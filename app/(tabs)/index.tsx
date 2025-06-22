@@ -1,5 +1,8 @@
+import * as React from 'react';
+
 import { Image } from 'expo-image';
 import { Platform, StyleSheet } from 'react-native';
+import { TextInput } from 'react-native-paper';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
@@ -7,6 +10,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
 export default function HomeScreen() {
+  const [text, setText] = React.useState("");
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -20,6 +24,14 @@ export default function HomeScreen() {
         <ThemedText type="title">Welcome!</ThemedText>
         <HelloWave />
       </ThemedView>
+       <TextInput label="Email"
+        value={text}
+        onChangeText={text => setText(text)}
+        mode="outlined"
+        dense={false}
+        >
+        
+        </TextInput>
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
         <ThemedText>
