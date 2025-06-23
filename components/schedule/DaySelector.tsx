@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 15,
-    paddingVertical: 10,
+    paddingVertical: 6,
     backgroundColor: '#f7f8fa',
   },
   utilityButton: {
@@ -85,8 +85,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   dayButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
     borderRadius: 8,
   },
   selectedDayButton: {
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   dayText: {
     fontWeight: 'bold',
     color: '#333',
-    fontSize: 8,
+    fontSize: 11,
   },
   selectedDayText: {
     color: '#fff',

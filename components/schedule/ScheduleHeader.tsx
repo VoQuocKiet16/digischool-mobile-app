@@ -57,6 +57,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     color: '#3A546D',
+    textAlign: 'center',
   },
   arrowButtonLeft: {
     position: 'absolute',

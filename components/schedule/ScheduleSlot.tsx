@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface ScheduleSlotProps {
   text: string;
@@ -7,6 +7,7 @@ interface ScheduleSlotProps {
   periodIndex: number;
   onAddActivity: (dayIndex: number, periodIndex: number, activity: string) => void;
   hasNotification?: boolean;
+  isUserAdded?: boolean;
 }
 
 const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
@@ -15,6 +16,7 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
   periodIndex,
   onAddActivity,
   hasNotification,
+  isUserAdded,
 }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [activity, setActivity] = useState('');
@@ -33,41 +35,67 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
     }
   };
 
-  const isEmpty = text === 'Thêm hoạt động';
-  const textParts = text.split(' ');
+  const isEmpty = text === 'Thêm hoạt động' || !text;
 
   return (
     <View style={styles.container}>
       <TouchableOpacity
-        style={isEmpty ? styles.emptySlot : styles.filledSlot}
+        style={
+          isEmpty
+            ? styles.emptySlot
+            : isUserAdded
+            ? styles.userAddedSlot
+            : styles.filledSlot
+        }
         onPress={handleAdd}
         activeOpacity={0.7}
       >
-        <Text style={isEmpty ? styles.emptySlotText : styles.filledSlotText}>{textParts[0]}</Text>
-        {textParts.length > 1 && (
-          <Text style={isEmpty ? styles.emptySlotText : styles.filledSlotText}>
-            {textParts.slice(1).join(' ')}
-          </Text>
-        )}
+        <Text
+          style={isEmpty ? styles.emptySlotText : styles.filledSlotText}
+          numberOfLines={2}
+          ellipsizeMode="tail"
+        >
+          {text}
+        </Text>
       </TouchableOpacity>
       {hasNotification && (
         <View style={styles.notificationPin}>
           <Text style={styles.notificationText}>!</Text>
         </View>
       )}
-      <Modal visible={modalVisible} transparent={true} animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPressOut={() => setModalVisible(false)}
+        >
+          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <Text style={styles.modalTitle}>Thêm hoạt động</Text>
             <TextInput
               style={styles.input}
               value={activity}
               onChangeText={setActivity}
-              placeholder="Nhập hoạt động"
+              placeholder="Nhập tên hoạt động..."
+              placeholderTextColor="#999"
             />
-            <Button title="Lưu" onPress={saveActivity} />
-            <Button title="Hủy" onPress={() => setModalVisible(false)} />
+            <View style={styles.buttonsContainer}>
+              <TouchableOpacity
+                style={[styles.button, styles.cancelButton]}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.cancelButtonText}>Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.button, styles.saveButton]} onPress={saveActivity}>
+                <Text style={styles.saveButtonText}>Lưu</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </TouchableOpacity>
       </Modal>
     </View>
   );
@@ -82,12 +110,13 @@ const styles = StyleSheet.create({
   filledSlot: {
     backgroundColor: '#3A546D',
     borderRadius: 12,
-    paddingVertical: 15,
+    paddingVertical: 12,
     paddingHorizontal: 10,
     width: '100%',
-    minHeight: 70,
-    alignItems: 'center',
+    height: 88,
+    minHeight: 88,
     justifyContent: 'center',
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.22,
@@ -99,32 +128,53 @@ const styles = StyleSheet.create({
     borderColor: '#D0D5DD',
     borderStyle: 'dashed',
     borderRadius: 12,
-    paddingVertical: 15,
+    paddingVertical: 12,
     paddingHorizontal: 10,
     width: '100%',
-    minHeight: 70,
-    alignItems: 'center',
+    height: 88,
+    minHeight: 88,
     justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: 'transparent',
+  },
+  userAddedSlot: {
+    backgroundColor: '#36a38f',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    width: '100%',
+    height: 88,
+    minHeight: 88,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+    elevation: 3,
   },
   filledSlotText: {
     color: '#fff',
-    fontWeight: '600',
-    fontSize: 6,
+    fontWeight: 'bold',
+    fontSize: 8,
     textAlign: 'center',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   emptySlotText: {
     color: '#A0A0A0',
-    fontWeight: '600',
-    fontSize: 4,
+    fontWeight: 'bold',
+    fontSize: 8,
     textAlign: 'center',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   notificationPin: {
     position: 'absolute',
-    top: -8,
-    right: 4,
-    width: 20,
-    height: 20,
+    top: -6,
+    right: -4,
+    width: 16,
+    height: 16,
     borderRadius: 10,
     backgroundColor: '#F04438',
     justifyContent: 'center',
@@ -137,9 +187,67 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 12,
   },
-  modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
-  modalContent: { backgroundColor: 'white', padding: 20, borderRadius: 10, width: '80%' },
-  input: { borderWidth: 1, padding: 10, marginBottom: 10 },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 25,
+    borderRadius: 15,
+    width: '90%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
+  },
+  input: {
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    padding: 15,
+    marginBottom: 20,
+    borderRadius: 10,
+    fontSize: 16,
+  },
+  buttonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginHorizontal: 5,
+  },
+  saveButton: {
+    backgroundColor: '#3A546D',
+  },
+  cancelButton: {
+    backgroundColor: '#E0E0E0',
+  },
+  saveButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  cancelButtonText: {
+    color: '#3A546D',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 });
 
 export default ScheduleSlot;
