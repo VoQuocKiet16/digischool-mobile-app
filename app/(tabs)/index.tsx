@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Header from '../../components/Header';
 
 export default function HomeScreen() {
   const goToAuth = () => {
@@ -9,9 +10,12 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.button} onPress={goToAuth}>
-        <Text style={styles.buttonText}>Về Trang Đăng Nhập</Text>
-      </TouchableOpacity>
+      <Header title="Trang chủ" studentName="HS Nguyễn Văn A" />
+      <View style={styles.body}>
+        <TouchableOpacity style={styles.button} onPress={goToAuth}>
+          <Text style={styles.buttonText}>Về Trang Đăng Nhập</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -22,6 +26,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#fff',
+  },
+  body: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
   },
   button: {
     backgroundColor: '#2d3a4b',
