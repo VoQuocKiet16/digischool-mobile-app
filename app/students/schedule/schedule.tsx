@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import DaySelector from '../../components/schedule/DaySelector';
-import ScheduleDay from '../../components/schedule/ScheduleDay';
-import ScheduleHeader from '../../components/schedule/ScheduleHeader';
+import DaySelector from '../../../components/schedule/DaySelector';
+import ScheduleDay from '../../../components/schedule/ScheduleDay';
+import ScheduleHeader from '../../../components/schedule/ScheduleHeader';
 
 export interface Activity {
   text: string;

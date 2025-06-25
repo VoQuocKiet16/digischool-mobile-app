@@ -14,6 +14,7 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+    Baloo2: require('../assets/fonts/Baloo2-VariableFont_wght.ttf'),
   });
 
   if (!loaded) {
@@ -27,7 +28,8 @@ export default function RootLayout() {
         screenOptions={{
           headerShown: false,
         }}
-      ></Stack>
+      >
+      </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
   );

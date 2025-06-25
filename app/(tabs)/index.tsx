@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Header from '../../components/Header';
-import ScheduleScreen from '../students/schedule';
+import ScheduleScreen from '../students/schedule/schedule';
 
 export default function HomeScreen() {
   return (

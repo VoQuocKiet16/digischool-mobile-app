@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Activity } from '../../app/students/schedule';
+import { Activity } from '../../app/students/schedule/schedule';
 import ScheduleSlot from './ScheduleSlot';
 
 interface ScheduleColumnProps {

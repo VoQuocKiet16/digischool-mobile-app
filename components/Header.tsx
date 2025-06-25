@@ -66,9 +66,10 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 34,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#215562',
     letterSpacing: 0.5,
+    fontFamily: 'Baloo2',
   },
   studentName: {
     fontSize: 16,
