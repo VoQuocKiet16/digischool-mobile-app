@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
   outlineInputBox: {
     borderWidth: 1,
     borderColor: '#25345D',
-    borderRadius: 20,
+    borderRadius: 12,
     paddingTop: 18,
     paddingBottom: 12,
     paddingHorizontal: 18,
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   inputTextOutline: {
-    fontSize: 18,
+    fontSize: 14,
     color: '#25345D',
     fontWeight: 'bold',
     paddingVertical: 0,
