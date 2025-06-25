@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import DaySelector from '../../components/schedule/DaySelector';
 import ScheduleDay from '../../components/schedule/ScheduleDay';
 import ScheduleHeader from '../../components/schedule/ScheduleHeader';
@@ -67,12 +67,14 @@ export default function ScheduleScreen() {
         onPressTitle={handleSessionToggle}
       />
       <DaySelector days={days} />
-      <ScheduleDay
-        periods={periods}
-        days={days}
-        onAddActivity={handleAddActivity}
-        scheduleData={displayedData}
-      />
+      <ScrollView style={{flex: 1}} contentContainerStyle={{flexGrow: 1}}>
+        <ScheduleDay
+          periods={periods}
+          days={days}
+          onAddActivity={handleAddActivity}
+          scheduleData={displayedData}
+        />
+      </ScrollView>
     </View>
   );
 }

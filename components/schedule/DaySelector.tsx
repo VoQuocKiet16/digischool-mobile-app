@@ -40,6 +40,7 @@ const DaySelector: React.FC<DaySelectorProps> = ({ days }) => {
 
       <Modal
         transparent={true}
+        statusBarTranslucent={true}
         visible={menuVisible}
         animationType="fade"
         onRequestClose={() => setMenuVisible(false)}

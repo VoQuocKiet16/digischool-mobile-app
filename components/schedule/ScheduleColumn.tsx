@@ -38,6 +38,7 @@ const ScheduleColumn: React.FC<ScheduleColumnProps> = ({ dayIndex, columnData, o
 const styles = StyleSheet.create({
   column: {
     flex: 1,
+    marginRight: 8,
     borderRightWidth: 1,
     borderRightColor: '#f0f0f0',
   },

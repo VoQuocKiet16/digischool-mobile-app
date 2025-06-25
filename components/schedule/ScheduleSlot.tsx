@@ -1,3 +1,4 @@
+import { FontAwesome } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
@@ -60,12 +61,13 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
       </TouchableOpacity>
       {hasNotification && (
         <View style={styles.notificationPin}>
-          <Text style={styles.notificationText}>!</Text>
+          <FontAwesome name="exclamation" size={12} color="#fff" style={styles.notificationText} />
         </View>
       )}
       <Modal
         visible={modalVisible}
         transparent={true}
+        statusBarTranslucent={true}
         animationType="fade"
         onRequestClose={() => setModalVisible(false)}
       >
@@ -112,9 +114,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 10,
-    width: '100%',
-    height: 88,
-    minHeight: 88,
+    width: '90%',
+    height: 77,
+    minHeight: 77,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -122,6 +124,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
     elevation: 3,
+ 
   },
   emptySlot: {
     borderWidth: 2,
@@ -130,9 +133,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 10,
-    width: '100%',
-    height: 88,
-    minHeight: 88,
+    width: '90%',
+    height: 77,
+    minHeight: 77,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'transparent',
@@ -172,9 +175,9 @@ const styles = StyleSheet.create({
   notificationPin: {
     position: 'absolute',
     top: -6,
-    right: -4,
-    width: 16,
-    height: 16,
+    right: -2,
+    width: 14,
+    height: 14,
     borderRadius: 10,
     backgroundColor: '#F04438',
     justifyContent: 'center',
