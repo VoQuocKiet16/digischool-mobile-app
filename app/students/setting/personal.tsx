@@ -3,11 +3,11 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import HeaderLayout from '../../../components/layout/HeaderLayout';
-import AccountInfo from '../../../components/setting/AccountInfo';
-import ContactInfo from '../../../components/setting/ContactInfo';
-import LearnInfo from '../../../components/setting/LearnInfo';
-import ProfileInfo from '../../../components/setting/ProfileInfo';
-import ProfileSection from '../../../components/setting/ProfileSection';
+import AccountInfo from '../../../components/setting/personal/detail/AccountInfo';
+import ContactInfo from '../../../components/setting/personal/detail/ContactInfo';
+import LearnInfo from '../../../components/setting/personal/detail/LearnInfo';
+import ProfileInfo from '../../../components/setting/personal/detail/ProfileInfo';
+import ProfileSection from '../../../components/setting/personal/detail/ProfileSection';
 
 const Personal: React.FC = () => {
   const router = useRouter();
@@ -15,7 +15,8 @@ const Personal: React.FC = () => {
     <HeaderLayout
       title="Thông tin cá nhân"
       onBack={() => router.back()}
-      rightIcon={<Ionicons name="pencil" size={20} color="#25345D" />}
+      rightIcon={<Ionicons name="pencil" size={20} color="#25345D" onPress={() => router.push('/students/setting/update_personal')}/>}
+      style={{ fontSize: 20, fontWeight: 'bold' }}
     >
       <ScrollView style={styles.container}>
         <ProfileSection />

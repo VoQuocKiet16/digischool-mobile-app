@@ -6,7 +6,7 @@ const ProfileSection: React.FC = () => {
     <View style={styles.container}>
       <Image
         style={styles.avatar}
-        source={require('../../assets/images/avatar1.png')}
+        source={require('../../../../assets/images/avatar1.png')}
       />
       <Text style={styles.name}>Nguyen Van A</Text>
       <Text style={styles.role}>Hoc sinh - 12A4</Text>

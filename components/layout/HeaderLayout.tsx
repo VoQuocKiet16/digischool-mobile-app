@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, TextStyle, TouchableOpacity, View } from 'react-native';
 
 interface HeaderLayoutProps {
   title: string;
@@ -8,16 +8,17 @@ interface HeaderLayoutProps {
   rightIcon?: React.ReactNode;
   onRightIconPress?: () => void;
   children?: React.ReactNode;
+  style?: TextStyle;
 }
 
-const HeaderLayout: React.FC<HeaderLayoutProps> = ({ title, onBack, rightIcon, onRightIconPress, children }) => {
+const HeaderLayout: React.FC<HeaderLayoutProps> = ({ title, onBack, rightIcon, onRightIconPress, children, style }) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
           <Ionicons name="chevron-back" size={24} color="#25345D" />
         </TouchableOpacity>
-        <Text style={styles.title}>{title}</Text>
+        <Text style={[styles.title, style]}>{title}</Text>
         {rightIcon ? (
           <TouchableOpacity onPress={onRightIconPress} style={styles.rightBtn} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
             {rightIcon}
@@ -43,6 +44,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     paddingHorizontal: 16,
     backgroundColor: '#f7f7f7',
+    marginTop: 20,
   },
   backBtn: {
     width: 32,
