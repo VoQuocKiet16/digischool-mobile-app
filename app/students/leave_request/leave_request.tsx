@@ -83,6 +83,20 @@ export default function LeaveRequestScreen() {
           <TouchableOpacity
             style={[styles.button, selected.length === 0 && styles.buttonDisabled]}
             disabled={selected.length === 0}
+            onPress={() => {
+              if (selected.length > 0) {
+                // Lấy tên môn học thực tế cho từng slot đã chọn
+                const subjects = selected.map(({ row, col }) => displayedData[row][col]?.text || '');
+                router.push({
+                  pathname: '/students/leave_request/leave_request_info',
+                  params: {
+                    selectedSlots: JSON.stringify(selected),
+                    subjects: JSON.stringify(subjects),
+                    days: JSON.stringify(days),
+                  }
+                });
+              }
+            }}
           >
             <Text style={[styles.buttonText, selected.length === 0 && styles.buttonTextDisabled]}>Tiếp tục</Text>
           </TouchableOpacity>
