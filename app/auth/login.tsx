@@ -1,14 +1,39 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { API_ERROR_MESSAGES } from '../../constants/api.constants';
+import { login } from '../../services/auth.service';
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const router = useRouter();
 
   const isValid = username.trim() !== '' && password.trim() !== '';
+
+  const handleLogin = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await login(username, password);
+      if (res.success && res.data?.token) {
+        await AsyncStorage.setItem('token', res.data.token);
+        router.replace('/');
+      } else {
+        setError(API_ERROR_MESSAGES.INVALID_CREDENTIALS);
+      }
+    } catch (err: any) {
+      setError(err?.message || API_ERROR_MESSAGES.UNKNOWN_ERROR);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <LinearGradient colors={["#FFFFFF", "#B3E5FC"]} style={{ flex: 1 }}>
@@ -47,15 +72,20 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
+          {error ? (
+            <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text>
+          ) : null}
+
           <TouchableOpacity style={styles.forgotPassword}>
             <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.loginButton, isValid ? { backgroundColor: '#25345D' } : { backgroundColor: '#D3D9E6' }]}
-            disabled={!isValid}
+            disabled={!isValid || loading}
+            onPress={handleLogin}
           >
-            <Text style={styles.loginButtonText}>Đăng nhập</Text>
+            <Text style={styles.loginButtonText}>{loading ? 'Đang đăng nhập...' : 'Đăng nhập'}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>

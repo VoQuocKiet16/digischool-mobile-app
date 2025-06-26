@@ -1,11 +1,14 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from "expo-status-bar";
+import React, { useEffect } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
@@ -16,10 +19,24 @@ export default function RootLayout() {
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     Baloo2: require('../assets/fonts/Baloo2-VariableFont_wght.ttf'),
   });
+  const router = useRouter();
+
+  useEffect(() => {
+    AsyncStorage.getItem('token').then(token => {
+      if (token) {
+        router.replace('/');
+      } else {
+        router.replace('/auth/login');
+      }
+    });
+  }, []);
 
   if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#25345D" />
+      </View>
+    );
   }
 
   return (

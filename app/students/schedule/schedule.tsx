@@ -32,7 +32,7 @@ const initialScheduleData: Activity[][] = [
   [defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity('')],
 ];
 
-export default function ScheduleScreen() {
+export default function ScheduleStudentsScreen() {
   const router = useRouter();
   const [session, setSession] = useState<'Buổi sáng' | 'Buổi chiều'>('Buổi sáng');
   const [scheduleData, setScheduleData] = useState<Activity[][]>(initialScheduleData);

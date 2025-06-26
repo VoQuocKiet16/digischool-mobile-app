@@ -16,7 +16,7 @@ export default function Header({ title = 'Manage', studentName = 'HS Nguyá»…n VÄ
   const colorScheme = useColorScheme();
 
   const handleAvatarPress = () => {
-    router.push('/students/setting/setting' as any);
+    router.push('setting/setting' as any);
   };
 
   return (

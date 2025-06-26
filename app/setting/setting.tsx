@@ -1,11 +1,25 @@
-import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import HeaderLayout from '../../components/layout/HeaderLayout';
+import { logout } from '../../services/auth.service';
 
 const Setting: React.FC = () => {
   const router = useRouter();
+  const handleLogout = async () => {
+    try {
+      const res = await logout();
+      console.log('Logout response in setting:', res);
+      const token = await AsyncStorage.getItem('token');
+      console.log('Token in setting after logout:', token);
+      router.replace('/auth/login');
+    } catch (err) {
+      console.log('Logout error in setting:', err);
+      // Có thể hiển thị thông báo lỗi nếu cần
+    }
+  };
   return (
     <HeaderLayout title="Cài đặt" onBack={() => router.back()}>
       <ScrollView style={styles.container} contentContainerStyle={{paddingBottom: 32}}>
@@ -16,11 +30,11 @@ const Setting: React.FC = () => {
             <Text style={styles.role}>Học sinh - 12A4</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.logoutBtn}>
+        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <Text style={styles.logoutText}>Đăng xuất</Text>
         </TouchableOpacity>
         <View style={styles.menuWrap}>
-          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/students/setting/personal')}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/setting/personal')}>
             <View style={styles.menuIcon}><Ionicons name="person-circle-outline" size={28} color="#FFFFFF" /></View>
             <Text style={styles.menuText}>Thông tin cá nhân</Text>
             <Ionicons name="chevron-forward" size={22} color="#25345D" style={styles.menuArrow} />
