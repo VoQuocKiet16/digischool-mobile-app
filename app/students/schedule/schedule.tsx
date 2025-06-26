@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import DaySelector from '../../../components/schedule/DaySelector';
@@ -32,6 +33,7 @@ const initialScheduleData: Activity[][] = [
 ];
 
 export default function ScheduleScreen() {
+  const router = useRouter();
   const [session, setSession] = useState<'Buổi sáng' | 'Buổi chiều'>('Buổi sáng');
   const [scheduleData, setScheduleData] = useState<Activity[][]>(initialScheduleData);
 
@@ -41,13 +43,20 @@ export default function ScheduleScreen() {
   const periods = session === 'Buổi sáng' ? morningPeriods : afternoonPeriods;
 
   const handleAddActivity = (dayIndex: number, periodIndex: number, activityText: string) => {
-    setScheduleData(currentData => {
-      const newData = [...currentData.map(row => [...row])];
-      const absolutePeriodIndex = session === 'Buổi sáng' ? periodIndex : periodIndex + morningPeriods.length;
-      newData[absolutePeriodIndex][dayIndex] = { text: activityText, type: 'user-added' };
-      return newData;
-    });
-    console.log(`Thêm hoạt động "${activityText}" tại ${days[dayIndex]}, ${periods[periodIndex]}`);
+    if (!activityText || activityText === 'Thêm hoạt động') {
+      router.push({
+        pathname: '/students/schedule/add_activity',
+        params: { periodIndex }
+      });
+    } else {
+      setScheduleData(currentData => {
+        const newData = [...currentData.map(row => [...row])];
+        const absolutePeriodIndex = session === 'Buổi sáng' ? periodIndex : periodIndex + morningPeriods.length;
+        newData[absolutePeriodIndex][dayIndex] = { text: activityText, type: 'user-added' };
+        return newData;
+      });
+      console.log(`Thêm hoạt động "${activityText}" tại ${days[dayIndex]}, ${periods[periodIndex]}`);
+    }
   };
 
   const handleSessionToggle = () => {

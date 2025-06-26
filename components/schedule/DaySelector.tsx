@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -8,6 +9,7 @@ interface DaySelectorProps {
 const DaySelector: React.FC<DaySelectorProps> = ({ days }) => {
   const [selectedDay, setSelectedDay] = useState(2); // Thứ 4 is selected by default
   const [menuVisible, setMenuVisible] = useState(false);
+  const router = useRouter();
 
   return (
     <View style={styles.container}>
@@ -51,7 +53,7 @@ const DaySelector: React.FC<DaySelectorProps> = ({ days }) => {
               <Text style={styles.menuItemText}>Xuất TKB ra</Text>
             </TouchableOpacity>
             <View style={styles.separator} />
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/students/leave_request/leave_request')}>
               <Text style={styles.menuItemText}>Xin phép nghỉ</Text>
             </TouchableOpacity>
           </View>

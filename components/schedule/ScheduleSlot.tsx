@@ -10,6 +10,8 @@ interface ScheduleSlotProps {
   onAddActivity?: (dayIndex: number, periodIndex: number, activity: string) => void;
   hasNotification?: boolean;
   isUserAdded?: boolean;
+  isSelected?: boolean;
+  onSlotPress?: (dayIndex: number, periodIndex: number) => void;
 }
 
 const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
@@ -19,11 +21,19 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
   onAddActivity,
   hasNotification,
   isUserAdded,
+  isSelected,
+  onSlotPress,
 }) => {
   const router = useRouter();
 
+  const isEmpty = text === 'Thêm hoạt động' || !text;
+
   const handleAdd = () => {
-    if (text === 'Thêm hoạt động') {
+    if (onSlotPress && !isEmpty) {
+      onSlotPress(dayIndex, periodIndex);
+    } else if (onAddActivity && isEmpty) {
+      onAddActivity(dayIndex, periodIndex, text);
+    } else if (isEmpty) {
       router.push({
         pathname: '/students/schedule/add_activity',
         params: { periodIndex }
@@ -31,27 +41,34 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
     }
   };
 
-  const isEmpty = text === 'Thêm hoạt động' || !text;
+  let slotStyle = styles.filledSlot;
+  let slotText = text;
+  let textStyle = styles.filledSlotText;
+  if (isEmpty) {
+    slotStyle = styles.emptySlot as any;
+    textStyle = styles.emptySlotText;
+  } else if (isSelected) {
+    slotStyle = styles.selectedSlot;
+    slotText = 'Đã chọn';
+    textStyle = styles.selectedSlotText;
+  } else if (isUserAdded) {
+    slotStyle = styles.userAddedSlot;
+  }
 
   return (
     <View style={styles.container}>
       <TouchableOpacity
-        style={
-          isEmpty
-            ? styles.emptySlot
-            : isUserAdded
-            ? styles.userAddedSlot
-            : styles.filledSlot
-        }
+        style={slotStyle}
         onPress={handleAdd}
-        activeOpacity={0.7}
+        activeOpacity={onSlotPress && isEmpty ? 1 : 0.7}
+        disabled={onSlotPress && isEmpty}
       >
         <Text
-          style={isEmpty ? styles.emptySlotText : styles.filledSlotText}
+          style={textStyle}
           numberOfLines={2}
           ellipsizeMode="tail"
         >
-          {text}
+          {slotText}
         </Text>
       </TouchableOpacity>
       {hasNotification && (
@@ -84,7 +101,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
     elevation: 3,
- 
   },
   emptySlot: {
     borderWidth: 2,
@@ -149,6 +165,30 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 12,
+  },
+  selectedSlot: {
+    backgroundColor: '#FFA726',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    width: '90%',
+    height: 77,
+    minHeight: 77,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+    elevation: 3,
+  },
+  selectedSlotText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 8,
+    textAlign: 'center',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
 });
 
