@@ -2,7 +2,7 @@ import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icon
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import HeaderLayout from '../../../components/layout/HeaderLayout';
+import HeaderLayout from '../../components/layout/HeaderLayout';
 
 const Setting: React.FC = () => {
   const router = useRouter();
@@ -10,7 +10,7 @@ const Setting: React.FC = () => {
     <HeaderLayout title="Cài đặt" onBack={() => router.back()}>
       <ScrollView style={styles.container} contentContainerStyle={{paddingBottom: 32}}>
         <View style={styles.profileCard}>
-          <Image source={require('../../../assets/images/avatar1.png')} style={styles.avatar} />
+          <Image source={require('../../assets/images/avatar1.png')} style={styles.avatar} />
           <View style={{flex: 1}}>
             <Text style={styles.name}>Nguyen Van A</Text>
             <Text style={styles.role}>Học sinh - 12A4</Text>
