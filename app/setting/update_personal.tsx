@@ -8,14 +8,14 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import HeaderLayout from "../../../components/layout/HeaderLayout";
-import UpdateContactInfo from "../../../components/setting/personal/update/UpdateContactInfo";
-import UpdateProfileInfo from "../../../components/setting/personal/update/UpdateProfileInfo";
+import HeaderLayout from "../../components/layout/HeaderLayout";
+import UpdateContactInfo from "../../components/setting/personal/update/UpdateContactInfo";
+import UpdateProfileInfo from "../../components/setting/personal/update/UpdateProfileInfo";
 import { useRouter } from "expo-router";
 
 export default function UpdatePersonal() {
   const [avatar, setAvatar] = useState(
-    require("../../../assets/images/avatar2.png")
+    require("../../assets/images/avatar1.png")
   );
   const [name, setName] = useState("Nguyễn Văn A");
   const [dob, setDob] = useState("01/01/2006");

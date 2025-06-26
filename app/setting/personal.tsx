@@ -2,12 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
-import HeaderLayout from '../../../components/layout/HeaderLayout';
-import AccountInfo from '../../../components/setting/personal/detail/AccountInfo';
-import ContactInfo from '../../../components/setting/personal/detail/ContactInfo';
-import LearnInfo from '../../../components/setting/personal/detail/LearnInfo';
-import ProfileInfo from '../../../components/setting/personal/detail/ProfileInfo';
-import ProfileSection from '../../../components/setting/personal/detail/ProfileSection';
+import HeaderLayout from '../../components/layout/HeaderLayout';
+import AccountInfo from '../../components/setting/personal/detail/AccountInfo';
+import ContactInfo from '../../components/setting/personal/detail/ContactInfo';
+import LearnInfo from '../../components/setting/personal/detail/LearnInfo';
+import ProfileInfo from '../../components/setting/personal/detail/ProfileInfo';
+import ProfileSection from '../../components/setting/personal/detail/ProfileSection';
 
 const Personal: React.FC = () => {
   const router = useRouter();
