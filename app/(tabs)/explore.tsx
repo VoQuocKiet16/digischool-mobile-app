@@ -3,21 +3,31 @@ import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function TabTwoScreen() {
+  const goToSlotDetail = () => {
+    router.replace("/students/slot_information/slot_detail");
+  };
+
   const goToAddExamReminder = () => {
-    router.replace("/teachers/add_exam_reminder/add_exam_reminder");
+    router.replace("../teachers/add_exam_reminder/add_exam_reminder");
   };
 
   const goToSubstituteRequest = () => {
-    router.replace("/teachers/substitute_request/substitute_request");
+    router.replace("../teachers/substitute_request/substitute_request");
   };
 
   const goToTietHocThayThe = () => {
-    router.replace("/teachers/substitute_lesson/substitute_lesson");
+    router.replace("../teachers/substitute_lesson/substitute_lesson");
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.body}>
+        <TouchableOpacity
+          style={[styles.button, { marginTop: 20 }]}
+          onPress={goToSlotDetail}
+        >
+          <Text style={styles.buttonText}>Thông tin tiết học</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, { marginTop: 20 }]}
           onPress={goToAddExamReminder}
