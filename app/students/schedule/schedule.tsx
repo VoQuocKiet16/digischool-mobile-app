@@ -45,7 +45,7 @@ export default function ScheduleStudentsScreen() {
   const handleAddActivity = (dayIndex: number, periodIndex: number, activityText: string) => {
     if (!activityText || activityText === 'Thêm hoạt động') {
       router.push({
-        pathname: '/students/schedule/add_activity',
+        pathname: '/general/add_activity',
         params: { periodIndex }
       });
     } else {

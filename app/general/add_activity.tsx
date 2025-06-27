@@ -10,9 +10,9 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
-import HeaderLayout from "../../../components/layout/HeaderLayout";
-import SuccessModal from "../../../components/notifications_modal/SuccessModal";
-import RemindPicker from "../../../components/schedule/RemindPicker";
+import HeaderLayout from "../../components/layout/HeaderLayout";
+import SuccessModal from "../../components/notifications_modal/SuccessModal";
+import RemindPicker from "../../components/schedule/RemindPicker";
 
 const REMIND_OPTIONS = [
   "Trước 10 phút",
