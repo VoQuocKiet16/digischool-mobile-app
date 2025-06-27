@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   ScrollView,
@@ -11,46 +11,39 @@ import HeaderLayout from "../../../components/layout/HeaderLayout";
 import DaySelector from "../../../components/schedule/DaySelector";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
-
-type PeriodCell = { row: number; col: number };
+import type { Activity } from "../../students/schedule/schedule";
 
 const DAYS = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
 const PERIODS = ["Tiết 1", "Tiết 2", "Tiết 3", "Tiết 4", "Tiết 5"];
+// Dữ liệu mẫu cho dạy bù: mỗi slot là 1 trạng thái
 const MOCK_SCHEDULE = [
-  // Mỗi dòng là 1 tiết, mỗi cột là 1 ngày
-  [
-    "Sinh học",
-    "Sinh học",
-    "Sinh học",
-    "Sinh học",
-    "Sinh học",
-    "Sinh học",
-    "Sinh học",
-  ],
-  ["Lịch sử", "Lịch sử", "Lịch sử", "Lịch sử", "Lịch sử", "Lịch sử", "Lịch sử"],
-  ["Địa lý", "Địa lý", "Địa lý", "Địa lý", "Địa lý", "Địa lý", "Địa lý"],
-  ["Toán", "Toán", "Toán", "Toán", "Toán", "Toán", "Toán"],
-  ["Trống", "Trống", "Trống", "Trống", "Trống", "Trống", "Trống"],
+  ["Toán", "Lý", "Hóa", "Sinh", "Sử", "Địa", "GDCD"],
+  ["Văn", "Anh", "Toán", "Lý", "Hóa", "Sinh", "Sử"],
+  ["Địa", "GDCD", "Toán", "Lý", "Hóa", "Sinh", "Văn"],
+  ["Anh", "Toán", "Lý", "Hóa", "Sinh", "Sử", "Địa"],
+  ["GDCD", "Văn", "Anh", "Toán", "Lý", "Hóa", "Sinh"],
 ];
-const TODAY_INDEX = 2; // Thứ 4 (index 2)
-const CURRENT_PERIOD_INDEX = 1; // Tiết 2 (index 1)
-const TAUGHT_PERIODS = [
+// Các slot đã được chọn để dạy bù (taken)
+const TAKEN_SLOTS = [
   { row: 0, col: 0 },
-  { row: 0, col: 1 },
-  { row: 1, col: 0 },
+  { row: 1, col: 1 },
+  { row: 2, col: 2 },
+  { row: 3, col: 3 },
+  { row: 4, col: 4 },
 ];
+// Slot hiện tại (giáo viên đang chọn để dạy bù vào slot khác)
+const CURRENT_SLOT = { row: 1, col: 2 };
 
-export default function SubstituteLesson() {
-  const [selected, setSelected] = useState<PeriodCell[]>([]);
+const TODAY_INDEX = 3; // Thứ 4 (index 3)
+const CURRENT_PERIOD_INDEX = 1; // Tiết 2 (index 1)
 
-  const isTaught = (row: number, col: number) =>
-    TAUGHT_PERIODS.some((p) => p.row === row && p.col === col);
-  const isCurrent = (row: number, col: number) =>
-    row === CURRENT_PERIOD_INDEX && col === TODAY_INDEX;
-  const isSelected = (row: number, col: number) =>
-    selected.some((p) => p.row === row && p.col === col);
+export default function SelectMakeupLessonScreen() {
+  const [selected, setSelected] = useState<{ row: number; col: number } | null>(
+    null
+  );
+  const router = useRouter();
 
-  // Tạo cellStatusData cho từng ô
+  // Xác định trạng thái từng cell
   const cellStatusData = PERIODS.map((_, rowIdx) =>
     DAYS.map((_, colIdx) => {
       // Disable các tiết đã qua (cột < hôm nay)
@@ -58,50 +51,47 @@ export default function SubstituteLesson() {
       // Disable các tiết trước tiết hiện tại trong cùng ngày
       if (colIdx === TODAY_INDEX && rowIdx < CURRENT_PERIOD_INDEX)
         return "taught";
-      // Tiết hiện tại (thứ 4, tiết 2)
+      // Tiết hiện tại
       if (colIdx === TODAY_INDEX && rowIdx === CURRENT_PERIOD_INDEX)
         return "current";
-      // Các ô còn lại là exchangeable
+      // Các slot đã được chọn để dạy bù (taken)
+      if (TAKEN_SLOTS.some((s) => s.row === rowIdx && s.col === colIdx))
+        return "taught";
+      // Slot hiện tại (giáo viên đang chọn để dạy bù vào slot khác)
+      if (CURRENT_SLOT.row === rowIdx && CURRENT_SLOT.col === colIdx)
+        return "current";
       return "exchangeable";
     })
   );
 
-  // Chỉ cho phép chọn các ô exchangeable
+  // Chỉ cho chọn 1 slot trống (exchangeable)
   const handleSelect = (dayIndex: number, periodIndex: number) => {
     const row = periodIndex;
     const col = dayIndex;
     if (cellStatusData[row][col] !== "exchangeable") return;
-    if (isSelected(row, col)) {
-      setSelected([]);
-    } else {
-      setSelected([{ row, col }]);
-    }
+    setSelected({ row, col });
   };
 
-  // Chuyển đổi dữ liệu cho ScheduleDay (không render 'Thêm hoạt động')
-  const scheduleData = PERIODS.map((_, rowIdx) =>
+  // scheduleData: đúng type Activity[][]
+  const scheduleData: Activity[][] = PERIODS.map((_, rowIdx) =>
     DAYS.map((_, colIdx) => {
-      const value = MOCK_SCHEDULE[rowIdx]?.[colIdx];
-      let type: "default" | "user-added" = "default";
-      if (cellStatusData[rowIdx][colIdx] === "taught") type = "user-added";
-      if (cellStatusData[rowIdx][colIdx] === "current") type = "default";
-      // Không render 'Thêm hoạt động', chỉ để chuỗi rỗng nếu null
-      return { text: value ? value : "", type };
+      let value = MOCK_SCHEDULE[rowIdx]?.[colIdx] || "";
+      return { text: value, type: "default", hasNotification: false };
     })
   );
 
-  const isContinueEnabled = selected.length === 1;
+  const isContinueEnabled = !!selected;
 
   const handleContinue = () => {
     if (isContinueEnabled) {
-      router.replace("/teachers/confirm_substitute/confirm_substitute");
+      // Xử lý tiếp tục, ví dụ chuyển trang hoặc lưu slot đã chọn
     }
   };
 
   return (
     <HeaderLayout
-      title="Tiết học thay thế"
-      subtitle="Chọn tiết học thay thế cho tiết học hiện tại"
+      title="Chọn tiết dạy bù"
+      subtitle="Chọn tiết học trống để dạy bù"
       onBack={() => router.replace("/explore")}
     >
       <View style={styles.container}>
@@ -118,7 +108,7 @@ export default function SubstituteLesson() {
             days={DAYS}
             onAddActivity={() => {}}
             scheduleData={scheduleData}
-            selectedSlots={selected}
+            selectedSlots={selected ? [selected] : []}
             onSelectSlot={handleSelect}
             cellStatusData={cellStatusData}
           />
@@ -136,7 +126,7 @@ export default function SubstituteLesson() {
                 },
               ]}
             />
-            <Text style={styles.legendText}>Đã được dạy</Text>
+            <Text style={styles.legendText}>Đã được chọn</Text>
           </View>
           <View style={styles.legendItem}>
             <View
