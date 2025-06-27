@@ -52,7 +52,7 @@ export default function LeaveRequestScreen() {
   };
 
   return (
-    <HeaderLayout title="Tiết học xin nghỉ" onBack={() => router.back()}>
+    <HeaderLayout title="Tiết học xin nghỉ" subtitle="Chọn các tiết học bạn muốn xin phép nghỉ" onBack={() => router.back()}>
       <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
         <View style={{ flex: 1 }}>
           <ScheduleHeader

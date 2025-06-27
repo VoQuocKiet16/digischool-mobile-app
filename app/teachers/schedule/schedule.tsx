@@ -136,7 +136,7 @@ export default function ScheduleTeachersScreen() {
   ) => {
     if (!activityText || activityText === "Thêm hoạt động") {
       router.push({
-        pathname: "/general/add_activity",
+        pathname: "/activity/add_activity",
         params: { periodIndex },
       });
     } else {

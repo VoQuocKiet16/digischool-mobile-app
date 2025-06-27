@@ -1,18 +1,40 @@
 import { router } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Header from "../../components/Header";
 
 export default function TabTwoScreen() {
-  const goToAuth = () => {
-    router.replace("/teachers/schedule/schedule");
+  const goToAddExamReminder = () => {
+    router.replace("/teachers/add_exam_reminder/add_exam_reminder");
   };
+
+  const goToSubstituteRequest = () => {
+    router.replace("/teachers/substitute_request/substitute_request");
+  };
+
+  const goToTietHocThayThe = () => {
+    router.replace("/teachers/substitute_lesson/substitute_lesson");
+  };
+
   return (
     <View style={styles.container}>
-      <Header title="Tài khoản" studentName="HS Nguyễn Văn A" />
       <View style={styles.body}>
-        <TouchableOpacity style={styles.button} onPress={goToAuth}>
-          <Text style={styles.buttonText}>Thời khóa biểu giáo viên</Text>
+        <TouchableOpacity
+          style={[styles.button, { marginTop: 20 }]}
+          onPress={goToAddExamReminder}
+        >
+          <Text style={styles.buttonText}>Dặn dò kiểm tra</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, { marginTop: 20 }]}
+          onPress={goToSubstituteRequest}
+        >
+          <Text style={styles.buttonText}>Yêu cầu dạy thay</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, { marginTop: 20 }]}
+          onPress={goToTietHocThayThe}
+        >
+          <Text style={styles.buttonText}>Tiết học thay thế</Text>
         </TouchableOpacity>
       </View>
     </View>

@@ -81,7 +81,7 @@ export default function AddActivity() {
   };
 
   return (
-    <HeaderLayout title="Thêm hoạt động" onBack={() => router.back()} style={{ fontSize: 20, fontWeight: 'bold' }}>
+    <HeaderLayout title="Thêm hoạt động" subtitle="Tạo thông tin hoạt động" onBack={() => router.back()} style={{ fontSize: 20, fontWeight: 'bold' }}>
       <View style={styles.container}>
         {/* Tiêu đề hoạt động */}
         <View style={styles.fieldWrap}>
