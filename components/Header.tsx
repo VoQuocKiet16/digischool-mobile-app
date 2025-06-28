@@ -19,6 +19,10 @@ export default function Header({ title = 'Manage', studentName = 'HS Nguyá»…n VÄ
     router.push('setting/setting' as any);
   };
 
+  const handleBellPress = () => {
+    router.push('/notification/notification_list');
+  };
+
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <ThemedView style={styles.headerWrap}>
@@ -30,10 +34,10 @@ export default function Header({ title = 'Manage', studentName = 'HS Nguyá»…n VÄ
           </View>
         </View>
         <View style={styles.headerRight}>
-          <View style={styles.bellWrap}>
+          <TouchableOpacity onPress={handleBellPress} activeOpacity={0.7} style={styles.bellWrap}>
             <Ionicons name="notifications-outline" size={28} color="#215562" />
             <View style={styles.bellDot} />
-          </View>
+          </TouchableOpacity>
           <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.7}>
             <Image source={require('../assets/images/avatar1.png')} style={styles.avatar} />
           </TouchableOpacity>

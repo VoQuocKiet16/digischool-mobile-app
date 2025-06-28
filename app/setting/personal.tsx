@@ -15,7 +15,7 @@ const Personal: React.FC = () => {
     <HeaderLayout
       title="Thông tin cá nhân"
       onBack={() => router.back()}
-      rightIcon={<Ionicons name="pencil" size={20} color="#25345D" onPress={() => router.push('/students/setting/update_personal')}/>}
+      rightIcon={<Ionicons name="pencil" size={20} color="#25345D" onPress={() => router.push('/setting/update_personal')}/>}
       style={{ fontSize: 20, fontWeight: 'bold' }}
     >
       <ScrollView style={styles.container}>
