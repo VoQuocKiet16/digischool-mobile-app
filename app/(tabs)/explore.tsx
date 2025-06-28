@@ -4,8 +4,13 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function TabTwoScreen() {
   const goToSlotDetail = () => {
-    router.replace("/students/slot_information/slot_detail");
+    router.replace("/students/lesson_information/lesson_detail");
   };
+
+  const goToSlotEvaluate = () => {
+    router.replace("/students/lesson_information/lesson_evaluate");
+  };
+
 
   const goToAddExamReminder = () => {
     router.replace("../teachers/add_exam_reminder/add_exam_reminder");
@@ -27,6 +32,12 @@ export default function TabTwoScreen() {
           onPress={goToSlotDetail}
         >
           <Text style={styles.buttonText}>Thông tin tiết học</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, { marginTop: 20 }]}
+          onPress={goToSlotEvaluate}
+        >
+          <Text style={styles.buttonText}>Đánh giá tiết học</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, { marginTop: 20 }]}
