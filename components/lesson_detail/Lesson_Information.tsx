@@ -2,10 +2,15 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
-const Slot_Information = () => {
+interface Slot_InformationProps {
+  onEvaluatePress?: () => void;
+}
+
+const Slot_Information: React.FC<Slot_InformationProps> = ({ onEvaluatePress }) => {
   return (
     <View style={styles.container}>
       {/* Card 1: Thông tin bài học */}
@@ -82,10 +87,14 @@ const Slot_Information = () => {
           <ThemedText style={styles.statusTextWhite}>Đánh giá: A+</ThemedText>
         </View>
         {/* Chưa đánh giá tiết học */}
-        <View style={styles.statusRowBlueWrap}>
+        <TouchableOpacity 
+          style={styles.statusRowBlueWrap}
+          onPress={onEvaluatePress}
+          activeOpacity={0.7}
+        >
           <View style={styles.statusRowBlueLeft}>
             <View style={styles.statusIconWrapBlue}>
-              <IconSymbol name="chevron.right" size={20} color={Colors.light.icon} />
+              <MaterialCommunityIcons name="message-text" size={20} color={Colors.light.icon} />
             </View>
             <ThemedText style={styles.statusTextBlue}>Chưa đánh giá tiết học</ThemedText>
           </View>
@@ -93,7 +102,7 @@ const Slot_Information = () => {
           <View style={styles.statusArrowWrap}>
             <IconSymbol name="chevron.right" size={22} color={Colors.light.icon} />
           </View>
-        </View>
+        </TouchableOpacity>
       </ThemedView>
     </View>
   );

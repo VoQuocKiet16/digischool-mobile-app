@@ -8,6 +8,10 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View 
 const LessonDetailScreen = () => {
   const [menuVisible, setMenuVisible] = useState(false);
 
+  const handleEvaluatePress = () => {
+    router.push('/students/lesson_information/lesson_evaluate');
+  };
+
   return (
     <HeaderLayout
       title="Chi tiết tiết học"
@@ -20,7 +24,7 @@ const LessonDetailScreen = () => {
       }
     >
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Lesson_Information />
+        <Lesson_Information onEvaluatePress={handleEvaluatePress} />
       </ScrollView>
       <Modal
         visible={menuVisible}

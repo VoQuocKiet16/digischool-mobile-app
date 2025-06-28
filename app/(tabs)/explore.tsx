@@ -29,18 +29,6 @@ export default function TabTwoScreen() {
       <View style={styles.body}>
         <TouchableOpacity
           style={[styles.button, { marginTop: 20 }]}
-          onPress={goToSlotDetail}
-        >
-          <Text style={styles.buttonText}>Thông tin tiết học</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.button, { marginTop: 20 }]}
-          onPress={goToSlotEvaluate}
-        >
-          <Text style={styles.buttonText}>Đánh giá tiết học</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.button, { marginTop: 20 }]}
           onPress={goToAddExamReminder}
         >
           <Text style={styles.buttonText}>Dặn dò kiểm tra</Text>

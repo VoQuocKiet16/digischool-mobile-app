@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
 import { API_ENDPOINTS } from '../constants/api.constants';
 import api from './api.config';
 
@@ -24,11 +23,10 @@ export const login = async (email: string, password: string) => {
 export const logout = async () => {
   try {
     const response = await api.post(API_ENDPOINTS.AUTH.LOGOUT);
-    if (response.data.success) {
-      await AsyncStorage.multiRemove(['token', 'role', 'userName']);
-    }
+    await AsyncStorage.multiRemove(['token', 'role', 'userName']);
     return response.data;
   } catch (error: any) {
+    await AsyncStorage.multiRemove(['token', 'role', 'userName']);
     if (error.response && error.response.data) {
       throw error.response.data;
     }

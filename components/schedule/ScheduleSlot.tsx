@@ -8,10 +8,12 @@ interface ScheduleSlotProps {
   dayIndex: number;
   periodIndex: number;
   onAddActivity?: (dayIndex: number, periodIndex: number, activity: string) => void;
+  onSlotPress?: (dayIndex: number, periodIndex: number, activity: string) => void;
+  activityText?: string;
   hasNotification?: boolean;
   isUserAdded?: boolean;
   isSelected?: boolean;
-  onSlotPress?: (dayIndex: number, periodIndex: number) => void;
+  onSlotPressLegacy?: (dayIndex: number, periodIndex: number) => void;
 }
 
 const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
@@ -19,23 +21,27 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
   dayIndex,
   periodIndex,
   onAddActivity,
+  onSlotPress,
+  activityText,
   hasNotification,
   isUserAdded,
   isSelected,
-  onSlotPress,
+  onSlotPressLegacy,
 }) => {
   const router = useRouter();
 
   const isEmpty = text === 'Thêm hoạt động' || !text;
 
   const handleAdd = () => {
-    if (onSlotPress && !isEmpty) {
-      onSlotPress(dayIndex, periodIndex);
-    } else if (onAddActivity && isEmpty) {
+    if (isEmpty && onAddActivity) {
       onAddActivity(dayIndex, periodIndex, text);
+    } else if (!isEmpty && onSlotPress) {
+      onSlotPress(dayIndex, periodIndex, text);
+    } else if (onSlotPressLegacy && !isEmpty) {
+      onSlotPressLegacy(dayIndex, periodIndex);
     } else if (isEmpty) {
       router.push({
-        pathname: '/students/schedule/add_activity',
+        pathname: '/activity/add_activity',
         params: { periodIndex }
       });
     }
@@ -60,8 +66,7 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
       <TouchableOpacity
         style={slotStyle}
         onPress={handleAdd}
-        activeOpacity={onSlotPress && isEmpty ? 1 : 0.7}
-        disabled={onSlotPress && isEmpty}
+        activeOpacity={0.7}
       >
         <Text
           style={textStyle}

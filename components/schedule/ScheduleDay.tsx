@@ -7,12 +7,13 @@ interface ScheduleDayProps {
   periods: string[];
   days: string[];
   onAddActivity: (dayIndex: number, periodIndex: number, activity: string) => void;
+  onSlotPress: (dayIndex: number, periodIndex: number, activity: string) => void;
   scheduleData: Activity[][];
   selectedSlots?: {row: number, col: number}[];
   onSelectSlot?: (dayIndex: number, periodIndex: number) => void;
 }
 
-const ScheduleDay: React.FC<ScheduleDayProps> = ({ periods, days, onAddActivity, scheduleData, selectedSlots = [], onSelectSlot }) => {
+const ScheduleDay: React.FC<ScheduleDayProps> = ({ periods, days, onAddActivity, onSlotPress, scheduleData, selectedSlots = [], onSelectSlot }) => {
   return (
     <View style={styles.container}>
       {/* Các hàng tiết */}
@@ -39,7 +40,9 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({ periods, days, onAddActivity,
                   periodIndex={periodIndex}
                   isSelected={isSelected}
                   onAddActivity={onAddActivity}
-                  {...(onSelectSlot && { onSlotPress: () => onSelectSlot(dayIndex, periodIndex) })}
+                  onSlotPress={onSlotPress}
+                  activityText={slotData.text}
+                  {...(onSelectSlot && { onSlotPressLegacy: () => onSelectSlot(dayIndex, periodIndex) })}
                 />
               </View>
             );
