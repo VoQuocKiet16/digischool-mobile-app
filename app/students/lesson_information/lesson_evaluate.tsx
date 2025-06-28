@@ -66,16 +66,19 @@ const LessonEvaluateScreen = () => {
 
   const renderStep2 = () => (
     <View style={styles.stepContainer}>
-      <Text style={styles.inputLabel}>Nhận xét</Text>
-      <TextInput
-        style={styles.textInput}
-        placeholder="Vui lòng nhập nhận xét của bạn về tiết học"
-        placeholderTextColor="#B0B0B0"
-        value={comment}
-        onChangeText={setComment}
-        multiline
-        numberOfLines={4}
-      />
+      <View style={styles.confirmInputBox}>
+        <Text style={styles.confirmLabel}>Nhận xét</Text>
+        <TextInput
+          style={[styles.confirmInput, { minHeight: 100, fontSize: 16 }]}
+          placeholder="Vui lòng nhập nhận xét của bạn về tiết học"
+          placeholderTextColor="#C4C4C4"
+          value={comment}
+          onChangeText={setComment}
+          multiline
+          numberOfLines={4}
+          textAlignVertical="top"
+        />
+      </View>
       <TouchableOpacity
         style={styles.checkboxRow}
         onPress={() => setChecked(!checked)}
@@ -182,23 +185,33 @@ const styles = StyleSheet.create({
     fontSize: 17,
     color: '#fff',
   },
-  inputLabel: {
-    fontWeight: 'bold',
-    fontSize: 15,
-    color: '#25345D',
-    marginBottom: 10,
-    marginLeft: 2,
-  },
-  textInput: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    minHeight: 90,
-    padding: 14,
-    fontSize: 15,
-    color: '#25345D',
+  confirmInputBox: {
+    borderWidth: 2,
+    borderColor: "#22315B",
+    borderRadius: 12,
+    backgroundColor: "#F6F8FB",
     marginBottom: 18,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+    paddingTop: 18,
+    paddingBottom: 12,
+    paddingHorizontal: 16,
+    position: "relative",
+  },
+  confirmLabel: {
+    position: "absolute",
+    top: -10,
+    left: 18,
+    backgroundColor: "#F6F8FB",
+    paddingHorizontal: 6,
+    color: "#22315B",
+    fontWeight: "bold",
+    fontSize: 12,
+    zIndex: 2,
+  },
+  confirmInput: {
+    color: "#22315B",
+    fontSize: 14,
+    fontWeight: "bold",
+    marginTop: 2,
   },
   checkboxRow: {
     flexDirection: 'row',
