@@ -13,15 +13,19 @@ export default function TabTwoScreen() {
 
 
   const goToAddExamReminder = () => {
-    router.replace("../teachers/add_exam_reminder/add_exam_reminder");
+    router.push("/teachers/add_exam_reminder/add_exam_reminder");
   };
 
   const goToSubstituteRequest = () => {
-    router.replace("../teachers/substitute_request/substitute_request");
+    router.push("/teachers/substitute_request/substitute_request");
   };
 
   const goToTietHocThayThe = () => {
-    router.replace("../teachers/substitute_lesson/substitute_lesson");
+    router.push("/teachers/substitute_lesson/substitute_lesson");
+  };
+
+  const goToSelectMakeupLesson = () => {
+    router.push("/teachers/select_makeup_lesson/select_makeup_lesson");
   };
 
   return (
@@ -44,6 +48,12 @@ export default function TabTwoScreen() {
           onPress={goToTietHocThayThe}
         >
           <Text style={styles.buttonText}>Tiết học thay thế</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, { marginTop: 20 }]}
+          onPress={goToSelectMakeupLesson}
+        >
+          <Text style={styles.buttonText}>Chọn tiết dạy bù</Text>
         </TouchableOpacity>
       </View>
     </View>
