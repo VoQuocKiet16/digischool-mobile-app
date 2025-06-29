@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,11 +18,13 @@ const DAYS = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", 
 const PERIODS = ["Tiết 1", "Tiết 2", "Tiết 3", "Tiết 4", "Tiết 5"];
 // Dữ liệu mẫu cho dạy bù: mỗi slot là 1 trạng thái
 const MOCK_SCHEDULE = [
-  ["Toán", "Lý", "Hóa", "Sinh", "Sử", "Địa", "GDCD"],
-  ["Văn", "Anh", "Toán", "Lý", "Hóa", "Sinh", "Sử"],
-  ["Địa", "GDCD", "Toán", "Lý", "Hóa", "Sinh", "Văn"],
-  ["Anh", "Toán", "Lý", "Hóa", "Sinh", "Sử", "Địa"],
-  ["GDCD", "Văn", "Anh", "Toán", "Lý", "Hóa", "Sinh"],
+  ["Toán", "Văn", "Địa", "Anh", "GDCD"], // Thứ 2: Tiết 1,2,3,4,5
+  ["Lý", "Anh", "GDCD", "Toán", "Văn"],   // Thứ 3: Tiết 1,2,3,4,5
+  ["Hóa", "Toán", "Toán", "Lý", "Anh"],   // Thứ 4: Tiết 1,2,3,4,5
+  ["", "", "", "", ""],    // Thứ 5: tất cả trống
+  ["", "", "", "", ""],     // Thứ 6: tất cả trống
+  ["", "", "", "", ""],   // Thứ 7: tất cả trống
+  ["", "", "", "", ""],   // CN: tất cả trống
 ];
 // Các slot đã được chọn để dạy bù (taken)
 const TAKEN_SLOTS = [
@@ -75,7 +78,7 @@ export default function SelectMakeupLessonScreen() {
   // scheduleData: đúng type Activity[][]
   const scheduleData: Activity[][] = PERIODS.map((_, rowIdx) =>
     DAYS.map((_, colIdx) => {
-      let value = MOCK_SCHEDULE[rowIdx]?.[colIdx] || "";
+      let value = MOCK_SCHEDULE[colIdx]?.[rowIdx] || "";
       return { text: value, type: "default", hasNotification: false };
     })
   );
@@ -84,7 +87,7 @@ export default function SelectMakeupLessonScreen() {
 
   const handleContinue = () => {
     if (isContinueEnabled) {
-      // Xử lý tiếp tục, ví dụ chuyển trang hoặc lưu slot đã chọn
+      router.push("/teachers/confirm_makeup_lesson/confirm_makeup_lesson");
     }
   };
 
@@ -92,7 +95,7 @@ export default function SelectMakeupLessonScreen() {
     <HeaderLayout
       title="Chọn tiết dạy bù"
       subtitle="Chọn tiết học trống để dạy bù"
-      onBack={() => router.replace("/explore")}
+      onBack={() => router.replace("/")}
     >
       <View style={styles.container}>
         <ScheduleHeader
@@ -107,6 +110,7 @@ export default function SelectMakeupLessonScreen() {
             periods={PERIODS}
             days={DAYS}
             onAddActivity={() => {}}
+            onSlotPress={handleSelect}
             scheduleData={scheduleData}
             selectedSlots={selected ? [selected] : []}
             onSelectSlot={handleSelect}
@@ -152,16 +156,18 @@ export default function SelectMakeupLessonScreen() {
           </View>
         </View>
         {/* Nút tiếp tục */}
-        <TouchableOpacity
-          style={[
-            styles.continueBtn,
-            !isContinueEnabled && styles.continueBtnDisabled,
-          ]}
-          onPress={handleContinue}
-          disabled={!isContinueEnabled}
-        >
-          <Text style={styles.continueBtnText}>Tiếp tục</Text>
-        </TouchableOpacity>
+        <SafeAreaView style={{ backgroundColor: '#fff', marginBottom: 30, paddingHorizontal: 16 }}>
+          <TouchableOpacity
+            style={[
+              styles.continueBtn,
+              !isContinueEnabled && styles.continueBtnDisabled,
+            ]}
+            onPress={handleContinue}
+            disabled={!isContinueEnabled}
+          >
+            <Text style={styles.continueBtnText}>Tiếp tục</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
       </View>
     </HeaderLayout>
   );

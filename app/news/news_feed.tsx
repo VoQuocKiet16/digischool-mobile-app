@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 
 const SUBJECTS = [
   { key: 'all', label: 'Tất cả', icon: require('../../assets/images/all.png') },
@@ -64,9 +64,33 @@ const NEWS = [
 ];
 
 export default function NewsFeedScreen() {
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const [tab, setTab] = useState<'news' | 'favorite'>('news');
   const [selectedSubject, setSelectedSubject] = useState('all');
   const [newsList, setNewsList] = useState(NEWS);
+
+  // Responsive calculations
+  const isSmallScreen = screenWidth < 375;
+  const isMediumScreen = screenWidth >= 375 && screenWidth < 768;
+  const isLargeScreen = screenWidth >= 768;
+  const isTablet = screenWidth >= 768;
+
+  // Dynamic card dimensions
+  // Dynamic card dimensions
+  const cardWidth = isTablet ? Math.min(400, screenWidth * 0.4) : Math.min(320, screenWidth * 0.85);
+  const cardHeight = isTablet ? 420 : 360;
+  const cardMargin = isTablet ? 16 : 20;
+
+  // Dynamic font sizes
+  const titleFontSize = isSmallScreen ? 16 : isMediumScreen ? 18 : 20;
+  const tabFontSize = isSmallScreen ? 14 : 16;
+  const subjectLabelFontSize = isSmallScreen ? 11 : 13;
+  const infoFontSize = isSmallScreen ? 10 : 12;
+
+  // Dynamic spacing
+  const containerPadding = isTablet ? 24 : 16;
+  const tabSpacing = isSmallScreen ? 4 : 8;
+  const subjectSpacing = isSmallScreen ? 12 : 18;
 
   const filteredNews = selectedSubject === 'all'
     ? newsList
@@ -81,43 +105,61 @@ export default function NewsFeedScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingHorizontal: containerPadding }]}>
       {/* Tabs */}
-      <View style={styles.tabRow}>
+      <View style={[styles.tabRow, { gap: tabSpacing }]}>
         <TouchableOpacity
           style={[styles.tabBtn, tab === 'news' && styles.tabBtnActive]}
           onPress={() => setTab('news')}
         >
-          <Text style={[styles.tabText, tab === 'news' && styles.tabTextActive]}>Tin tức</Text>
+          <Text style={[styles.tabText, tab === 'news' && styles.tabTextActive, { fontSize: tabFontSize }]}>Tin tức</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tabBtn, tab === 'favorite' && styles.tabBtnActive]}
           onPress={() => setTab('favorite')}
         >
-          <Text style={[styles.tabText, tab === 'favorite' && styles.tabTextActive]}>Yêu thích</Text>
+          <Text style={[styles.tabText, tab === 'favorite' && styles.tabTextActive, { fontSize: tabFontSize }]}>Yêu thích</Text>
         </TouchableOpacity>
       </View>
 
       {/* Subject filter */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.subjectScroll} contentContainerStyle={{paddingBottom: 0, marginBottom: 0}}>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false} 
+        style={styles.subjectScroll} 
+        contentContainerStyle={{paddingBottom: 0, marginBottom: 0}}
+      >
         {SUBJECTS.map((s, idx) => (
           <TouchableOpacity
             key={s.key}
-            style={styles.subjectItem}
+            style={[styles.subjectItem, { marginRight: subjectSpacing, minWidth: isSmallScreen ? 48 : 56 }]}
             onPress={() => setSelectedSubject(s.key)}
             activeOpacity={0.7}
           >
             <View style={[
               styles.subjectIconWrap,
-              selectedSubject === s.key && styles.subjectIconActive
+              selectedSubject === s.key && styles.subjectIconActive,
+              { 
+                width: isSmallScreen ? 40 : 48, 
+                height: isSmallScreen ? 40 : 48,
+                borderRadius: isSmallScreen ? 20 : 24
+              }
             ]}>
-              <Image source={s.icon} style={styles.subjectIcon} resizeMode="contain" />
+              <Image 
+                source={s.icon} 
+                style={[styles.subjectIcon, { 
+                  width: isSmallScreen ? 26 : 32, 
+                  height: isSmallScreen ? 26 : 32 
+                }]} 
+                resizeMode="contain" 
+              />
             </View>
             <Text style={[
               styles.subjectLabel,
-              selectedSubject === s.key && styles.subjectLabelActive
+              selectedSubject === s.key && styles.subjectLabelActive,
+              { fontSize: subjectLabelFontSize }
             ]}>{s.label}</Text>
-            {selectedSubject === s.key && <View style={styles.subjectUnderline} />}
+            {selectedSubject === s.key && <View style={[styles.subjectUnderline, { width: isSmallScreen ? 20 : 24 }]} />}
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -126,36 +168,52 @@ export default function NewsFeedScreen() {
       <FlatList
         data={displayedNews}
         keyExtractor={item => item.id}
-        horizontal
+        horizontal={!isTablet}
+        numColumns={isTablet ? 2 : 1}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{
           paddingLeft: 0,
-          paddingTop: -8,
+          paddingTop: 0,
           paddingBottom: 80,
           justifyContent: 'center',
           alignItems: 'center',
+          ...(isTablet && { paddingHorizontal: 16 })
         }}
         snapToAlignment="center"
         decelerationRate="fast"
-        snapToInterval={340}
+        snapToInterval={cardWidth + cardMargin * 2}
         renderItem={({ item }) => (
-          <View style={styles.newsCard}>
+          <View style={[
+            styles.newsCard,
+            {
+              width: cardWidth,
+              height: cardHeight,
+              marginHorizontal: cardMargin,
+              marginBottom: isTablet ? 16 : 0
+            }
+          ]}>
             <Image source={item.image} style={styles.newsImage} />
             <View style={styles.overlay} />
             <TouchableOpacity style={styles.bookmarkBtn} onPress={() => handleToggleBookmark(item.id)}>
               <Ionicons name={item.bookmarked ? 'bookmark' : 'bookmark-outline'} size={22} color="#fff" />
             </TouchableOpacity>
             <View style={styles.newsContent}>
-              <Text style={styles.newsTitle} numberOfLines={2}>{item.title}</Text>
+              <Text style={[styles.newsTitle, { fontSize: titleFontSize }]} numberOfLines={2}>{item.title}</Text>
               <View style={styles.newsInfoRow}>
-                <Image source={SUBJECTS.find(s => s.key === item.subjectKey)?.icon} style={styles.newsSubjectIcon} />
-                <Text style={styles.newsInfoText}>{item.subject}</Text>
-                <Text style={styles.newsInfoText}>• {item.time}</Text>
-                <Text style={styles.newsInfoText}>• {item.views} người xem</Text>
+                <Image 
+                  source={SUBJECTS.find(s => s.key === item.subjectKey)?.icon} 
+                  style={[styles.newsSubjectIcon, { 
+                    width: isSmallScreen ? 16 : 18, 
+                    height: isSmallScreen ? 16 : 18 
+                  }]} 
+                />
+                <Text style={[styles.newsInfoText, { fontSize: infoFontSize }]}>{item.subject}</Text>
+                <Text style={[styles.newsInfoText, { fontSize: infoFontSize }]}>• {item.time}</Text>
+                <Text style={[styles.newsInfoText, { fontSize: infoFontSize }]}>• {item.views} người xem</Text>
               </View>
               <View style={styles.newsInfoRow}>
-                <Text style={styles.newsAuthor}>{item.author}</Text>
-                <Text style={styles.newsHashtag}>{item.hashtag}</Text>
+                <Text style={[styles.newsAuthor, { fontSize: infoFontSize }]}>{item.author}</Text>
+                <Text style={[styles.newsHashtag, { fontSize: infoFontSize }]}>{item.hashtag}</Text>
               </View>
             </View>
           </View>
@@ -240,11 +298,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   newsCard: {
-    width: 320,
-    height: 420,
     backgroundColor: '#fff',
     borderRadius: 28,
-    marginHorizontal: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,

@@ -34,7 +34,7 @@ export default function SubstituteRequest() {
     <HeaderLayout
       title="Yêu cầu dạy thay"
       subtitle="Hoàn thành mẫu yêu cầu dạy thay"
-      onBack={() => router.replace("/explore")}
+      onBack={() => router.replace("/")}
     >
       <View style={styles.container}>
         {/* Lý do */}
@@ -105,7 +105,7 @@ export default function SubstituteRequest() {
           visible={showSuccess}
           onClose={() => {
             setShowSuccess(false);
-            router.replace("/explore");
+            router.replace("/");
           }}
           title="Thành công"
           message={"Gửi yêu cầu dạy thay thành công.\nQuay lại trang trước đó?"}
