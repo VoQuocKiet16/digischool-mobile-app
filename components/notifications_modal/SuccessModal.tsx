@@ -33,7 +33,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
         <View style={styles.modalContent}>
           <View style={styles.iconWrapper}>
             <View style={styles.iconContainer}>
-              <Feather name="check" size={40} color="#fff" />
+              <Feather name="check" size={35} color="#fff" />
             </View>
           </View>
           <Text style={styles.title}>{title}</Text>
@@ -57,9 +57,8 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 25,
-    paddingTop: 40,
+    borderRadius: 20,
+    padding: 20,
     alignItems: 'center',
     width: '100%',
     maxWidth: 340,
@@ -73,29 +72,30 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   iconWrapper: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 4,
+    width: 70,
+    height: 70,
+    borderRadius: 50,
+    borderWidth: 3,
     borderColor: 'rgba(76, 175, 80, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
   },
   iconContainer: {
-    width: 60,
-    height: 60,
+    width: 50,
+    height: 50,
     borderRadius: 30,
     backgroundColor: '#4CAF50',
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#4CAF50',
     marginBottom: 12,
     textAlign: 'center',
+    fontFamily: 'Baloo2-SemiBold',
   },
   message: {
     fontSize: 15,
@@ -103,18 +103,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 30,
     lineHeight: 22,
+    fontFamily: 'Baloo2-Medium',
   },
   button: {
     backgroundColor: '#66bb6a',
     borderRadius: 50,
     paddingVertical: 12,
-    width: '80%',
+    width: '90%',
     alignItems: 'center',
   },
   buttonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
+    fontFamily: 'Baloo2-SemiBold',
   },
 });
 

@@ -1,15 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import {
-    FlatList,
-    Image,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { router } from "expo-router";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 
 const EXISTING_ACCOUNTS = [
@@ -17,25 +17,25 @@ const EXISTING_ACCOUNTS = [
     id: "1",
     name: "Nguyen Thi Bich",
     username: "hocsinh1",
-    avatar: require("../../assets/images/avatar1.png"),
+    avatar: require("../../assets/images/avt_default.png"),
   },
   {
     id: "2",
     name: "Nguyen Thi Bich",
     username: "hocsinh1",
-    avatar: require("../../assets/images/avatar1.png"),
+    avatar: require("../../assets/images/avt_default.png"),
   },
   {
     id: "3",
     name: "Nguyen Thi Bich",
     username: "hocsinh1",
-    avatar: require("../../assets/images/avatar1.png"),
+    avatar: require("../../assets/images/avt_default.png"),
   },
   {
     id: "4",
     name: "Nguyen Thi Bich",
     username: "hocsinh1",
-    avatar: require("../../assets/images/avatar1.png"),
+    avatar: require("../../assets/images/avt_default.png"),
   },
 ];
 
@@ -76,7 +76,12 @@ export default function AddContactScreen() {
                   <Text style={styles.name}>{item.name}</Text>
                   <Text style={styles.username}>{item.username}</Text>
                 </View>
-                <Ionicons name="chatbubble-ellipses-outline" size={28} color="#fff" style={styles.chatIcon} />
+                <Ionicons
+                  name="chatbubble-ellipses-outline"
+                  size={28}
+                  color="#fff"
+                  style={styles.chatIcon}
+                />
               </View>
             )}
             contentContainerStyle={{ paddingBottom: 16 }}

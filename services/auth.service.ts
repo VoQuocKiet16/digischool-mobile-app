@@ -8,15 +8,7 @@ export const login = async (email: string, password: string) => {
       email,
       password,
     });
-    if (response.data.success && response.data?.data?.token) {
-      await AsyncStorage.setItem("token", response.data.data.token);
-      await AsyncStorage.setItem(
-        "role",
-        JSON.stringify(response.data.data.user.role)
-      );
-      await AsyncStorage.setItem("userName", response.data.data.user.name);
-      // TODO: Điều hướng sang màn hình tiếp theo hoặc theo response.data.data.redirectTo
-    }
+    // Không lưu token vào AsyncStorage ở đây nữa, để xử lý ở login.tsx
     return response.data;
   } catch (error: any) {
     if (error.response && error.response.data) {
@@ -46,6 +38,52 @@ export const logout = async () => {
       return { success: true, message: "Đăng xuất thành công" };
     }
 
+    if (error.response && error.response.data) {
+      throw error.response.data;
+    }
+    throw { message: "Lỗi không xác định. Vui lòng thử lại." };
+  }
+};
+
+export const setPasswordNewUser = async (
+  tempToken: string,
+  password: string,
+  confirmPassword: string
+) => {
+  try {
+    const response = await api.post(API_ENDPOINTS.AUTH.SET_PASSWORD, {
+      tempToken,
+      password,
+      confirmPassword,
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.response && error.response.data) {
+      throw error.response.data;
+    }
+    throw { message: "Lỗi không xác định. Vui lòng thử lại." };
+  }
+};
+
+export const forgotPassword = async (email: string) => {
+  try {
+    const response = await api.post(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, {
+      email,
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.response && error.response.data) {
+      throw error.response.data;
+    }
+    throw { message: "Lỗi không xác định. Vui lòng thử lại." };
+  }
+};
+
+export const getMe = async () => {
+  try {
+    const response = await api.get(API_ENDPOINTS.AUTH.GET_ME);
+    return response.data;
+  } catch (error: any) {
     if (error.response && error.response.data) {
       throw error.response.data;
     }
