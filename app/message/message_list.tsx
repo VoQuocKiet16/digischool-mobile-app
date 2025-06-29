@@ -1,7 +1,15 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { FlatList, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 interface MessageListScreenProps {
   userName?: string;
@@ -12,7 +20,7 @@ const chatData = [
   {
     id: "1",
     name: "Nguyễn Văn A",
-    avatar: require("../../assets/images/avatar1.png"),
+    avatar: require("../../assets/images/avt_default.png"),
     lastMessage: "Bạn: Hey, please pay the rent for me before tomorrow.",
     time: "Now",
     unread: 10,
@@ -21,7 +29,7 @@ const chatData = [
   {
     id: "2",
     name: "Nguyễn Văn A",
-    avatar: require("../../assets/images/avatar1.png"),
+    avatar: require("../../assets/images/avt_default.png"),
     lastMessage: "Bạn: Hey, please pay the rent for me before tomorrow.",
     time: "Now",
     unread: 10,
@@ -29,7 +37,7 @@ const chatData = [
   {
     id: "3",
     name: "Nguyễn Văn A",
-    avatar: require("../../assets/images/avatar1.png"),
+    avatar: require("../../assets/images/avt_default.png"),
     lastMessage: "Bạn: Hey, please pay the rent for me before tomorrow.",
     time: "Now",
     unread: 10,
@@ -37,7 +45,7 @@ const chatData = [
   {
     id: "4",
     name: "Nguyễn Văn A",
-    avatar: require("../../assets/images/avatar1.png"),
+    avatar: require("../../assets/images/avt_default.png"),
     lastMessage: "Bạn: Hey, please pay the rent for me before tomorrow.",
     time: "Now",
     unread: 10,
@@ -45,14 +53,17 @@ const chatData = [
   {
     id: "5",
     name: "Nguyễn Văn A",
-    avatar: require("../../assets/images/avatar1.png"),
+    avatar: require("../../assets/images/avt_default.png"),
     lastMessage: "Bạn: Hey, please pay the rent for me before tomorrow.",
     time: "Now",
     unread: 10,
   },
 ];
 
-export default function MessageListScreen({ userName, roles }: MessageListScreenProps) {
+export default function MessageListScreen({
+  userName,
+  roles,
+}: MessageListScreenProps) {
   const [search, setSearch] = useState("");
   const router = useRouter();
 
@@ -61,7 +72,12 @@ export default function MessageListScreen({ userName, roles }: MessageListScreen
       {/* Thanh tìm kiếm */}
       <View style={styles.searchRow}>
         <View style={styles.searchBox}>
-          <Ionicons name="search" size={20} color="#215562" style={{ marginLeft: 10, marginRight: 6 }} />
+          <Ionicons
+            name="search"
+            size={20}
+            color="#215562"
+            style={{ marginLeft: 10, marginRight: 6 }}
+          />
           <TextInput
             style={styles.searchInput}
             placeholder="Find users..."
@@ -69,23 +85,40 @@ export default function MessageListScreen({ userName, roles }: MessageListScreen
             value={search}
             onChangeText={setSearch}
           />
-          <MaterialIcons name="sort-by-alpha" size={22} color="#215562" style={{ marginHorizontal: 6 }} />
+          <MaterialIcons
+            name="sort-by-alpha"
+            size={22}
+            color="#215562"
+            style={{ marginHorizontal: 6 }}
+          />
         </View>
-        <TouchableOpacity style={styles.addChatBtn} onPress={() => router.push('/message/add_contact')}>
-          <Ionicons name="chatbubble-ellipses-outline" size={24} color="#215562" />
+        <TouchableOpacity
+          style={styles.addChatBtn}
+          onPress={() => router.push("/message/add_contact")}
+        >
+          <Ionicons
+            name="chatbubble-ellipses-outline"
+            size={24}
+            color="#215562"
+          />
         </TouchableOpacity>
       </View>
       {/* Danh sách chat */}
       <FlatList
         data={chatData}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => router.push('/message/message_box')} activeOpacity={0.8}>
+          <TouchableOpacity
+            onPress={() => router.push("/message/message_box")}
+            activeOpacity={0.8}
+          >
             <View style={styles.chatItem}>
               <Image source={item.avatar} style={styles.avatar} />
               <View style={styles.chatContent}>
                 <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.lastMessage} numberOfLines={1}>{item.lastMessage}</Text>
+                <Text style={styles.lastMessage} numberOfLines={1}>
+                  {item.lastMessage}
+                </Text>
               </View>
               <View style={styles.rightInfo}>
                 <Text style={styles.time}>{item.time}</Text>

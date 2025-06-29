@@ -19,7 +19,7 @@ const messages = [
     text: "Lorem Ipsum Dolor Sit Amet, Consectetur Adipisicing Elit, Sed Do Elusmod Tempor Incididunt Ut Labore Et Dolore.",
     time: "10 AM",
     isMe: false,
-    avatar: require("../../assets/images/avatar1.png"),
+    avatar: require("../../assets/images/avt_default.png"),
   },
   {
     id: "2",
@@ -33,7 +33,7 @@ const messages = [
     text: "Lorem Ipsum Dolor Sit",
     time: "10 AM",
     isMe: false,
-    avatar: require("../../assets/images/avatar1.png"),
+    avatar: require("../../assets/images/avt_default.png"),
   },
   {
     id: "4",
@@ -47,7 +47,7 @@ const messages = [
     text: "Lorem Ipsum Dolor Sit Amet, Consectetur Adipiscing",
     time: "10 AM",
     isMe: false,
-    avatar: require("../../assets/images/avatar1.png"),
+    avatar: require("../../assets/images/avt_default.png"),
   },
   {
     id: "6",
@@ -61,32 +61,38 @@ const messages = [
     text: "Ok",
     time: "10 AM",
     isMe: false,
-    avatar: require("../../assets/images/avatar1.png"),
+    avatar: require("../../assets/images/avt_default.png"),
   },
 ];
 
 export default function MessageBoxScreen() {
   const [input, setInput] = useState("");
 
-  const renderMessage = ({ item }: { item: typeof messages[0] }) => (
+  const renderMessage = ({ item }: { item: (typeof messages)[0] }) => (
     <View
       style={[
         styles.messageRow,
         item.isMe ? styles.messageRowMe : styles.messageRowOther,
       ]}
     >
-      {!item.isMe && (
-        <Image source={item.avatar} style={styles.avatar} />
-      )}
-      <View style={[styles.bubble, item.isMe ? styles.bubbleMe : styles.bubbleOther]}>
-        <Text style={[styles.messageText, item.isMe ? styles.textMe : styles.textOther]}>
+      {!item.isMe && <Image source={item.avatar} style={styles.avatar} />}
+      <View
+        style={[
+          styles.bubble,
+          item.isMe ? styles.bubbleMe : styles.bubbleOther,
+        ]}
+      >
+        <Text
+          style={[
+            styles.messageText,
+            item.isMe ? styles.textMe : styles.textOther,
+          ]}
+        >
           {item.text}
         </Text>
         <Text style={styles.time}>{item.time}</Text>
       </View>
-      {item.isMe && (
-        <Image source={item.avatar} style={styles.avatar} />
-      )}
+      {item.isMe && <Image source={item.avatar} style={styles.avatar} />}
     </View>
   );
 
@@ -115,7 +121,12 @@ export default function MessageBoxScreen() {
           keyboardVerticalOffset={16}
         >
           <View style={styles.inputRow}>
-            <Ionicons name="happy-outline" size={24} color="#25345D" style={{ marginHorizontal: 8 }} />
+            <Ionicons
+              name="happy-outline"
+              size={24}
+              color="#25345D"
+              style={{ marginHorizontal: 8 }}
+            />
             <TextInput
               style={styles.input}
               placeholder="Nhập tin nhắn tại đây..."
@@ -167,11 +178,11 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   listWrapper: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     flex: 1,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   messageRow: {
     flexDirection: "row",

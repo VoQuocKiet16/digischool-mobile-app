@@ -60,6 +60,7 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({
           <View style={{ width: 24 }} />
         )}
       </View>
+      <View style={{ height: 1, backgroundColor: "#FFFFFF", width: "100%" }} />
       {children}
     </SafeAreaView>
   );
@@ -74,10 +75,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingTop: 16,
-    paddingBottom: 12,
+    paddingBottom: 16,
     paddingHorizontal: 16,
     backgroundColor: "#f7f7f7",
-    marginTop: 20,
   },
   backBtn: {
     width: 32,
@@ -101,19 +101,21 @@ const styles = StyleSheet.create({
   },
   title: {
     textAlign: "center",
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: "bold",
     color: "#25345D",
     marginBottom: 2,
     maxWidth: "100%",
+    fontFamily: "Baloo2-Bold",
   },
   subtitle: {
     textAlign: "center",
-    fontSize: 13,
+    fontSize: 14,
     color: "#25345D",
     fontWeight: "500",
     marginTop: 0,
     maxWidth: "100%",
+    fontFamily: "Baloo2-Medium",
   },
 });
 

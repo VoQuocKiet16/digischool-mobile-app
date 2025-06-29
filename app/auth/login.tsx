@@ -1,30 +1,53 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { API_ERROR_MESSAGES } from '../../constants/api.constants';
-import { login } from '../../services/auth.service';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
+import {
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import LoadingModal from "../../components/LoadingModal";
+import { API_ERROR_MESSAGES } from "../../constants/api.constants";
+import { login } from "../../services/auth.service";
 
 export default function LoginScreen() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const router = useRouter();
 
-  const isValid = username.trim() !== '' && password.trim() !== '';
+  const isValid = email.trim() !== "" && password.trim() !== "";
 
   const handleLogin = async () => {
     setLoading(true);
-    setError('');
+    setError("");
     try {
-      const res = await login(username, password);
-      if (res.success && res.data?.token) {
-        await AsyncStorage.setItem('token', res.data.token);
-        router.replace('/');
+      const res = await login(email, password);
+      const token = res.data?.token || res.data?.tempToken;
+      if (res.success && token) {
+        if (
+          res.data?.redirectTo === "set-password" &&
+          res.data?.user?.isNewUser
+        ) {
+          router.push({
+            pathname: "/auth/set-password",
+            params: {
+              token: token,
+              email: email,
+              isNewUser: res.data.user.isNewUser,
+            },
+          });
+        } else {
+          await AsyncStorage.setItem("token", token);
+          router.replace("/");
+        }
       } else {
         setError(API_ERROR_MESSAGES.INVALID_CREDENTIALS);
       }
@@ -44,50 +67,105 @@ export default function LoginScreen() {
             Biến ứng dụng trường học{"\n"}thành trợ lý cá nhân của bạn
           </Text>
 
-          <Text style={styles.label}>Tên người dùng</Text>
+          <Text style={styles.label}>Email</Text>
           <View style={styles.inputContainer}>
-            <Icon name="person" size={22} color="#25345D" style={styles.inputIcon} />
+            <Icon
+              name="email"
+              size={22}
+              color="#25345D"
+              style={styles.inputIcon}
+            />
             <TextInput
               style={styles.input}
-              placeholder="hocsinh"
+              placeholder="Nhập email"
               placeholderTextColor="#7a869a"
-              value={username}
-              onChangeText={setUsername}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
             />
+            {email.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setEmail("")}
+                style={{ position: "absolute", right: 8 }}
+              >
+                <Icon
+                  name="close"
+                  size={25}
+                  color="#25345D"
+                  style={{ marginRight: 10 }}
+                />
+              </TouchableOpacity>
+            )}
           </View>
 
           <Text style={styles.label}>Mật khẩu</Text>
           <View style={styles.inputContainer}>
-            <Icon name="lock" size={22} color="#25345D" style={styles.inputIcon} />
+            <Icon
+              name="lock"
+              size={22}
+              color="#25345D"
+              style={styles.inputIcon}
+            />
             <TextInput
               style={styles.input}
-              placeholder=""
+              placeholder="Nhập mật khẩu"
               placeholderTextColor="#7a869a"
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
             />
+            {password.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setPassword("")}
+                style={{ position: "absolute", right: 8 }}
+              >
+                <Icon
+                  name="close"
+                  size={25}
+                  color="#25345D"
+                  style={{ marginRight: 40 }}
+                />
+              </TouchableOpacity>
+            )}
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Icon name={showPassword ? "visibility-off" : "visibility"} size={22} color="#7a869a" />
+              <Icon
+                name={showPassword ? "visibility-off" : "visibility"}
+                size={22}
+                color="#25345D"
+              />
             </TouchableOpacity>
           </View>
 
           {error ? (
-            <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text>
+            <Text
+              style={{ color: "red", marginBottom: 8, fontFamily: "Baloo2" }}
+            >
+              {error}
+            </Text>
           ) : null}
 
-          <TouchableOpacity style={styles.forgotPassword}>
+          <TouchableOpacity
+            style={styles.forgotPassword}
+            onPress={() => router.push("/auth/forgot-password")}
+          >
             <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.loginButton, isValid ? { backgroundColor: '#25345D' } : { backgroundColor: '#D3D9E6' }]}
+            style={[
+              styles.loginButton,
+              isValid
+                ? { backgroundColor: "#25345D" }
+                : { backgroundColor: "#25345D", opacity: 0.3 },
+            ]}
             disabled={!isValid || loading}
             onPress={handleLogin}
           >
-            <Text style={styles.loginButtonText}>{loading ? 'Đang đăng nhập...' : 'Đăng nhập'}</Text>
+            <Text style={styles.loginButtonText}>Đăng nhập</Text>
           </TouchableOpacity>
         </View>
+        <LoadingModal visible={loading} text="Đang đăng nhập..." />
       </SafeAreaView>
     </LinearGradient>
   );
@@ -100,65 +178,73 @@ const styles = StyleSheet.create({
     paddingTop: 32,
   },
   title: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#25345D',
+    fontSize: 32,
+    fontWeight: "bold",
+    color: "#25345D",
     marginBottom: 8,
     marginTop: 16,
+    fontFamily: "Baloo2-Bold",
   },
   subtitle: {
-    fontSize: 15,
-    color: '#7a869a',
-    marginBottom: 32,
+    fontSize: 18,
+    color: "#25345D",
+    marginBottom: 85,
     lineHeight: 22,
+    fontFamily: "Baloo2-SemiBold",
   },
   label: {
-    fontSize: 14,
-    color: '#25345D',
+    fontSize: 16,
+    color: "#25345D",
     marginBottom: 6,
     marginTop: 12,
-    fontWeight: '500',
+    fontWeight: "500",
+    fontFamily: "Baloo2-SemiBold",
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1.5,
-    borderColor: '#B6C5E1',
+    borderColor: "#25345D",
     borderRadius: 10,
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     marginBottom: 8,
-    backgroundColor: '#fff',
-    height: 48,
+    backgroundColor: "#fff",
+    height: 58,
   },
   inputIcon: {
-    marginRight: 8,
+    marginRight: 12,
+    fontSize: 28,
   },
   input: {
     flex: 1,
-    fontSize: 16,
-    color: '#25345D',
+    fontSize: 18,
+    color: "#25345D",
+    fontFamily: "Baloo2-Regular",
   },
   forgotPassword: {
-    alignSelf: 'flex-end',
-    marginTop: 4,
+    alignSelf: "flex-end",
+    marginTop: 12,
     marginBottom: 24,
+    fontFamily: "Baloo2-SemiBold",
   },
   forgotPasswordText: {
-    color: '#25345D',
-    fontWeight: '500',
+    color: "#25345D",
+    fontWeight: "500",
     fontSize: 14,
-    textDecorationLine: 'underline',
+    textDecorationLine: "underline",
+    fontFamily: "Baloo2-SemiBold",
   },
   loginButton: {
-    backgroundColor: '#D3D9E6',
+    backgroundColor: "#25345D",
     borderRadius: 10,
     paddingVertical: 14,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 8,
   },
   loginButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
+    color: "#fff",
+    fontWeight: "500",
+    fontSize: 18,
+    fontFamily: "Baloo2-Medium",
   },
 });

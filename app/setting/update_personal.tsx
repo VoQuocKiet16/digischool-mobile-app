@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   Image,
@@ -11,11 +12,10 @@ import {
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import UpdateContactInfo from "../../components/setting/personal/update/UpdateContactInfo";
 import UpdateProfileInfo from "../../components/setting/personal/update/UpdateProfileInfo";
-import { useRouter } from "expo-router";
 
 export default function UpdatePersonal() {
   const [avatar, setAvatar] = useState(
-    require("../../assets/images/avatar1.png")
+    require("../../assets/images/avt_default.png")
   );
   const [name, setName] = useState("Nguyễn Văn A");
   const [dob, setDob] = useState("01/01/2006");
@@ -37,7 +37,11 @@ export default function UpdatePersonal() {
   };
 
   return (
-    <HeaderLayout title="Cập nhật thông tin cá nhân"  onBack={() => router.back()} style={{ fontSize: 20, fontWeight: 'bold' }}>
+    <HeaderLayout
+      title="Cập nhật thông tin cá nhân"
+      onBack={() => router.back()}
+      style={{ fontSize: 20, fontWeight: "bold" }}
+    >
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.avatarBox}>
           <View style={styles.avatarWrap}>
