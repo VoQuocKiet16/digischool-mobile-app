@@ -3,14 +3,6 @@ import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function TabTwoScreen() {
-  const goToSlotDetail = () => {
-    router.replace("/students/lesson_information/lesson_detail");
-  };
-
-  const goToSlotEvaluate = () => {
-    router.replace("/students/lesson_information/lesson_evaluate");
-  };
-
 
   const goToAddExamReminder = () => {
     router.push("/teachers/add_exam_reminder/add_exam_reminder");
