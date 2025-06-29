@@ -186,6 +186,7 @@ export default function ScheduleTeachersScreen() {
           periods={periods}
           days={days}
           onAddActivity={handleAddActivity}
+          onSlotPress={() => {}}
           scheduleData={displayedData}
         />
       </ScrollView>

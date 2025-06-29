@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   },
   remindFloatingLabel: {
     position: "absolute",
-    top: -14,
+    top: -10,
     left: 16,
     backgroundColor: "#fff",
     paddingHorizontal: 6,

@@ -6,26 +6,14 @@ import ScheduleSlot from "./ScheduleSlot";
 interface ScheduleDayProps {
   periods: string[];
   days: string[];
-  onAddActivity: (
-    dayIndex: number,
-    periodIndex: number,
-    activity: string
-  ) => void;
+  onAddActivity: (dayIndex: number, periodIndex: number, activity: string) => void;
+  onSlotPress: (dayIndex: number, periodIndex: number, activity: string) => void;
   scheduleData: Activity[][];
   selectedSlots?: { row: number; col: number }[];
   onSelectSlot?: (dayIndex: number, periodIndex: number) => void;
   cellStatusData?: ("taught" | "current" | "exchangeable" | "default")[][];
 }
-
-const ScheduleDay: React.FC<ScheduleDayProps> = ({
-  periods,
-  days,
-  onAddActivity,
-  scheduleData,
-  selectedSlots = [],
-  onSelectSlot,
-  cellStatusData,
-}) => {
+const ScheduleDay: React.FC<ScheduleDayProps> = ({ periods, days, onAddActivity, onSlotPress, scheduleData, selectedSlots = [], onSelectSlot, cellStatusData, }) => {
   return (
     <View style={styles.container}>
       {/* Các hàng tiết */}
@@ -61,9 +49,9 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
                   isSelected={isSelected}
                   onAddActivity={onAddActivity}
                   {...(cellStatus && { cellStatus })}
-                  {...(onSelectSlot && {
-                    onSlotPress: () => onSelectSlot(dayIndex, periodIndex),
-                  })}
+                  onSlotPress={onSlotPress}
+                  activityText={slotData.text}
+                  {...(onSelectSlot && { onSlotPressLegacy: () => onSelectSlot(dayIndex, periodIndex) })}
                 />
               </View>
             );

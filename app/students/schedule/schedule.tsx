@@ -43,20 +43,15 @@ export default function ScheduleStudentsScreen() {
   const periods = session === 'Buổi sáng' ? morningPeriods : afternoonPeriods;
 
   const handleAddActivity = (dayIndex: number, periodIndex: number, activityText: string) => {
-    if (!activityText || activityText === 'Thêm hoạt động') {
-      router.push({
-        pathname: '/activity/add_activity',
-        params: { periodIndex }
-      });
-    } else {
-      setScheduleData(currentData => {
-        const newData = [...currentData.map(row => [...row])];
-        const absolutePeriodIndex = session === 'Buổi sáng' ? periodIndex : periodIndex + morningPeriods.length;
-        newData[absolutePeriodIndex][dayIndex] = { text: activityText, type: 'user-added' };
-        return newData;
-      });
-      console.log(`Thêm hoạt động "${activityText}" tại ${days[dayIndex]}, ${periods[periodIndex]}`);
-    }
+    router.push({
+      pathname: '/activity/add_activity',
+      params: { periodIndex }
+    });
+  };
+
+  const handleSlotDetail = (dayIndex: number, periodIndex: number, activityText: string) => {
+    console.log('Slot detail:', activityText);
+    router.push('/students/lesson_information/lesson_detail');
   };
 
   const handleSessionToggle = () => {
@@ -80,8 +75,9 @@ export default function ScheduleStudentsScreen() {
         <ScheduleDay
           periods={periods}
           days={days}
-          onAddActivity={handleAddActivity}
           scheduleData={displayedData}
+          onAddActivity={handleAddActivity}
+          onSlotPress={handleSlotDetail}
         />
       </ScrollView>
     </View>
