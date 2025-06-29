@@ -50,15 +50,28 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
   };
 
   if (cellStatus) {
+    if (cellStatus === "taught") {
+      return (
+        <View style={styles.container}>
+          <View
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: 12,
+              width: "90%",
+              height: 77,
+              minHeight: 77,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          />
+        </View>
+      );
+    }
     let slotStyle = styles.filledSlot;
     let slotText = text;
     let textStyle = styles.filledSlotText;
     let disabled = false;
-    if (cellStatus === "taught") {
-      slotStyle = styles.taughtSlot;
-      textStyle = styles.taughtSlotText;
-      disabled = true;
-    } else if (cellStatus === "current") {
+    if (cellStatus === "current") {
       slotStyle = styles.currentSlot;
       textStyle = styles.currentSlotText;
       disabled = true;

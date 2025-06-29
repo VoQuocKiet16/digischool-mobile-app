@@ -35,9 +35,12 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({ periods, days, onAddActivity,
             const cellStatus = cellStatusData
               ? cellStatusData[periodIndex][dayIndex]
               : undefined;
-            const slotText = cellStatus
-              ? slotData.text
-              : slotData.text || "Thêm hoạt động";
+            let slotText = slotData.text;
+            if (cellStatus === "exchangeable" && (!slotText || slotText === "")) {
+              slotText = "Trống";
+            } else if (!slotText || slotText === "") {
+              slotText = "Thêm hoạt động";
+            }
             return (
               <View key={dayIndex} style={styles.slotWrapper}>
                 <ScheduleSlot

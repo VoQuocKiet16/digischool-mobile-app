@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -117,6 +118,7 @@ export default function SubstituteLesson() {
             periods={PERIODS}
             days={DAYS}
             onAddActivity={() => {}}
+            onSlotPress={handleSelect}
             scheduleData={scheduleData}
             selectedSlots={selected}
             onSelectSlot={handleSelect}
@@ -162,16 +164,18 @@ export default function SubstituteLesson() {
           </View>
         </View>
         {/* Nút tiếp tục */}
-        <TouchableOpacity
-          style={[
-            styles.continueBtn,
-            !isContinueEnabled && styles.continueBtnDisabled,
-          ]}
-          onPress={handleContinue}
-          disabled={!isContinueEnabled}
-        >
-          <Text style={styles.continueBtnText}>Tiếp tục</Text>
-        </TouchableOpacity>
+        <SafeAreaView style={{ backgroundColor: '#fff', marginBottom: 30, paddingHorizontal: 16 }}>
+          <TouchableOpacity
+            style={[
+              styles.continueBtn,
+              !isContinueEnabled && styles.continueBtnDisabled,
+            ]}
+            onPress={handleContinue}
+            disabled={!isContinueEnabled}
+          >
+            <Text style={styles.continueBtnText}>Tiếp tục</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
       </View>
     </HeaderLayout>
   );
