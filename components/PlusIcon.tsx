@@ -1,19 +1,20 @@
+import { FontAwesome } from '@expo/vector-icons';
 import React from 'react';
 import { GestureResponderEvent, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
 
 
-interface NoteIconProps {
+interface PlusIconProps {
   onPress?: (event: GestureResponderEvent) => void;
+  text?: string;
 }
 
-const NoteIcon: React.FC<NoteIconProps> = ({ onPress }) => {
+const PlusIcon: React.FC<PlusIconProps> = ({ onPress, text = 'Thêm ghi chú' }) => {
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.iconCircle}>
         <FontAwesome name="plus" size={24} color="#2d3a5a" />
       </View>
-      <Text style={styles.text}>Thêm ghi chú</Text>
+      <Text style={styles.text}>{text}</Text>
     </TouchableOpacity>
   );
 };
@@ -39,4 +40,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default NoteIcon;
+export default PlusIcon;

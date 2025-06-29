@@ -87,7 +87,7 @@ export default function SelectMakeupLessonScreen() {
 
   const handleContinue = () => {
     if (isContinueEnabled) {
-      // Xử lý tiếp tục, ví dụ chuyển trang hoặc lưu slot đã chọn
+      router.push("/teachers/confirm_makeup_lesson/confirm_makeup_lesson");
     }
   };
 
@@ -95,7 +95,7 @@ export default function SelectMakeupLessonScreen() {
     <HeaderLayout
       title="Chọn tiết dạy bù"
       subtitle="Chọn tiết học trống để dạy bù"
-      onBack={() => router.replace("/explore")}
+      onBack={() => router.replace("/")}
     >
       <View style={styles.container}>
         <ScheduleHeader

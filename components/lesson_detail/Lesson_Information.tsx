@@ -3,14 +3,27 @@ import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface Slot_InformationProps {
   onEvaluatePress?: () => void;
+  isCompleted?: boolean;
+  onCompletePress?: () => void;
+  role?: 'student' | 'teacher';
+  isEvaluated?: boolean;
+  rank?: string;
 }
 
-const Slot_Information: React.FC<Slot_InformationProps> = ({ onEvaluatePress }) => {
+const Slot_Information: React.FC<Slot_InformationProps> = ({ onEvaluatePress, isCompleted, onCompletePress, role = 'student', isEvaluated, rank }) => {
+  const handleEvaluate = () => {
+    if (role === 'teacher') {
+      router.push('/teachers/lesson_information/lesson_evaluate');
+    } else {
+      router.push('/students/lesson_information/lesson_evaluate');
+    }
+  };
   return (
     <View style={styles.container}>
       {/* Card 1: Thông tin bài học */}
@@ -71,38 +84,58 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({ onEvaluatePress }) 
           <View style={styles.headerBar} />
           <ThemedText type="subtitle" style={styles.headerText}>Tình trạng tiết học</ThemedText>
         </View>
-        {/* Đã hoàn thành tiết học */}
-        <View style={styles.statusRowGreen}>
-          <View style={styles.statusIconWrap}>
-            {/* Sử dụng icon check hoặc clipboard */}
-            <IconSymbol name="house.fill" size={20} color="#fff" />
-          </View>
-          <ThemedText style={styles.statusTextWhite}>Đã hoàn thành tiết học</ThemedText>
-        </View>
-        {/* Đánh giá: A+ */}
-        <View style={styles.statusRowGreen}>
-          <View style={styles.statusIconWrap}>
-            <IconSymbol name="chevron.left.forwardslash.chevron.right" size={20} color="#fff" />
-          </View>
-          <ThemedText style={styles.statusTextWhite}>Đánh giá: A+</ThemedText>
-        </View>
-        {/* Chưa đánh giá tiết học */}
-        <TouchableOpacity 
-          style={styles.statusRowBlueWrap}
-          onPress={onEvaluatePress}
-          activeOpacity={0.7}
-        >
-          <View style={styles.statusRowBlueLeft}>
-            <View style={styles.statusIconWrapBlue}>
-              <MaterialCommunityIcons name="message-text" size={20} color={Colors.light.icon} />
+        {/* Nếu chưa hoàn thành tiết học */}
+        {!isCompleted && (
+          <TouchableOpacity style={styles.statusRowOrangeWrap} onPress={onCompletePress} activeOpacity={0.7}>
+            <View style={styles.statusRowOrangeLeft}>
+              <View style={styles.statusIconWrapOrange}>
+                <MaterialCommunityIcons name="checkbox-marked-outline" size={20} color="#fff" />
+              </View>
+              <ThemedText style={styles.statusTextOrange}>Chưa hoàn thành tiết học</ThemedText>
             </View>
-            <ThemedText style={styles.statusTextBlue}>Chưa đánh giá tiết học</ThemedText>
-          </View>
-          <View style={styles.statusAlertDot} />
-          <View style={styles.statusArrowWrap}>
-            <IconSymbol name="chevron.right" size={22} color={Colors.light.icon} />
-          </View>
-        </TouchableOpacity>
+            <View style={styles.statusAlertDot} />
+            <View style={styles.statusArrowWrap}>
+              <IconSymbol name="chevron.right" size={22} color={Colors.light.icon} />
+            </View>
+          </TouchableOpacity>
+        )}
+        {/* Nếu đã hoàn thành tiết học */}
+        {isCompleted && (
+          <>
+            <View style={styles.statusRowGreen}>
+              <View style={styles.statusIconWrap}>
+                <MaterialCommunityIcons name="checkbox-marked-outline" size={20} color="#fff" />
+              </View>
+              <ThemedText style={styles.statusTextWhite}>Đã hoàn thành tiết học</ThemedText>
+            </View>
+            {/* Card đánh giá tiết học */}
+            {isEvaluated ? (
+              <View style={[styles.statusRowGreen, { backgroundColor: '#5FC16E', marginTop: 0 }]}> 
+                <View style={[styles.statusIconWrap, { backgroundColor: '#4CAF50' }]}> 
+                  <MaterialCommunityIcons name="alert-circle-outline" size={20} color="#fff" />
+                </View>
+                <ThemedText style={styles.statusTextWhite}>Đánh giá: {rank || 'A+'}</ThemedText>
+              </View>
+            ) : (
+              <TouchableOpacity 
+                style={styles.statusRowBlueWrap}
+                onPress={handleEvaluate}
+                activeOpacity={0.7}
+              >
+                <View style={styles.statusRowBlueLeft}>
+                  <View style={styles.statusIconWrapBlue}>
+                    <MaterialCommunityIcons name="message-text" size={20} color={Colors.light.icon} />
+                  </View>
+                  <ThemedText style={styles.statusTextBlue}>Chưa đánh giá tiết học</ThemedText>
+                </View>
+                <View style={styles.statusAlertDot} />
+                <View style={styles.statusArrowWrap}>
+                  <IconSymbol name="chevron.right" size={22} color={Colors.light.icon} />
+                </View>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
       </ThemedView>
     </View>
   );
@@ -243,6 +276,42 @@ const styles = StyleSheet.create({
   statusArrowWrap: {
     marginLeft: 8,
     marginRight: 2,
+  },
+  statusRowOrangeWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9B233',
+    borderRadius: 24,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    marginLeft: 8,
+    marginRight: 8,
+    marginTop: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 1,
+    position: 'relative',
+  },
+  statusRowOrangeLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  statusIconWrapOrange: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#F9A825',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  statusTextOrange: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

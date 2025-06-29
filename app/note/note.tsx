@@ -2,8 +2,8 @@ import { FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
 import { Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import HeaderLayout from "../../../components/layout/HeaderLayout";
-import NoteIcon from "../../../components/note/NoteIcon";
+import HeaderLayout from "../../components/layout/HeaderLayout";
+import NoteIcon from "../../components/PlusIcon";
 
 const notes = [
   {
@@ -88,7 +88,7 @@ const NoteScreen = () => {
               content={item.content}
               remindTime={item.remindTime}
               onPress={() => router.push({
-                pathname: '/students/note/detail_note',
+                pathname: '/note/detail_note',
                 params: {
                   id: item.id,
                   title: item.title,
@@ -103,7 +103,7 @@ const NoteScreen = () => {
           showsVerticalScrollIndicator={false}
         />
         <View style={styles.addNoteWrapper}>
-          <NoteIcon onPress={() => router.push('/students/note/add_note')} />
+          <NoteIcon onPress={() => router.push('/note/add_note')} />
         </View>
       </View>
     </HeaderLayout>

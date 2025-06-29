@@ -103,7 +103,7 @@ export default function SubstituteLesson() {
     <HeaderLayout
       title="Tiết học thay thế"
       subtitle="Chọn tiết học thay thế cho tiết học hiện tại"
-      onBack={() => router.replace("/explore")}
+      onBack={() => router.replace("/")}
     >
       <View style={styles.container}>
         <ScheduleHeader

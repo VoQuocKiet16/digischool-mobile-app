@@ -3,8 +3,8 @@ import React, { useState } from "react";
 import {
     StyleSheet, Text, TextInput, TouchableOpacity, View
 } from "react-native";
-import HeaderLayout from "../../../components/layout/HeaderLayout";
-import RemindPicker from "../../../components/RemindPicker";
+import HeaderLayout from "../../components/layout/HeaderLayout";
+import RemindPicker from "../../components/RemindPicker";
 
 const REMIND_OPTIONS = [
   "Trước 10 phút", "Trước 20 phút", "Trước 30 phút", "Trước 40 phút", "Trước 50 phút"

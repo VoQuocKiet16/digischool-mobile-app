@@ -164,6 +164,10 @@ export default function ScheduleTeachersScreen() {
     );
   };
 
+  const handleSlotDetail = (dayIndex: number, periodIndex: number, activityText: string) => {
+    router.push('/teachers/lesson_information/lesson_detail');
+  };
+
   const displayedData =
     session === "Buổi sáng"
       ? scheduleData.slice(0, morningPeriods.length)
@@ -186,7 +190,7 @@ export default function ScheduleTeachersScreen() {
           periods={periods}
           days={days}
           onAddActivity={handleAddActivity}
-          onSlotPress={() => {}}
+          onSlotPress={handleSlotDetail}
           scheduleData={displayedData}
         />
       </ScrollView>
