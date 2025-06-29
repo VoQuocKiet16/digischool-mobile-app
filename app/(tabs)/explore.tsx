@@ -1,19 +1,59 @@
-import { Image } from "expo-image";
 import { router } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Header from "../../components/Header";
 
 export default function TabTwoScreen() {
-  const goToAuth = () => {
-    router.replace("/auth"); // Chuyển sang trang /auth
+  const goToSlotDetail = () => {
+    router.replace("/students/lesson_information/lesson_detail");
   };
+
+  const goToSlotEvaluate = () => {
+    router.replace("/students/lesson_information/lesson_evaluate");
+  };
+
+
+  const goToAddExamReminder = () => {
+    router.push("/teachers/add_exam_reminder/add_exam_reminder");
+  };
+
+  const goToSubstituteRequest = () => {
+    router.push("/teachers/substitute_request/substitute_request");
+  };
+
+  const goToTietHocThayThe = () => {
+    router.push("/teachers/substitute_lesson/substitute_lesson");
+  };
+
+  const goToSelectMakeupLesson = () => {
+    router.push("/teachers/select_makeup_lesson/select_makeup_lesson");
+  };
+
   return (
     <View style={styles.container}>
-      <Header title="Tài khoản" studentName="HS Nguyễn Văn A" />
       <View style={styles.body}>
-        <TouchableOpacity style={styles.button} onPress={goToAuth}>
-          <Text style={styles.buttonText}>Về Trang Đăng Nhập</Text>
+        <TouchableOpacity
+          style={[styles.button, { marginTop: 20 }]}
+          onPress={goToAddExamReminder}
+        >
+          <Text style={styles.buttonText}>Dặn dò kiểm tra</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, { marginTop: 20 }]}
+          onPress={goToSubstituteRequest}
+        >
+          <Text style={styles.buttonText}>Yêu cầu dạy thay</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, { marginTop: 20 }]}
+          onPress={goToTietHocThayThe}
+        >
+          <Text style={styles.buttonText}>Tiết học thay thế</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, { marginTop: 20 }]}
+          onPress={goToSelectMakeupLesson}
+        >
+          <Text style={styles.buttonText}>Chọn tiết dạy bù</Text>
         </TouchableOpacity>
       </View>
     </View>

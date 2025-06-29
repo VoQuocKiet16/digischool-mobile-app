@@ -1,29 +1,37 @@
-import { useRouter } from 'expo-router';
-import React, { useRef, useState } from 'react';
-import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Swiper from 'react-native-swiper';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
+import { Dimensions, StyleSheet, TouchableOpacity, View } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import Icon from "react-native-vector-icons/MaterialIcons";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 const slides = [
   {
-    key: '1',
-    title: 'Quản Lý Thời Khoá Biểu',
-    description: 'Cập nhật lịch học và nhận thông báo tự động về tiết vắng, kiểm tra và các thay đổi trong thời khoá biểu ngay trên ứng dụng. Nhắc nhở thông minh giúp bạn không bao giờ bỏ lỡ tiết học quan trọng.',
-    image: require('../../assets/images/student1.png'),
+    key: "1",
+    title: "Quản Lý Thời Khoá Biểu",
+    description:
+      "Cập nhật lịch học và nhận thông báo tự động về tiết vắng, kiểm tra và các thay đổi trong thời khoá biểu ngay trên ứng dụng. Nhắc nhở thông minh giúp bạn không bao giờ bỏ lỡ tiết học quan trọng.",
+    image: require("../../assets/images/student1.png"),
   },
   {
-    key: '2',
-    title: 'Xin Phép Và Đánh Giá',
-    description: 'Xin phép vắng học chỉ với vài thao tác, và ngay sau mỗi tiết học, bạn có thể dễ dàng đánh giá giáo viên, giúp nâng cao chất lượng giảng dạy và học tập.',
-    image: require('../../assets/images/student2.png'),
+    key: "2",
+    title: "Xin Phép Và Đánh Giá",
+    description:
+      "Xin phép vắng học chỉ với vài thao tác, và ngay sau mỗi tiết học, bạn có thể dễ dàng đánh giá giáo viên, giúp nâng cao chất lượng giảng dạy và học tập.",
+    image: require("../../assets/images/student2.png"),
   },
   {
-    key: '3',
-    title: 'Nhận Thông Báo',
-    description: 'Nhận thông báo tức thì về các hoạt động trong trường như lịch kiểm tra, cuộc họp và các thông tin quan trọng từ giáo viên, quản lý và nhà trường để luôn cập nhật mọi thông tin cần thiết.',
-    image: require('../../assets/images/student3.png'),
+    key: "3",
+    title: "Nhận Thông Báo",
+    description:
+      "Nhận thông báo tức thì về các hoạt động trong trường như lịch kiểm tra, cuộc họp và các thông tin quan trọng từ giáo viên, quản lý và nhà trường để luôn cập nhật mọi thông tin cần thiết.",
+    image: require("../../assets/images/student3.png"),
   },
 ];
 
@@ -47,95 +55,181 @@ function Indicator({ total, current }: { total: number; current: number }) {
 export default function TutorialScreen() {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const swiperRef = useRef<any>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const handleDone = () => {
-    router.replace('/auth/login');
-  };
+  // Shared values for animations
+  const imageOpacity = useSharedValue(1);
+  const imageScale = useSharedValue(1);
+  const textOpacity = useSharedValue(1);
+  const textTranslateY = useSharedValue(0);
+  const indicatorOpacity = useSharedValue(1);
 
-  const goToPrev = () => {
-    if (currentIndex > 0) {
-      swiperRef.current.scrollBy(-1);
+  // Animation function
+  const animateTransition = useCallback(
+    (direction: "next" | "prev", newIndex: number) => {
+      if (isTransitioning) return;
+
+      setIsTransitioning(true);
+
+      // Animate out
+      imageOpacity.value = withTiming(0.7, {
+        duration: 200,
+        easing: Easing.out(Easing.quad),
+      });
+      imageScale.value = withTiming(0.95, {
+        duration: 200,
+        easing: Easing.out(Easing.quad),
+      });
+      textOpacity.value = withTiming(0, {
+        duration: 150,
+        easing: Easing.out(Easing.quad),
+      });
+      textTranslateY.value = withTiming(direction === "next" ? -20 : 20, {
+        duration: 150,
+        easing: Easing.out(Easing.quad),
+      });
+      indicatorOpacity.value = withTiming(0.5, {
+        duration: 100,
+        easing: Easing.out(Easing.quad),
+      });
+
+      // Change content and animate in
+      setTimeout(() => {
+        setCurrentIndex(newIndex);
+
+        imageOpacity.value = withTiming(1, {
+          duration: 300,
+          easing: Easing.out(Easing.quad),
+        });
+        imageScale.value = withTiming(1, {
+          duration: 300,
+          easing: Easing.out(Easing.quad),
+        });
+        textOpacity.value = withTiming(1, {
+          duration: 250,
+          easing: Easing.out(Easing.quad),
+        });
+        textTranslateY.value = withTiming(0, {
+          duration: 250,
+          easing: Easing.out(Easing.quad),
+        });
+        indicatorOpacity.value = withTiming(1, {
+          duration: 200,
+          easing: Easing.out(Easing.quad),
+        });
+
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 300);
+      }, 200);
+    },
+    [isTransitioning]
+  );
+
+  // Animated styles
+  const imageStyle = useAnimatedStyle(() => ({
+    opacity: imageOpacity.value,
+    transform: [{ scale: imageScale.value }],
+  }));
+
+  const textStyle = useAnimatedStyle(() => ({
+    opacity: textOpacity.value,
+    transform: [{ translateY: textTranslateY.value }],
+  }));
+
+  const indicatorStyle = useAnimatedStyle(() => ({
+    opacity: indicatorOpacity.value,
+  }));
+
+  const handleDone = useCallback(() => {
+    router.replace("/auth/login");
+  }, [router]);
+
+  const goToPrev = useCallback(() => {
+    if (currentIndex > 0 && !isTransitioning) {
+      animateTransition("prev", currentIndex - 1);
     }
-  };
+  }, [currentIndex, isTransitioning, animateTransition]);
 
-  const goToNext = () => {
-    if (currentIndex < slides.length - 1) {
-      swiperRef.current.scrollBy(1);
+  const goToNext = useCallback(() => {
+    if (currentIndex < slides.length - 1 && !isTransitioning) {
+      animateTransition("next", currentIndex + 1);
+    } else if (currentIndex === slides.length - 1 && !isTransitioning) {
+      // Chuyển đến trang login khi ở slide cuối
+      router.replace("/auth/login");
     }
-  };
+  }, [currentIndex, isTransitioning, animateTransition, router]);
+
+  const currentSlide = slides[currentIndex];
 
   return (
-    <Swiper
-      ref={swiperRef}
-      loop={false}
-      showsPagination={false}
-      onIndexChanged={setCurrentIndex}
-      scrollEnabled={false}
-    >
-      {slides.map((slide, idx) => (
-        <View style={styles.slide} key={slide.key}>
-          <Image source={slide.image} style={styles.image} resizeMode="cover" />
-          <View style={styles.content}>
-            <Indicator total={slides.length} current={idx === currentIndex ? currentIndex : idx} />
-            <Text style={styles.title}>{slide.title}</Text>
-            <Text style={styles.description}>{slide.description}</Text>
-            <View style={styles.iconRow}>
-              <TouchableOpacity
-                style={[styles.iconCircleOutline, currentIndex === 0 && { opacity: 0.3 }]}
-                onPress={goToPrev}
-                disabled={currentIndex === 0}
-              >
-                <Icon name="arrow-back" size={24} color="#25345D" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.iconCircleFilled, currentIndex === slides.length - 1 && { opacity: 0.3 }]}
-                onPress={goToNext}
-                disabled={currentIndex === slides.length - 1}
-              >
-                <Icon name="arrow-forward" size={24} color="#fff" />
-              </TouchableOpacity>
-            </View>
-            {idx === slides.length - 1 ? (
-              <TouchableOpacity style={styles.button} onPress={handleDone}>
-                <Text style={styles.buttonText}>Bắt đầu</Text>
-              </TouchableOpacity>
-            ) : null}
-          </View>
+    <View style={styles.slide}>
+      <Animated.Image
+        source={currentSlide.image}
+        style={[styles.image, imageStyle]}
+        resizeMode="cover"
+      />
+      <View style={styles.content}>
+        <Animated.View style={indicatorStyle}>
+          <Indicator total={slides.length} current={currentIndex} />
+        </Animated.View>
+        <Animated.Text style={[styles.title, textStyle]}>
+          {currentSlide.title}
+        </Animated.Text>
+        <Animated.Text style={[styles.description, textStyle]}>
+          {currentSlide.description}
+        </Animated.Text>
+        <View style={styles.iconRow}>
+          {currentIndex > 0 && (
+            <TouchableOpacity
+              style={styles.iconCircleOutline}
+              onPress={goToPrev}
+              disabled={isTransitioning}
+            >
+              <Icon name="arrow-back" size={32} color="#25345D" />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            style={styles.iconCircleFilled}
+            onPress={goToNext}
+            disabled={isTransitioning}
+          >
+            <Icon name="arrow-forward" size={32} color="#fff" />
+          </TouchableOpacity>
         </View>
-      ))}
-    </Swiper>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   slide: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
+    backgroundColor: "#fff",
+    alignItems: "center",
   },
   image: {
     width: width,
     height: 350,
   },
   content: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     marginTop: -40,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     padding: 24,
-    alignItems: 'center',
+    alignItems: "center",
     flex: 1,
-    width: '100%',
+    width: "100%",
   },
   indicatorContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 16,
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: 58,
     marginTop: 8,
   },
   dot: {
-    backgroundColor: '#25345D',
+    backgroundColor: "#25345D",
     width: 12,
     height: 12,
     borderRadius: 6,
@@ -150,53 +244,55 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#2d3a4b',
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#25345D",
     marginBottom: 12,
-    textAlign: 'center',
+    textAlign: "center",
+    fontFamily: "Baloo2-Bold",
   },
   description: {
     fontSize: 15,
-    color: '#7a869a',
-    textAlign: 'center',
-    marginBottom: 32,
+    color: "#7a869a",
+    textAlign: "center",
+    marginBottom: 90,
+    fontFamily: "Baloo2-Medium",
   },
   button: {
-    backgroundColor: '#2d3a4b',
+    backgroundColor: "#2d3a4b",
     borderRadius: 30,
     paddingVertical: 12,
     paddingHorizontal: 40,
     marginTop: 20,
   },
   buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
     fontSize: 16,
   },
   iconRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 16,
   },
   iconCircleOutline: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     borderWidth: 2,
-    borderColor: '#25345D',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderColor: "#25345D",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 16,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   iconCircleFilled: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#25345D',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#25345D",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

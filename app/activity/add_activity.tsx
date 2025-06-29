@@ -10,9 +10,9 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
-import HeaderLayout from "../../../components/layout/HeaderLayout";
-import SuccessModal from "../../../components/notifications_modal/SuccessModal";
-import RemindPicker from "../../../components/schedule/RemindPicker";
+import HeaderLayout from "../../components/layout/HeaderLayout";
+import SuccessModal from "../../components/notifications_modal/SuccessModal";
+import RemindPicker from "../../components/RemindPicker";
 
 const REMIND_OPTIONS = [
   "Trước 10 phút",
@@ -81,7 +81,7 @@ export default function AddActivity() {
   };
 
   return (
-    <HeaderLayout title="Thêm hoạt động" onBack={() => router.back()} style={{ fontSize: 20, fontWeight: 'bold' }}>
+    <HeaderLayout title="Thêm hoạt động" subtitle="Tạo thông tin hoạt động" onBack={() => router.back()} style={{ fontSize: 20, fontWeight: 'bold' }}>
       <View style={styles.container}>
         {/* Tiêu đề hoạt động */}
         <View style={styles.fieldWrap}>
