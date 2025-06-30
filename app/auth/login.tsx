@@ -13,7 +13,7 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import LoadingModal from "../../components/LoadingModal";
 import { API_ERROR_MESSAGES } from "../../constants/api.constants";
-import { login } from "../../services/auth.service";
+import { getMe, login } from "../../services/auth.service";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -46,6 +46,25 @@ export default function LoginScreen() {
           });
         } else {
           await AsyncStorage.setItem("token", token);
+          try {
+            const userResponse = await getMe();
+            if (userResponse.success && userResponse.data) {
+              if (userResponse.data.role) {
+                await AsyncStorage.setItem("role", JSON.stringify(userResponse.data.role));
+              }
+              if (userResponse.data.name) {
+                await AsyncStorage.setItem("userName", userResponse.data.name);
+              }
+            }
+          } catch (error) {
+            console.log("Error fetching user data after login:", error);
+            if (res.data?.user?.role) {
+              await AsyncStorage.setItem("role", JSON.stringify(res.data.user.role));
+            }
+            if (res.data?.user?.name) {
+              await AsyncStorage.setItem("userName", res.data.user.name);
+            }
+          }
           router.replace("/");
         }
       } else {
