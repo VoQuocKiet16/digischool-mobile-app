@@ -15,7 +15,17 @@ export default function HomeScreen() {
       AsyncStorage.getItem("role"),
       AsyncStorage.getItem("userName"),
     ]).then(([roleStr, name]) => {
-      if (roleStr) setRoles(JSON.parse(roleStr));
+      if (roleStr) {
+        try {
+          const parsedRoles = JSON.parse(roleStr);
+          setRoles(parsedRoles);
+        } catch (error) {
+          console.log("Error parsing role:", error);
+          setRoles([]);
+        }
+      } else {
+        setRoles([]);
+      }
       if (name) setUserName(name);
       setLoading(false);
     });
@@ -56,7 +66,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <Header
         title="Trang chủ"
-        studentName={userName ? `HS ${userName}` : "HS Nguyễn Văn A"}
+        studentName={userName ? `HS ${userName}` : "HS..."}
       />
       <ScheduleStudentsScreen />
     </View>

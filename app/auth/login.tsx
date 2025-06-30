@@ -13,7 +13,7 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import LoadingModal from "../../components/LoadingModal";
 import { API_ERROR_MESSAGES } from "../../constants/api.constants";
-import { login } from "../../services/auth.service";
+import { getMe, login } from "../../services/auth.service";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -46,6 +46,104 @@ export default function LoginScreen() {
           });
         } else {
           await AsyncStorage.setItem("token", token);
+          try {
+            const userResponse = await getMe();
+            if (userResponse.success && userResponse.data) {
+              if (userResponse.data.role) {
+                await AsyncStorage.setItem(
+                  "role",
+                  JSON.stringify(userResponse.data.role)
+                );
+              }
+              if (userResponse.data.name) {
+                await AsyncStorage.setItem("userName", userResponse.data.name);
+              }
+              if (userResponse.data.email) {
+                await AsyncStorage.setItem(
+                  "userEmail",
+                  userResponse.data.email
+                );
+              }
+
+              if (userResponse.data.phone !== null) {
+                await AsyncStorage.setItem(
+                  "userPhone",
+                  userResponse.data.phone
+                );
+              }
+              if (userResponse.data.address !== null) {
+                await AsyncStorage.setItem(
+                  "userAddress",
+                  userResponse.data.address
+                );
+              }
+              if (userResponse.data.dateOfBirth !== null) {
+                await AsyncStorage.setItem(
+                  "userDateOfBirth",
+                  userResponse.data.dateOfBirth
+                );
+              }
+              if (userResponse.data.gender !== null) {
+                await AsyncStorage.setItem(
+                  "userGender",
+                  userResponse.data.gender
+                );
+              }
+
+              if (userResponse.data.studentId !== null) {
+                await AsyncStorage.setItem(
+                  "userStudentId",
+                  userResponse.data.studentId
+                );
+              }
+              if (userResponse.data.teacherId !== null) {
+                await AsyncStorage.setItem(
+                  "userTeacherId",
+                  userResponse.data.teacherId
+                );
+              }
+              if (userResponse.data.managerId !== null) {
+                await AsyncStorage.setItem(
+                  "userManagerId",
+                  userResponse.data.managerId
+                );
+              }
+
+              if (userResponse.data.class !== null) {
+                await AsyncStorage.setItem(
+                  "userClass",
+                  JSON.stringify(userResponse.data.class)
+                );
+              }
+              if (userResponse.data.subjects) {
+                await AsyncStorage.setItem(
+                  "userSubjects",
+                  JSON.stringify(userResponse.data.subjects)
+                );
+              }
+
+              if (userResponse.data.roleInfo) {
+                await AsyncStorage.setItem(
+                  "userRoleInfo",
+                  JSON.stringify(userResponse.data.roleInfo)
+                );
+              }
+            }
+          } catch (error) {
+            console.log("Error fetching user data after login:", error);
+            if (res.data?.user?.role) {
+              await AsyncStorage.setItem(
+                "role",
+                JSON.stringify(res.data.user.role)
+              );
+            }
+            if (res.data?.user?.name) {
+              await AsyncStorage.setItem("userName", res.data.user.name);
+            }
+            if (res.data?.user?.email) {
+              await AsyncStorage.setItem("userEmail", res.data.user.email);
+            }
+          }
           router.replace("/");
         }
       } else {

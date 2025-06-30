@@ -37,21 +37,15 @@ export default function UpdatePersonal() {
   };
 
   return (
-    <HeaderLayout
-      title="Cập nhật thông tin cá nhân"
-      onBack={() => router.back()}
-      style={{ fontSize: 20, fontWeight: "bold" }}
-    >
+    <HeaderLayout title="Thông tin cá nhân" onBack={() => router.back()}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.avatarBox}>
-          <View style={styles.avatarWrap}>
-            <Image source={avatar} style={styles.avatar} />
-          </View>
+          <Image source={avatar} style={styles.avatar} />
           <TouchableOpacity
             style={styles.cameraIcon}
             onPress={handleChangeAvatar}
           >
-            <Ionicons name="camera-outline" size={30} color="#fff" />
+            <Ionicons name="camera-outline" size={20} color="#fff" />
           </TouchableOpacity>
         </View>
         <Text style={styles.role}>Học sinh</Text>
@@ -67,7 +61,6 @@ export default function UpdatePersonal() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#fff",
     paddingTop: 32,
     paddingBottom: 40,
     minHeight: "100%",
@@ -81,52 +74,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarWrap: {
-    width: 110,
-    height: 110,
-    borderRadius: 20,
-    borderWidth: 3,
-    borderColor: "#25345D",
-    overflow: "hidden",
-    backgroundColor: "#f2f6fa",
-    justifyContent: "center",
-    alignItems: "center",
-  },
   avatar: {
-    width: 110,
-    height: 110,
-    borderRadius: 20,
+    width: 120,
+    height: 120,
+    borderRadius: 10,
+    marginBottom: 10,
   },
   cameraIcon: {
     position: "absolute",
-    right: -12,
-    bottom: -12,
-    width: 40,
-    height: 40,
+    right: 0,
+    bottom: 0,
+    width: 30,
+    height: 30,
     backgroundColor: "rgba(60,60,60,0.25)",
     borderRadius: 28,
     justifyContent: "center",
     alignItems: "center",
     zIndex: 2,
   },
-  plusIcon: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    backgroundColor: "#25345D",
-    borderRadius: 10,
-    width: 20,
-    height: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#fff",
-  },
   role: {
-    fontSize: 16,
+    fontSize: 18,
     color: "#25345D",
-    fontWeight: "bold",
-    marginBottom: 6,
+    fontFamily: "Baloo2-Medium",
+    marginBottom: 25,
     alignSelf: "center",
   },
   form: {
@@ -136,31 +106,13 @@ const styles = StyleSheet.create({
     padding: 18,
     marginBottom: 24,
   },
-  label: {
-    fontSize: 14,
-    color: "#25345D",
-    marginBottom: 4,
-    marginTop: 10,
-    fontWeight: "500",
-  },
-  input: {
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    borderWidth: 1.2,
-    borderColor: "#B6C5E1",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: "#25345D",
-  },
   saveBtn: {
     backgroundColor: "#25345D",
     borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 120,
+    paddingVertical: 15,
+    paddingHorizontal: 130,
     alignItems: "center",
-    marginTop: 8,
-    marginBottom: 24,
+    marginBottom: 20,
     alignSelf: "center",
   },
   saveBtnText: {

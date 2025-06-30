@@ -1,36 +1,67 @@
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import React, { useState } from "react";
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SelectList } from "react-native-dropdown-select-list";
+import CustomDatePickerModal from "./CustomDatePickerModal";
 
 export default function UpdateProfileInfo() {
-  const [name, setName] = useState('Nguyen Van A');
-  const [dob, setDob] = useState('01 - 01 - 2003');
-  const [gender, setGender] = useState('Nam');
-  const [showGender, setShowGender] = useState(false);
-  const [showDate, setShowDate] = useState(false);
+  const [name, setName] = useState("Nguyen Van A");
+  const [dob, setDob] = useState("01 - 01 - 2003");
+  const [gender, setGender] = useState("Nam");
   const [showInfo, setShowInfo] = useState(true);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date(2003, 0, 1));
 
-  // Xử lý chọn ngày sinh và giới tính nếu muốn
+  const genderOptions = [
+    { key: "Nam", value: "Nam" },
+    { key: "Nữ", value: "Nữ" },
+    { key: "Khác", value: "Khác" },
+  ];
+
+  // Khi xác nhận chọn ngày
+  const handleDateConfirm = (date: Date) => {
+    setSelectedDate(date);
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear();
+    setDob(`${day} - ${month} - ${year}`);
+    setShowDatePicker(false);
+  };
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.headerRow} onPress={() => setShowInfo(v => !v)} activeOpacity={0.7}>
+      <TouchableOpacity
+        style={styles.headerRow}
+        onPress={() => setShowInfo((v) => !v)}
+        activeOpacity={0.7}
+      >
         <Text style={styles.title}>Thông tin cá nhân</Text>
-        <Ionicons name={showInfo ? 'chevron-up' : 'chevron-down'} size={28} color="#25345D" style={styles.headerIcon} />
+        <Ionicons
+          name={showInfo ? "chevron-down" : "chevron-forward"}
+          size={24}
+          color="#25345D"
+          style={styles.icon}
+        />
       </TouchableOpacity>
       {showInfo && (
         <>
           {/* Họ và tên */}
           <View style={styles.fieldWrap}>
             <View style={styles.outlineInputBox}>
-              <Text style={{...styles.floatingLabel, marginTop: -8}}>
+              <Text style={{ ...styles.floatingLabel, marginTop: -8 }}>
                 Họ và tên <Text style={styles.required}>*</Text>
               </Text>
               <TextInput
                 style={styles.inputTextOutline}
                 value={name}
                 onChangeText={setName}
-                placeholder=" "
+                placeholder="Nhập họ và tên"
                 placeholderTextColor="#7a869a"
               />
             </View>
@@ -47,28 +78,47 @@ export default function UpdateProfileInfo() {
                 placeholderTextColor="#7a869a"
                 editable={false}
               />
-              <TouchableOpacity style={styles.inputIconOutline}>
-                <MaterialIcons name="calendar-today" size={22} color="#25345D" />
+              <TouchableOpacity
+                style={styles.inputIconOutline}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <MaterialIcons
+                  name="calendar-today"
+                  size={22}
+                  color="#25345D"
+                />
               </TouchableOpacity>
             </View>
           </View>
           {/* Giới tính */}
           <View style={styles.fieldWrap}>
-            <View style={styles.outlineInputBox}>
-              <Text style={styles.floatingLabel}>Giới tính</Text>
-              <TextInput
-                style={styles.inputTextOutline}
-                value={gender}
-                onChangeText={setGender}
-                editable={false}
-                placeholder=" "
-                placeholderTextColor="#7a869a"
-              />
-              <TouchableOpacity style={styles.inputIconOutline}>
-                <Ionicons name="chevron-down" size={22} color="#25345D" />
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.floatingLabel}>Giới tính</Text>
+            <SelectList
+              setSelected={setGender}
+              data={genderOptions}
+              save="value"
+              placeholder="Chọn giới tính"
+              boxStyles={{
+                marginTop: 8,
+                borderRadius: 14,
+                borderColor: "#25345D",
+                backgroundColor: "#fff",
+              }}
+              dropdownStyles={{
+                borderRadius: 14,
+                borderColor: "#25345D",
+                backgroundColor: "#fff",
+              }}
+              defaultOption={{ key: gender, value: gender }}
+            />
           </View>
+          {/* Custom Date Picker Modal */}
+          <CustomDatePickerModal
+            visible={showDatePicker}
+            initialDate={selectedDate}
+            onConfirm={handleDateConfirm}
+            onCancel={() => setShowDatePicker(false)}
+          />
         </>
       )}
     </View>
@@ -77,96 +127,98 @@ export default function UpdateProfileInfo() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 18,
-    margin: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 1,
+    backgroundColor: "#f7f7f7",
+    borderRadius: 12,
+    paddingRight: 20,
+    paddingLeft: 20,
+    marginRight: 10,
+    marginLeft: 10,
+    marginBottom: 20,
   },
   headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 25,
   },
   title: {
+    fontSize: 25,
+    color: "#25345D",
     flex: 1,
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#25345D',
+    fontFamily: "Baloo2-Bold",
   },
-  headerIcon: {
-    marginLeft: 8,
+  icon: {
+    color: "#25345D",
+    marginLeft: 6,
+    backgroundColor: "#C4C4C4",
+    borderRadius: 20,
+    padding: 4,
   },
   fieldWrap: {
-    marginBottom: 16,
+    marginBottom: 25,
   },
   outlineInputBox: {
     borderWidth: 1,
-    borderColor: '#25345D',
+    borderColor: "#25345D",
     borderRadius: 12,
-    paddingTop: 18,
-    paddingBottom: 12,
-    paddingHorizontal: 18,
-    backgroundColor: '#fff',
+    paddingVertical: 17,
+    paddingHorizontal: 25,
+    backgroundColor: "#f7f7f7",
     marginTop: 8,
-    position: 'relative',
+    position: "relative",
   },
   floatingLabel: {
-    position: 'absolute',
+    position: "absolute",
     top: -10,
     left: 18,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#f7f7f7",
     paddingHorizontal: 4,
     fontSize: 12,
-    color: '#25345D',
-    fontWeight: 'bold',
+    color: "#25345D",
+    fontWeight: "bold",
     zIndex: 2,
   },
   inputTextOutline: {
     fontSize: 14,
-    color: '#25345D',
-    fontWeight: 'bold',
+    color: "#25345D",
+    fontWeight: "bold",
     paddingVertical: 0,
   },
   label: {
     fontSize: 14,
-    color: '#25345D',
-    fontWeight: '500',
+    color: "#25345D",
+    fontWeight: "500",
   },
   required: {
-    color: '#E53935',
+    color: "#E53935",
     fontSize: 18,
     marginLeft: 2,
     marginTop: -2,
   },
   inputBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#25345D',
+    borderColor: "#25345D",
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     marginTop: 2,
   },
   inputText: {
     flex: 1,
     fontSize: 16,
-    color: '#25345D',
-    fontWeight: 'bold',
+    color: "#25345D",
+    fontWeight: "bold",
     paddingVertical: 2,
   },
   inputIcon: {
     marginLeft: 8,
   },
   inputIconOutline: {
-    position: 'absolute',
+    position: "absolute",
     right: 14,
-    top: '50%',
+    top: "50%",
     marginTop: 6,
   },
 });

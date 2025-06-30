@@ -1,71 +1,23 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
-import {
-  Image,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import React from "react";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import ConfirmLogoutModal from "../../components/notifications_modal/ConfirmLogoutModal";
-import { getMe, logout } from "../../services/auth.service";
-
-interface UserData {
-  id: string;
-  email: string;
-  name: string;
-  role: string[];
-  class_id: string;
-  subjects: any[];
-  isNewUser: boolean;
-  active: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+import RefreshableScrollView from "../../components/RefreshableScrollView";
+import { useUserData } from "../../hooks/useUserData";
+import { logout } from "../../services/auth.service";
 
 const Setting: React.FC = () => {
   const router = useRouter();
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [error, setError] = useState("");
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-
-  useEffect(() => {
-    fetchUserData();
-  }, []);
-
-  const fetchUserData = async () => {
-    try {
-      const response = await getMe();
-      if (response.success && response.data) {
-        setUserData(response.data);
-      } else {
-        setError("Không thể tải thông tin người dùng");
-      }
-    } catch (err: any) {
-      console.log("Error fetching user data:", err);
-      setError(err?.message || "Không thể tải thông tin người dùng");
-    }
-  };
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchUserData();
-    setRefreshing(false);
-  }, []);
+  const { userData, refreshUserData } = useUserData();
+  const [showLogoutModal, setShowLogoutModal] = React.useState(false);
 
   const handleLogout = async () => {
     setShowLogoutModal(false);
     try {
       const res = await logout();
       console.log("Logout response in setting:", res);
-      const token = await AsyncStorage.getItem("token");
-      console.log("Token in setting after logout:", token);
       router.replace("/auth/login");
     } catch (err) {
       console.log("Logout error in setting:", err);
@@ -81,17 +33,10 @@ const Setting: React.FC = () => {
 
   return (
     <HeaderLayout title="Cài đặt" onBack={() => router.back()}>
-      <ScrollView
+      <RefreshableScrollView
         style={styles.container}
         contentContainerStyle={{ paddingBottom: 32 }}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#25345D"]}
-            tintColor="#25345D"
-          />
-        }
+        onRefresh={refreshUserData}
       >
         <View style={styles.profileCard}>
           <Image
@@ -108,7 +53,7 @@ const Setting: React.FC = () => {
             </Text>
             <Text style={styles.role}>
               {userData
-                ? `${getRoleDisplay(userData.role)} - 12A4`
+                ? `${getRoleDisplay(userData.roleInfo?.role || [])} - 12A4`
                 : "Đang tải..."}
             </Text>
           </View>
@@ -183,7 +128,7 @@ const Setting: React.FC = () => {
             />
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </RefreshableScrollView>
       <ConfirmLogoutModal
         visible={showLogoutModal}
         onCancel={() => setShowLogoutModal(false)}
@@ -227,10 +172,10 @@ const styles = StyleSheet.create({
   },
   logoutBtn: {
     backgroundColor: "#FFA6A6",
-    borderRadius: 15,
+    borderRadius: 10,
     marginHorizontal: 32,
     marginBottom: 30,
-    paddingVertical: 15,
+    paddingVertical: 10,
     alignItems: "center",
   },
   logoutText: {

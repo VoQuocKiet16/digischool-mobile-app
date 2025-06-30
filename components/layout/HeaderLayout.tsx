@@ -90,6 +90,8 @@ const styles = StyleSheet.create({
     height: 32,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "transparent",
+    borderRadius: 16,
   },
   titleContainer: {
     flex: 1,
