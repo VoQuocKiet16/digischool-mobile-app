@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 
@@ -68,6 +69,8 @@ export default function NewsFeedScreen() {
   const [tab, setTab] = useState<'news' | 'favorite'>('news');
   const [selectedSubject, setSelectedSubject] = useState('all');
   const [newsList, setNewsList] = useState(NEWS);
+  const role = 'teacher'; // hoặc 'student'
+  const router = useRouter();
 
   // Responsive calculations
   const isSmallScreen = screenWidth < 375;
@@ -92,6 +95,8 @@ export default function NewsFeedScreen() {
   const tabSpacing = isSmallScreen ? 4 : 8;
   const subjectSpacing = isSmallScreen ? 12 : 18;
 
+  const [showMenu, setShowMenu] = useState(false);
+
   const filteredNews = selectedSubject === 'all'
     ? newsList
     : newsList.filter(n => n.subjectKey === selectedSubject);
@@ -107,7 +112,7 @@ export default function NewsFeedScreen() {
   return (
     <View style={[styles.container, { paddingHorizontal: containerPadding }]}>
       {/* Tabs */}
-      <View style={[styles.tabRow, { gap: tabSpacing }]}>
+      <View style={[styles.tabRow, { gap: tabSpacing, alignItems: 'center' }]}>
         <TouchableOpacity
           style={[styles.tabBtn, tab === 'news' && styles.tabBtnActive]}
           onPress={() => setTab('news')}
@@ -120,6 +125,32 @@ export default function NewsFeedScreen() {
         >
           <Text style={[styles.tabText, tab === 'favorite' && styles.tabTextActive, { fontSize: tabFontSize }]}>Yêu thích</Text>
         </TouchableOpacity>
+        {role === 'teacher' && (
+          <View style={{ marginLeft: 8 }}>
+            <TouchableOpacity onPress={() => setShowMenu(!showMenu)} style={{ padding: 6 }}>
+              <Ionicons name="menu" size={28} color="#25345D" />
+            </TouchableOpacity>
+            {showMenu && (
+              <View style={styles.menuPopup}>
+                <TouchableOpacity 
+                  style={styles.menuItem} 
+                  onPress={() => {
+                    setShowMenu(false);
+                    router.push('/news/add_news');
+                  }}
+                >
+                  <Text style={styles.menuItemText}>Thêm tin tức</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.menuItem} onPress={() => {
+                  setShowMenu(false);
+                  router.push('/news/manage_news');
+                }}>
+                  <Text style={styles.menuItemText}>Quản lý tin tức</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
       </View>
 
       {/* Subject filter */}
@@ -372,4 +403,29 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontStyle: 'italic',
   },
+  menuPopup: {
+    position: 'absolute',
+    top: 36,
+    right: 0,
+    backgroundColor: '#25345D',
+    borderRadius: 10,
+    paddingVertical: 4,
+    width: 160,
+    zIndex: 100,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  menuItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+
+  menuItemText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '500',
+  },
+
 });
