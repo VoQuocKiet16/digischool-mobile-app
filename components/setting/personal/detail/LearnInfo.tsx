@@ -1,19 +1,43 @@
-import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from "@expo/vector-icons";
+import React, { useState } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-const LearnInfo: React.FC = () => {
+interface UserData {
+  name: string;
+  email: string;
+  phone: string | null;
+  address: string | null;
+  dateOfBirth: string | null;
+  gender: string | null;
+  studentId: string | null;
+  teacherId: string | null;
+  managerId: string | null;
+  class: any | null;
+  subjects: any[];
+  roleInfo: any | null;
+}
+
+interface LearnInfoProps {
+  userData: UserData | null;
+}
+
+const LearnInfo: React.FC<LearnInfoProps> = ({ userData }) => {
   const [showInfo, setShowInfo] = useState(true);
+
+  const getCurrentYear = () => {
+    const currentYear = new Date().getFullYear();
+    return `${currentYear} - ${currentYear + 1}`;
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Text style={styles.title}>Thông tin học tập</Text>
-        <TouchableOpacity onPress={() => setShowInfo(v => !v)}>
+        <TouchableOpacity onPress={() => setShowInfo((v) => !v)}>
           <Ionicons
-            name={showInfo ? 'chevron-down' : 'chevron-forward'}
+            name={showInfo ? "chevron-down" : "chevron-forward"}
             size={24}
-            color="#A3A7AC"
+            color="#25345D"
             style={styles.icon}
           />
         </TouchableOpacity>
@@ -22,17 +46,21 @@ const LearnInfo: React.FC = () => {
         <>
           <View style={styles.item}>
             <Text style={styles.label}>Lớp học</Text>
-            <Text style={styles.value}>12A4</Text>
+            <Text style={styles.value}>
+              {userData?.class?.name || "Chưa cập nhật"}
+            </Text>
             <View style={styles.underline} />
           </View>
           <View style={styles.item}>
             <Text style={styles.label}>Năm học</Text>
-            <Text style={styles.value}>2024 - 2025</Text>
+            <Text style={styles.value}>{getCurrentYear()}</Text>
             <View style={styles.underline} />
           </View>
           <View style={styles.item}>
             <Text style={styles.label}>Trường học</Text>
-            <Text style={styles.value}>THPT Phan Văn Trị</Text>
+            <Text style={styles.value}>
+              {userData?.class?.school || "Chưa cập nhật"}
+            </Text>
             <View style={styles.underline} />
           </View>
         </>
@@ -43,48 +71,53 @@ const LearnInfo: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: '#f7f7f7',
+    backgroundColor: "#f7f7f7",
     borderRadius: 12,
-    margin: 10,
+    paddingRight: 20,
+    paddingLeft: 20,
+    marginRight: 10,
+    marginLeft: 10,
+    marginBottom: 20,
   },
   headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 10,
   },
   title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#25345D',
+    fontSize: 25,
+    color: "#25345D",
     flex: 1,
+    fontFamily: "Baloo2-Bold",
   },
   icon: {
+    color: "#25345D",
     marginLeft: 6,
+    backgroundColor: "#C4C4C4",
+    borderRadius: 20,
+    padding: 4,
   },
   item: {
-    marginBottom: 2,
     paddingVertical: 6,
-    position: 'relative',
+    position: "relative",
   },
   label: {
-    color: '#25345D',
-    fontWeight: 'bold',
-    fontSize: 15,
-    marginBottom: 0,
+    color: "#25345D",
+    fontSize: 18,
+    fontFamily: "Baloo2-SemiBold",
   },
   value: {
-    color: '#A3A7AC',
-    fontSize: 15,
-    position: 'absolute',
+    color: "#A3A7AC",
+    fontSize: 18,
+    position: "absolute",
     right: 0,
-    top: 0,
-    fontWeight: '500',
+    top: 5,
+    fontFamily: "Baloo2-SemiBold",
   },
   underline: {
     height: 3,
-    backgroundColor: '#FFA726',
-    marginTop: 16,
+    backgroundColor: "#FFA726",
+    marginTop: 7,
     borderRadius: 2,
   },
 });

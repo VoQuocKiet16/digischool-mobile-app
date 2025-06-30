@@ -1,24 +1,56 @@
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 
-const ProfileSection: React.FC = () => {
+interface UserData {
+  name: string;
+  email: string;
+  phone: string | null;
+  address: string | null;
+  dateOfBirth: string | null;
+  gender: string | null;
+  studentId: string | null;
+  teacherId: string | null;
+  managerId: string | null;
+  class: any | null;
+  subjects: any[];
+  roleInfo: any | null;
+}
+
+interface ProfileSectionProps {
+  userData: UserData | null;
+}
+
+const ProfileSection: React.FC<ProfileSectionProps> = ({ userData }) => {
+  const getRoleDisplay = () => {
+    if (!userData?.roleInfo?.type) return "Người dùng";
+
+    switch (userData.roleInfo.type) {
+      case "student":
+        return "Học sinh";
+      case "teacher":
+        return "Giáo viên";
+      case "admin":
+        return "Quản trị viên";
+      default:
+        return "Người dùng";
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Image
         style={styles.avatar}
         source={require("../../../../assets/images/avt_default.png")}
       />
-      <Text style={styles.name}>Nguyen Van A</Text>
-      <Text style={styles.role}>Hoc sinh - 12A4</Text>
+      <Text style={styles.role}>{getRoleDisplay()}</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { alignItems: "center", padding: 20, backgroundColor: "#f0f0f0" },
-  avatar: { width: 100, height: 100, borderRadius: 50, marginBottom: 10 },
-  name: { fontSize: 18, fontWeight: "bold" },
-  role: { fontSize: 14, color: "#666" },
+  container: { alignItems: "center", padding: 20, paddingBottom: 0 },
+  avatar: { width: 120, height: 120, borderRadius: 10, marginBottom: 10 },
+  role: { fontSize: 18, color: "#25345D", fontFamily: "Baloo2-Medium" },
 });
 
 export default ProfileSection;

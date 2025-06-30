@@ -1,19 +1,38 @@
-import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from "@expo/vector-icons";
+import React, { useState } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-const ContactInfo: React.FC = () => {
+interface UserData {
+  name: string;
+  email: string;
+  phone: string | null;
+  address: string | null;
+  dateOfBirth: string | null;
+  gender: string | null;
+  studentId: string | null;
+  teacherId: string | null;
+  managerId: string | null;
+  class: any | null;
+  subjects: any[];
+  roleInfo: any | null;
+}
+
+interface ContactInfoProps {
+  userData: UserData | null;
+}
+
+const ContactInfo: React.FC<ContactInfoProps> = ({ userData }) => {
   const [showInfo, setShowInfo] = useState(true);
 
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Text style={styles.title}>Thông tin liên hệ</Text>
-        <TouchableOpacity onPress={() => setShowInfo(v => !v)}>
+        <TouchableOpacity onPress={() => setShowInfo((v) => !v)}>
           <Ionicons
-            name={showInfo ? 'chevron-down' : 'chevron-forward'}
+            name={showInfo ? "chevron-down" : "chevron-forward"}
             size={24}
-            color="#A3A7AC"
+            color="#25345D"
             style={styles.icon}
           />
         </TouchableOpacity>
@@ -22,17 +41,23 @@ const ContactInfo: React.FC = () => {
         <>
           <View style={styles.item}>
             <Text style={styles.label}>Số điện thoại</Text>
-            <Text style={styles.value}>Chưa cập nhật</Text>
+            <Text style={styles.value}>
+              {userData?.phone || "Chưa cập nhật"}
+            </Text>
             <View style={styles.underline} />
           </View>
           <View style={styles.item}>
             <Text style={styles.label}>Email</Text>
-            <Text style={styles.value}>exampl@gmail.com</Text>
+            <Text style={styles.value}>
+              {userData?.email || "Chưa cập nhật"}
+            </Text>
             <View style={styles.underline} />
           </View>
           <View style={styles.item}>
             <Text style={styles.label}>Địa chỉ</Text>
-            <Text style={styles.value}>Ninh Kieu, Can Tho</Text>
+            <Text style={styles.value}>
+              {userData?.address || "Chưa cập nhật"}
+            </Text>
             <View style={styles.underline} />
           </View>
         </>
@@ -43,48 +68,53 @@ const ContactInfo: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: '#f7f7f7',
+    backgroundColor: "#f7f7f7",
     borderRadius: 12,
-    margin: 10,
+    paddingRight: 20,
+    paddingLeft: 20,
+    marginRight: 10,
+    marginLeft: 10,
+    marginBottom: 20,
   },
   headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 10,
   },
   title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#25345D',
+    fontSize: 25,
+    color: "#25345D",
     flex: 1,
+    fontFamily: "Baloo2-Bold",
   },
   icon: {
+    color: "#25345D",
     marginLeft: 6,
+    backgroundColor: "#C4C4C4",
+    borderRadius: 20,
+    padding: 4,
   },
   item: {
-    marginBottom: 2,
     paddingVertical: 6,
-    position: 'relative',
+    position: "relative",
   },
   label: {
-    color: '#25345D',
-    fontWeight: 'bold',
-    fontSize: 15,
-    marginBottom: 0,
+    color: "#25345D",
+    fontSize: 18,
+    fontFamily: "Baloo2-SemiBold",
   },
   value: {
-    color: '#A3A7AC',
-    fontSize: 15,
-    position: 'absolute',
+    color: "#A3A7AC",
+    fontSize: 18,
+    position: "absolute",
     right: 0,
-    top: 0,
-    fontWeight: '500',
+    top: 5,
+    fontFamily: "Baloo2-SemiBold",
   },
   underline: {
     height: 3,
-    backgroundColor: '#FFA726',
-    marginTop: 16,
+    backgroundColor: "#FFA726",
+    marginTop: 7,
     borderRadius: 2,
   },
 });
