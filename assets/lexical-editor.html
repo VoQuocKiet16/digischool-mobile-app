@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lexical Editor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    body { margin: 0; padding: 0; }
+    #editor { min-height: 180px; border: 1.5px solid #25345D; border-radius: 12px; padding: 10px; outline: none; font-size: 18px; }
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      padding: 8px 8px 4px 8px;
+      border-radius: 12px 12px 0 0;
+      background: #f7faff;
+      border-bottom: 1px solid #e0e6f0;
+      margin-bottom: 0;
+      align-items: center;
+    }
+    .tool-btn {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: #fff;
+      color: #3b82f6;
+      font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+      cursor: pointer;
+      outline: none;
+    }
+    .tool-btn.active, .tool-btn:active {
+      background: #e6f0ff;
+    }
+    .tool-btn:focus {
+      box-shadow: 0 0 0 2px #3b82f6;
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <button class="tool-btn" onclick="document.execCommand('undo', false, null)" title="Undo">&#8630;</button>
+    <button class="tool-btn" onclick="document.execCommand('redo', false, null)" title="Redo">&#8631;</button>
+    <button class="tool-btn" onclick="document.execCommand('bold', false, null)" title="Bold"><b>B</b></button>
+    <button class="tool-btn" onclick="document.execCommand('italic', false, null)" title="Italic"><i>I</i></button>
+    <button class="tool-btn" onclick="document.execCommand('underline', false, null)" title="Underline"><u>U</u></button>
+    <button class="tool-btn" onclick="document.execCommand('insertUnorderedList', false, null)" title="Bullet List">&#8226;</button>
+    <button class="tool-btn" onclick="document.execCommand('insertOrderedList', false, null)" title="Numbered List">1.</button>
+    <button class="tool-btn" onclick="document.execCommand('justifyLeft', false, null)" title="Align Left">&#8676;</button>
+    <button class="tool-btn" onclick="document.execCommand('justifyCenter', false, null)" title="Align Center">&#8596;</button>
+    <button class="tool-btn" onclick="document.execCommand('justifyRight', false, null)" title="Align Right">&#8677;</button>
+  </div>
+  <div id="editor" contenteditable="true">Nhập nội dung...</div>
+  <script>
+    const editor = document.getElementById('editor');
+    // Gửi nội dung về RN khi thay đổi
+    editor.addEventListener('input', function() {
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(editor.innerHTML);
+      }
+    });
+    // Nhận nội dung từ RN
+    window.document.addEventListener('message', function(event) {
+      editor.innerHTML = event.data;
+    });
+    // Hỗ trợ cả postMessage mới (WebView >= v11)
+    window.addEventListener('message', function(event) {
+      editor.innerHTML = event.data;
+    });
+    // Highlight active button (optional, basic demo)
+    document.querySelectorAll('.tool-btn').forEach(btn => {
+      btn.addEventListener('mousedown', e => {
+        btn.classList.add('active');
+      });
+      btn.addEventListener('mouseup', e => {
+        setTimeout(() => btn.classList.remove('active'), 150);
+      });
+      btn.addEventListener('mouseleave', e => {
+        btn.classList.remove('active');
+      });
+    });
+  </script>
+</body>
+</html> 

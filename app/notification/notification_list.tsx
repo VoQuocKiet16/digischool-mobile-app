@@ -54,7 +54,14 @@ export default function NotificationListScreen() {
   const router = useRouter();
 
   return (
-    <HeaderLayout title="Thông báo" onBack={() => router.back()}>
+    <HeaderLayout 
+      title="Thông báo" 
+      onBack={() => router.back()}
+      rightIcon={<Ionicons name="add" size={30} color="#25345D" />}
+      onRightIconPress={() => {
+        router.push('/notification/notification_create');
+      }}
+    >
       <View style={styles.tabsRow}>
         {TABS.map(t => (
           <TouchableOpacity
