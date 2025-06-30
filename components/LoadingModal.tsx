@@ -12,6 +12,7 @@ export default function LoadingModal({
     <Modal
       visible={visible}
       transparent
+      statusBarTranslucent={true}
       animationType="fade"
       onRequestClose={() => {}}
     >
