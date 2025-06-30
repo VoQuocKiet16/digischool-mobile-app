@@ -1,17 +1,25 @@
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { WebView } from 'react-native-webview';
 import HeaderLayout from '../../components/layout/HeaderLayout';
-import { useRouter } from 'expo-router';
 
 export default function NotificationDetailScreen() {
-const router = useRouter();
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const title = params.title || '';
+  const content = params.content || '<p>Không có nội dung</p>';
+
   return (
     <HeaderLayout title="Chi tiết thông báo" onBack={() => router.back()}>
       <View style={styles.contentWrap}>
-        <Text style={styles.title}>Thông báo nghỉ tiết</Text>
-        <Text style={styles.body}>
-          Thầy xin thông báo tiết học [môn học] vào [thời gian, ngày] sẽ được nghỉ do [lý do, ví dụ: thầy/cô có việc đột xuất, lịch điều chỉnh của nhà trường]. Các em vui lòng theo dõi lịch học mới hoặc thông báo tiếp theo để cập nhật.
-        </Text>
+        {title ? <Text style={styles.title}>{title}</Text> : null}
+        <WebView
+          originWhitelist={["*"]}
+          source={{ html: content as string }}
+          style={styles.webview}
+          scrollEnabled={false}
+        />
         <View style={{ height: 24 }} />
         <Text style={styles.sender}>[GV] Nguyen Van A</Text>
         <Text style={styles.time}>7 phút trước</Text>
@@ -33,11 +41,11 @@ const styles = StyleSheet.create({
     color: '#25345D',
     marginBottom: 16,
   },
-  body: {
-    fontSize: 16,
-    color: '#222',
-    lineHeight: 24,
-    marginBottom: 18,
+  webview: {
+    width: '100%',
+    minHeight: 120,
+    maxHeight: 300,
+    backgroundColor: 'transparent',
   },
   sender: {
     fontWeight: 'bold',
