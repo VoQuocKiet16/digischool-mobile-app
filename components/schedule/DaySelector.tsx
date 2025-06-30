@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useUserData } from '../../hooks/useUserData';
 
 interface DaySelectorProps {
   days: string[];
@@ -10,6 +11,16 @@ const DaySelector: React.FC<DaySelectorProps> = ({ days }) => {
   const [selectedDay, setSelectedDay] = useState(2); // Thứ 4 is selected by default
   const [menuVisible, setMenuVisible] = useState(false);
   const router = useRouter();
+  const { userData } = useUserData();
+
+  const handleLeaveRequest = () => {
+    const role = userData?.roleInfo?.type;
+    if (role === 'teacher') {
+      router.push('/teachers/leave_request/leave_request');
+    } else {
+      router.push('/students/leave_request/leave_request');
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -53,7 +64,7 @@ const DaySelector: React.FC<DaySelectorProps> = ({ days }) => {
               <Text style={styles.menuItemText}>Xuất TKB ra</Text>
             </TouchableOpacity>
             <View style={styles.separator} />
-            <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/students/leave_request/leave_request')}>
+            <TouchableOpacity style={styles.menuItem} onPress={handleLeaveRequest}>
               <Text style={styles.menuItemText}>Xin phép nghỉ</Text>
             </TouchableOpacity>
           </View>

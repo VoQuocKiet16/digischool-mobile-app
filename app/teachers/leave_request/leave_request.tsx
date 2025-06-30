@@ -14,23 +14,34 @@ const defaultActivity = (text: string, hasNotification = false): Activity => ({
 });
 
 const initialScheduleData: Activity[][] = [
-  [ defaultActivity('Chào cờ', true), defaultActivity('Chào cờ'), defaultActivity('Chào cờ'), defaultActivity('Chào cờ'), defaultActivity('Chào cờ'), defaultActivity('Chào cờ'), defaultActivity(''), ],
-  [ defaultActivity('Toán'), defaultActivity('Văn'), defaultActivity(''), defaultActivity('Lý'), defaultActivity('Hóa'), defaultActivity(''), defaultActivity(''), ],
-  [ defaultActivity('Anh'), defaultActivity(''), defaultActivity('Sử'), defaultActivity('Địa'), defaultActivity(''), defaultActivity('GDCD'), defaultActivity(''), ],
-  [ defaultActivity(''), defaultActivity('Sinh'), defaultActivity('Công nghệ'), defaultActivity(''), defaultActivity('Thể dục'), defaultActivity('Thể dục'), defaultActivity(''), ],
-  [ defaultActivity('Mỹ thuật'), defaultActivity(''), defaultActivity(''), defaultActivity('Âm nhạc'), defaultActivity('Toán'), defaultActivity(''), defaultActivity(''), ],
-  [defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity('')],
-  [defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity('')],
-  [defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity('')],
-  [defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity('')],
-  [defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity('')],
+  // Tiết 1
+  [
+    defaultActivity("10A3"), // Thứ 2
+    defaultActivity("11A1"), // Thứ 3
+    defaultActivity("10A3"), // Thứ 4 (dạy 2 lớp)
+    defaultActivity(""), // Thứ 5
+    defaultActivity("12A2"), // Thứ 6
+    defaultActivity(""), // Thứ 7
+    defaultActivity(""), // CN
+  ],
+  // Tiết 2
+  [
+    defaultActivity("10A2"),
+    defaultActivity("10A3"),
+    defaultActivity("11A1"),
+    defaultActivity(""),
+    defaultActivity("12A2"),
+    defaultActivity(""),
+    defaultActivity(""),
+  ],
+  // ... các tiết khác
 ];
 
 const days = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
 const morningPeriods = ['Tiết 1', 'Tiết 2', 'Tiết 3', 'Tiết 4', 'Tiết 5'];
 const afternoonPeriods = ['Tiết 6', 'Tiết 7', 'Tiết 8', 'Tiết 9', 'Tiết 10'];
 
-export default function LeaveRequestScreen() {
+export default function TeacherLeaveRequestScreen() {
   const router = useRouter();
   const [session, setSession] = useState<'Buổi sáng' | 'Buổi chiều'>('Buổi sáng');
   const [selected, setSelected] = useState<{row: number, col: number}[]>([]);
@@ -52,7 +63,7 @@ export default function LeaveRequestScreen() {
   };
 
   return (
-    <HeaderLayout title="Tiết học xin nghỉ" subtitle="Chọn các tiết học bạn muốn xin phép nghỉ" onBack={() => router.back()}>
+    <HeaderLayout title="Tiết dạy xin nghỉ" subtitle="Chọn các tiết dạy bạn muốn xin phép nghỉ" onBack={() => router.back()}>
       <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
         <View style={{ flex: 1 }}>
           <ScheduleHeader
@@ -75,8 +86,8 @@ export default function LeaveRequestScreen() {
           </ScrollView>
           {/* Chú thích màu sắc */}
           <View style={styles.legendRow}>
-            <View style={styles.legendItem}><View style={styles.legendBox}/><Text style={styles.legendText}>Tiết học hiện tại</Text></View>
-            <View style={styles.legendItem}><View style={[styles.legendBox, styles.legendBoxSelected]}/><Text style={styles.legendText}>Tiết học xin nghỉ</Text></View>
+            <View style={styles.legendItem}><View style={styles.legendBox}/><Text style={styles.legendText}>Tiết dạy hiện tại</Text></View>
+            <View style={styles.legendItem}><View style={[styles.legendBox, styles.legendBoxSelected]}/><Text style={styles.legendText}>Tiết dạy xin nghỉ</Text></View>
           </View>
         </View>
         {/* Nút tiếp tục cố định dưới cùng */}
@@ -86,10 +97,10 @@ export default function LeaveRequestScreen() {
             disabled={selected.length === 0}
             onPress={() => {
               if (selected.length > 0) {
-                // Lấy tên môn học thực tế cho từng slot đã chọn
+                // Lấy tên môn dạy thực tế cho từng slot đã chọn
                 const subjects = selected.map(({ row, col }) => displayedData[row][col]?.text || '');
                 router.push({
-                  pathname: '/students/leave_request/leave_request_info',
+                  pathname: '/teachers/leave_request/leave_request_info',
                   params: {
                     selectedSlots: JSON.stringify(selected),
                     subjects: JSON.stringify(subjects),
@@ -128,4 +139,4 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     backgroundColor: '#fff',
   },
-});
+}); 
