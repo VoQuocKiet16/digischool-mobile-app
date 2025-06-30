@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import LexicalEditorWebView from "../../components/LexicalEditorWebView";
 
@@ -13,7 +13,7 @@ export default function NotificationCreateScreen() {
 
   return (
     <HeaderLayout title="Tạo thông báo" onBack={() => router.back()}>
-      <ScrollView contentContainerStyle={styles.scrollWrap} keyboardShouldPersistTaps="handled">
+      <View style={styles.scrollWrap}>
         <Text style={styles.subTitle}>Tạo mẫu thông báo gửi đến học sinh</Text>
         <View style={styles.formGroup}>
           <Text style={styles.label}>
@@ -43,10 +43,12 @@ export default function NotificationCreateScreen() {
           <Text style={styles.label}>
             Nội dung <Text style={styles.required}>*</Text>
           </Text>
+        </View>
+        <View style={[styles.formGroup, {marginBottom: 24}]}> 
           <LexicalEditorWebView
             value={content}
             onChange={setContent}
-            height={200}
+            height={260}
           />
         </View>
         <TouchableOpacity
@@ -63,7 +65,7 @@ export default function NotificationCreateScreen() {
         >
           <Text style={styles.buttonText}>Gửi thông báo</Text>
         </TouchableOpacity>
-      </ScrollView>
+      </View>
     </HeaderLayout>
   );
 }

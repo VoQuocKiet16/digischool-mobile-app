@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Keyboard, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 interface LexicalEditorWebViewProps {
@@ -26,7 +26,11 @@ const LexicalEditorWebView = ({ value, onChange, height = 220 }: LexicalEditorWe
         originWhitelist={['*']}
         source={require('../assets/lexical-editor.html')}
         onMessage={event => {
-          if (onChange) onChange(event.nativeEvent.data);
+          if (event.nativeEvent.data === '__BLUR__') {
+            Keyboard.dismiss();
+          } else if (onChange) {
+            onChange(event.nativeEvent.data);
+          }
         }}
         javaScriptEnabled
         domStorageEnabled
