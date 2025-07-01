@@ -20,6 +20,11 @@ const MAPPING = {
   'newspaper.fill': 'article',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
+  'graduationcap.fill': 'school',
+  'checkmark.circle.fill': 'check-circle',
+  'arrow.triangle.branch': 'timeline',
+  'person.crop.circle.badge.plus': 'add',
+  'checkmark.icloud.fill': 'sync',
 } as IconMapping;
 
 /**
