@@ -38,7 +38,7 @@ const LessonDetailScreen = () => {
               style={styles.menuItem}
               onPress={() => {
                 setMenuVisible(false);
-                router.push('/students/note/note');
+                router.push('/note/note');
               }}
             >
               <Text style={styles.menuText}>Ghi chú</Text>

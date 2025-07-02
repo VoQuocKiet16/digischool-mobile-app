@@ -136,7 +136,7 @@ export default function ManageRollcall() {
         <Pressable style={styles.dropdownOverlay} onPress={() => {setShowDay(false); setShowStatus(false); setShowSubject(false);}} />
       )}
       {/* Danh sách điểm danh */}
-      <View style={styles.rollcallListWrap}>
+      <ScrollView style={styles.rollcallListWrap} contentContainerStyle={{paddingBottom: 24}} showsVerticalScrollIndicator={false}>
         {/* Header bộ môn */}
         <View style={styles.rollcallHeaderSubject}>
           <Text style={styles.rollcallHeaderSubjectText}>
@@ -183,7 +183,7 @@ export default function ManageRollcall() {
             </View>
           </View>
         ))}
-      </View>
+      </ScrollView>
     </View>
   );
 }
