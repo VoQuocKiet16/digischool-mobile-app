@@ -1,3 +1,4 @@
+import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -26,7 +27,12 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
             onPress={onPressTitle}
             style={styles.arrowButtonLeft}
           >
-            <Text style={styles.arrowText}>◀</Text>
+            <MaterialIcons
+              name="arrow-left"
+              size={35}
+              color="#29375C"
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            />
           </TouchableOpacity>
         )}
         <Text style={styles.title}>{title}</Text>
@@ -35,7 +41,12 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
             onPress={onPressTitle}
             style={styles.arrowButtonRight}
           >
-            <Text style={styles.arrowText}>▶</Text>
+            <MaterialIcons
+              name="arrow-right"
+              size={35}
+              color="#29375C"
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            />
           </TouchableOpacity>
         )}
       </View>
@@ -45,11 +56,11 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
           onPress={onChangeDateRange}
         >
           <Text style={styles.pickerText}>{dateRange}</Text>
-          <Text style={styles.pickerArrow}>▼</Text>
+          <MaterialIcons name="arrow-drop-down" size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.pickerButton} onPress={onChangeYear}>
           <Text style={styles.pickerText}>{year}</Text>
-          <Text style={styles.pickerArrow}>▼</Text>
+          <MaterialIcons name="arrow-drop-down" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
     </View>
@@ -69,13 +80,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
     position: "relative",
-    marginBottom: 10,
+    marginBottom: 5,
   },
   title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#3A546D",
+    fontSize: 30,
+    color: "#29375C",
     textAlign: "center",
+    fontFamily: "Baloo2-Bold",
   },
   arrowButtonLeft: {
     position: "absolute",
@@ -87,30 +98,26 @@ const styles = StyleSheet.create({
     right: 0,
     padding: 5,
   },
-  arrowText: {
-    fontSize: 18,
-    color: "#3A546D",
-  },
   pickersContainer: {
     flexDirection: "row",
   },
   pickerButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#3A546D",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    marginHorizontal: 5,
+    backgroundColor: "#29375C",
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    marginHorizontal: 10,
   },
   pickerText: {
     color: "#fff",
-    marginRight: 8,
+    marginLeft: 5,
     fontSize: 14,
+    fontFamily: "Baloo2-Medium",
   },
   pickerArrow: {
     color: "#fff",
-    fontSize: 10,
   },
 });
 

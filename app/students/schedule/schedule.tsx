@@ -4,12 +4,12 @@ import {
   ActivityIndicator,
   FlatList,
   Modal,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import RefreshableScrollView from "../../../components/RefreshableScrollView";
 import DaySelector from "../../../components/schedule/DaySelector";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
@@ -27,11 +27,8 @@ const defaultActivity = (text: string, hasNotification = false): Activity => ({
   hasNotification,
 });
 
-const initialScheduleData: Activity[][] = Array.from({ length: 10 }, (_, i) =>
-  Array.from({ length: 7 }, (_, j) => {
-    if (i === 0 && j === 0) return defaultActivity("Chào cờ", true);
-    return { text: "", type: "user-added" };
-  })
+const initialScheduleData: Activity[][] = Array.from({ length: 10 }, () =>
+  Array.from({ length: 7 }, () => ({ text: "", type: "user-added" }))
 );
 
 const defaultDays = [
@@ -90,49 +87,55 @@ function getWeekRangesByYear(year: string) {
   return weeks;
 }
 
-function getSortedWeekDates(lessonsByDay: any) {
-  // Lấy tất cả ngày, sort theo thứ trong tuần (thứ 2 = 0, ..., CN = 6)
-  const days = Object.keys(lessonsByDay || {});
-  return days.sort((a: string, b: string) => {
-    const getDay = (d: string) => (new Date(d).getDay() + 6) % 7; // Thứ 2 = 0, ..., CN = 6
-    return getDay(a) - getDay(b);
-  });
-}
-
-function mapApiToScheduleData(apiData: any, weekDates: string[]): Activity[][] {
+function mapApiToScheduleData(apiData: any): {
+  schedule: Activity[][];
+  lessonIds: string[][];
+} {
   // 10 periods x 7 days
   const schedule: Activity[][] = Array.from({ length: 10 }, () =>
     Array.from({ length: 7 }, () => ({ text: "", type: "user-added" }))
   );
-  weekDates.forEach((date, dayIdx) => {
-    const lessons = apiData?.weeklySchedules?.[0]?.lessonsByDay?.[date] || [];
-    lessons.forEach((lesson: any) => {
-      const periodIdx = (lesson.period || 1) - 1;
-      if (periodIdx >= 0 && periodIdx < 10) {
-        if (lesson.subject) {
-          schedule[periodIdx][dayIdx] = {
-            text: lesson.subject.code,
-            type: "default",
-          };
-        } else if (periodIdx === 0 && dayIdx === 0) {
-          schedule[periodIdx][dayIdx] = { text: "Chào cờ", type: "default" };
-        } else {
-          schedule[periodIdx][dayIdx] = { text: "", type: "user-added" };
+  const lessonIds: string[][] = Array.from({ length: 10 }, () =>
+    Array.from({ length: 7 }, () => "")
+  );
+
+  // Lấy dữ liệu từ response mới
+  const scheduleData = apiData?.data?.schedule || [];
+
+  scheduleData.forEach((dayData: any) => {
+    const dayOfWeek = dayData.dayOfWeek;
+    const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Chủ nhật = 0, chuyển thành index 6
+
+    dayData.lessons?.forEach((lesson: any) => {
+      const periodIndex = (lesson.period || 1) - 1;
+      if (periodIndex >= 0 && periodIndex < 10) {
+        let text = "";
+
+        if (lesson.type === "fixed" && lesson.fixedInfo) {
+          // Xử lý tiết cố định như chào cờ, sinh hoạt lớp
+          text = lesson.fixedInfo.description || "";
+        } else if (lesson.subject) {
+          // Xử lý tiết học thông thường
+          text = lesson.subject.name || "";
+        } else if (lesson.type === "empty") {
+          // Tiết trống
+          text = "";
+        }
+
+        schedule[periodIndex][dayIndex] = {
+          text,
+          type: "default",
+        };
+
+        // Lưu lessonId nếu có
+        if (lesson._id) {
+          lessonIds[periodIndex][dayIndex] = lesson._id;
         }
       }
     });
-    // Bổ sung slot trống nếu không có lesson
-    for (let i = 0; i < 10; i++) {
-      if (!lessons.find((l: any) => l.period === i + 1)) {
-        if (i === 0 && dayIdx === 0) {
-          schedule[i][dayIdx] = { text: "Chào cờ", type: "default" };
-        } else {
-          schedule[i][dayIdx] = { text: "", type: "user-added" };
-        }
-      }
-    }
   });
-  return schedule;
+
+  return { schedule, lessonIds };
 }
 
 export default function ScheduleStudentsScreen() {
@@ -142,6 +145,9 @@ export default function ScheduleStudentsScreen() {
   );
   const [scheduleData, setScheduleData] =
     useState<Activity[][]>(initialScheduleData);
+  const [lessonIds, setLessonIds] = useState<string[][]>(
+    Array.from({ length: 10 }, () => Array.from({ length: 7 }, () => ""))
+  );
   const [year, setYear] = useState("2024-2025");
   const [dateRange, setDateRange] = useState<{
     start: string;
@@ -149,38 +155,39 @@ export default function ScheduleStudentsScreen() {
     label: string;
   }>(() => {
     const weeks = getWeekRangesByYear("2024-2025");
-    return weeks[0];
+    return weeks[1];
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showYearModal, setShowYearModal] = useState(false);
   const [showWeekModal, setShowWeekModal] = useState(false);
+  const [currentDayIndex, setCurrentDayIndex] = useState(0);
 
   const days = defaultDays;
   const weekList = getWeekRangesByYear(year);
 
-  useEffect(() => {
-    async function fetchSchedule() {
-      setLoading(true);
-      setError("");
-      try {
-        const data = await getSchedule({
-          scheduleId: "685cbf81f3b618a9802fad69",
-          academicYear: year,
-          startOfWeek: dateRange.start,
-          endOfWeek: dateRange.end,
-        });
-        const lessonsByDay =
-          data.data?.weeklySchedules?.[0]?.lessonsByDay || {};
-        const weekDates = getSortedWeekDates(lessonsByDay);
-        setScheduleData(mapApiToScheduleData(data.data, weekDates));
-      } catch (err) {
-        setError("Lỗi tải thời khóa biểu");
-        setScheduleData(initialScheduleData);
-      } finally {
-        setLoading(false);
-      }
+  const fetchSchedule = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const data = await getSchedule({
+        className: "12A1",
+        academicYear: year,
+        startOfWeek: dateRange.start,
+        endOfWeek: dateRange.end,
+      });
+      const { schedule, lessonIds: newLessonIds } = mapApiToScheduleData(data);
+      setScheduleData(schedule);
+      setLessonIds(newLessonIds);
+    } catch (err) {
+      setError("Lỗi tải thời khóa biểu");
+      setScheduleData(initialScheduleData);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchSchedule();
   }, [year, dateRange]);
 
@@ -198,9 +205,17 @@ export default function ScheduleStudentsScreen() {
   const handleSlotDetail = (
     dayIndex: number,
     periodIndex: number,
-    activityText: string
+    activityText: string,
+    lessonId?: string
   ) => {
-    router.push("/students/lesson_information/lesson_detail");
+    if (lessonId) {
+      router.push({
+        pathname: "/students/lesson_information/lesson_detail",
+        params: { lessonId },
+      });
+    } else {
+      router.push("/students/lesson_information/lesson_detail");
+    }
   };
 
   // Hiển thị dữ liệu theo buổi sáng hoặc chiều
@@ -248,7 +263,7 @@ export default function ScheduleStudentsScreen() {
         onChangeYear={handleChangeYear}
         onChangeDateRange={handleChangeDateRange}
       />
-      <DaySelector days={days} />
+      <DaySelector days={days} onCurrentDayChange={setCurrentDayIndex} />
       {loading ? (
         <ActivityIndicator
           size="large"
@@ -260,15 +275,29 @@ export default function ScheduleStudentsScreen() {
           <Text style={{ color: "red" }}>{error}</Text>
         </View>
       ) : (
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
-          <ScheduleDay
-            periods={periods}
-            days={days}
-            scheduleData={displayedData}
-            onAddActivity={handleAddActivity}
-            onSlotPress={handleSlotDetail}
-          />
-        </ScrollView>
+        <RefreshableScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingBottom: 100 }}
+          showsVerticalScrollIndicator={false}
+          bounces={true}
+          onRefresh={fetchSchedule}
+        >
+          <View style={{ flex: 1 }}>
+            <ScheduleDay
+              periods={periods}
+              days={days}
+              scheduleData={displayedData}
+              onAddActivity={handleAddActivity}
+              onSlotPress={handleSlotDetail}
+              currentDayIndex={currentDayIndex}
+              lessonIds={
+                session === "Buổi sáng"
+                  ? lessonIds.slice(0, 5)
+                  : lessonIds.slice(5, 10)
+              }
+            />
+          </View>
+        </RefreshableScrollView>
       )}
       {/* Modal chọn năm học */}
       <Modal visible={showYearModal} transparent animationType="fade">
@@ -318,7 +347,7 @@ export default function ScheduleStudentsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  container: { flex: 1, backgroundColor: "#f7f7f7" },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.2)",

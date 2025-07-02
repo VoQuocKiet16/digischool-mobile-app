@@ -7,14 +7,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const RANKS = ["A+", "A", "B+", "B"];
@@ -99,7 +99,9 @@ const LessonEvaluateTeacherScreen = () => {
           </View>
           {/* Nhận xét */}
           <View style={styles.inputBox}>
-            <View style={[styles.floatingInputBox, styles.floatingInputBoxSmall]}>
+            <View
+              style={[styles.floatingInputBox, styles.floatingInputBoxSmall]}
+            >
               <Text style={styles.floatingLabel}>Nhận xét</Text>
               <TextInput
                 style={[styles.floatingInput, { minHeight: 36, fontSize: 12 }]}
@@ -132,7 +134,7 @@ const LessonEvaluateTeacherScreen = () => {
                 <Ionicons
                   name={showRankDropdown ? "chevron-up" : "chevron-down"}
                   size={24}
-                  color="#22315B"
+                  color="#29375C"
                   style={{ marginLeft: 8 }}
                 />
               </TouchableOpacity>
@@ -165,21 +167,46 @@ const LessonEvaluateTeacherScreen = () => {
             </View>
           </View>
           {/* Checkbox xác nhận trách nhiệm nhận xét */}
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginHorizontal: 16, marginBottom: 8 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "flex-start",
+              marginHorizontal: 16,
+              marginBottom: 8,
+            }}
+          >
             <TouchableOpacity
               onPress={() => setChecked(!checked)}
               style={{
-                width: 24, height: 24, borderRadius: 4, borderWidth: 2, borderColor: '#22315B', alignItems: 'center', justifyContent: 'center', marginRight: 8, backgroundColor: checked ? '#22315B' : 'transparent',
+                width: 24,
+                height: 24,
+                borderRadius: 4,
+                borderWidth: 2,
+                borderColor: "#29375C",
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: 8,
+                backgroundColor: checked ? "#29375C" : "transparent",
               }}
               activeOpacity={0.8}
             >
-              {checked && (
-                <Ionicons name="checkmark" size={18} color="#fff" />
-              )}
+              {checked && <Ionicons name="checkmark" size={18} color="#fff" />}
             </TouchableOpacity>
-            <Text style={{ color: '#22315B', fontSize: 16, fontWeight: '500', flex: 1, flexWrap: 'wrap', lineHeight: 18 }}>
+            <Text
+              style={{
+                color: "#29375C",
+                fontSize: 16,
+                fontWeight: "500",
+                flex: 1,
+                flexWrap: "wrap",
+                lineHeight: 18,
+              }}
+            >
               Tôi hoàn toàn chịu trách nhiệm với nội dung nhận xét của mình.
-              <Text style={{ color: 'red', fontSize: 12, fontWeight: 'bold' }}> *</Text>
+              <Text style={{ color: "red", fontSize: 12, fontWeight: "bold" }}>
+                {" "}
+                *
+              </Text>
             </Text>
           </View>
           {/* Nút xác nhận */}
@@ -197,7 +224,7 @@ const LessonEvaluateTeacherScreen = () => {
             visible={showSuccess}
             onClose={() => {
               setShowSuccess(false);
-              router.replace('/teachers/lesson_information/lesson_detail');
+              router.replace("/teachers/lesson_information/lesson_detail");
             }}
             title="Thành công"
             message={"Đánh giá tiết học thành công.\nQuay lại trang trước đó?"}
@@ -216,13 +243,13 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 15,
-    color: "#22315B",
+    color: "#29375C",
     fontWeight: "bold",
     marginBottom: 6,
   },
   floatingInputBox: {
     borderWidth: 2,
-    borderColor: "#22315B",
+    borderColor: "#29375C",
     borderRadius: 12,
     backgroundColor: "#F6F8FB",
     paddingTop: 18,
@@ -240,31 +267,31 @@ const styles = StyleSheet.create({
     left: 18,
     backgroundColor: "#F6F8FB",
     paddingHorizontal: 6,
-    color: "#22315B",
+    color: "#29375C",
     fontWeight: "bold",
     fontSize: 12,
     zIndex: 2,
   },
   floatingInput: {
-    color: "#22315B",
+    color: "#29375C",
     fontSize: 12,
     fontWeight: "bold",
     marginTop: 2,
   },
   input: {
     borderWidth: 2,
-    borderColor: "#22315B",
+    borderColor: "#29375C",
     borderRadius: 12,
     backgroundColor: "#fff",
     paddingVertical: 12,
     paddingHorizontal: 16,
     fontSize: 15,
-    color: "#22315B",
+    color: "#29375C",
     fontWeight: "bold",
   },
   dropdownFloatingBox: {
     borderWidth: 2,
-    borderColor: "#22315B",
+    borderColor: "#29375C",
     borderRadius: 20,
     backgroundColor: "#fff",
     paddingTop: 18,
@@ -287,7 +314,7 @@ const styles = StyleSheet.create({
   },
   dropdownText: {
     fontSize: 16,
-    color: "#22315B",
+    color: "#29375C",
     fontWeight: "bold",
     flex: 1,
   },
@@ -311,7 +338,7 @@ const styles = StyleSheet.create({
   },
   dropdownItemText: {
     fontSize: 22,
-    color: "#22315B",
+    color: "#29375C",
     fontWeight: "500",
   },
   actionBtn: {

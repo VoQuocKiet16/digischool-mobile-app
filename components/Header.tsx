@@ -11,14 +11,11 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { ThemedView } from "./ThemedView";
 
 interface HeaderProps {
-  title?: string;
-  studentName?: string;
+  title: string;
+  studentName: string;
 }
 
-export default function Header({
-  title = "Manage",
-  studentName = "HS Nguyễn Văn A",
-}: HeaderProps) {
+export default function Header({ title, studentName }: HeaderProps) {
   const router = useRouter();
   const colorScheme = useColorScheme();
 
@@ -49,7 +46,7 @@ export default function Header({
             activeOpacity={0.7}
             style={styles.bellWrap}
           >
-            <Ionicons name="notifications-outline" size={28} color="#215562" />
+            <Ionicons name="notifications-outline" size={28} color="#29375C" />
             <View style={styles.bellDot} />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.7}>
@@ -60,6 +57,7 @@ export default function Header({
           </TouchableOpacity>
         </View>
       </ThemedView>
+      <View style={{ height: 1, backgroundColor: "#FFFFFF", width: "100%" }} />
     </ThemeProvider>
   );
 }
@@ -73,29 +71,27 @@ const styles = StyleSheet.create({
     paddingTop: 30,
     paddingBottom: 10,
     marginTop: 10,
-    backgroundColor: "#fff",
+    backgroundColor: "#f7f7f7",
   },
   headerLeft: {
     flexDirection: "row",
     alignItems: "center",
   },
   logo: {
-    width: 54,
-    height: 54,
+    width: 75,
+    height: 75,
     resizeMode: "contain",
     marginRight: 14,
   },
   headerTitle: {
-    fontSize: 34,
-    fontWeight: "600",
-    color: "#215562",
-    letterSpacing: 0.5,
-    fontFamily: "Baloo2",
+    fontSize: 32,
+    color: "#29375C",
+    fontFamily: "Baloo2-Bold",
   },
   studentName: {
-    fontSize: 16,
-    color: "#215562",
-    marginTop: 2,
+    fontSize: 15,
+    color: "#29375C",
+    fontFamily: "Baloo2-Medium",
   },
   headerRight: {
     flexDirection: "row",
@@ -123,9 +119,7 @@ const styles = StyleSheet.create({
     borderColor: "#fff",
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderColor: "#e6e6e6",
-    backgroundColor: "#fff",
+    width: 60,
+    height: 60,
   },
 });
