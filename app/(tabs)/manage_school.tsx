@@ -20,7 +20,7 @@ export default function ManageSchool() {
   const dateStr = `${weekdays[now.getDay()]}, ${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()}`;
 
   return (
-    <View style={{flex: 1, backgroundColor: '#fff'}}>
+    <View style={{flex: 1}}>
       <Header title="Quản lý trường học" />
       <ScrollView contentContainerStyle={{paddingBottom: 24}} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
@@ -79,14 +79,8 @@ export default function ManageSchool() {
 const styles = StyleSheet.create({
   container: {
     // backgroundColor: '#F7F8FA',
-    borderRadius: 12,
-    padding: 18,
+    flex: 1,
     alignItems: 'center',
-    margin: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
   },
   row: {
     flexDirection: 'row',
