@@ -1,16 +1,16 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
-  Image,
   Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import Svg, { Line, Text as SvgText } from 'react-native-svg';
+import Header from '../../components/Header';
 
 const BLOCKS = ["Khối 10", "Khối 11", "Khối 12"];
 const SEMESTERS = ["Học kỳ I", "Học kỳ II"];
@@ -90,31 +90,7 @@ export default function ManageProcess() {
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
       {/* Header */}
-      <View style={styles.headerWrap}>
-        <View style={styles.headerLeft}>
-          <Image
-            source={require("../../assets/images/digi-logo.png")}
-            style={styles.logo}
-          />
-          <View>
-            <Text style={styles.headerTitle}>Tiến trình</Text>
-            <Text style={styles.studentName}>Xin chào, QL Nguyễn Văn A</Text>
-          </View>
-        </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity activeOpacity={0.7} style={styles.bellWrap}>
-            <MaterialIcons
-              name="notifications-none"
-              size={28}
-              color="#215562"
-            />
-          </TouchableOpacity>
-          <Image
-            source={require("../../assets/images/avt_default.png")}
-            style={styles.avatar}
-          />
-        </View>
-      </View>
+      <Header title="Tiến trình" studentName="QL Nguyễn Văn A" />
       {/* Filter lớn */}
       <View style={styles.filterBlockWrap}>
         <TouchableOpacity

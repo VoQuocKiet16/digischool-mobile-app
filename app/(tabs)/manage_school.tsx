@@ -24,7 +24,7 @@ export default function ManageSchool() {
 
   return (
     <View style={{flex: 1}}>
-      <Header title="Quản lý trường học" />
+      <Header title="Quản lý" />
       <ScrollView contentContainerStyle={{paddingBottom: 24}} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
           <View style={styles.row}>
