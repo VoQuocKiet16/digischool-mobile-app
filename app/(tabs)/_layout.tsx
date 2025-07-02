@@ -78,6 +78,41 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="manage_account"
+        options={{
+          title: 'Tài khoản',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="manage_process"
+        options={{
+          title: 'Quá trình',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="checkmark.icloud.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="manage_rollcall"
+        options={{
+          title: 'Điểm danh',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="checkmark.circle.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="manage_schedule"
+        options={{
+          title: 'Thời khoá biểu',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="manage_school"
+        options={{
+          title: 'Trường học',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="graduationcap.fill" color={color} />,
+        }}
+      />
     </Tabs>
   );
 }
