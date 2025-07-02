@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SelectList } from "react-native-dropdown-select-list";
 import CustomDatePickerModal from "./CustomDatePickerModal";
 
 export default function UpdateProfileInfo() {
@@ -17,6 +16,7 @@ export default function UpdateProfileInfo() {
   const [showInfo, setShowInfo] = useState(true);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date(2003, 0, 1));
+  const [showGenderDropdown, setShowGenderDropdown] = useState(false);
 
   const genderOptions = [
     { key: "Nam", value: "Nam" },
@@ -92,25 +92,48 @@ export default function UpdateProfileInfo() {
           </View>
           {/* Giới tính */}
           <View style={styles.fieldWrap}>
-            <Text style={styles.floatingLabel}>Giới tính</Text>
-            <SelectList
-              setSelected={setGender}
-              data={genderOptions}
-              save="value"
-              placeholder="Chọn giới tính"
-              boxStyles={{
-                marginTop: 8,
-                borderRadius: 14,
-                borderColor: "#25345D",
-                backgroundColor: "#fff",
-              }}
-              dropdownStyles={{
-                borderRadius: 14,
-                borderColor: "#25345D",
-                backgroundColor: "#fff",
-              }}
-              defaultOption={{ key: gender, value: gender }}
-            />
+            <View style={styles.outlineInputBox}>
+              <Text style={styles.floatingLabel}>Giới tính</Text>
+              <TextInput
+                style={styles.inputTextOutline}
+                value={gender}
+                placeholder="Chọn giới tính"
+                placeholderTextColor="#7a869a"
+                editable={false}
+                onPressIn={() => setShowGenderDropdown((v) => !v)}
+              />
+              <TouchableOpacity
+                style={styles.inputIconOutline}
+                onPress={() => setShowGenderDropdown((v) => !v)}
+              >
+                <Ionicons name="chevron-down" size={22} color="#25345D" />
+              </TouchableOpacity>
+              {showGenderDropdown && (
+                <View style={styles.dropdownList}>
+                  {genderOptions.map((option) => (
+                    <TouchableOpacity
+                      key={option.key}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setGender(option.value);
+                        setShowGenderDropdown(false);
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          color: "#25345D",
+                          fontWeight:
+                            gender === option.value ? "bold" : "normal",
+                        }}
+                      >
+                        {option.value}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
           </View>
           {/* Custom Date Picker Modal */}
           <CustomDatePickerModal
@@ -172,16 +195,15 @@ const styles = StyleSheet.create({
     left: 18,
     backgroundColor: "#f7f7f7",
     paddingHorizontal: 4,
-    fontSize: 12,
+    fontSize: 14,
     color: "#25345D",
-    fontWeight: "bold",
+    fontFamily: "Baloo2-SemiBold",
     zIndex: 2,
   },
   inputTextOutline: {
-    fontSize: 14,
+    fontSize: 16,
     color: "#25345D",
-    fontWeight: "bold",
-    paddingVertical: 0,
+    fontFamily: "Baloo2-SemiBold",
   },
   label: {
     fontSize: 14,
@@ -220,5 +242,21 @@ const styles = StyleSheet.create({
     right: 14,
     top: "50%",
     marginTop: 6,
+  },
+  dropdownList: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: "108%",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    borderWidth: 1.2,
+    borderColor: "#25345D",
+    elevation: 5,
+    zIndex: 10,
+  },
+  dropdownItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
   },
 });

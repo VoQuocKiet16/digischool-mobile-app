@@ -1,13 +1,35 @@
-import React from "react";
-import { ActivityIndicator, Modal, Text, View } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
+import React, { useEffect, useRef } from "react";
+import { Animated, ActivityIndicator, Modal, Text, View } from "react-native";
 
 export default function LoadingModal({
   visible,
   text,
+  success = false,
 }: {
   visible: boolean;
   text?: string;
+  success?: boolean;
 }) {
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (success) {
+      Animated.sequence([
+        Animated.timing(scaleAnim, {
+          toValue: 1.2,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [success]);
+
   return (
     <Modal
       visible={visible}
@@ -27,13 +49,19 @@ export default function LoadingModal({
         <View
           style={{
             backgroundColor: "#fff",
-            borderRadius: 16,
-            padding: 32,
+            borderRadius: 20,
+            padding: 24,
             alignItems: "center",
-            minWidth: 180,
+            minWidth: 200,
           }}
         >
-          <ActivityIndicator size="large" color="#25345D" />
+          {success ? (
+            <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+              <MaterialIcons name="check-circle" size={54} color="#29375C" />
+            </Animated.View>
+          ) : (
+            <ActivityIndicator size="large" color="#25345D" />
+          )}
           <Text
             style={{
               marginTop: 16,

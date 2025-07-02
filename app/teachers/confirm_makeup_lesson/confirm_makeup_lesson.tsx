@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import {
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import HeaderLayout from "../../../components/layout/HeaderLayout";
 import SuccessModal from "../../../components/notifications_modal/SuccessModal";
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   submitBtn: {
-    backgroundColor: "#22315B",
+    backgroundColor: "#29375C",
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: "center",
