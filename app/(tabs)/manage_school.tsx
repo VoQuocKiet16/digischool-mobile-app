@@ -4,6 +4,9 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-nati
 import Header from "../../components/Header";
 import ChartSchoolTopday from "../../components/manage/ChartSchoolTopday";
 import ChartSchoolWeek from "../../components/manage/ChartSchoolWeek";
+import ChartStudentTopday from "../../components/manage/ChartStudentTopday";
+import ChartStudentWeek from "../../components/manage/ChartStudentWeek";
+import ChartTeacher from "../../components/manage/ChartTeacher";
 
 const FILTERS = ["Toàn trường", "Giáo viên", "Học sinh"];
 const SUB_FILTERS = ["Hôm nay", "Tuần này"];
@@ -45,19 +48,22 @@ export default function ManageSchool() {
               </TouchableOpacity>
             ))}
           </View>
-          <View style={styles.subFilterRow}>
-            {SUB_FILTERS.map((item, idx) => (
-              <TouchableOpacity
-                key={item}
-                style={styles.subFilterBtn}
-                onPress={() => setSubFilter(idx)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.subFilterText, subFilter === idx && styles.subFilterTextActive]}>{item}</Text>
-                {subFilter === idx && <View style={styles.underline} />}
-              </TouchableOpacity>
-            ))}
-          </View>
+          {/* Ẩn subFilterRow nếu filter là Giáo viên */}
+          {filter !== 1 && (
+            <View style={styles.subFilterRow}>
+              {SUB_FILTERS.map((item, idx) => (
+                <TouchableOpacity
+                  key={item}
+                  style={styles.subFilterBtn}
+                  onPress={() => setSubFilter(idx)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.subFilterText, subFilter === idx && styles.subFilterTextActive]}>{item}</Text>
+                  {subFilter === idx && <View style={styles.underline} />}
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
           <View style={styles.timeRow}>
             <MaterialIcons name="access-time" size={18} color="#215562" style={{marginRight: 4}} />
             <Text style={styles.timeText}>{timeStr}, {dateStr}</Text>
@@ -70,6 +76,18 @@ export default function ManageSchool() {
         {/* Hiển thị chart tuần khi filter là Toàn trường và subFilter là Tuần này */}
         {filter === 0 && subFilter === 1 && (
           <ChartSchoolWeek />
+        )}
+        {/* Hiển thị chart học sinh hôm nay */}
+        {filter === 2 && subFilter === 0 && (
+          <ChartStudentTopday />
+        )}
+        {/* Hiển thị chart học sinh tuần này */}
+        {filter === 2 && subFilter === 1 && (
+          <ChartStudentWeek />
+        )}
+        {/* Hiển thị chart giáo viên */}
+        {filter === 1 && (
+          <ChartTeacher />
         )}
       </ScrollView>
     </View>
