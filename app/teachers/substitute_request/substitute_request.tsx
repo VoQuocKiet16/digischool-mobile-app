@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     color: "#25345D",
   },
   sendBtn: {
-    backgroundColor: "#22315B",
+    backgroundColor: "#29375C",
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: "center",
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   },
   suggestionTag: {
     fontSize: 12,
-    color: "#22315B",
+    color: "#29375C",
     marginLeft: 8,
     fontWeight: "500",
   },

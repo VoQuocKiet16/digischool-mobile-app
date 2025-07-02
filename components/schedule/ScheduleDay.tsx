@@ -6,14 +6,38 @@ import ScheduleSlot from "./ScheduleSlot";
 interface ScheduleDayProps {
   periods: string[];
   days: string[];
-  onAddActivity: (dayIndex: number, periodIndex: number, activity: string) => void;
-  onSlotPress: (dayIndex: number, periodIndex: number, activity: string) => void;
+  onAddActivity: (
+    dayIndex: number,
+    periodIndex: number,
+    activity: string
+  ) => void;
+  onSlotPress: (
+    dayIndex: number,
+    periodIndex: number,
+    activity: string,
+    lessonId?: string
+  ) => void;
   scheduleData: Activity[][];
   selectedSlots?: { row: number; col: number }[];
   onSelectSlot?: (dayIndex: number, periodIndex: number) => void;
   cellStatusData?: ("taught" | "current" | "exchangeable" | "default")[][];
+  currentDayIndex?: number;
+  lessonIds?: string[][];
+  hideNullSlot?: boolean;
 }
-const ScheduleDay: React.FC<ScheduleDayProps> = ({ periods, days, onAddActivity, onSlotPress, scheduleData, selectedSlots = [], onSelectSlot, cellStatusData, }) => {
+const ScheduleDay: React.FC<ScheduleDayProps> = ({
+  periods,
+  days,
+  onAddActivity,
+  onSlotPress,
+  scheduleData,
+  selectedSlots = [],
+  onSelectSlot,
+  cellStatusData,
+  currentDayIndex,
+  lessonIds,
+  hideNullSlot = false,
+}) => {
   return (
     <View style={styles.container}>
       {/* Các hàng tiết */}
@@ -35,14 +59,34 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({ periods, days, onAddActivity,
             const cellStatus = cellStatusData
               ? cellStatusData[periodIndex][dayIndex]
               : undefined;
+            const lessonId = lessonIds?.[periodIndex]?.[dayIndex];
             let slotText = slotData.text;
-            if (cellStatus === "exchangeable" && (!slotText || slotText === "")) {
+            if (
+              cellStatus === "exchangeable" &&
+              (!slotText || slotText === "")
+            ) {
               slotText = "Trống";
             } else if (!slotText || slotText === "") {
               slotText = "Thêm hoạt động";
             }
+
+            // Kiểm tra xem có phải cột của ngày hiện tại không
+            const isCurrentDay =
+              currentDayIndex !== undefined && currentDayIndex === dayIndex;
+
+            // Nếu là leave_request và slot null thì không render gì
+            if (hideNullSlot && (!slotData.text || slotData.text === "")) {
+              return <View key={dayIndex} style={styles.slotWrapper}></View>;
+            }
+
             return (
-              <View key={dayIndex} style={styles.slotWrapper}>
+              <View
+                key={dayIndex}
+                style={[
+                  styles.slotWrapper,
+                  isCurrentDay && styles.currentDaySlot,
+                ]}
+              >
                 <ScheduleSlot
                   text={slotText}
                   isUserAdded={slotData.type === "user-added"}
@@ -54,7 +98,11 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({ periods, days, onAddActivity,
                   {...(cellStatus && { cellStatus })}
                   onSlotPress={onSlotPress}
                   activityText={slotData.text}
-                  {...(onSelectSlot && { onSlotPressLegacy: () => onSelectSlot(dayIndex, periodIndex) })}
+                  lessonId={lessonId}
+                  {...(onSelectSlot && {
+                    onSlotPressLegacy: () =>
+                      onSelectSlot(dayIndex, periodIndex),
+                  })}
                 />
               </View>
             );
@@ -66,28 +114,28 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({ periods, days, onAddActivity,
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
-  row: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
+  container: { flex: 1, backgroundColor: "#f7f7f7" },
+  row: { flexDirection: "row", alignItems: "center" },
   periodCell: {
     width: 60,
-    height: 88,
+    height: 100,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f7f8fa",
+    backgroundColor: "#f7f7f7",
     borderRightWidth: 1,
     borderRightColor: "#e0e0e0",
     borderBottomWidth: 1,
     borderBottomColor: "#e0e0e0",
   },
   periodText: {
-    fontWeight: "bold",
-    color: "#3A546D",
-    fontSize: 13,
+    color: "#29375C",
+    fontSize: 15,
     textAlign: "center",
+    fontFamily: "Baloo2-SemiBold",
   },
   slotWrapper: {
     flex: 1,
-    height: 88,
+    height: 100,
     alignItems: "center",
     justifyContent: "center",
     marginHorizontal: 0,
@@ -95,6 +143,10 @@ const styles = StyleSheet.create({
     borderRightColor: "#e0e0e0",
     borderBottomWidth: 1,
     borderBottomColor: "#e0e0e0",
+    backgroundColor: "#f7f7f7",
+  },
+  currentDaySlot: {
+    backgroundColor: "#BACDDD",
   },
 });
 

@@ -164,7 +164,13 @@ export default function SubstituteLesson() {
           </View>
         </View>
         {/* Nút tiếp tục */}
-        <SafeAreaView style={{ backgroundColor: '#fff', marginBottom: 30, paddingHorizontal: 16 }}>
+        <SafeAreaView
+          style={{
+            backgroundColor: "#fff",
+            marginBottom: 30,
+            paddingHorizontal: 16,
+          }}
+        >
           <TouchableOpacity
             style={[
               styles.continueBtn,
@@ -203,12 +209,12 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   legendText: {
-    color: "#22315B",
+    color: "#29375C",
     fontSize: 13,
     fontWeight: "500",
   },
   continueBtn: {
-    backgroundColor: "#22315B",
+    backgroundColor: "#29375C",
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: "center",

@@ -19,12 +19,12 @@ const PERIODS = ["Tiết 1", "Tiết 2", "Tiết 3", "Tiết 4", "Tiết 5"];
 // Dữ liệu mẫu cho dạy bù: mỗi slot là 1 trạng thái
 const MOCK_SCHEDULE = [
   ["Toán", "Văn", "Địa", "Anh", "GDCD"], // Thứ 2: Tiết 1,2,3,4,5
-  ["Lý", "Anh", "GDCD", "Toán", "Văn"],   // Thứ 3: Tiết 1,2,3,4,5
-  ["Hóa", "Toán", "Toán", "Lý", "Anh"],   // Thứ 4: Tiết 1,2,3,4,5
-  ["", "", "", "", ""],    // Thứ 5: tất cả trống
-  ["", "", "", "", ""],     // Thứ 6: tất cả trống
-  ["", "", "", "", ""],   // Thứ 7: tất cả trống
-  ["", "", "", "", ""],   // CN: tất cả trống
+  ["Lý", "Anh", "GDCD", "Toán", "Văn"], // Thứ 3: Tiết 1,2,3,4,5
+  ["Hóa", "Toán", "Toán", "Lý", "Anh"], // Thứ 4: Tiết 1,2,3,4,5
+  ["", "", "", "", ""], // Thứ 5: tất cả trống
+  ["", "", "", "", ""], // Thứ 6: tất cả trống
+  ["", "", "", "", ""], // Thứ 7: tất cả trống
+  ["", "", "", "", ""], // CN: tất cả trống
 ];
 // Các slot đã được chọn để dạy bù (taken)
 const TAKEN_SLOTS = [
@@ -156,7 +156,13 @@ export default function SelectMakeupLessonScreen() {
           </View>
         </View>
         {/* Nút tiếp tục */}
-        <SafeAreaView style={{ backgroundColor: '#fff', marginBottom: 30, paddingHorizontal: 16 }}>
+        <SafeAreaView
+          style={{
+            backgroundColor: "#fff",
+            marginBottom: 30,
+            paddingHorizontal: 16,
+          }}
+        >
           <TouchableOpacity
             style={[
               styles.continueBtn,
@@ -195,12 +201,12 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   legendText: {
-    color: "#22315B",
+    color: "#29375C",
     fontSize: 13,
     fontWeight: "500",
   },
   continueBtn: {
-    backgroundColor: "#22315B",
+    backgroundColor: "#29375C",
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: "center",

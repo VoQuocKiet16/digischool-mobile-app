@@ -1,13 +1,13 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import HeaderLayout from "../../../components/layout/HeaderLayout";
 import SuccessModal from "../../../components/notifications_modal/SuccessModal";
@@ -39,13 +39,14 @@ export default function TeacherLeaveRequestInfoScreen() {
     ({ row, col }: { row: number; col: number }, idx: number) => ({
       period: periods[row],
       day: days[col],
-      subject: subjects[idx] || '',
+      subject: subjects[idx] || "",
     })
   );
 
   // Lấy ngày và tiết duy nhất (giả sử chỉ chọn 1 ngày)
   const uniqueDay = selectedLessons.length > 0 ? selectedLessons[0].day : "";
-  const uniquePeriod = selectedLessons.length > 0 ? selectedLessons[0].period : "";
+  const uniquePeriod =
+    selectedLessons.length > 0 ? selectedLessons[0].period : "";
 
   // Xử lý tiếp tục
   const handleNext = () => {
@@ -116,7 +117,9 @@ export default function TeacherLeaveRequestInfoScreen() {
             <View style={{ padding: 20 }}>
               <View style={styles.card}>
                 <Text style={styles.cardTitle}>Tiết dạy xin nghỉ</Text>
-                <Text style={styles.cardDate}>{uniqueDay} - {uniquePeriod} - 16/6/2025</Text>
+                <Text style={styles.cardDate}>
+                  {uniqueDay} - {uniquePeriod} - 16/6/2025
+                </Text>
                 {selectedLessons.map((lesson: any, idx: number) => (
                   <View key={idx} style={styles.lessonTag}>
                     <Text style={styles.lessonTagText}>{lesson.subject}</Text>
@@ -155,23 +158,23 @@ export default function TeacherLeaveRequestInfoScreen() {
 const styles = StyleSheet.create({
   subtitle: {
     fontSize: 15,
-    color: "#22315B",
+    color: "#29375C",
     textAlign: "center",
     marginBottom: 18,
   },
   inputBox: { marginBottom: 18 },
-  label: { color: "#22315B", fontWeight: "bold", marginBottom: 6 },
+  label: { color: "#29375C", fontWeight: "bold", marginBottom: 6 },
   input: {
     borderWidth: 1.2,
     borderColor: "#B6C5E1",
     borderRadius: 8,
     padding: 12,
     fontSize: 15,
-    color: "#22315B",
+    color: "#29375C",
     backgroundColor: "#fff",
   },
   button: {
-    backgroundColor: "#22315B",
+    backgroundColor: "#29375C",
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: "center",
@@ -194,10 +197,10 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#22315B",
+    color: "#29375C",
     marginBottom: 6,
   },
-  cardDate: { color: "#22315B", marginBottom: 10 },
+  cardDate: { color: "#29375C", marginBottom: 10 },
   lessonTag: {
     backgroundColor: "#FFD6B0",
     borderRadius: 12,
@@ -209,14 +212,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   lessonTagText: {
-    color: "#22315B",
+    color: "#29375C",
     fontWeight: "bold",
     fontSize: 18,
     textAlign: "center",
   },
   confirmInputBox: {
     borderWidth: 2,
-    borderColor: "#22315B",
+    borderColor: "#29375C",
     borderRadius: 12,
     backgroundColor: "#FFFFFF",
     marginBottom: 18,
@@ -231,15 +234,15 @@ const styles = StyleSheet.create({
     left: 18,
     backgroundColor: "#FFFFFF",
     paddingHorizontal: 6,
-    color: "#22315B",
+    color: "#29375C",
     fontWeight: "bold",
     fontSize: 12,
     zIndex: 2,
   },
   confirmInput: {
-    color: "#22315B",
+    color: "#29375C",
     fontSize: 14,
     fontWeight: "bold",
     marginTop: 2,
   },
-}); 
+});

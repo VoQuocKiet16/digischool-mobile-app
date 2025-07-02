@@ -5,13 +5,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const LessonDetailScreen = () => {
@@ -52,7 +52,9 @@ const LessonDetailScreen = () => {
         <View style={{ marginHorizontal: 16, marginTop: 0, marginBottom: 12 }}>
           <PlusIcon
             text="Dặn dò kiểm tra cho tiết học này"
-            onPress={() => router.push("/teachers/add_exam_reminder/add_exam_reminder")}
+            onPress={() =>
+              router.push("/teachers/add_exam_reminder/add_exam_reminder")
+            }
           />
         </View>
       </ScrollView>
@@ -69,7 +71,7 @@ const LessonDetailScreen = () => {
               <Ionicons
                 name="checkmark-done-circle-outline"
                 size={40}
-                color="#22315B"
+                color="#29375C"
               />
             </View>
             <Text style={styles.modalTitle}>Hoàn thành tiết học</Text>
@@ -108,9 +110,7 @@ const LessonDetailScreen = () => {
                 router.push("/teachers/substitute_request/substitute_request");
               }}
             >
-              <Text style={styles.menuText}>
-                Dạy thay
-              </Text>
+              <Text style={styles.menuText}>Dạy thay</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.menuItem}
@@ -139,7 +139,7 @@ const LessonDetailScreen = () => {
               style={styles.menuItem}
               onPress={() => {
                 setMenuVisible(false);
-                router.push({ pathname: '/note/note' });
+                router.push({ pathname: "/note/note" });
               }}
             >
               <Text style={styles.menuText}>Ghi chú</Text>
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   menuTextActive: {
-    color: "#22315B",
+    color: "#29375C",
     fontWeight: "bold",
   },
   modalOverlay: {
@@ -220,12 +220,12 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#22315B",
+    color: "#29375C",
     marginBottom: 8,
     marginTop: 2,
   },
   modalDesc: {
-    color: "#22315B",
+    color: "#29375C",
     fontSize: 15,
     textAlign: "center",
     marginBottom: 18,
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   modalBtnOutlineText: {
-    color: "#22315B",
+    color: "#29375C",
     fontWeight: "bold",
     fontSize: 16,
   },
