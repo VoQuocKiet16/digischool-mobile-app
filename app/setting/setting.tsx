@@ -1,23 +1,25 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import ConfirmLogoutModal from "../../components/notifications_modal/ConfirmLogoutModal";
 import RefreshableScrollView from "../../components/RefreshableScrollView";
-import { useUserData } from "../../hooks/useUserData";
 import { logout } from "../../services/auth.service";
+import { useUserContext } from "../UserContext";
 
 const Setting: React.FC = () => {
   const router = useRouter();
-  const { userData, refreshUserData } = useUserData();
+  const { userData, setUserData } = useUserContext();
   const [showLogoutModal, setShowLogoutModal] = React.useState(false);
 
   const handleLogout = async () => {
     setShowLogoutModal(false);
     try {
-      const res = await logout();
-      console.log("Logout response in setting:", res);
+      await logout();
+      await AsyncStorage.clear();
+      setUserData(null);
       router.replace("/auth/login");
     } catch (err) {
       console.log("Logout error in setting:", err);
@@ -36,7 +38,7 @@ const Setting: React.FC = () => {
       <RefreshableScrollView
         style={styles.container}
         contentContainerStyle={{ paddingBottom: 32 }}
-        onRefresh={refreshUserData}
+        onRefresh={async () => {}}
       >
         <View style={styles.profileCard}>
           <Image

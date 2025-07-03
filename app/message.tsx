@@ -1,11 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
-import Header from "../../components/Header";
-import ScheduleStudentsScreen from "../students/schedule/schedule";
-import ScheduleTeacherScreen from "../teachers/schedule/schedule";
+import {
+  ActivityIndicator,
+  View
+} from "react-native";
+import Header from "../components/Header";
+import MessageListScreen from "./message/message_list";
 
-export default function HomeScreen() {
+export default function MessageScreen() {
   const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
@@ -15,17 +17,7 @@ export default function HomeScreen() {
       AsyncStorage.getItem("role"),
       AsyncStorage.getItem("userName"),
     ]).then(([roleStr, name]) => {
-      if (roleStr) {
-        try {
-          const parsedRoles = JSON.parse(roleStr);
-          setRoles(parsedRoles);
-        } catch (error) {
-          console.log("Error parsing role:", error);
-          setRoles([]);
-        }
-      } else {
-        setRoles([]);
-      }
+      if (roleStr) setRoles(JSON.parse(roleStr));
       if (name) setUserName(name);
       setLoading(false);
     });
@@ -39,25 +31,22 @@ export default function HomeScreen() {
     );
   }
 
-  const renderHeader = (rolePrefix: string) => (
-    <Header
-      title="Trang chủ"
-      studentName={userName ? `${rolePrefix} ${userName}` : `${rolePrefix}...`}
-    />
-  );
-
   if (roles.includes("teacher")) {
-    // UI cho teacher
+    // UI cho giáo viên
     return (
       <View style={styles.container}>
-        {renderHeader("GV")}
-        <ScheduleTeacherScreen />
+        <Header
+          title="Trò chuyện"
+          studentName={userName ? `GV ${userName}` : "GV Nguyễn Văn A"}
+        />
+        {/* TODO: Thay bằng component chat cho giáo viên nếu có */}
+        <MessageListScreen userName={userName} roles={roles} />
       </View>
     );
   }
 
   if (roles.includes("manager")) {
-    // UI cho manager (hiện tại là loading)
+    // UI cho manager
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#25345D" />
@@ -65,18 +54,21 @@ export default function HomeScreen() {
     );
   }
 
-  // UI cho student
+  // UI cho học sinh
   return (
     <View style={styles.container}>
-      {renderHeader("HS")}
-      <ScheduleStudentsScreen />
+      <Header
+        title="Trò chuyện"
+        studentName={userName ? `HS ${userName}` : "HS Nguyễn Văn A"}
+      />
+      <MessageListScreen userName={userName} roles={roles} />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = {
   container: {
     flex: 1,
     backgroundColor: "#fff",
   },
-});
+};

@@ -3,7 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useState } from "react";
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import Header from "../../components/Header";
+import Header from "../components/Header";
 
 const FILTERS = ["Học sinh", "Giáo viên"];
 const BLOCKS = ["Khối 10", "Khối 11", "Khối 12"];
@@ -26,16 +26,16 @@ export default function ManageAccount() {
 
   // Dữ liệu mẫu
   const students = [
-    { name: 'Nguyen Van A', class: '10A1', code: 'HS-101', avatar: require('../../assets/images/avt_default.png') },
-    { name: 'Nguyen Van B', class: '10A2', code: 'HS-102', avatar: require('../../assets/images/avt_default.png') },
-    { name: 'Nguyen Van C', class: '10A3', code: 'HS-103', avatar: require('../../assets/images/avt_default.png') },
-    { name: 'Nguyen Van D', class: '10A4', code: 'HS-104', avatar: require('../../assets/images/avt_default.png') },
+    { name: 'Nguyen Van A', class: '10A1', code: 'HS-101', avatar: require('../assets/images/avt_default.png') },
+    { name: 'Nguyen Van B', class: '10A2', code: 'HS-102', avatar: require('../assets/images/avt_default.png') },
+    { name: 'Nguyen Van C', class: '10A3', code: 'HS-103', avatar: require('../assets/images/avt_default.png') },
+    { name: 'Nguyen Van D', class: '10A4', code: 'HS-104', avatar: require('../assets/images/avt_default.png') },
   ];
   const teachers = [
-    { name: 'Tran Thi B', subject: 'Toán', code: 'GV-201', avatar: require('../../assets/images/avt_default.png') },
-    { name: 'Le Van C', subject: 'Vật lý', code: 'GV-202', avatar: require('../../assets/images/avt_default.png') },
-    { name: 'Pham Van D', subject: 'Ngữ Văn', code: 'GV-203', avatar: require('../../assets/images/avt_default.png') },
-    { name: 'Nguyen Thi E', subject: 'Hóa học', code: 'GV-204', avatar: require('../../assets/images/avt_default.png') },
+    { name: 'Tran Thi B', subject: 'Toán', code: 'GV-201', avatar: require('../assets/images/avt_default.png') },
+    { name: 'Le Van C', subject: 'Vật lý', code: 'GV-202', avatar: require('../assets/images/avt_default.png') },
+    { name: 'Pham Van D', subject: 'Ngữ Văn', code: 'GV-203', avatar: require('../assets/images/avt_default.png') },
+    { name: 'Nguyen Thi E', subject: 'Hóa học', code: 'GV-204', avatar: require('../assets/images/avt_default.png') },
   ];
   const filteredStudents = students.filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -50,7 +50,7 @@ export default function ManageAccount() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      <Header title="Tài khoản" />
+      <Header title="Tài khoản" studentName="" />
       {/* Filter chọn Học sinh/Giáo viên */}
       <View style={styles.filterRow}>
         <TouchableOpacity style={styles.arrowBtn} onPress={() => setFilterIdx((filterIdx - 1 + FILTERS.length) % FILTERS.length)}>

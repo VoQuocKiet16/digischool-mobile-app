@@ -168,6 +168,8 @@ export const useUserData = () => {
     }, [loadUserDataFromStorage])
   );
 
+  console.log("userData:", userData);
+
   return {
     userData,
     loading,

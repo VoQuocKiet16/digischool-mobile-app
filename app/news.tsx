@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import Header from '../../components/Header';
-import NewsFeedScreen from '../news/news_feed';
+import Header from '../components/Header';
+import NewsFeedScreen from './news/news_feed';
 
 export default function NewsScreen() {
   const [userName, setUserName] = useState('');

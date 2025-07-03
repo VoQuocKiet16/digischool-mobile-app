@@ -1,12 +1,12 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Header from "../../components/Header";
-import ChartSchoolTopday from "../../components/manage/ChartSchoolTopday";
-import ChartSchoolWeek from "../../components/manage/ChartSchoolWeek";
-import ChartStudentTopday from "../../components/manage/ChartStudentTopday";
-import ChartStudentWeek from "../../components/manage/ChartStudentWeek";
-import ChartTeacher from "../../components/manage/ChartTeacher";
+import Header from "../components/Header";
+import ChartSchoolTopday from "../components/manage/ChartSchoolTopday";
+import ChartSchoolWeek from "../components/manage/ChartSchoolWeek";
+import ChartStudentTopday from "../components/manage/ChartStudentTopday";
+import ChartStudentWeek from "../components/manage/ChartStudentWeek";
+import ChartTeacher from "../components/manage/ChartTeacher";
 
 const FILTERS = ["Toàn trường", "Giáo viên", "Học sinh"];
 const SUB_FILTERS = ["Hôm nay", "Tuần này"];
@@ -24,7 +24,7 @@ export default function ManageSchool() {
 
   return (
     <View style={{flex: 1}}>
-      <Header title="Quản lý" />
+      <Header title="Quản lý" studentName=""/>
       <ScrollView contentContainerStyle={{paddingBottom: 24}} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
           <View style={styles.row}>
