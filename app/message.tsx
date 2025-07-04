@@ -37,7 +37,7 @@ export default function MessageScreen() {
       <View style={styles.container}>
         <Header
           title="Trò chuyện"
-          studentName={userName ? `GV ${userName}` : "GV Nguyễn Văn A"}
+          name={userName ? `GV ${userName}` : "GV Nguyễn Văn A"}
         />
         {/* TODO: Thay bằng component chat cho giáo viên nếu có */}
         <MessageListScreen userName={userName} roles={roles} />
@@ -59,7 +59,7 @@ export default function MessageScreen() {
     <View style={styles.container}>
       <Header
         title="Trò chuyện"
-        studentName={userName ? `HS ${userName}` : "HS Nguyễn Văn A"}
+        name={userName ? `HS ${userName}` : "HS Nguyễn Văn A"}
       />
       <MessageListScreen userName={userName} roles={roles} />
     </View>

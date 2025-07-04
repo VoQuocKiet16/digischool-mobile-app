@@ -1,5 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Header from "../components/Header";
 import ChartSchoolTopday from "../components/manage/ChartSchoolTopday";
@@ -14,6 +15,13 @@ const SUB_FILTERS = ["Hôm nay", "Tuần này"];
 export default function ManageSchool() {
   const [filter, setFilter] = useState(0);
   const [subFilter, setSubFilter] = useState(0);
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    AsyncStorage.getItem("userName").then(name => {
+      if (name) setUserName(name);
+    });
+  }, []);
 
   // Lấy ngày giờ hiện tại
   const now = new Date();
@@ -24,7 +32,7 @@ export default function ManageSchool() {
 
   return (
     <View style={{flex: 1}}>
-      <Header title="Quản lý" studentName=""/>
+      <Header title="Quản lý" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"}/>
       <ScrollView contentContainerStyle={{paddingBottom: 24}} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
           <View style={styles.row}>

@@ -90,7 +90,7 @@ export default function ManageProcess() {
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
       {/* Header */}
-      <Header title="Tiến trình" studentName="QL Nguyễn Văn A" />
+      <Header title="Tiến trình" name="QL Nguyễn Văn A" />
       {/* Filter lớn */}
       <View style={styles.filterBlockWrap}>
         <TouchableOpacity

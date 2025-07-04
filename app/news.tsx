@@ -34,7 +34,7 @@ export default function NewsScreen() {
       <View style={styles.container}>
         <Header
           title="Tin tức"
-          studentName={userName ? `GV ${userName}` : 'GV Nguyễn Văn A'}
+          name={userName ? `GV ${userName}` : 'GV Nguyễn Văn A'}
         />
         {/* TODO: Thay bằng component news cho giáo viên nếu có */}
         <NewsFeedScreen />
@@ -56,7 +56,7 @@ export default function NewsScreen() {
     <View style={styles.container}>
       <Header
         title="Tin tức"
-        studentName={userName ? `HS ${userName}` : 'HS Nguyễn Văn A'}
+        name={userName ? `HS ${userName}` : 'HS Nguyễn Văn A'}
       />
       <NewsFeedScreen />
     </View>

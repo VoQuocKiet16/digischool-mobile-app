@@ -1,7 +1,8 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Header from "../components/Header";
 
@@ -23,6 +24,13 @@ export default function ManageAccount() {
   const [classIdx, setClassIdx] = useState<number|null>(null);
   const [blockDropdownOpen, setBlockDropdownOpen] = useState(false);
   const [classDropdownOpen, setClassDropdownOpen] = useState(false);
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    AsyncStorage.getItem("userName").then(name => {
+      if (name) setUserName(name);
+    });
+  }, []);
 
   // Dữ liệu mẫu
   const students = [
@@ -50,7 +58,7 @@ export default function ManageAccount() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      <Header title="Tài khoản" studentName="" />
+      <Header title="Tài khoản" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} />
       {/* Filter chọn Học sinh/Giáo viên */}
       <View style={styles.filterRow}>
         <TouchableOpacity style={styles.arrowBtn} onPress={() => setFilterIdx((filterIdx - 1 + FILTERS.length) % FILTERS.length)}>

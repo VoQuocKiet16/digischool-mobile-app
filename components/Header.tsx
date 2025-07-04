@@ -12,10 +12,10 @@ import { ThemedView } from "./ThemedView";
 
 interface HeaderProps {
   title: string;
-  studentName: string;
+  name: string;
 }
 
-export default function Header({ title, studentName }: HeaderProps) {
+export default function Header({ title, name }: HeaderProps) {
   const router = useRouter();
   const colorScheme = useColorScheme();
 
@@ -37,7 +37,7 @@ export default function Header({ title, studentName }: HeaderProps) {
           />
           <View>
             <Text style={styles.headerTitle}>{title}</Text>
-            <Text style={styles.studentName}>Xin chào, {studentName}</Text>
+            <Text style={styles.studentName}>Xin chào, {name}</Text>
           </View>
         </View>
         <View style={styles.headerRight}>

@@ -42,7 +42,7 @@ export default function HomeScreen() {
   const renderHeader = (rolePrefix: string) => (
     <Header
       title="Trang chủ"
-      studentName={userName ? `${rolePrefix} ${userName}` : `${rolePrefix}...`}
+      name={userName ? `${rolePrefix} ${userName}` : `${rolePrefix}...`}
     />
   );
 

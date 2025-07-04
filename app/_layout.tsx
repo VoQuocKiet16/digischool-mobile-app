@@ -11,7 +11,7 @@ import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import "react-native-reanimated";
-import { UserProvider, useUserContext } from "./UserContext";
+import { UserProvider, useUserContext } from "../contexts/UserContext";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -176,7 +176,9 @@ function RootLayoutContent() {
                 style={[styles.tabItem, currentRoute === tab.route && styles.tabItemActive]}
                 onPress={() => handleTabPress(tab.route)}
               >
-                {tab.icon}
+                <View style={currentRoute === tab.route ? styles.iconShadow : undefined}>
+                  {React.cloneElement(tab.icon, { color: currentRoute === tab.route ? '#29375C' : '#C4C4C4' })}
+                </View>
                 <Text style={[styles.tabText, currentRoute === tab.route && styles.tabTextActive]}>{tab.name}</Text>
               </TouchableOpacity>
             ))}
@@ -214,15 +216,22 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   tabItemActive: {
-    backgroundColor: "#F7F8FA",
+    backgroundColor: "#FFFFFF",
   },
   tabText: {
     fontSize: 12,
-    color: "#22304A",
+    color: "#C4C4C4",
     marginTop: 2,
   },
   tabTextActive: {
-    color: "#215562",
+    color: "#29375C",
     fontWeight: "bold",
+  },
+  iconShadow: {
+    shadowColor: '#29375C',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.60,
+    shadowRadius: 6,
+    elevation: 6, // Android
   },
 });

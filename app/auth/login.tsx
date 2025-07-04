@@ -13,8 +13,8 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import LoadingModal from "../../components/LoadingModal";
 import { API_ERROR_MESSAGES } from "../../constants/api.constants";
+import { useUserContext } from "../../contexts/UserContext";
 import { getMe, login } from "../../services/auth.service";
-import { useUserContext } from "../UserContext";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
