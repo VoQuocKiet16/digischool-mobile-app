@@ -10,9 +10,17 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     (async () => {
       const userRoleInfoString = await AsyncStorage.getItem("userRoleInfo");
+      const userInfoString = await AsyncStorage.getItem("userInfo");
+      let userData: any = {};
       if (userRoleInfoString) {
-        const roleInfo = JSON.parse(userRoleInfoString);
-        setUserData({ roleInfo });
+        userData.roleInfo = JSON.parse(userRoleInfoString);
+      }
+      if (userInfoString) {
+        const info = JSON.parse(userInfoString);
+        userData = { ...userData, ...info };
+      }
+      if (userData && (userData.roleInfo || userData.name)) {
+        setUserData(userData);
       }
     })();
   }, []);

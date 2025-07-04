@@ -35,9 +35,9 @@ export default function Header({ title, name }: HeaderProps) {
             source={require("../assets/images/digi-logo.png")}
             style={styles.logo}
           />
-          <View>
-            <Text style={styles.headerTitle}>{title}</Text>
-            <Text style={styles.studentName}>Xin chào, {name}</Text>
+          <View style={styles.textWrap}>
+            <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">{title}</Text>
+            <Text style={styles.studentName} numberOfLines={1} ellipsizeMode="tail">Xin chào, {name}</Text>
           </View>
         </View>
         <View style={styles.headerRight}>
@@ -46,7 +46,7 @@ export default function Header({ title, name }: HeaderProps) {
             activeOpacity={0.7}
             style={styles.bellWrap}
           >
-            <Ionicons name="notifications-outline" size={28} color="#29375C" />
+            <Ionicons name="notifications-outline" size={24} color="#29375C" />
             <View style={styles.bellDot} />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.7}>
@@ -67,59 +67,70 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     paddingTop: 30,
     paddingBottom: 10,
     marginTop: 10,
     backgroundColor: "#f7f7f7",
+    width: "100%",
   },
   headerLeft: {
     flexDirection: "row",
     alignItems: "center",
+    flex: 1,
+    minWidth: 0,
   },
   logo: {
-    width: 75,
-    height: 75,
+    width: 48,
+    height: 48,
     resizeMode: "contain",
-    marginRight: 14,
+    marginRight: 10,
+  },
+  textWrap: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: "center",
   },
   headerTitle: {
-    fontSize: 32,
+    fontSize: 22,
     color: "#29375C",
     fontFamily: "Baloo2-Bold",
+    fontWeight: "bold",
   },
   studentName: {
-    fontSize: 15,
+    fontSize: 14,
     color: "#29375C",
     fontFamily: "Baloo2-Medium",
   },
   headerRight: {
     flexDirection: "row",
     alignItems: "center",
+    marginLeft: 8,
   },
   bellWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: "#e6eef2",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 14,
+    marginRight: 10,
     position: "relative",
   },
   bellDot: {
     position: "absolute",
-    top: 10,
-    right: 10,
-    width: 9,
-    height: 9,
-    borderRadius: 5,
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: "#e74c3c",
-    borderWidth: 1.5,
+    borderWidth: 1.2,
     borderColor: "#fff",
   },
   avatar: {
-    width: 60,
-    height: 60,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
 });

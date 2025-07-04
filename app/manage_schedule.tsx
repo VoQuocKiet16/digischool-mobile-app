@@ -10,5 +10,5 @@ export default function ManageSchedule() {
     });
   }, []);
 
-  return <Header title="Quản lý thời khoá biểu" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"}/>;
+  return <Header title="Thời khoá biểu" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"}/>;
 }

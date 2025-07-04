@@ -34,6 +34,8 @@ const Setting: React.FC = () => {
     return "Người dùng";
   };
 
+  // console.log("userData in Setting:", userData);
+
   return (
     <HeaderLayout title="Cài đặt" onBack={() => router.back()}>
       <RefreshableScrollView
