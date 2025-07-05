@@ -6,12 +6,12 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import ConfirmLogoutModal from "../../components/notifications_modal/ConfirmLogoutModal";
 import RefreshableScrollView from "../../components/RefreshableScrollView";
-import { useUserContext } from "../../contexts/UserContext";
+import { useUserData } from "../../hooks/useUserData";
 import { logout } from "../../services/auth.service";
 
 const Setting: React.FC = () => {
   const router = useRouter();
-  const { userData, setUserData } = useUserContext();
+  const { userData, refreshUserData } = useUserData();
   const [showLogoutModal, setShowLogoutModal] = React.useState(false);
 
   const handleLogout = async () => {
@@ -19,7 +19,6 @@ const Setting: React.FC = () => {
     try {
       await logout();
       await AsyncStorage.clear();
-      setUserData(null);
       router.replace("/auth/login");
     } catch (err) {
       console.log("Logout error in setting:", err);
@@ -41,7 +40,7 @@ const Setting: React.FC = () => {
       <RefreshableScrollView
         style={styles.container}
         contentContainerStyle={{ paddingBottom: 32 }}
-        onRefresh={async () => {}}
+        onRefresh={refreshUserData}
       >
         <View style={styles.profileCard}>
           <Image
