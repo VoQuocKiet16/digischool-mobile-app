@@ -3,17 +3,38 @@ import React, { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { UserData } from "../../../../types/user.types";
 
-interface ContactInfoProps {
+interface TeachingInfoProps {
   userData: UserData | null;
 }
 
-const ContactInfo: React.FC<ContactInfoProps> = ({ userData }) => {
+const TeachingInfo: React.FC<TeachingInfoProps> = ({ userData }) => {
   const [showInfo, setShowInfo] = useState(true);
+
+  const getSubjectsDisplay = () => {
+    if (!userData?.subjects || userData.subjects.length === 0) {
+      return "Chưa cập nhật";
+    }
+    return userData.subjects.map((subject: any) => subject.subjectName).join(", ");
+  };
+
+  const getHomeroomClass = () => {
+    if (!userData?.roleInfo?.homeroomClass) {
+      return "Chưa cập nhật";
+    }
+    return userData.roleInfo.homeroomClass;
+  };
+
+  const getSchoolName = () => {
+    if (!userData?.roleInfo?.school) {
+      return "Chưa cập nhật";
+    }
+    return userData.roleInfo.school;
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>Thông tin liên hệ</Text>
+        <Text style={styles.title}>Thông tin giảng dạy</Text>
         <TouchableOpacity onPress={() => setShowInfo((v) => !v)}>
           <Ionicons
             name={showInfo ? "chevron-down" : "chevron-forward"}
@@ -26,24 +47,18 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ userData }) => {
       {showInfo && (
         <>
           <View style={styles.item}>
-            <Text style={styles.label}>Số điện thoại</Text>
-            <Text style={styles.value}>
-              {userData?.phone || "Chưa cập nhật"}
-            </Text>
+            <Text style={styles.label}>Bộ môn</Text>
+            <Text style={styles.value}>{getSubjectsDisplay()}</Text>
             <View style={styles.underline} />
           </View>
           <View style={styles.item}>
-            <Text style={styles.label}>Email</Text>
-            <Text style={styles.value}>
-              {userData?.email || "Chưa cập nhật"}
-            </Text>
+            <Text style={styles.label}>Chủ nhiệm</Text>
+            <Text style={styles.value}>{getHomeroomClass()}</Text>
             <View style={styles.underline} />
           </View>
           <View style={styles.item}>
-            <Text style={styles.label}>Địa chỉ</Text>
-            <Text style={styles.value}>
-              {userData?.address || "Chưa cập nhật"}
-            </Text>
+            <Text style={styles.label}>Trường học</Text>
+            <Text style={styles.value}>{getSchoolName()}</Text>
             <View style={styles.underline} />
           </View>
         </>
@@ -96,6 +111,8 @@ const styles = StyleSheet.create({
     right: 0,
     top: 5,
     fontFamily: "Baloo2-SemiBold",
+    maxWidth: "60%",
+    textAlign: "right",
   },
   underline: {
     height: 3,
@@ -105,4 +122,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ContactInfo;
+export default TeachingInfo;

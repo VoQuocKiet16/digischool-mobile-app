@@ -23,9 +23,24 @@ const LessonDetailScreen = () => {
         </TouchableOpacity>
       }
     >
+<<<<<<< khoi-api
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Lesson_Information onEvaluatePress={handleEvaluatePress} />
       </ScrollView>
+=======
+      <RefreshableScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        onRefresh={fetchLessonDetail}
+      >
+        <Lesson_Information
+          onEvaluatePress={handleEvaluatePress}
+          lessonData={lessonData}
+          testInfo={lessonData?.testInfo}
+        />
+      </RefreshableScrollView>
+>>>>>>> local
       <Modal
         visible={menuVisible}
         transparent

@@ -1,3 +1,4 @@
+<<<<<<< khoi-api
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -6,6 +7,27 @@ import DaySelector from '../../../components/schedule/DaySelector';
 import ScheduleDay from '../../../components/schedule/ScheduleDay';
 import ScheduleHeader from '../../../components/schedule/ScheduleHeader';
 import { Activity } from '../schedule/schedule';
+=======
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import HeaderLayout from "../../../components/layout/HeaderLayout";
+import DaySelector from "../../../components/schedule/DaySelector";
+import ScheduleDay from "../../../components/schedule/ScheduleDay";
+import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
+import { getStudentSchedule } from "../../../services/schedule.service";
+import { Activity } from "../schedule/schedule";
+>>>>>>> local
 
 const defaultActivity = (text: string, hasNotification = false): Activity => ({
   text,
@@ -36,10 +58,63 @@ export default function LeaveRequestScreen() {
   const [selected, setSelected] = useState<{row: number, col: number}[]>([]);
   const [scheduleData] = useState<Activity[][]>(initialScheduleData);
 
+<<<<<<< khoi-api
   const periods = session === 'Buổi sáng' ? morningPeriods : afternoonPeriods;
   const displayedData = session === 'Buổi sáng'
     ? scheduleData.slice(0, morningPeriods.length)
     : scheduleData.slice(morningPeriods.length, morningPeriods.length + afternoonPeriods.length);
+=======
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const data = await getStudentSchedule({
+          className: "12A1",
+          academicYear: year,
+          startOfWeek: dateRange.start,
+          endOfWeek: dateRange.end,
+        });
+        const { schedule, lessonIds: newLessonIds } =
+          mapApiToScheduleData(data);
+        setScheduleData(schedule);
+        setLessonIds(newLessonIds);
+        const details = Array.from({ length: 10 }, () =>
+          Array.from({ length: 7 }, () => null)
+        );
+        const scheduleData = data?.data?.schedule || [];
+        scheduleData.forEach((dayData: any) => {
+          const dayOfWeek = dayData.dayOfWeek;
+          const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+          const date = dayData.date;
+          dayData.lessons?.forEach((lesson: any) => {
+            const periodIndex = (lesson.period || 1) - 1;
+            if (periodIndex >= 0 && periodIndex < 10) {
+              details[periodIndex][dayIndex] = {
+                ...lesson,
+                date: date,
+              };
+            }
+          });
+        });
+        setLessonDetails(details);
+      } catch (err) {
+        setError("Lỗi tải thời khoá biểu");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSchedule();
+  }, [year, dateRange]);
+
+  useEffect(() => {
+    if (params.selectedSlots) {
+      try {
+        setSelected(JSON.parse(params.selectedSlots as string));
+      } catch {}
+    }
+  }, [params.selectedSlots]);
+>>>>>>> local
 
   // Hàm chọn tiết xin nghỉ
   const handleSelectSlot = (dayIndex: number, periodIndex: number) => {

@@ -39,7 +39,9 @@ const LessonEvaluateTeacherScreen = () => {
     <HeaderLayout
       title="Đánh giá tiết học"
       subtitle="Hoàn thành mẫu đánh giá tiết học"
-      onBack={() => {}}
+      onBack={() => {
+        router.back();
+      }}
     >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -49,62 +51,68 @@ const LessonEvaluateTeacherScreen = () => {
         <ScrollView
           contentContainerStyle={{
             paddingBottom: 32,
+            paddingHorizontal: 16,
             marginBottom: 32,
             marginTop: 32,
           }}
           showsVerticalScrollIndicator={false}
         >
           {/* Tiết chương trình */}
-          <View style={styles.inputBox}>
-            <View style={styles.floatingInputBox}>
+          <View style={styles.fieldWrap}>
+            <View style={styles.outlineInputBox}>
               <Text style={styles.floatingLabel}>
-                Tiết chương trình <Text style={{ color: "red" }}>*</Text>
+                Tiết chương trình <Text style={styles.required}>*</Text>
               </Text>
               <TextInput
-                style={styles.floatingInput}
+                style={styles.inputTextOutline}
                 placeholder="Vui lòng nhập tiết chương trình"
-                placeholderTextColor="#A0A3BD"
+                placeholderTextColor="#9CA3AF"
                 value={lesson}
                 onChangeText={setLesson}
               />
             </View>
           </View>
           {/* Tên bài, nội dung công việc */}
-          <View style={styles.inputBox}>
-            <View style={styles.floatingInputBox}>
+          <View style={styles.fieldWrap}>
+            <View style={styles.outlineInputBox}>
               <Text style={styles.floatingLabel}>
                 Tên bài, nội dung công việc{" "}
-                <Text style={{ color: "red" }}>*</Text>
+                <Text style={styles.required}>*</Text>
               </Text>
               <TextInput
-                style={styles.floatingInput}
+                style={styles.inputTextOutline}
                 placeholder="Vui lòng nhập tên bài học, nội dung công việc"
-                placeholderTextColor="#A0A3BD"
+                placeholderTextColor="#9CA3AF"
                 value={content}
                 onChangeText={setContent}
               />
             </View>
           </View>
           {/* Học sinh vắng */}
-          <View style={styles.inputBox}>
+          <View style={[styles.fieldWrap, { marginBottom: 25 }]}>
             <Student_Absent />
           </View>
           {/* Học sinh vi phạm */}
-          <View style={styles.inputBox}>
+          <View style={[styles.fieldWrap, { marginBottom: 25 }]}>
             <Student_Violates />
           </View>
           {/* Kiểm tra miệng */}
-          <View style={styles.inputBox}>
+          <View style={[styles.fieldWrap, { marginBottom: 46 }]}>
             <Student_Test />
           </View>
           {/* Nhận xét */}
+<<<<<<< khoi-api
           <View style={styles.inputBox}>
             <View style={[styles.floatingInputBox, styles.floatingInputBoxSmall]}>
+=======
+          <View style={styles.fieldWrap}>
+            <View style={styles.outlineInputBox}>
+>>>>>>> local
               <Text style={styles.floatingLabel}>Nhận xét</Text>
               <TextInput
-                style={[styles.floatingInput, { minHeight: 36, fontSize: 12 }]}
+                style={styles.inputTextOutline}
                 placeholder="Vui lòng nhập nhận xét"
-                placeholderTextColor="#A0A3BD"
+                placeholderTextColor="#9CA3AF"
                 value={comment}
                 onChangeText={setComment}
                 multiline
@@ -114,18 +122,20 @@ const LessonEvaluateTeacherScreen = () => {
             </View>
           </View>
           {/* Xếp loại tiết học */}
-          <View style={styles.inputBox}>
-            <View style={styles.dropdownFloatingBox}>
+          <View style={styles.fieldWrap}>
+            <View style={styles.outlineInputBox}>
               <Text style={styles.floatingLabel}>
-                Xếp loại tiết học <Text style={{ color: "red" }}>*</Text>
+                Xếp loại tiết học <Text style={styles.required}>*</Text>
               </Text>
               <TouchableOpacity
-                style={[styles.dropdown, { marginTop: 12 }]}
+                style={styles.dropdown}
                 onPress={() => setShowRankDropdown(!showRankDropdown)}
                 activeOpacity={0.7}
               >
                 <Text
-                  style={[styles.dropdownText, !rank && { color: "#A0A3BD" }]}
+                  style={
+                    rank ? styles.dropdownText : styles.dropdownPlaceholder
+                  }
                 >
                   {rank || "Chọn loại xếp hạng tiết học"}
                 </Text>
@@ -137,14 +147,11 @@ const LessonEvaluateTeacherScreen = () => {
                 />
               </TouchableOpacity>
               {showRankDropdown && (
-                <View style={styles.dropdownListInsideBox}>
+                <View style={styles.modalContent}>
                   {RANKS.map((r) => (
                     <TouchableOpacity
                       key={r}
-                      style={[
-                        styles.dropdownItem,
-                        rank === r && styles.dropdownItemSelected,
-                      ]}
+                      style={styles.modalItem}
                       onPress={() => {
                         setRank(r);
                         setShowRankDropdown(false);
@@ -152,7 +159,7 @@ const LessonEvaluateTeacherScreen = () => {
                     >
                       <Text
                         style={[
-                          styles.dropdownItemText,
+                          styles.modalItemText,
                           rank === r && { fontWeight: "bold" },
                         ]}
                       >
@@ -169,7 +176,19 @@ const LessonEvaluateTeacherScreen = () => {
             <TouchableOpacity
               onPress={() => setChecked(!checked)}
               style={{
+<<<<<<< khoi-api
                 width: 24, height: 24, borderRadius: 4, borderWidth: 2, borderColor: '#22315B', alignItems: 'center', justifyContent: 'center', marginRight: 8, backgroundColor: checked ? '#22315B' : 'transparent',
+=======
+                width: 22,
+                height: 22,
+                borderRadius: 4,
+                borderWidth: 2,
+                borderColor: "#29375C",
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: 8,
+                backgroundColor: checked ? "#29375C" : "transparent",
+>>>>>>> local
               }}
               activeOpacity={0.8}
             >
@@ -177,21 +196,39 @@ const LessonEvaluateTeacherScreen = () => {
                 <Ionicons name="checkmark" size={18} color="#fff" />
               )}
             </TouchableOpacity>
+<<<<<<< khoi-api
             <Text style={{ color: '#22315B', fontSize: 16, fontWeight: '500', flex: 1, flexWrap: 'wrap', lineHeight: 18 }}>
               Tôi hoàn toàn chịu trách nhiệm với nội dung nhận xét của mình.
               <Text style={{ color: 'red', fontSize: 12, fontWeight: 'bold' }}> *</Text>
+=======
+            <Text
+              style={{
+                color: "#29375C",
+                fontSize: 16,
+                flex: 1,
+                flexWrap: "wrap",
+                lineHeight: 23,
+                fontFamily: "Baloo2-Medium",
+              }}
+            >
+              Tôi hoàn toàn chịu trách nhiệm với nội dung nhận xét của mình.
+              <Text style={{ color: "red", fontSize: 16, fontFamily: "Baloo2-SemiBold", marginLeft: 2 }}>
+                {" "}
+                *
+              </Text>
+>>>>>>> local
             </Text>
           </View>
           {/* Nút xác nhận */}
           <TouchableOpacity
             style={[
-              styles.actionBtn,
-              isValid ? styles.actionBtnActive : styles.actionBtnDisabled,
+              styles.saveBtn,
+              isValid ? styles.saveBtnActive : styles.saveBtnDisabled,
             ]}
             disabled={!isValid}
             onPress={() => setShowSuccess(true)}
           >
-            <Text style={styles.actionBtnText}>Xác nhận</Text>
+            <Text style={styles.saveBtnText}>Xác nhận</Text>
           </TouchableOpacity>
           <SuccessModal
             visible={showSuccess}
@@ -210,6 +247,7 @@ const LessonEvaluateTeacherScreen = () => {
 };
 
 const styles = StyleSheet.create({
+<<<<<<< khoi-api
   inputBox: {
     marginBottom: 16,
     marginHorizontal: 16,
@@ -223,23 +261,31 @@ const styles = StyleSheet.create({
   floatingInputBox: {
     borderWidth: 2,
     borderColor: "#22315B",
-    borderRadius: 12,
-    backgroundColor: "#F6F8FB",
-    paddingTop: 18,
-    paddingBottom: 12,
-    paddingHorizontal: 16,
-    position: "relative",
+=======
+  fieldWrap: {
+    marginBottom: 10,
   },
-  floatingInputBoxSmall: {
-    paddingTop: 8,
-    paddingBottom: 6,
+  outlineInputBox: {
+    borderWidth: 1,
+    borderColor: "#29375C",
+>>>>>>> local
+    borderRadius: 12,
+    backgroundColor: "#f7f7f7",
+    marginBottom: 25,
+    paddingTop: 15,
+    paddingBottom: 12,
+    paddingHorizontal: 25,
+    marginLeft: 15,
+    marginRight: 15,
+    position: "relative",
   },
   floatingLabel: {
     position: "absolute",
-    top: -10,
+    top: -16,
     left: 18,
-    backgroundColor: "#F6F8FB",
+    backgroundColor: "#f7f7f7",
     paddingHorizontal: 6,
+<<<<<<< khoi-api
     color: "#22315B",
     fontWeight: "bold",
     fontSize: 12,
@@ -272,66 +318,88 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     position: "relative",
     marginTop: 0,
+=======
+    color: "#29375C",
+    fontFamily: "Baloo2-SemiBold",
+    fontSize: 14,
+    zIndex: 2,
+  },
+  inputTextOutline: {
+    color: "#29375C",
+    fontSize: 16,
+    fontFamily: "Baloo2-Medium",
+  },
+  required: {
+    color: "#E53935",
+    fontSize: 18,
+    marginLeft: 2,
+    marginTop: -2,
+>>>>>>> local
   },
   dropdown: {
-    borderWidth: 0,
-    borderColor: "transparent",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    paddingVertical: 18,
-    paddingHorizontal: 18,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 0,
+    borderWidth: 0,
+    minHeight: 22,
   },
   dropdownText: {
+<<<<<<< khoi-api
     fontSize: 16,
     color: "#22315B",
     fontWeight: "bold",
     flex: 1,
+=======
+    color: "#29375C",
+    fontSize: 16,
+    fontFamily: "Baloo2-Medium",
+>>>>>>> local
   },
-  dropdownListInsideBox: {
-    borderWidth: 0,
-    borderRadius: 0,
-    backgroundColor: "#fff",
-    marginTop: 0,
-    overflow: "hidden",
-    paddingBottom: 8,
+  dropdownPlaceholder: {
+    color: "#9CA3AF",
+    fontSize: 16,
+    fontFamily: "Baloo2-Medium",
   },
-  dropdownItem: {
-    paddingVertical: 18,
-    paddingHorizontal: 18,
-    borderRadius: 16,
-    marginHorizontal: 8,
-    marginTop: 6,
+  modalContent: {
+    backgroundColor: "#f7f7f7",
+    borderRadius: 10,
+    padding: 10,
+    elevation: 5,
   },
-  dropdownItemSelected: {
-    backgroundColor: "#ECEEF3",
+  modalItem: {
+    paddingVertical: 8,
   },
+<<<<<<< khoi-api
   dropdownItemText: {
     fontSize: 22,
     color: "#22315B",
     fontWeight: "500",
+=======
+  modalItemText: {
+    fontSize: 16,
+    color: "#29375C",
+    fontFamily: "Baloo2-Medium",
+>>>>>>> local
   },
-  actionBtn: {
-    borderRadius: 12,
+  saveBtn: {
+    backgroundColor: "#29375C",
+    borderRadius: 20,
     paddingVertical: 14,
     alignItems: "center",
-    marginHorizontal: 16,
-    marginTop: 18,
-    marginBottom: 20,
+    alignSelf: "center",
+    marginTop: 30,
+    width: "95%",
   },
-  actionBtnActive: {
-    backgroundColor: "#25345D",
+  saveBtnActive: {
+    backgroundColor: "#29375C",
   },
-  actionBtnDisabled: {
-    backgroundColor: "#C4C4C4",
+  saveBtnDisabled: {
+    backgroundColor: "#D1D5DB",
   },
-  actionBtnText: {
-    fontWeight: "bold",
-    fontSize: 17,
+  saveBtnText: {
     color: "#fff",
+    fontFamily: "Baloo2-SemiBold",
+    fontSize: 18,
   },
 });
 

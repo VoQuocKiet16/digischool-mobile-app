@@ -1,21 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-
-interface UserData {
-  name: string;
-  email: string;
-  phone: string | null;
-  address: string | null;
-  dateOfBirth: string | null;
-  gender: string | null;
-  studentId: string | null;
-  teacherId: string | null;
-  managerId: string | null;
-  class: any | null;
-  subjects: any[];
-  roleInfo: any | null;
-}
+import { UserData } from "../../../../types/user.types";
 
 interface ProfileInfoProps {
   userData: UserData | null;
@@ -43,6 +29,19 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
     if (userData?.teacherId) return userData.teacherId;
     if (userData?.managerId) return userData.managerId;
     return "Chưa cập nhật";
+  };
+
+  const getRoleLabel = () => {
+    switch (userData?.roleInfo?.type) {
+      case "student":
+        return "Mã học sinh";
+      case "teacher":
+        return "Mã giáo viên";
+      case "manager":
+        return "Mã quản lý";
+      default:
+        return "Mã";
+    }
   };
 
   const getGenderDisplay = () => {
@@ -74,7 +73,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
             <View style={styles.underline} />
           </View>
           <View style={styles.item}>
-            <Text style={styles.label}>Mã học sinh</Text>
+            <Text style={styles.label}>{getRoleLabel()}</Text>
             <Text style={styles.value}>{getDisplayId()}</Text>
             <View style={styles.underline} />
           </View>

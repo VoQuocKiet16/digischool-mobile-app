@@ -1,20 +1,6 @@
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
-
-interface UserData {
-  name: string;
-  email: string;
-  phone: string | null;
-  address: string | null;
-  dateOfBirth: string | null;
-  gender: string | null;
-  studentId: string | null;
-  teacherId: string | null;
-  managerId: string | null;
-  class: any | null;
-  subjects: any[];
-  roleInfo: any | null;
-}
+import { UserData } from "../../../../types/user.types";
 
 interface ProfileSectionProps {
   userData: UserData | null;
@@ -22,14 +8,12 @@ interface ProfileSectionProps {
 
 const ProfileSection: React.FC<ProfileSectionProps> = ({ userData }) => {
   const getRoleDisplay = () => {
-    if (!userData?.roleInfo?.type) return "Người dùng";
-
-    switch (userData.roleInfo.type) {
+    switch (userData?.roleInfo?.type) {
       case "student":
         return "Học sinh";
       case "teacher":
         return "Giáo viên";
-      case "admin":
+      case "manager":
         return "Quản trị viên";
       default:
         return "Người dùng";

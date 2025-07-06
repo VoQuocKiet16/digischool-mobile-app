@@ -52,9 +52,37 @@ export default function LeaveRequestInfoScreen() {
     }
   };
 
+<<<<<<< khoi-api
   // Xử lý gửi yêu cầu
   const handleSubmit = () => {
     setShowSuccess(true);
+=======
+  const handleSubmit = async () => {
+    setShowLoading(true);
+    setLoadingSuccess(false);
+    setError("");
+    try {
+      const res = await createLeaveRequest({
+        lessonIds,
+        phoneNumber: phone,
+        reason,
+      });
+      if (res && res.success) {
+        setLoadingSuccess(true);
+        setTimeout(() => {
+          setShowLoading(false);
+          setLoadingSuccess(false);
+          router.push("/(tabs)");
+        }, 1000);
+      } else {
+        setError("Gửi yêu cầu thất bại!");
+        setShowLoading(false);
+      }
+    } catch (e) {
+      setError("Gửi yêu cầu thất bại!");
+      setShowLoading(false);
+    }
+>>>>>>> local
   };
 
   return (

@@ -9,11 +9,20 @@ import ContactInfo from "../../components/setting/personal/detail/ContactInfo";
 import LearnInfo from "../../components/setting/personal/detail/LearnInfo";
 import ProfileInfo from "../../components/setting/personal/detail/ProfileInfo";
 import ProfileSection from "../../components/setting/personal/detail/ProfileSection";
+import TeachingInfo from "../../components/setting/personal/detail/TeachingInfo";
 import { useUserData } from "../../hooks/useUserData";
 
 const Personal: React.FC = () => {
   const router = useRouter();
   const { userData, loading, error, refreshUserData } = useUserData();
+
+  // Xác định role của user
+  const getUserRole = () => {
+    if (userData?.roleInfo?.type) return userData.roleInfo.type;
+    return "unknown";
+  };
+
+  const userRole = getUserRole();
 
   return (
     <HeaderLayout
@@ -29,7 +38,10 @@ const Personal: React.FC = () => {
         <ProfileSection userData={userData} />
         <ProfileInfo userData={userData} />
         <ContactInfo userData={userData} />
-        <LearnInfo userData={userData} />
+
+        {userRole === "student" && <LearnInfo userData={userData} />}
+        {userRole === "teacher" && <TeachingInfo userData={userData} />}
+
         <AccountInfo userData={userData} />
       </RefreshableScrollView>
     </HeaderLayout>

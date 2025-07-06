@@ -53,7 +53,7 @@ export default function HomeScreen() {
   }
 
   if (roles.includes("manager")) {
-    // UI cho manager (hiện tại là loading)
+    
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#25345D" />
