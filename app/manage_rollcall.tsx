@@ -1,7 +1,8 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Header from "../../components/Header";
+import Header from "../components/Header";
 
 const DAYS = [
   "25/06/2025",
@@ -36,6 +37,7 @@ export default function ManageRollcall() {
   const [showStatus, setShowStatus] = useState(false);
   const [subject, setSubject] = useState(SUBJECTS[0]);
   const [showSubject, setShowSubject] = useState(false);
+  const [userName, setUserName] = useState("");
 
   // Dữ liệu mẫu đủ trường
   const [allRollcalls] = useState([
@@ -69,9 +71,15 @@ export default function ManageRollcall() {
     setShowDay(false);
   };
 
+  useEffect(() => {
+    AsyncStorage.getItem("userName").then(name => {
+      if (name) setUserName(name);
+    });
+  }, []);
+
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      <Header title="Điểm danh" studentName="QL Nguyễn Văn A" />
+      <Header title="Điểm danh" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} />
       {/* Filter hàng ngang */}
       <View style={styles.filterRowWrap}>
         {/* Filter ngày */}

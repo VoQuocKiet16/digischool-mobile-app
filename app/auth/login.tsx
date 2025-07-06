@@ -13,6 +13,7 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import LoadingModal from "../../components/LoadingModal";
 import { API_ERROR_MESSAGES } from "../../constants/api.constants";
+import { useUserContext } from "../../contexts/UserContext";
 import { getMe, login } from "../../services/auth.service";
 
 export default function LoginScreen() {
@@ -22,6 +23,7 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const { setUserData } = useUserContext();
 
   const isValid = email.trim() !== "" && password.trim() !== "";
 
@@ -128,6 +130,7 @@ export default function LoginScreen() {
                   JSON.stringify(userResponse.data.roleInfo)
                 );
               }
+              setUserData(userResponse.data);
             }
           } catch (error) {
             console.log("Error fetching user data after login:", error);

@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import HeaderLayout from "../../../components/layout/HeaderLayout";
-import DaySelector from "../../../components/schedule/DaySelector";
+// import DaySelector from "../../../components/schedule/DaySelector";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { Activity } from "../schedule/schedule";
@@ -97,7 +97,7 @@ export default function TeacherLeaveRequestScreen() {
               setSession(session === "Buổi sáng" ? "Buổi chiều" : "Buổi sáng")
             }
           />
-          <DaySelector days={days} />
+          {/* <DaySelector days={days} /> */}
           <ScrollView
             style={{ flex: 1 }}
             contentContainerStyle={{ flexGrow: 1 }}

@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 import HeaderLayout from "../../../components/layout/HeaderLayout";
-import DaySelector from "../../../components/schedule/DaySelector";
+// import DaySelector from "../../../components/schedule/DaySelector";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getSchedule } from "../../../services/schedule.service";
@@ -97,6 +97,12 @@ function mapApiToScheduleData(apiData: any): {
   return { schedule, lessonIds };
 }
 
+function getTodayIndex() {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  return dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+}
+
 export default function LeaveRequestScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -134,6 +140,7 @@ export default function LeaveRequestScreen() {
   const [lessonDetails, setLessonDetails] = useState<any[][]>(
     Array.from({ length: 10 }, () => Array.from({ length: 7 }, () => null))
   );
+  const [selectedDay, setSelectedDay] = useState(getTodayIndex());
 
   const weekList = getWeekRangesByYear(year);
 
@@ -269,11 +276,11 @@ export default function LeaveRequestScreen() {
             onChangeYear={handleChangeYear}
             onChangeDateRange={handleChangeDateRange}
           />
-          <DaySelector
+          {/* <DaySelector
             days={days}
             onCurrentDayChange={setCurrentDayIndex}
             showUtilityButton={false}
-          />
+          /> */}
           {loading ? (
             <ActivityIndicator
               size="large"
@@ -306,7 +313,7 @@ export default function LeaveRequestScreen() {
                 )}
                 onSelectSlot={handleSelectSlot}
                 onSlotPress={handleSelectSlot}
-                currentDayIndex={currentDayIndex}
+                currentDayIndex={selectedDay}
                 hideNullSlot={true}
               />
             </ScrollView>

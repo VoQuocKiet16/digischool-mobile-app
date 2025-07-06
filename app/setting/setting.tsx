@@ -1,4 +1,5 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -16,20 +17,23 @@ const Setting: React.FC = () => {
   const handleLogout = async () => {
     setShowLogoutModal(false);
     try {
-      const res = await logout();
-      console.log("Logout response in setting:", res);
+      await logout();
+      await AsyncStorage.clear();
       router.replace("/auth/login");
     } catch (err) {
       console.log("Logout error in setting:", err);
     }
   };
 
-  const getRoleDisplay = (roles: string[]) => {
-    if (roles.includes("student")) return "Học sinh";
-    if (roles.includes("teacher")) return "Giáo viên";
-    if (roles.includes("admin")) return "Quản trị viên";
+  const getRoleDisplay = (roles: string[] | string) => {
+    const roleArr = Array.isArray(roles) ? roles : [roles];
+    if (roleArr.includes("student")) return "Học sinh";
+    if (roleArr.includes("teacher")) return "Giáo viên";
+    if (roleArr.includes("manage") || roleArr.includes("manager")) return "Quản lý";
     return "Người dùng";
   };
+
+  // console.log("userData in Setting:", userData);
 
   return (
     <HeaderLayout title="Cài đặt" onBack={() => router.back()}>

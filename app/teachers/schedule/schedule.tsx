@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import DaySelector from "../../../components/schedule/DaySelector";
+// import DaySelector from "../../../components/schedule/DaySelector";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 
@@ -184,7 +184,7 @@ export default function ScheduleTeachersScreen() {
         year="2025"
         onPressTitle={handleSessionToggle}
       />
-      <DaySelector days={days} />
+      {/* <DaySelector days={days} /> */}
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
         <ScheduleDay
           periods={periods}

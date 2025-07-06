@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import RefreshableScrollView from "../../../components/RefreshableScrollView";
-import DaySelector from "../../../components/schedule/DaySelector";
+// import DaySelector from "../../../components/schedule/DaySelector";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getSchedule } from "../../../services/schedule.service";
@@ -138,6 +138,12 @@ function mapApiToScheduleData(apiData: any): {
   return { schedule, lessonIds };
 }
 
+function getTodayIndex() {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  return dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+}
+
 export default function ScheduleStudentsScreen() {
   const router = useRouter();
   const [session, setSession] = useState<"Buổi sáng" | "Buổi chiều">(
@@ -161,7 +167,7 @@ export default function ScheduleStudentsScreen() {
   const [error, setError] = useState("");
   const [showYearModal, setShowYearModal] = useState(false);
   const [showWeekModal, setShowWeekModal] = useState(false);
-  const [currentDayIndex, setCurrentDayIndex] = useState(0);
+  const [currentDayIndex, setCurrentDayIndex] = useState(getTodayIndex());
 
   const days = defaultDays;
   const weekList = getWeekRangesByYear(year);
@@ -263,7 +269,7 @@ export default function ScheduleStudentsScreen() {
         onChangeYear={handleChangeYear}
         onChangeDateRange={handleChangeDateRange}
       />
-      <DaySelector days={days} onCurrentDayChange={setCurrentDayIndex} />
+      {/* <DaySelector days={days} onCurrentDayChange={setCurrentDayIndex} /> */}
       {loading ? (
         <ActivityIndicator
           size="large"
