@@ -7,14 +7,24 @@ interface ScheduleSlotProps {
   text: string;
   dayIndex: number;
   periodIndex: number;
-  onAddActivity?: (dayIndex: number, periodIndex: number, activity: string) => void;
-  onSlotPress?: (dayIndex: number, periodIndex: number, activity: string) => void;
+  onAddActivity?: (
+    dayIndex: number,
+    periodIndex: number,
+    activity: string
+  ) => void;
+  onSlotPress?: (
+    dayIndex: number,
+    periodIndex: number,
+    activity: string,
+    lessonId?: string
+  ) => void;
   activityText?: string;
   hasNotification?: boolean;
   isUserAdded?: boolean;
   isSelected?: boolean;
   onSlotPressLegacy?: (dayIndex: number, periodIndex: number) => void;
   cellStatus?: "taught" | "current" | "exchangeable" | "default";
+  lessonId?: string;
 }
 
 const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
@@ -29,6 +39,7 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
   isSelected,
   cellStatus,
   onSlotPressLegacy,
+  lessonId,
 }) => {
   const router = useRouter();
 
@@ -38,13 +49,13 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
     if (isEmpty && onAddActivity) {
       onAddActivity(dayIndex, periodIndex, text);
     } else if (!isEmpty && onSlotPress) {
-      onSlotPress(dayIndex, periodIndex, text);
+      onSlotPress(dayIndex, periodIndex, text, lessonId);
     } else if (onSlotPressLegacy && !isEmpty) {
       onSlotPressLegacy(dayIndex, periodIndex);
     } else if (isEmpty) {
       router.push({
-        pathname: '/activity/add_activity',
-        params: { periodIndex }
+        pathname: "/activity/add_activity",
+        params: { periodIndex },
       });
     }
   };
@@ -155,10 +166,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   filledSlot: {
-    backgroundColor: "#3A546D",
+    backgroundColor: "#29375C",
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
     paddingVertical: 12,
     paddingHorizontal: 10,
     width: "90%",
@@ -206,19 +215,19 @@ const styles = StyleSheet.create({
   },
   filledSlotText: {
     color: "#fff",
-    fontWeight: "bold",
-    fontSize: 8,
+    fontSize: 9,
     textAlign: "center",
     includeFontPadding: false,
     textAlignVertical: "center",
+    fontFamily: "Baloo2-SemiBold",
   },
   emptySlotText: {
     color: "#A0A0A0",
-    fontWeight: "bold",
-    fontSize: 8,
+    fontSize: 9,
     textAlign: "center",
     includeFontPadding: false,
     textAlignVertical: "center",
+    fontFamily: "Baloo2-SemiBold",
   },
   taughtSlot: {
     backgroundColor: "#fff",
@@ -241,11 +250,11 @@ const styles = StyleSheet.create({
   },
   taughtSlotText: {
     color: "#B6B6B6",
-    fontWeight: "bold",
-    fontSize: 13,
+    fontSize: 9,
     textAlign: "center",
     includeFontPadding: false,
     textAlignVertical: "center",
+    fontFamily: "Baloo2-SemiBold",
   },
   currentSlot: {
     backgroundColor: "#E5E7EB",
@@ -267,11 +276,11 @@ const styles = StyleSheet.create({
   },
   currentSlotText: {
     color: "#fff",
-    fontWeight: "bold",
-    fontSize: 13,
+    fontSize: 9,
     textAlign: "center",
     includeFontPadding: false,
     textAlignVertical: "center",
+    fontFamily: "Baloo2-SemiBold",
   },
   exchangeableSlot: {
     backgroundColor: "#fff",
@@ -293,19 +302,16 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   exchangeableSlotText: {
-    color: "#22315B",
-    fontWeight: "bold",
-    fontSize: 13,
+    color: "#29375C",
+    fontSize: 9,
     textAlign: "center",
     includeFontPadding: false,
     textAlignVertical: "center",
+    fontFamily: "Baloo2-SemiBold",
   },
   selectedSlot: {
-    backgroundColor: "#FFF7E6",
+    backgroundColor: "#F9B233",
     borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#F9B233",
-    borderStyle: "dashed",
     paddingVertical: 12,
     paddingHorizontal: 10,
     width: "90%",
@@ -320,12 +326,12 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   selectedSlotText: {
-    color: "#F9B233",
-    fontWeight: "bold",
-    fontSize: 13,
+    color: "#fff",
+    fontSize: 9,
     textAlign: "center",
     includeFontPadding: false,
     textAlignVertical: "center",
+    fontFamily: "Baloo2-SemiBold",
   },
   notificationPin: {
     position: "absolute",
@@ -342,8 +348,8 @@ const styles = StyleSheet.create({
   },
   notificationText: {
     color: "#fff",
-    fontWeight: "bold",
-    fontSize: 12,
+    fontSize: 9,
+    fontFamily: "Baloo2-SemiBold",
   },
 });
 

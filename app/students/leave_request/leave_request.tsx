@@ -18,41 +18,99 @@ import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getStudentSchedule } from "../../../services/schedule.service";
 import { Activity } from "../schedule/schedule";
 
-const defaultActivity = (text: string, hasNotification = false): Activity => ({
-  text,
-  type: 'default',
-  hasNotification,
-});
+const days = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
+const morningPeriods = ["Tiết 1", "Tiết 2", "Tiết 3", "Tiết 4", "Tiết 5"];
+const afternoonPeriods = ["Tiết 6", "Tiết 7", "Tiết 8", "Tiết 9", "Tiết 10"];
 
-const initialScheduleData: Activity[][] = [
-  [ defaultActivity('Chào cờ', true), defaultActivity('Chào cờ'), defaultActivity('Chào cờ'), defaultActivity('Chào cờ'), defaultActivity('Chào cờ'), defaultActivity('Chào cờ'), defaultActivity(''), ],
-  [ defaultActivity('Toán'), defaultActivity('Văn'), defaultActivity(''), defaultActivity('Lý'), defaultActivity('Hóa'), defaultActivity(''), defaultActivity(''), ],
-  [ defaultActivity('Anh'), defaultActivity(''), defaultActivity('Sử'), defaultActivity('Địa'), defaultActivity(''), defaultActivity('GDCD'), defaultActivity(''), ],
-  [ defaultActivity(''), defaultActivity('Sinh'), defaultActivity('Công nghệ'), defaultActivity(''), defaultActivity('Thể dục'), defaultActivity('Thể dục'), defaultActivity(''), ],
-  [ defaultActivity('Mỹ thuật'), defaultActivity(''), defaultActivity(''), defaultActivity('Âm nhạc'), defaultActivity('Toán'), defaultActivity(''), defaultActivity(''), ],
-  [defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity('')],
-  [defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity('')],
-  [defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity('')],
-  [defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity('')],
-  [defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity(''),defaultActivity('')],
-];
+const academicYears = ["2024-2025", "2025-2026"];
 
-const days = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
-const morningPeriods = ['Tiết 1', 'Tiết 2', 'Tiết 3', 'Tiết 4', 'Tiết 5'];
-const afternoonPeriods = ['Tiết 6', 'Tiết 7', 'Tiết 8', 'Tiết 9', 'Tiết 10'];
+function getFirstMonday(date: Date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 1 ? 0 : (8 - day) % 7;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function getWeekRangesByYear(year: string) {
+  const [startYear, endYear] = year.split("-").map(Number);
+  const startDate = new Date(startYear, 7, 1);
+  const endDate = new Date(endYear, 4, 31);
+  let current = getFirstMonday(startDate);
+  const weeks = [];
+  while (current <= endDate) {
+    const weekStart = new Date(current);
+    const weekEnd = new Date(current);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    if (weekEnd > endDate) weekEnd.setTime(endDate.getTime());
+    weeks.push({
+      start: weekStart.toISOString().slice(0, 10),
+      end: weekEnd.toISOString().slice(0, 10),
+      label:
+        `${weekStart.getDate().toString().padStart(2, "0")}/${(
+          weekStart.getMonth() + 1
+        )
+          .toString()
+          .padStart(2, "0")}` +
+        " - " +
+        `${weekEnd.getDate().toString().padStart(2, "0")}/${(
+          weekEnd.getMonth() + 1
+        )
+          .toString()
+          .padStart(2, "0")}`,
+    });
+    current.setDate(current.getDate() + 7);
+  }
+  return weeks;
+}
+
+function mapApiToScheduleData(apiData: any): {
+  schedule: Activity[][];
+  lessonIds: string[][];
+} {
+  const schedule: Activity[][] = Array.from({ length: 10 }, () =>
+    Array.from({ length: 7 }, () => ({ text: "", type: "user-added" }))
+  );
+  const lessonIds: string[][] = Array.from({ length: 10 }, () =>
+    Array.from({ length: 7 }, () => "")
+  );
+  const scheduleData = apiData?.data?.schedule || [];
+  scheduleData.forEach((dayData: any) => {
+    const dayOfWeek = dayData.dayOfWeek;
+    const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    dayData.lessons?.forEach((lesson: any) => {
+      const periodIndex = (lesson.period || 1) - 1;
+      if (periodIndex >= 0 && periodIndex < 10) {
+        let text = "";
+        if (lesson.type === "fixed" && lesson.fixedInfo) {
+          text = lesson.fixedInfo.description || "";
+        } else if (lesson.subject) {
+          text = lesson.subject.name || "";
+        }
+        schedule[periodIndex][dayIndex] = { text, type: "default" };
+        if (lesson._id) {
+          lessonIds[periodIndex][dayIndex] = lesson._id;
+        }
+      }
+    });
+  });
+  return { schedule, lessonIds };
+}
 
 export default function LeaveRequestScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const [session, setSession] = useState<'Buổi sáng' | 'Buổi chiều'>('Buổi sáng');
   const [selected, setSelected] = useState<{row: number, col: number}[]>([]);
-  const [scheduleData, setScheduleData] = useState<Activity[][]>(initialScheduleData);
+  const [scheduleData, setScheduleData] = useState<Activity[][]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [lessonDetails, setLessonDetails] = useState<any[][]>([]);
-  const [lessonIds, setLessonIds] = useState<string[]>([]);
+  const [lessonIds, setLessonIds] = useState<string[][]>([]);
   const [year, setYear] = useState("2025");
   const [dateRange, setDateRange] = useState({ start: "12/6", end: "19/6" });
+  const [showYearModal, setShowYearModal] = useState(false);
+  const [showWeekModal, setShowWeekModal] = useState(false);
 
   useEffect(() => {
     const fetchSchedule = async () => {
@@ -105,19 +163,59 @@ export default function LeaveRequestScreen() {
     }
   }, [params.selectedSlots]);
 
-  // Hàm chọn tiết xin nghỉ
   const handleSelectSlot = (dayIndex: number, periodIndex: number) => {
-    const isExist = selected.some(cell => cell.row === periodIndex && cell.col === dayIndex);
+    const isExist = selected.some(
+      (cell) =>
+        cell.row === periodIndex &&
+        cell.col === dayIndex
+    );
     if (isExist) {
-      setSelected(selected.filter(cell => !(cell.row === periodIndex && cell.col === dayIndex)));
+      setSelected(
+        selected.filter(
+          (cell) =>
+            !(
+              cell.row === periodIndex &&
+              cell.col === dayIndex
+            )
+        )
+      );
     } else {
-      setSelected([...selected, {row: periodIndex, col: dayIndex}]);
+      const lesson = lessonDetails[periodIndex]?.[dayIndex];
+      setSelected([
+        ...selected,
+        {
+          row: periodIndex,
+          col: dayIndex,
+        },
+      ]);
     }
   };
 
+  const handleChangeYear = () => setShowYearModal(true);
+  const handleSelectYear = (selected: string) => {
+    setYear(selected);
+    const weeks = getWeekRangesByYear(selected);
+    setDateRange(weeks[0]);
+    setShowYearModal(false);
+  };
+
+  const handleChangeDateRange = () => setShowWeekModal(true);
+  const handleSelectWeek = (selected: {
+    start: string;
+    end: string;
+    label: string;
+  }) => {
+    setDateRange(selected);
+    setShowWeekModal(false);
+  };
+
   return (
-    <HeaderLayout title="Tiết học xin nghỉ" subtitle="Chọn các tiết học bạn muốn xin phép nghỉ" onBack={() => router.back()}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+    <HeaderLayout
+      title="Tiết học xin nghỉ"
+      subtitle="Chọn các tiết học bạn muốn xin phép nghỉ"
+      onBack={() => router.back()}
+    >
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
         <View style={{ flex: 1 }}>
           <ScheduleHeader
             title={session}
@@ -126,43 +224,159 @@ export default function LeaveRequestScreen() {
             onPressTitle={() => setSession(session === 'Buổi sáng' ? 'Buổi chiều' : 'Buổi sáng')}
           />
           <DaySelector days={days} />
-          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
-            <ScheduleDay
-              periods={session === 'Buổi sáng' ? morningPeriods : afternoonPeriods}
-              days={days}
-              onAddActivity={handleSelectSlot}
-              scheduleData={scheduleData}
-              selectedSlots={selected}
-              onSelectSlot={handleSelectSlot}
-            />
-          </ScrollView>
-          {/* Chú thích màu sắc */}
+          {loading ? (
+            <ActivityIndicator size="large" color="#0000ff" />
+          ) : error ? (
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ color: "red" }}>{error}</Text>
+            </View>
+          ) : (
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+              <ScheduleDay
+                periods={session === 'Buổi sáng' ? morningPeriods : afternoonPeriods}
+                days={days}
+                onAddActivity={handleSelectSlot}
+                scheduleData={scheduleData}
+                selectedSlots={selected}
+                onSelectSlot={handleSelectSlot}
+                onSlotPress={handleSelectSlot}
+              />
+            </ScrollView>
+          )}
+          <Modal visible={showYearModal} transparent animationType="fade">
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                backgroundColor: "rgba(0,0,0,0.2)",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+              activeOpacity={1}
+              onPressOut={() => setShowYearModal(false)}
+            >
+              <View
+                style={{
+                  backgroundColor: "#fff",
+                  borderRadius: 12,
+                  padding: 16,
+                  minWidth: 200,
+                  elevation: 5,
+                }}
+              >
+                {academicYears.map((y) => (
+                  <TouchableOpacity
+                    key={y}
+                    style={{ paddingVertical: 12, paddingHorizontal: 8 }}
+                    onPress={() => handleSelectYear(y)}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        color: "#3A546D",
+                        textAlign: "center",
+                      }}
+                    >
+                      {y}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </TouchableOpacity>
+          </Modal>
+          <Modal visible={showWeekModal} transparent animationType="fade">
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                backgroundColor: "rgba(0,0,0,0.2)",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+              activeOpacity={1}
+              onPressOut={() => setShowWeekModal(false)}
+            >
+              <View
+                style={{
+                  backgroundColor: "#fff",
+                  borderRadius: 12,
+                  padding: 16,
+                  minWidth: 200,
+                  elevation: 5,
+                  maxHeight: 400,
+                }}
+              >
+                <FlatList
+                  data={getWeekRangesByYear(year)}
+                  keyExtractor={(item) => item.label}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={{ paddingVertical: 12, paddingHorizontal: 8 }}
+                      onPress={() => handleSelectWeek(item)}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          color: "#3A546D",
+                          textAlign: "center",
+                        }}
+                      >
+                        {item.label}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                />
+              </View>
+            </TouchableOpacity>
+          </Modal>
           <View style={styles.legendRow}>
-            <View style={styles.legendItem}><View style={styles.legendBox}/><Text style={styles.legendText}>Tiết học hiện tại</Text></View>
-            <View style={styles.legendItem}><View style={[styles.legendBox, styles.legendBoxSelected]}/><Text style={styles.legendText}>Tiết học xin nghỉ</Text></View>
+            <View style={styles.legendItem}>
+              <View style={styles.legendBox} />
+              <Text style={styles.legendText}>Tiết học hiện tại</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendBox, styles.legendBoxSelected]} />
+              <Text style={styles.legendText}>Tiết học xin nghỉ</Text>
+            </View>
           </View>
         </View>
-        {/* Nút tiếp tục cố định dưới cùng */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={[styles.button, selected.length === 0 && styles.buttonDisabled]}
+            style={[
+              styles.button,
+              selected.length === 0 && styles.buttonDisabled,
+            ]}
             disabled={selected.length === 0}
             onPress={() => {
               if (selected.length > 0) {
-                // Lấy tên môn học thực tế cho từng slot đã chọn
                 const subjects = selected.map(({ row, col }) => scheduleData[row][col]?.text || '');
+                const lessonIdsSelected = selected.map(({ row, col }) => lessonIds[row][col] || '');
                 router.push({
-                  pathname: '/students/leave_request/leave_request_info',
+                  pathname: "/students/leave_request/leave_request_info",
                   params: {
                     selectedSlots: JSON.stringify(selected),
                     subjects: JSON.stringify(subjects),
                     days: JSON.stringify(days),
-                  }
+                    lessonIds: JSON.stringify(lessonIdsSelected),
+                    ...(params.phone ? { phone: params.phone } : {}),
+                    ...(params.reason ? { reason: params.reason } : {}),
+                  },
                 });
               }
             }}
           >
-            <Text style={[styles.buttonText, selected.length === 0 && styles.buttonTextDisabled]}>Tiếp tục</Text>
+            <Text
+              style={[
+                styles.buttonText,
+                selected.length === 0 && styles.buttonTextDisabled,
+              ]}
+            >
+              Tiếp tục
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -171,24 +385,63 @@ export default function LeaveRequestScreen() {
 }
 
 const styles = StyleSheet.create({
-  slot: { width: 54, height: 48, backgroundColor: '#22315B', borderRadius: 8, margin: 2, justifyContent: 'center', alignItems: 'center', position: 'relative' },
-  slotEmpty: { backgroundColor: 'transparent' },
-  slotSelected: { backgroundColor: '#FFA726' },
-  slotText: { color: '#fff', fontWeight: 'bold', fontSize: 13 },
-  slotTextSelected: { color: '#fff' },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#FF3B30', position: 'absolute', top: 6, right: 8 },
-  legendRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginVertical: 12 },
-  legendItem: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 8 },
-  legendBox: { width: 20, height: 20, backgroundColor: '#22315B', borderRadius: 5, marginRight: 6 },
-  legendBoxSelected: { backgroundColor: '#FFA726' },
-  legendText: { color: '#22315B', fontSize: 13 },
-  button: { backgroundColor: '#22315B', borderRadius: 10, paddingVertical: 14, alignItems: 'center', marginTop: 8 },
-  buttonDisabled: { backgroundColor: '#D1D5DB' },
-  buttonText: { color: '#fff', fontWeight: 'bold', fontSize: 17 },
-  buttonTextDisabled: { color: '#9CA3AF' },
+  slot: {
+    width: 54,
+    height: 48,
+    backgroundColor: "#29375C",
+    borderRadius: 8,
+    margin: 2,
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+  slotEmpty: { backgroundColor: "transparent" },
+  slotSelected: { backgroundColor: "#FFA726" },
+  slotText: { color: "#fff", fontFamily: "Baloo2-SemiBold", fontSize: 13 },
+  slotTextSelected: { color: "#fff", fontFamily: "Baloo2-SemiBold" },
+  legendRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginVertical: 12,
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: 8,
+  },
+  legendBox: {
+    width: 20,
+    height: 20,
+    backgroundColor: "#29375C",
+    borderRadius: 5,
+    marginRight: 6,
+  },
+  legendBoxSelected: { backgroundColor: "#FFA726" },
+  legendText: { color: "#29375C", fontSize: 13 },
+  button: {
+    backgroundColor: "#29375C",
+    borderRadius: 20,
+    paddingVertical: 14,
+    alignItems: "center",
+    alignSelf: "center",
+    marginTop: 8,
+    width: "90%",
+  },
+  buttonDisabled: { backgroundColor: "#D1D5DB" },
+  buttonText: {
+    color: "#fff",
+    fontFamily: "Baloo2-SemiBold",
+    fontSize: 18,
+  },
+  buttonTextDisabled: {
+    color: "#9CA3AF",
+    fontFamily: "Baloo2-SemiBold",
+    fontSize: 18,
+  },
   buttonContainer: {
     paddingHorizontal: 16,
     paddingBottom: 16,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
 });

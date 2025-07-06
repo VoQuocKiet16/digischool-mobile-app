@@ -1,26 +1,24 @@
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
-import React, { useState } from "react";
-import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
-import PlusIcon from "../PlusIcon";
-import { ThemedText } from "../ThemedText";
-import { ThemedView } from "../ThemedView";
+import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import PlusIcon from '../PlusIcon';
 
 const allStudents = [
-  'Nguyen Van A',
-  'Nguyen Van B',
-  'Nguyen Van C',
-  'Nguyen Van D',
+  "Nguyen Van A",
+  "Nguyen Van B",
+  "Nguyen Van C",
+  "Nguyen Van D",
 ];
 
 const Student_Test = () => {
   const [showCard, setShowCard] = useState(false);
-  const [testList, setTestList] = useState<string[]>(['Nguyen Van A']);
+  const [testList, setTestList] = useState<string[]>(["Nguyen Van A"]);
   const [dropdownIndex, setDropdownIndex] = useState<number | null>(null);
-  const [scoreList, setScoreList] = useState<(string | number)[]>(['']);
+  const [scoreList, setScoreList] = useState<(string | number)[]>([""]);
 
   const handleAddTest = () => {
-    setTestList([...testList, '']);
-    setScoreList([...scoreList, '']);
+    setTestList([...testList, ""]);
+    setScoreList([...scoreList, ""]);
   };
 
   const handleRemoveTest = (index: number) => {
@@ -37,11 +35,11 @@ const Student_Test = () => {
 
   const handleScoreChange = (text: string, index: number) => {
     // Chỉ cho phép nhập số, rỗng hoặc 1-10
-    let value = text.replace(/[^0-9]/g, '');
-    if (value === '') {
-      setScoreList(list => {
+    let value = text.replace(/[^0-9]/g, "");
+    if (value === "") {
+      setScoreList((list) => {
         const newList = [...list];
-        newList[index] = '';
+        newList[index] = "";
         return newList;
       });
       return;
@@ -49,7 +47,7 @@ const Student_Test = () => {
     let num = parseInt(value, 10);
     if (num < 1) num = 1;
     if (num > 10) num = 10;
-    setScoreList(list => {
+    setScoreList((list) => {
       const newList = [...list];
       newList[index] = num;
       return newList;
@@ -67,23 +65,13 @@ const Student_Test = () => {
   return (
     <View>
       {!showCard ? (
-        <View style={{ marginLeft: 16 }}>
-          <PlusIcon
-            onPress={() => setShowCard(true)}
-            text="Thêm học sinh kiểm tra"
-          />
-        </View>
+        <PlusIcon onPress={() => setShowCard(true)} text="Thêm học sinh kiểm tra" />
       ) : (
-        <ThemedView style={[styles.card, { position: "relative" }]}>
+        <View style={[styles.card, { position: "relative" }]}>
           <View style={styles.headerRow}>
             <View style={styles.headerBar} />
-            <ThemedText type="subtitle" style={styles.headerText}>
-              Kiểm tra miệng
-            </ThemedText>
-            <TouchableOpacity
-              style={styles.closeBtn}
-              onPress={() => setShowCard(false)}
-            >
+            <Text style={styles.headerText}>Kiểm tra miệng</Text>
+            <TouchableOpacity style={styles.closeBtn} onPress={() => setShowCard(false)}>
               <View style={styles.closeCircle}>
                 <MaterialIcons name="close" size={22} color="#fff" />
               </View>
@@ -91,23 +79,14 @@ const Student_Test = () => {
           </View>
           {testList.map((item, index) => (
             <View key={index} style={styles.testRow}>
-              <View
-                style={{
-                  flex: 1,
-                  position: "relative",
-                  flexDirection: "row",
-                  alignItems: "center",
-                }}
-              >
-                <View style={{ flex: 1 }}>
-                  <TouchableOpacity
-                    style={styles.testInput}
-                    activeOpacity={0.7}
-                    onPress={() => openDropdown(index)}
-                  >
-                    <ThemedText style={styles.testText}>
-                      {item || "Chọn học sinh kiểm tra"}
-                    </ThemedText>
+              <View style={{flex: 1, position: 'relative', flexDirection: 'column', alignItems: 'flex-start'}}>
+                <TouchableOpacity
+                  style={styles.testInputWrap}
+                  activeOpacity={0.8}
+                  onPress={() => openDropdown(index)}
+                >
+                  <View style={{flexDirection: 'row', alignItems: 'center', width: '100%'}}>
+                    <Text style={styles.testText}>{item || 'Chọn học sinh kiểm tra'}</Text>
                     {item && (
                       <View style={styles.scoreInputBox}>
                         <TextInput
@@ -115,61 +94,43 @@ const Student_Test = () => {
                           placeholder="Nhập điểm"
                           placeholderTextColor="#C4C4C4"
                           keyboardType="numeric"
-                          value={scoreList[index]?.toString() || ''}
-                          onChangeText={text => handleScoreChange(text, index)}
+                          value={scoreList[index]?.toString() || ""}
+                          onChangeText={(text) =>
+                            handleScoreChange(text, index)
+                          }
                           maxLength={2}
                         />
                       </View>
                     )}
-                    <MaterialIcons
-                      name="keyboard-arrow-down"
-                      size={24}
-                      color="#fff"
-                      style={{ marginLeft: 8 }}
-                    />
-                  </TouchableOpacity>
-                  {dropdownIndex === index && (
-                    <View style={styles.dropdown}>
-                      {allStudents.map((student) => (
-                        <TouchableOpacity
-                          key={student}
-                          style={styles.dropdownItem}
-                          onPress={() => handleSelectStudent(student, index)}
-                        >
-                          <ThemedText style={styles.dropdownItemText}>
-                            {student}
-                          </ThemedText>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  )}
-                </View>
-                <TouchableOpacity
-                  style={[
-                    styles.testCloseBtn,
-                    { alignSelf: "flex-start", marginLeft: 8 },
-                  ]}
-                  onPress={() => handleRemoveTest(index)}
-                >
-                  <MaterialIcons
-                    name="close"
-                    size={16}
-                    color="#fff"
-                    style={{
-                      backgroundColor: "#CF2020",
-                      borderRadius: 50,
-                      padding: 5,
-                      marginTop: 10,
-                    }}
-                  />
+                    <FontAwesome name={dropdownIndex === index ? 'chevron-up' : 'chevron-down'} size={22} color="#fff" style={{marginLeft: 8}} />
+                  </View>
                 </TouchableOpacity>
+                {dropdownIndex === index && (
+                  <View style={styles.dropdown}>
+                    {allStudents.map(student => (
+                      <TouchableOpacity
+                        key={student}
+                        style={styles.dropdownItem}
+                        onPress={() => handleSelectStudent(student, index)}
+                      >
+                        <Text style={styles.dropdownItemText}>{student}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
               </View>
+              <TouchableOpacity
+                style={{alignSelf: 'flex-start', marginLeft: 8, backgroundColor: 'transparent'}}
+                onPress={() => handleRemoveTest(index)}
+              >
+                <FontAwesome name="close" size={22} color="#F04438" />
+              </TouchableOpacity>
             </View>
           ))}
           <View style={{ marginTop: 10, marginLeft: 10 }}>
             <PlusIcon onPress={handleAddTest} text="Thêm học sinh kiểm tra" />
           </View>
-        </ThemedView>
+        </View>
       )}
     </View>
   );
@@ -177,35 +138,35 @@ const Student_Test = () => {
 
 const styles = StyleSheet.create({
   card: {
-    width: "92%",
-    backgroundColor: "#F3F6FA",
+    width: '98%',
+    backgroundColor: '#E9EBF0',
     borderRadius: 16,
     padding: 18,
     marginBottom: 18,
     marginTop: 8,
-    alignSelf: 'center',
-    shadowColor: '#000',
+    alignSelf: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 2,
   },
   headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 10,
   },
   headerBar: {
-    width: 3,
-    height: 45,
-    backgroundColor: "#F9A825",
+    width: 4,
+    height: 28,
+    backgroundColor: '#F9A825',
     borderRadius: 2,
     marginRight: 10,
   },
   headerText: {
-    color: "#25345C",
-    fontSize: 24,
-    fontFamily: "Baloo2-SemiBold",
+    color: '#26324D',
+    fontWeight: '700',
+    fontSize: 20,
     flex: 1,
   },
   closeBtn: {
@@ -215,51 +176,54 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   closeCircle: {
-    backgroundColor: "#CF2020",
+    backgroundColor: '#F04438',
     borderRadius: 16,
-    width: 24,
-    height: 24,
-    alignItems: "center",
-    justifyContent: "center",
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   testRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 10,
     marginLeft: 10,
   },
-  testInput: {
-    flex: 1,
-    backgroundColor: "#29375C",
-    borderRadius: 15,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    flexDirection: "row",
-    alignItems: "center",
+  testInputWrap: {
+    backgroundColor: '#A0A3BD',
+    borderRadius: 20,
+    paddingVertical: 18,
+    paddingHorizontal: 18,
+    width: '100%',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    marginTop: 0,
   },
   testText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    flex: 1,
+    fontWeight: 'bold',
+    fontFamily: 'Baloo 2',
+    marginBottom: 0,
   },
   scoreInputBox: {
-    backgroundColor: '#7D88A7',
+    backgroundColor: "#7D88A7",
     borderRadius: 12,
     marginLeft: 12,
     paddingVertical: 4,
     paddingHorizontal: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   scoreInput: {
-    backgroundColor: 'transparent',
-    color: 'rgba(255,255,255,0.7)',
+    backgroundColor: "transparent",
+    color: "rgba(255,255,255,0.7)",
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     paddingVertical: 0,
     paddingHorizontal: 0,
     minWidth: 40,
-    textAlign: 'center',
+    textAlign: "center",
   },
   testCloseBtn: {
     marginLeft: 8,
@@ -267,16 +231,16 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     marginTop: 10,
-    backgroundColor: "#525D7B",
-    borderRadius: 15,
-    shadowColor: "#000",
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
     shadowRadius: 8,
     elevation: 4,
     paddingVertical: 2,
     maxHeight: 180,
-    width: '100%',
+    width: "100%",
   },
   dropdownItem: {
     paddingVertical: 10,
@@ -284,7 +248,7 @@ const styles = StyleSheet.create({
   },
   dropdownItemText: {
     fontSize: 16,
-    color: "#fff",
+    color: '#22315B',
   },
 });
 

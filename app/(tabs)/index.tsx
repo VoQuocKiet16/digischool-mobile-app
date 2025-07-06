@@ -39,14 +39,18 @@ export default function HomeScreen() {
     );
   }
 
+  const renderHeader = (rolePrefix: string) => (
+    <Header
+      title="Trang chủ"
+      studentName={userName ? `${rolePrefix} ${userName}` : `${rolePrefix}...`}
+    />
+  );
+
   if (roles.includes("teacher")) {
-    // UI cho teacher (hiện tại là loading)
+    // UI cho teacher
     return (
       <View style={styles.container}>
-        <Header
-          title="Trang chủ"
-          studentName={userName ? `GV ${userName}` : "GV Nguyễn Văn A"}
-        />
+        {renderHeader("GV")}
         <ScheduleTeacherScreen />
       </View>
     );
@@ -64,10 +68,7 @@ export default function HomeScreen() {
   // UI cho student
   return (
     <View style={styles.container}>
-      <Header
-        title="Trang chủ"
-        studentName={userName ? `HS ${userName}` : "HS..."}
-      />
+      {renderHeader("HS")}
       <ScheduleStudentsScreen />
     </View>
   );

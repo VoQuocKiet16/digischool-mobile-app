@@ -7,14 +7,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const RANKS = ["A+", "A", "B+", "B"];
@@ -59,12 +59,12 @@ const LessonEvaluateTeacherScreen = () => {
         >
           {/* Tiết chương trình */}
           <View style={styles.fieldWrap}>
-            <View style={styles.outlineInputBox}>
+            <View style={styles.floatingInputBox}>
               <Text style={styles.floatingLabel}>
-                Tiết chương trình <Text style={styles.required}>*</Text>
+                Tiết chương trình <Text style={styles.label}>*</Text>
               </Text>
               <TextInput
-                style={styles.inputTextOutline}
+                style={styles.input}
                 placeholder="Vui lòng nhập tiết chương trình"
                 placeholderTextColor="#9CA3AF"
                 value={lesson}
@@ -74,13 +74,13 @@ const LessonEvaluateTeacherScreen = () => {
           </View>
           {/* Tên bài, nội dung công việc */}
           <View style={styles.fieldWrap}>
-            <View style={styles.outlineInputBox}>
+            <View style={styles.floatingInputBox}>
               <Text style={styles.floatingLabel}>
                 Tên bài, nội dung công việc{" "}
-                <Text style={styles.required}>*</Text>
+                <Text style={styles.label}>*</Text>
               </Text>
               <TextInput
-                style={styles.inputTextOutline}
+                style={styles.input}
                 placeholder="Vui lòng nhập tên bài học, nội dung công việc"
                 placeholderTextColor="#9CA3AF"
                 value={content}
@@ -102,10 +102,10 @@ const LessonEvaluateTeacherScreen = () => {
           </View>
           {/* Nhận xét */}
           <View style={styles.fieldWrap}>
-            <View style={styles.outlineInputBox}>
+            <View style={styles.floatingInputBox}>
               <Text style={styles.floatingLabel}>Nhận xét</Text>
               <TextInput
-                style={styles.inputTextOutline}
+                style={styles.input}
                 placeholder="Vui lòng nhập nhận xét"
                 placeholderTextColor="#9CA3AF"
                 value={comment}
@@ -118,9 +118,9 @@ const LessonEvaluateTeacherScreen = () => {
           </View>
           {/* Xếp loại tiết học */}
           <View style={styles.fieldWrap}>
-            <View style={styles.outlineInputBox}>
+            <View style={styles.floatingInputBox}>
               <Text style={styles.floatingLabel}>
-                Xếp loại tiết học <Text style={styles.required}>*</Text>
+                Xếp loại tiết học <Text style={styles.label}>*</Text>
               </Text>
               <TouchableOpacity
                 style={styles.dropdown}
@@ -137,7 +137,7 @@ const LessonEvaluateTeacherScreen = () => {
                 <Ionicons
                   name={showRankDropdown ? "chevron-up" : "chevron-down"}
                   size={24}
-                  color="#22315B"
+                  color="#29375C"
                   style={{ marginLeft: 8 }}
                 />
               </TouchableOpacity>
@@ -154,7 +154,7 @@ const LessonEvaluateTeacherScreen = () => {
                     >
                       <Text
                         style={[
-                          styles.modalItemText,
+                          styles.dropdownItemText,
                           rank === r && { fontWeight: "bold" },
                         ]}
                       >
@@ -167,41 +167,26 @@ const LessonEvaluateTeacherScreen = () => {
             </View>
           </View>
           {/* Checkbox xác nhận trách nhiệm nhận xét */}
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginHorizontal: 16, marginBottom: 8 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "flex-start",
+              marginHorizontal: 16,
+              marginBottom: 8,
+            }}
+          >
             <TouchableOpacity
               onPress={() => setChecked(!checked)}
               style={{
-                width: 22,
-                height: 22,
-                borderRadius: 4,
-                borderWidth: 2,
-                borderColor: "#29375C",
-                alignItems: "center",
-                justifyContent: "center",
-                marginRight: 8,
-                backgroundColor: checked ? "#29375C" : "transparent",
+                width: 24, height: 24, borderRadius: 4, borderWidth: 2, borderColor: '#22315B', alignItems: 'center', justifyContent: 'center', marginRight: 8, backgroundColor: checked ? '#22315B' : 'transparent',
               }}
               activeOpacity={0.8}
             >
-              {checked && (
-                <Ionicons name="checkmark" size={18} color="#fff" />
-              )}
+              {checked && <Ionicons name="checkmark" size={18} color="#fff" />}
             </TouchableOpacity>
-            <Text
-              style={{
-                color: "#29375C",
-                fontSize: 16,
-                flex: 1,
-                flexWrap: "wrap",
-                lineHeight: 23,
-                fontFamily: "Baloo2-Medium",
-              }}
-            >
+            <Text style={{ color: '#22315B', fontSize: 16, fontWeight: '500', flex: 1, flexWrap: 'wrap', lineHeight: 18 }}>
               Tôi hoàn toàn chịu trách nhiệm với nội dung nhận xét của mình.
-              <Text style={{ color: "red", fontSize: 16, fontFamily: "Baloo2-SemiBold", marginLeft: 2 }}>
-                {" "}
-                *
-              </Text>
+              <Text style={{ color: 'red', fontSize: 12, fontWeight: 'bold' }}> *</Text>
             </Text>
           </View>
           {/* Nút xác nhận */}
@@ -219,7 +204,7 @@ const LessonEvaluateTeacherScreen = () => {
             visible={showSuccess}
             onClose={() => {
               setShowSuccess(false);
-              router.replace('/teachers/lesson_information/lesson_detail');
+              router.replace("/teachers/lesson_information/lesson_detail");
             }}
             title="Thành công"
             message={"Đánh giá tiết học thành công.\nQuay lại trang trước đó?"}
@@ -235,9 +220,15 @@ const styles = StyleSheet.create({
   fieldWrap: {
     marginBottom: 10,
   },
-  outlineInputBox: {
-    borderWidth: 1,
-    borderColor: "#29375C",
+  label: {
+    fontSize: 15,
+    color: "#22315B",
+    fontWeight: "bold",
+    marginBottom: 6,
+  },
+  floatingInputBox: {
+    borderWidth: 2,
+    borderColor: "#22315B",
     borderRadius: 12,
     backgroundColor: "#f7f7f7",
     marginBottom: 25,
@@ -254,21 +245,21 @@ const styles = StyleSheet.create({
     left: 18,
     backgroundColor: "#f7f7f7",
     paddingHorizontal: 6,
-    color: "#29375C",
-    fontFamily: "Baloo2-SemiBold",
-    fontSize: 14,
+    color: "#22315B",
+    fontWeight: "bold",
+    fontSize: 12,
     zIndex: 2,
   },
-  inputTextOutline: {
-    color: "#29375C",
-    fontSize: 16,
-    fontFamily: "Baloo2-Medium",
-  },
-  required: {
-    color: "#E53935",
-    fontSize: 18,
-    marginLeft: 2,
-    marginTop: -2,
+  input: {
+    borderWidth: 2,
+    borderColor: "#22315B",
+    borderRadius: 12,
+    backgroundColor: "#fff",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    fontSize: 15,
+    color: "#22315B",
+    fontWeight: "bold",
   },
   dropdown: {
     flexDirection: "row",
@@ -278,9 +269,10 @@ const styles = StyleSheet.create({
     minHeight: 22,
   },
   dropdownText: {
-    color: "#29375C",
+    color: "#22315B",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontWeight: "bold",
+    flex: 1,
   },
   dropdownPlaceholder: {
     color: "#9CA3AF",
@@ -296,10 +288,10 @@ const styles = StyleSheet.create({
   modalItem: {
     paddingVertical: 8,
   },
-  modalItemText: {
-    fontSize: 16,
-    color: "#29375C",
-    fontFamily: "Baloo2-Medium",
+  dropdownItemText: {
+    fontSize: 22,
+    color: "#22315B",
+    fontWeight: "500",
   },
   saveBtn: {
     backgroundColor: "#29375C",

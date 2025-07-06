@@ -8,13 +8,14 @@ import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Modal,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { getLessonDetail } from "../../../services/schedule.service";
 const LessonDetailScreen = () => {
@@ -165,74 +166,61 @@ const LessonDetailScreen = () => {
         </TouchableOpacity>
       }
     >
-      <RefreshableScrollView
+      <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        onRefresh={fetchLessonDetail}
       >
         <Lesson_Information
           isCompleted={isCompleted}
           onCompletePress={handleCompletePress}
           onEvaluatePress={handleEvaluatePress}
           role="teacher"
-          lessonData={lessonData}
-          isEditingDescription={isEditingDesc}
-          descriptionValue={descValue}
-          onDescriptionChange={setDescValue}
-          onEditDescription={() => setIsEditingDesc(true)}
-          onDoneEditDescription={handleDoneEditDesc}
-          showDescriptionCard={showDescriptionCard}
-          setShowDescriptionCard={setShowDescriptionCard}
-          testInfo={lessonData?.testInfo}
-          onEditTestInfo={handleEditTestInfo}
-          lessonId={lessonId}
         />
-        {!showDescriptionCard && (
-          <View
-            style={{ marginHorizontal: 16, marginTop: 0, marginBottom: 12 }}
-          >
-            <PlusIcon
-              text="Thêm mô tả"
-              onPress={() => {
-                setShowDescriptionCard(true);
-                setIsEditingDesc(true);
-                setDescValue("");
-              }}
-            />
-          </View>
-        )}
-        {!lessonData?.testInfo && (
-          <View
-            style={{ marginHorizontal: 16, marginTop: 0, marginBottom: 12 }}
-          >
-            <PlusIcon
-              text="Dặn dò kiểm tra cho tiết học này"
-              onPress={() =>
-                router.push({
-                  pathname: "/teachers/test_information/test_information",
-                  params: {
-                    subtitle: getSubtitle(),
-                    lessonId: lessonId || "",
-                  },
-                })
-              }
-            />
-          </View>
-        )}
-      </RefreshableScrollView>
-      <ConfirmTeachedModal
+        <View style={{ marginHorizontal: 16, marginTop: 0, marginBottom: 12 }}>
+          <PlusIcon
+            text="Dặn dò kiểm tra cho tiết học này"
+            onPress={() => router.push("/teachers/test_information/test_information")}
+          />
+        </View>
+      </ScrollView>
+      <Modal
         visible={showModal}
-        onConfirm={handleConfirmComplete}
-        onCancel={() => setShowModal(false)}
-        title="Hoàn thành tiết học"
-        message={`Xác nhận rằng \n bạn đã hoàn thành tiết học này?`}
-        confirmText="Xác nhận"
-        cancelText="Bỏ qua"
-        icon="check-circle"
-        iconColor="#fff"
-        iconBgColor="#29375C"
-      />
+        transparent
+        statusBarTranslucent={true}
+        animationType="fade"
+        onRequestClose={() => setShowModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <View style={styles.modalIconWrap}>
+              <Ionicons
+                name="checkmark-done-circle-outline"
+                size={40}
+                color="#22315B"
+              />
+            </View>
+            <Text style={styles.modalTitle}>Hoàn thành tiết học</Text>
+            <Text style={styles.modalDesc}>
+              Xác nhận rằng{"\n"}bạn đã hoàn thành tiết học này?
+            </Text>
+            <View style={styles.modalBtnRow}>
+              <TouchableOpacity
+                style={styles.modalBtnOutline}
+                onPress={() => setShowModal(false)}
+              >
+                <Text style={styles.modalBtnOutlineText}>Bỏ qua</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalBtn}
+                onPress={handleConfirmComplete}
+              >
+                <Text style={styles.modalBtnText}>Xác nhận</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
       <Modal
         visible={menuVisible}
         transparent
@@ -248,9 +236,7 @@ const LessonDetailScreen = () => {
                 router.push("/teachers/substitute_request/substitute_request");
               }}
             >
-              <Text style={styles.menuText}>
-                Dạy thay
-              </Text>
+              <Text style={styles.menuText}>Dạy thay</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.menuItem}
@@ -279,7 +265,7 @@ const LessonDetailScreen = () => {
               style={styles.menuItem}
               onPress={() => {
                 setMenuVisible(false);
-                router.push({ pathname: '/note/note' });
+                router.push({ pathname: "/note/note" });
               }}
             >
               <Text style={styles.menuText}>Ghi chú</Text>
@@ -360,8 +346,81 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   menuTextActive: {
+    color: "#29375C",
+    fontWeight: "bold",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.18)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalBox: {
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    padding: 24,
+    alignItems: "center",
+    width: 300,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  modalIconWrap: {
+    backgroundColor: "#E5E7EB",
+    borderRadius: 32,
+    width: 64,
+    height: 64,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#22315B",
+    marginBottom: 8,
+    marginTop: 2,
+  },
+  modalDesc: {
+    color: "#22315B",
+    fontSize: 15,
+    textAlign: "center",
+    marginBottom: 18,
+  },
+  modalBtnRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    marginTop: 8,
+  },
+  modalBtnOutline: {
+    flex: 1,
+    borderWidth: 1.5,
+    borderColor: "#A0A3BD",
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: "center",
+    marginRight: 8,
+    backgroundColor: "#fff",
+  },
+  modalBtnOutlineText: {
     color: "#22315B",
     fontWeight: "bold",
+    fontSize: 16,
+  },
+  modalBtn: {
+    flex: 1,
+    backgroundColor: "#A0A3BD",
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+  modalBtnText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });
 

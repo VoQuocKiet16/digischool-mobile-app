@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lexical Editor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    body { margin: 0; padding: 0; background: #F7F7F7; }
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      padding: 8px 8px 4px 6px;
+      background: #E5E6E9;
+      align-items: center;
+      border-radius: 12px;
+      min-height: 40px;
+      box-sizing: border-box;
+      margin-bottom: 8px;
+      width: 99%;
+      max-width: 99vw;
+    }
+    .editor-wrap {
+      border: 1.5px solid #25345D;
+      border-radius: 12px;
+      background: #F7F7F7;
+      width: 99%;
+      margin: 0 auto;
+      box-sizing: border-box;
+      /* KHÔNG set height, KHÔNG overflow ở đây */
+    }
+    .editor-scroll {
+      height: 180px;           /* Chỉ vùng nhập liệu này có chiều cao cố định */
+      overflow-y: auto;        /* Chỉ vùng nhập liệu này cuộn */
+      background: #F7F7F7;
+      border-radius: 12px;
+      width: 100%;
+    }
+    .tool-btn {
+      width: 20px; height: 20px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: #222;
+      font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+      cursor: pointer;
+      outline: none;
+    }
+    .tool-btn.active, .tool-btn:active {
+      background: #D1D5DB;
+    }
+    .tool-btn:focus {
+      box-shadow: 0 0 0 2px #25345D33;
+    }
+    #editor {
+      min-height: 100px;
+      padding: 10px 10px 10px 10px;
+      outline: none;
+      font-size: 16px;
+      background: #F7F7F7;
+      border: none;
+      width: 100%;
+      color: #25345D;
+      margin-top: 0;
+    }
+    #editor:empty:before {
+      content: attr(data-placeholder);
+      color: #A0A0A0;
+      pointer-events: none;
+      font-size: 15px;
+      font-style: normal;
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <button class="tool-btn" onclick="document.execCommand('italic', false, null)" title="Italic"><i>I</i></button>
+    <button class="tool-btn" onclick="document.execCommand('bold', false, null)" title="Bold"><b>B</b></button>
+    <button class="tool-btn" onclick="document.execCommand('underline', false, null)" title="Underline"><u>U</u></button>
+    <button class="tool-btn" onclick="document.execCommand('strikethrough', false, null)" title="Strikethrough"><span style='text-decoration:line-through'>U</span></button>
+    <button class="tool-btn" onclick="document.execCommand('insertLink', false, null)" title="Link">&#128279;</button>
+    <button class="tool-btn" onclick="document.execCommand('insertUnorderedList', false, null)" title="Bullet List">&#9632;</button>
+    <button class="tool-btn" onclick="document.execCommand('justifyLeft', false, null)" title="Align Left">&#8676;</button>
+    <button class="tool-btn" onclick="document.execCommand('justifyCenter', false, null)" title="Align Center">&#8596;</button>
+    <button class="tool-btn" onclick="document.execCommand('justifyRight', false, null)" title="Align Right">&#8677;</button>
+    <button class="tool-btn" onclick="document.execCommand('insertOrderedList', false, null)" title="Numbered List">&#35;</button>
+    <button class="tool-btn" style="margin-left:auto;" disabled>&#9654;</button>
+    <button class="tool-btn" id="done-btn" style="margin-left:8px;">Xong</button>
+  </div>
+  <div class="editor-wrap">
+    <div class="editor-scroll">
+      <div id="editor" contenteditable="true" data-placeholder="Vui lòng nhập nội dung"></div>
+    </div>
+  </div>
+  <script>
+    const editor = document.getElementById('editor');
+    // Chỉ gửi nội dung về RN khi thay đổi, không set lại từ RN vào WebView khi user đang nhập/xoá
+    editor.addEventListener('input', function() {
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(editor.innerHTML);
+      }
+    });
+    // Nếu muốn set lại nội dung từ RN (ví dụ: khi mở lại editor), chỉ set một lần duy nhất
+    let initialSet = false;
+    window.document.addEventListener('message', function(event) {
+      if (!initialSet && event.data) {
+        editor.innerHTML = event.data;
+        initialSet = true;
+      }
+    });
+    window.addEventListener('message', function(event) {
+      if (!initialSet && event.data) {
+        editor.innerHTML = event.data;
+        initialSet = true;
+      }
+    });
+    // Highlight active button (optional, basic demo)
+    document.querySelectorAll('.tool-btn').forEach(btn => {
+      btn.addEventListener('mousedown', e => {
+        btn.classList.add('active');
+      });
+      btn.addEventListener('mouseup', e => {
+        setTimeout(() => btn.classList.remove('active'), 150);
+      });
+      btn.addEventListener('mouseleave', e => {
+        btn.classList.remove('active');
+      });
+    });
+    document.getElementById('done-btn').addEventListener('click', function() {
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage('__BLUR__');
+      }
+    });
+  </script>
+</body>
+</html> 

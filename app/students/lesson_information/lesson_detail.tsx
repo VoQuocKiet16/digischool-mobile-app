@@ -1,40 +1,117 @@
-import HeaderLayout from '@/components/layout/HeaderLayout';
-import Lesson_Information from '@/components/lesson_detail/Lesson_Information';
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import HeaderLayout from "@/components/layout/HeaderLayout";
+import Lesson_Information from "@/components/lesson_detail/Lesson_Information";
+import RefreshableScrollView from "@/components/RefreshableScrollView";
+import { MaterialIcons } from "@expo/vector-icons";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Modal,
+  ScrollView,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { getLessonDetail } from "../../../services/schedule.service";
 
 const LessonDetailScreen = () => {
   const [menuVisible, setMenuVisible] = useState(false);
+  const [lessonData, setLessonData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
+
+  useEffect(() => {
+    if (lessonId) {
+      fetchLessonDetail();
+    }
+  }, [lessonId]);
+
+  const fetchLessonDetail = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const data = await getLessonDetail(lessonId);
+      setLessonData(data);
+    } catch (err) {
+      setError("Lỗi tải thông tin tiết học");
+      console.error("Error fetching lesson detail:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEvaluatePress = () => {
-    router.push('/students/lesson_information/lesson_evaluate');
+    router.push("/students/lesson_information/lesson_evaluate");
   };
+
+  // Tạo subtitle từ dữ liệu lesson
+  const getSubtitle = () => {
+    if (!lessonData) return "Chưa rõ • Chưa rõ • Chưa rõ • Chưa rõ";
+
+    const session =
+      lessonData.timeSlot?.session === "morning" ? "Sáng" : "Chiều";
+    const period = `Tiết ${lessonData.timeSlot?.period || 1}`;
+    const subject =
+      lessonData.subject?.name ||
+      lessonData.fixedInfo?.description ||
+      "Chưa rõ";
+    const className = lessonData.class?.className || "Chưa rõ";
+
+    return `${session} • ${period} • ${subject} • ${className}`;
+  };
+
+  if (loading) {
+    return (
+      <HeaderLayout
+        title="Chi tiết tiết học"
+        subtitle={getSubtitle()}
+        onBack={() => router.back()}
+      >
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#3A546D" />
+          <Text style={styles.loadingText}>Đang tải thông tin tiết học...</Text>
+        </View>
+      </HeaderLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <HeaderLayout
+        title="Chi tiết tiết học"
+        subtitle={getSubtitle()}
+        onBack={() => router.back()}
+      >
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={fetchLessonDetail}
+          >
+            <Text style={styles.retryButtonText}>Thử lại</Text>
+          </TouchableOpacity>
+        </View>
+      </HeaderLayout>
+    );
+  }
 
   return (
     <HeaderLayout
       title="Chi tiết tiết học"
-      subtitle="Sáng • Tiết 3 • Hóa học • 10a3"
-      onBack={() => router.replace('/(tabs)')}
+      subtitle={getSubtitle()}
+      onBack={() => router.back()}
       rightIcon={
         <TouchableOpacity onPress={() => setMenuVisible(true)}>
-          <Ionicons name="menu" size={24} color="#25345D" />
+          <MaterialIcons name="menu" size={24} color="#25345D" />
         </TouchableOpacity>
       }
     >
-      <RefreshableScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        onRefresh={fetchLessonDetail}
-      >
-        <Lesson_Information
-          onEvaluatePress={handleEvaluatePress}
-          lessonData={lessonData}
-          testInfo={lessonData?.testInfo}
-        />
-      </RefreshableScrollView>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <Lesson_Information onEvaluatePress={handleEvaluatePress} />
+      </ScrollView>
       <Modal
         visible={menuVisible}
         transparent
@@ -47,7 +124,7 @@ const LessonDetailScreen = () => {
               style={styles.menuItem}
               onPress={() => {
                 setMenuVisible(false);
-                router.push('/students/note/note');
+                router.push("/note/note");
               }}
             >
               <Text style={styles.menuText}>Ghi chú</Text>
@@ -63,32 +140,62 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 32,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#666",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: "#F04438",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: "#3A546D",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "500",
+  },
   overlay: {
     flex: 1,
-    backgroundColor: 'transparent',
-    justifyContent: 'flex-start',
-    alignItems: 'flex-end',
+    backgroundColor: "transparent",
+    justifyContent: "flex-start",
+    alignItems: "flex-end",
     paddingTop: 48,
     paddingRight: 12,
   },
   menuBox: {
-    backgroundColor: '#25345D',
+    backgroundColor: "#25345D",
     borderRadius: 10,
-    padding: 8,
-    minWidth: 120,
-    marginTop: 0,
+    padding: 5,
+    minWidth: 110,
+    marginTop: 75,
+    marginRight: 8,
   },
   menuItem: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    backgroundColor: '#7D88A7',
+    padding: 5,
   },
   menuText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '500',
-    opacity: 0.7,
+    fontFamily: "Baloo2-Medium",
   },
 });
 
