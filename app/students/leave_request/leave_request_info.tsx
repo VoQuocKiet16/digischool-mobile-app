@@ -33,6 +33,9 @@ export default function LeaveRequestInfoScreen() {
   const [reason, setReason] = useState("");
   const [step, setStep] = useState<"form" | "confirm">("form");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showLoading, setShowLoading] = useState(false);
+  const [loadingSuccess, setLoadingSuccess] = useState(false);
+  const [error, setError] = useState("");
 
   // Xác nhận lại thông tin tiết học xin nghỉ
   const selectedLessons = selectedSlots.map(
@@ -52,11 +55,6 @@ export default function LeaveRequestInfoScreen() {
     }
   };
 
-<<<<<<< khoi-api
-  // Xử lý gửi yêu cầu
-  const handleSubmit = () => {
-    setShowSuccess(true);
-=======
   const handleSubmit = async () => {
     setShowLoading(true);
     setLoadingSuccess(false);
@@ -82,7 +80,6 @@ export default function LeaveRequestInfoScreen() {
       setError("Gửi yêu cầu thất bại!");
       setShowLoading(false);
     }
->>>>>>> local
   };
 
   return (

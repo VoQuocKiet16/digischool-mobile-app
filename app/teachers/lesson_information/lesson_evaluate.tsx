@@ -101,13 +101,8 @@ const LessonEvaluateTeacherScreen = () => {
             <Student_Test />
           </View>
           {/* Nhận xét */}
-<<<<<<< khoi-api
-          <View style={styles.inputBox}>
-            <View style={[styles.floatingInputBox, styles.floatingInputBoxSmall]}>
-=======
           <View style={styles.fieldWrap}>
             <View style={styles.outlineInputBox}>
->>>>>>> local
               <Text style={styles.floatingLabel}>Nhận xét</Text>
               <TextInput
                 style={styles.inputTextOutline}
@@ -176,9 +171,6 @@ const LessonEvaluateTeacherScreen = () => {
             <TouchableOpacity
               onPress={() => setChecked(!checked)}
               style={{
-<<<<<<< khoi-api
-                width: 24, height: 24, borderRadius: 4, borderWidth: 2, borderColor: '#22315B', alignItems: 'center', justifyContent: 'center', marginRight: 8, backgroundColor: checked ? '#22315B' : 'transparent',
-=======
                 width: 22,
                 height: 22,
                 borderRadius: 4,
@@ -188,7 +180,6 @@ const LessonEvaluateTeacherScreen = () => {
                 justifyContent: "center",
                 marginRight: 8,
                 backgroundColor: checked ? "#29375C" : "transparent",
->>>>>>> local
               }}
               activeOpacity={0.8}
             >
@@ -196,11 +187,6 @@ const LessonEvaluateTeacherScreen = () => {
                 <Ionicons name="checkmark" size={18} color="#fff" />
               )}
             </TouchableOpacity>
-<<<<<<< khoi-api
-            <Text style={{ color: '#22315B', fontSize: 16, fontWeight: '500', flex: 1, flexWrap: 'wrap', lineHeight: 18 }}>
-              Tôi hoàn toàn chịu trách nhiệm với nội dung nhận xét của mình.
-              <Text style={{ color: 'red', fontSize: 12, fontWeight: 'bold' }}> *</Text>
-=======
             <Text
               style={{
                 color: "#29375C",
@@ -216,7 +202,6 @@ const LessonEvaluateTeacherScreen = () => {
                 {" "}
                 *
               </Text>
->>>>>>> local
             </Text>
           </View>
           {/* Nút xác nhận */}
@@ -247,28 +232,12 @@ const LessonEvaluateTeacherScreen = () => {
 };
 
 const styles = StyleSheet.create({
-<<<<<<< khoi-api
-  inputBox: {
-    marginBottom: 16,
-    marginHorizontal: 16,
-  },
-  label: {
-    fontSize: 15,
-    color: "#22315B",
-    fontWeight: "bold",
-    marginBottom: 6,
-  },
-  floatingInputBox: {
-    borderWidth: 2,
-    borderColor: "#22315B",
-=======
   fieldWrap: {
     marginBottom: 10,
   },
   outlineInputBox: {
     borderWidth: 1,
     borderColor: "#29375C",
->>>>>>> local
     borderRadius: 12,
     backgroundColor: "#f7f7f7",
     marginBottom: 25,
@@ -285,40 +254,6 @@ const styles = StyleSheet.create({
     left: 18,
     backgroundColor: "#f7f7f7",
     paddingHorizontal: 6,
-<<<<<<< khoi-api
-    color: "#22315B",
-    fontWeight: "bold",
-    fontSize: 12,
-    zIndex: 2,
-  },
-  floatingInput: {
-    color: "#22315B",
-    fontSize: 12,
-    fontWeight: "bold",
-    marginTop: 2,
-  },
-  input: {
-    borderWidth: 2,
-    borderColor: "#22315B",
-    borderRadius: 12,
-    backgroundColor: "#fff",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    fontSize: 15,
-    color: "#22315B",
-    fontWeight: "bold",
-  },
-  dropdownFloatingBox: {
-    borderWidth: 2,
-    borderColor: "#22315B",
-    borderRadius: 20,
-    backgroundColor: "#fff",
-    paddingTop: 18,
-    paddingBottom: 12,
-    paddingHorizontal: 16,
-    position: "relative",
-    marginTop: 0,
-=======
     color: "#29375C",
     fontFamily: "Baloo2-SemiBold",
     fontSize: 14,
@@ -334,7 +269,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginLeft: 2,
     marginTop: -2,
->>>>>>> local
   },
   dropdown: {
     flexDirection: "row",
@@ -344,16 +278,9 @@ const styles = StyleSheet.create({
     minHeight: 22,
   },
   dropdownText: {
-<<<<<<< khoi-api
-    fontSize: 16,
-    color: "#22315B",
-    fontWeight: "bold",
-    flex: 1,
-=======
     color: "#29375C",
     fontSize: 16,
     fontFamily: "Baloo2-Medium",
->>>>>>> local
   },
   dropdownPlaceholder: {
     color: "#9CA3AF",
@@ -369,17 +296,10 @@ const styles = StyleSheet.create({
   modalItem: {
     paddingVertical: 8,
   },
-<<<<<<< khoi-api
-  dropdownItemText: {
-    fontSize: 22,
-    color: "#22315B",
-    fontWeight: "500",
-=======
   modalItemText: {
     fontSize: 16,
     color: "#29375C",
     fontFamily: "Baloo2-Medium",
->>>>>>> local
   },
   saveBtn: {
     backgroundColor: "#29375C",

@@ -1,11 +1,3 @@
-<<<<<<< khoi-api
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import DaySelector from '../../../components/schedule/DaySelector';
-import ScheduleDay from '../../../components/schedule/ScheduleDay';
-import ScheduleHeader from '../../../components/schedule/ScheduleHeader';
-=======
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -23,7 +15,6 @@ import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getStudentSchedule } from "../../../services/schedule.service";
 import AsyncStorage from "@react-native-async-storage/async-storage";
->>>>>>> local
 
 export interface Activity {
   text: string;
@@ -54,10 +45,6 @@ const initialScheduleData: Activity[][] = [
 
 export default function ScheduleStudentsScreen() {
   const router = useRouter();
-<<<<<<< khoi-api
-  const [session, setSession] = useState<'Buổi sáng' | 'Buổi chiều'>('Buổi sáng');
-  const [scheduleData, setScheduleData] = useState<Activity[][]>(initialScheduleData);
-=======
   const [session, setSession] = useState<"Buổi sáng" | "Buổi chiều">(
     "Buổi sáng"
   );
@@ -104,7 +91,6 @@ export default function ScheduleStudentsScreen() {
       setLoading(false);
     }
   };
->>>>>>> local
 
   const days = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
   const morningPeriods = ['Tiết 1', 'Tiết 2', 'Tiết 3', 'Tiết 4', 'Tiết 5'];

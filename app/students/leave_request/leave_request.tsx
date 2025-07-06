@@ -1,13 +1,3 @@
-<<<<<<< khoi-api
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import HeaderLayout from '../../../components/layout/HeaderLayout';
-import DaySelector from '../../../components/schedule/DaySelector';
-import ScheduleDay from '../../../components/schedule/ScheduleDay';
-import ScheduleHeader from '../../../components/schedule/ScheduleHeader';
-import { Activity } from '../schedule/schedule';
-=======
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -27,7 +17,6 @@ import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getStudentSchedule } from "../../../services/schedule.service";
 import { Activity } from "../schedule/schedule";
->>>>>>> local
 
 const defaultActivity = (text: string, hasNotification = false): Activity => ({
   text,
@@ -54,16 +43,17 @@ const afternoonPeriods = ['Tiết 6', 'Tiết 7', 'Tiết 8', 'Tiết 9', 'Tiế
 
 export default function LeaveRequestScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const [session, setSession] = useState<'Buổi sáng' | 'Buổi chiều'>('Buổi sáng');
   const [selected, setSelected] = useState<{row: number, col: number}[]>([]);
-  const [scheduleData] = useState<Activity[][]>(initialScheduleData);
+  const [scheduleData, setScheduleData] = useState<Activity[][]>(initialScheduleData);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [lessonDetails, setLessonDetails] = useState<any[][]>([]);
+  const [lessonIds, setLessonIds] = useState<string[]>([]);
+  const [year, setYear] = useState("2025");
+  const [dateRange, setDateRange] = useState({ start: "12/6", end: "19/6" });
 
-<<<<<<< khoi-api
-  const periods = session === 'Buổi sáng' ? morningPeriods : afternoonPeriods;
-  const displayedData = session === 'Buổi sáng'
-    ? scheduleData.slice(0, morningPeriods.length)
-    : scheduleData.slice(morningPeriods.length, morningPeriods.length + afternoonPeriods.length);
-=======
   useEffect(() => {
     const fetchSchedule = async () => {
       setLoading(true);
@@ -114,7 +104,6 @@ export default function LeaveRequestScreen() {
       } catch {}
     }
   }, [params.selectedSlots]);
->>>>>>> local
 
   // Hàm chọn tiết xin nghỉ
   const handleSelectSlot = (dayIndex: number, periodIndex: number) => {
@@ -132,17 +121,17 @@ export default function LeaveRequestScreen() {
         <View style={{ flex: 1 }}>
           <ScheduleHeader
             title={session}
-            dateRange="12/6 - 19/6"
-            year="2025"
+            dateRange={`${dateRange.start} - ${dateRange.end}`}
+            year={year}
             onPressTitle={() => setSession(session === 'Buổi sáng' ? 'Buổi chiều' : 'Buổi sáng')}
           />
           <DaySelector days={days} />
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
             <ScheduleDay
-              periods={periods}
+              periods={session === 'Buổi sáng' ? morningPeriods : afternoonPeriods}
               days={days}
               onAddActivity={handleSelectSlot}
-              scheduleData={displayedData}
+              scheduleData={scheduleData}
               selectedSlots={selected}
               onSelectSlot={handleSelectSlot}
             />
@@ -161,7 +150,7 @@ export default function LeaveRequestScreen() {
             onPress={() => {
               if (selected.length > 0) {
                 // Lấy tên môn học thực tế cho từng slot đã chọn
-                const subjects = selected.map(({ row, col }) => displayedData[row][col]?.text || '');
+                const subjects = selected.map(({ row, col }) => scheduleData[row][col]?.text || '');
                 router.push({
                   pathname: '/students/leave_request/leave_request_info',
                   params: {

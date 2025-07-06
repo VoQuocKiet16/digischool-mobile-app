@@ -8,15 +8,6 @@ import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-<<<<<<< khoi-api
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-=======
   ActivityIndicator,
   Modal,
   Pressable,
@@ -24,7 +15,6 @@ import {
   Text,
   TouchableOpacity,
   View,
->>>>>>> local
 } from "react-native";
 import { getLessonDetail } from "../../../services/schedule.service";
 const LessonDetailScreen = () => {
@@ -198,49 +188,6 @@ const LessonDetailScreen = () => {
           onEditTestInfo={handleEditTestInfo}
           lessonId={lessonId}
         />
-<<<<<<< khoi-api
-        <View style={{ marginHorizontal: 16, marginTop: 0, marginBottom: 12 }}>
-          <PlusIcon
-            text="Dặn dò kiểm tra cho tiết học này"
-            onPress={() => router.push("/teachers/add_exam_reminder/add_exam_reminder")}
-          />
-        </View>
-      </ScrollView>
-      <Modal
-        visible={showModal}
-        transparent
-        statusBarTranslucent={true}
-        animationType="fade"
-        onRequestClose={() => setShowModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <View style={styles.modalIconWrap}>
-              <Ionicons
-                name="checkmark-done-circle-outline"
-                size={40}
-                color="#22315B"
-              />
-            </View>
-            <Text style={styles.modalTitle}>Hoàn thành tiết học</Text>
-            <Text style={styles.modalDesc}>
-              Xác nhận rằng{"\n"}bạn đã hoàn thành tiết học này?
-            </Text>
-            <View style={styles.modalBtnRow}>
-              <TouchableOpacity
-                style={styles.modalBtnOutline}
-                onPress={() => setShowModal(false)}
-              >
-                <Text style={styles.modalBtnOutlineText}>Bỏ qua</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalBtn}
-                onPress={handleConfirmComplete}
-              >
-                <Text style={styles.modalBtnText}>Xác nhận</Text>
-              </TouchableOpacity>
-            </View>
-=======
         {!showDescriptionCard && (
           <View
             style={{ marginHorizontal: 16, marginTop: 0, marginBottom: 12 }}
@@ -253,7 +200,6 @@ const LessonDetailScreen = () => {
                 setDescValue("");
               }}
             />
->>>>>>> local
           </View>
         )}
         {!lessonData?.testInfo && (
@@ -417,82 +363,6 @@ const styles = StyleSheet.create({
     color: "#22315B",
     fontWeight: "bold",
   },
-<<<<<<< khoi-api
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.18)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalBox: {
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    padding: 24,
-    alignItems: "center",
-    width: 300,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  modalIconWrap: {
-    backgroundColor: "#E5E7EB",
-    borderRadius: 32,
-    width: 64,
-    height: 64,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#22315B",
-    marginBottom: 8,
-    marginTop: 2,
-  },
-  modalDesc: {
-    color: "#22315B",
-    fontSize: 15,
-    textAlign: "center",
-    marginBottom: 18,
-  },
-  modalBtnRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    marginTop: 8,
-  },
-  modalBtnOutline: {
-    flex: 1,
-    borderWidth: 1.5,
-    borderColor: "#A0A3BD",
-    borderRadius: 10,
-    paddingVertical: 10,
-    alignItems: "center",
-    marginRight: 8,
-    backgroundColor: "#fff",
-  },
-  modalBtnOutlineText: {
-    color: "#22315B",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  modalBtn: {
-    flex: 1,
-    backgroundColor: "#A0A3BD",
-    borderRadius: 10,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  modalBtnText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-=======
->>>>>>> local
 });
 
 export default LessonDetailScreen;

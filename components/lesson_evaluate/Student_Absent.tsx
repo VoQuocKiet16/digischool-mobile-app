@@ -1,16 +1,9 @@
-<<<<<<< khoi-api
-import { FontAwesome } from '@expo/vector-icons';
-import React, { useRef, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import PlusIcon from '../PlusIcon';
-=======
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import React, { useRef, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import PlusIcon from "../PlusIcon";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
->>>>>>> local
 
 const allStudents = [
   'Nguyen Van A',
@@ -55,13 +48,6 @@ const Student_Absent = () => {
           <PlusIcon onPress={() => setShowCard(true)} text="Học sinh vắng" />
         </View>
       ) : (
-<<<<<<< khoi-api
-        <View style={[styles.card, {position: 'relative'}]}>
-          <View style={styles.headerRow}>
-            <View style={styles.headerBar} />
-            <Text style={styles.headerText}>Học sinh vắng</Text>
-            <TouchableOpacity style={styles.closeBtn} onPress={() => setShowCard(false)}>
-=======
         <ThemedView style={[styles.card, { position: "relative" }]}>
           <View style={styles.headerRow}>
             <View style={styles.headerBar} />
@@ -72,7 +58,6 @@ const Student_Absent = () => {
               style={styles.closeBtn}
               onPress={() => setShowCard(false)}
             >
->>>>>>> local
               <View style={styles.closeCircle}>
                 <MaterialIcons name="close" size={22} color="#fff" />
               </View>
@@ -87,10 +72,6 @@ const Student_Absent = () => {
                     activeOpacity={0.7}
                     onPress={() => openDropdown(index)}
                   >
-<<<<<<< khoi-api
-                    <Text style={styles.absentText}>{item || 'Chọn học sinh vắng'}</Text>
-                    <FontAwesome name={dropdownIndex === index ? 'chevron-up' : 'chevron-down'} size={18} color="#fff" style={{marginLeft: 8}} />
-=======
                     <ThemedText style={styles.absentText}>
                       {item || "Chọn học sinh vắng"}
                     </ThemedText>
@@ -100,7 +81,6 @@ const Student_Absent = () => {
                       color="#fff"
                       style={{ marginLeft: 8 }}
                     />
->>>>>>> local
                   </TouchableOpacity>
                   {dropdownIndex === index && (
                     <View style={styles.dropdown}>
@@ -124,9 +104,6 @@ const Student_Absent = () => {
                   style={[styles.absentCloseBtn, {alignSelf: 'flex-start', marginLeft: 8}]}
                   onPress={() => handleRemoveAbsent(index)}
                 >
-<<<<<<< khoi-api
-                  <FontAwesome name="close" size={20} color="#F04438" marginTop={10} />
-=======
                   <MaterialIcons
                     name="close"
                     size={16}
@@ -138,7 +115,6 @@ const Student_Absent = () => {
                       marginTop: 10,
                     }}
                   />
->>>>>>> local
                 </TouchableOpacity>
               </View>
             </View>
@@ -154,13 +130,8 @@ const Student_Absent = () => {
 
 const styles = StyleSheet.create({
   card: {
-<<<<<<< khoi-api
-    width: '98%',
-    backgroundColor: '#E9EBF0',
-=======
     width: "92%",
     backgroundColor: "#F3F6FA",
->>>>>>> local
     borderRadius: 16,
     padding: 18,
     marginBottom: 18,
@@ -178,28 +149,16 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   headerBar: {
-<<<<<<< khoi-api
-    width: 4,
-    height: 28,
-    backgroundColor: '#F9A825',
-=======
     width: 3,
     height: 45,
     backgroundColor: "#F9A825",
->>>>>>> local
     borderRadius: 2,
     marginRight: 10,
   },
   headerText: {
-<<<<<<< khoi-api
-    color: '#26324D',
-    fontWeight: '700',
-    fontSize: 20,
-=======
     color: "#25345C",
     fontSize: 24,
     fontFamily: "Baloo2-SemiBold",
->>>>>>> local
     flex: 1,
   },
   closeBtn: {
@@ -209,21 +168,12 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   closeCircle: {
-<<<<<<< khoi-api
-    backgroundColor: '#F04438',
-    borderRadius: 16,
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-=======
     backgroundColor: "#CF2020",
     borderRadius: 16,
     width: 24,
     height: 24,
     alignItems: "center",
     justifyContent: "center",
->>>>>>> local
   },
   absentRow: {
     flexDirection: 'row',
@@ -245,21 +195,12 @@ const styles = StyleSheet.create({
   },
   absentInput: {
     flex: 1,
-<<<<<<< khoi-api
-    backgroundColor: '#A0A3BD',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-=======
     backgroundColor: "#29375C",
     borderRadius: 15,
     paddingVertical: 10,
     paddingHorizontal: 15,
     flexDirection: "row",
     alignItems: "center",
->>>>>>> local
   },
   absentText: {
     color: '#fff',
@@ -272,15 +213,9 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     marginTop: 10,
-<<<<<<< khoi-api
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    shadowColor: '#000',
-=======
     backgroundColor: "#525D7B",
     borderRadius: 15,
     shadowColor: "#000",
->>>>>>> local
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
     shadowRadius: 8,
@@ -295,11 +230,7 @@ const styles = StyleSheet.create({
   },
   dropdownItemText: {
     fontSize: 16,
-<<<<<<< khoi-api
-    color: '#22315B',
-=======
     color: "#fff",
->>>>>>> local
   },
 });
 

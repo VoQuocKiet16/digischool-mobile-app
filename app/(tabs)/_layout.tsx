@@ -2,18 +2,12 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform } from 'react-native';
 
-<<<<<<< khoi-api
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
-=======
 import { HapticTab } from "@/components/HapticTab";
 import { Colors } from "@/constants/Colors";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useColorScheme } from "@/hooks/useColorScheme";
->>>>>>> local
+import { MaterialIcons } from '@expo/vector-icons';
+import TabBarBackground from '@/components/ui/TabBarBackground';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -50,10 +44,6 @@ export default function TabLayout() {
       <Tabs.Screen
         name="news"
         options={{
-<<<<<<< khoi-api
-          title: 'News',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="newspaper.fill" color={color} />,
-=======
           title: "Tin tức",
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="newspaper" size={28} color={color} />
@@ -103,7 +93,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="graduationcap.fill" color={color} />
           ),
->>>>>>> local
         }}
       />
     </Tabs>

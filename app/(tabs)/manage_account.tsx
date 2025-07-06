@@ -91,7 +91,7 @@ export default function ManageAccount() {
                     <Text style={styles.accountClass}>Lớp: {s.class}</Text>
                     <Text style={styles.accountCode}>Mã học sinh: {s.code}</Text>
                   </View>
-                  <TouchableOpacity style={styles.accountDetailBtn} onPress={() => router.push('/manage/detail_account')}>
+                  <TouchableOpacity style={styles.accountDetailBtn} onPress={() => router.push('/')}>
                     <Text style={styles.accountDetailText}>Xem chi tiết</Text>
                     <MaterialIcons name="chevron-right" size={20} color="#fff" />
                   </TouchableOpacity>
@@ -109,7 +109,7 @@ export default function ManageAccount() {
                     <Text style={styles.accountClass}>Bộ môn: {t.subject}</Text>
                     <Text style={styles.accountCode}>Mã giáo viên: {t.code}</Text>
                   </View>
-                  <TouchableOpacity style={styles.accountDetailBtn} onPress={() => router.push('/manage/detail_account')}>
+                  <TouchableOpacity style={styles.accountDetailBtn} onPress={() => router.push('/')}>
                     <Text style={styles.accountDetailText}>Xem chi tiết</Text>
                     <MaterialIcons name="chevron-right" size={20} color="#fff" />
                   </TouchableOpacity>
@@ -119,7 +119,7 @@ export default function ManageAccount() {
       </ScrollView>
       {/* Nút thêm tài khoản (PlusIcon) */}
       <View style={styles.plusIconWrap}>
-        <TouchableOpacity activeOpacity={0.8} style={styles.plusIconCircle} onPress={() => router.push('/manage/add_account')}>
+        <TouchableOpacity activeOpacity={0.8} style={styles.plusIconCircle} onPress={() => router.push('/')}>
           <MaterialIcons name="add" size={36} color="#22304A" />
         </TouchableOpacity>
       </View>
