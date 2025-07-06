@@ -504,8 +504,9 @@ const styles = StyleSheet.create({
   },
   statusTextWhite: {
     color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 18,
+    marginTop: 5,
+    fontFamily: "Baloo2-Medium",
   },
   statusRowBlueWrap: {
     flexDirection: "row",
@@ -540,8 +541,9 @@ const styles = StyleSheet.create({
   },
   statusTextBlue: {
     color: "#2CA6B0",
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 18,
+    marginTop: 5,
+    fontFamily: "Baloo2-Medium",
   },
   statusArrowWrap: {
     marginLeft: 8,
@@ -574,15 +576,15 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#F9A825",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 10,
   },
   statusTextOrange: {
     color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 18,
+    marginTop: 5,
+    fontFamily: "Baloo2-Medium",
   },
   savingText: {
     color: "#D3D3D3",

@@ -175,26 +175,27 @@ const LessonEvaluateTeacherScreen = () => {
             style={{
               flexDirection: "row",
               alignItems: "flex-start",
-              marginHorizontal: 16,
+              marginHorizontal: 10,
               marginBottom: 8,
             }}
           >
             <TouchableOpacity
               onPress={() => setChecked(!checked)}
               style={{
-                width: 24,
-                height: 24,
+                width: 20,
+                height: 20,
                 borderRadius: 4,
                 borderWidth: 2,
                 borderColor: "#22315B",
                 alignItems: "center",
                 justifyContent: "center",
                 marginRight: 8,
+                marginLeft: 13,
                 backgroundColor: checked ? "#22315B" : "transparent",
               }}
               activeOpacity={0.8}
             >
-              {checked && <MaterialIcons name="check" size={18} color="#fff" />}
+              {checked && <MaterialIcons name="check" size={16} color="#fff" />}
             </TouchableOpacity>
             <Text
               style={{
@@ -203,11 +204,12 @@ const LessonEvaluateTeacherScreen = () => {
                 fontWeight: "500",
                 flex: 1,
                 flexWrap: "wrap",
-                lineHeight: 18,
+                lineHeight: 24,
+                fontFamily: "Baloo2-Medium",
               }}
             >
               Tôi hoàn toàn chịu trách nhiệm với nội dung nhận xét của mình.
-              <Text style={{ color: "red", fontSize: 12, fontWeight: "bold" }}>
+              <Text style={{ color: "red", fontSize: 20, fontWeight: "bold" }}>
                 {" "}
                 *
               </Text>
@@ -228,7 +230,10 @@ const LessonEvaluateTeacherScreen = () => {
             visible={showSuccess}
             onClose={() => {
               setShowSuccess(false);
-              router.replace("/teachers/lesson_information/lesson_detail");
+              router.push({
+                pathname: "/teachers/lesson_information/lesson_detail",
+                params: { lessonid: lesson },
+              });
             }}
             title="Thành công"
             message={"Đánh giá tiết học thành công.\nQuay lại trang trước đó?"}
