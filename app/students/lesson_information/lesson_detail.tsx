@@ -1,24 +1,24 @@
 import HeaderLayout from "@/components/layout/HeaderLayout";
 import Lesson_Information from "@/components/lesson_detail/Lesson_Information";
-import RefreshableScrollView from "@/components/RefreshableScrollView";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
-  ScrollView,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { getLessonDetail } from "../../../services/schedule.service";
+import { LessonData } from "../../../types/lesson.types";
 
 const LessonDetailScreen = () => {
   const [menuVisible, setMenuVisible] = useState(false);
-  const [lessonData, setLessonData] = useState<any>(null);
+  const [lessonData, setLessonData] = useState<LessonData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
@@ -109,8 +109,15 @@ const LessonDetailScreen = () => {
         </TouchableOpacity>
       }
     >
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Lesson_Information onEvaluatePress={handleEvaluatePress} />
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Lesson_Information
+          onEvaluatePress={handleEvaluatePress}
+          role="student"
+          lessonData={lessonData}
+        />
       </ScrollView>
       <Modal
         visible={menuVisible}

@@ -65,10 +65,9 @@ const Student_Violates = () => {
   return (
     <View>
       {!showCard ? (
-        <PlusIcon
-          onPress={() => setShowCard(true)}
-          text="Thêm học sinh vi phạm"
-        />
+        <View style={{ marginLeft: 16 }}>
+          <PlusIcon onPress={() => setShowCard(true)} text="Thêm học sinh vi phạm" />
+        </View>
       ) : (
         <View style={[styles.card, { position: "relative" }]}>
           <View style={styles.headerRow}>

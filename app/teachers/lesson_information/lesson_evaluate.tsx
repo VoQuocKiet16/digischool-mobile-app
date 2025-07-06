@@ -3,7 +3,7 @@ import Student_Absent from "@/components/lesson_evaluate/Student_Absent";
 import Student_Test from "@/components/lesson_evaluate/Student_Test";
 import Student_Violates from "@/components/lesson_evaluate/Student_Violates";
 import SuccessModal from "@/components/notifications_modal/SuccessModal";
-import { Ionicons } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -59,12 +59,12 @@ const LessonEvaluateTeacherScreen = () => {
         >
           {/* Tiết chương trình */}
           <View style={styles.fieldWrap}>
-            <View style={styles.floatingInputBox}>
-              <Text style={styles.floatingLabel}>
-                Tiết chương trình <Text style={styles.label}>*</Text>
+            <View style={styles.confirmInputBox}>
+              <Text style={styles.confirmLabel}>
+                Tiết chương trình <Text style={styles.required}>*</Text>
               </Text>
               <TextInput
-                style={styles.input}
+                style={styles.confirmInput}
                 placeholder="Vui lòng nhập tiết chương trình"
                 placeholderTextColor="#9CA3AF"
                 value={lesson}
@@ -74,13 +74,13 @@ const LessonEvaluateTeacherScreen = () => {
           </View>
           {/* Tên bài, nội dung công việc */}
           <View style={styles.fieldWrap}>
-            <View style={styles.floatingInputBox}>
-              <Text style={styles.floatingLabel}>
+            <View style={styles.confirmInputBox}>
+              <Text style={styles.confirmLabel}>
                 Tên bài, nội dung công việc{" "}
-                <Text style={styles.label}>*</Text>
+                <Text style={styles.required}>*</Text>
               </Text>
               <TextInput
-                style={styles.input}
+                style={styles.confirmInput}
                 placeholder="Vui lòng nhập tên bài học, nội dung công việc"
                 placeholderTextColor="#9CA3AF"
                 value={content}
@@ -102,10 +102,10 @@ const LessonEvaluateTeacherScreen = () => {
           </View>
           {/* Nhận xét */}
           <View style={styles.fieldWrap}>
-            <View style={styles.floatingInputBox}>
-              <Text style={styles.floatingLabel}>Nhận xét</Text>
+            <View style={styles.confirmInputBox}>
+              <Text style={styles.confirmLabel}>Nhận xét</Text>
               <TextInput
-                style={styles.input}
+                style={styles.confirmInput}
                 placeholder="Vui lòng nhập nhận xét"
                 placeholderTextColor="#9CA3AF"
                 value={comment}
@@ -118,9 +118,9 @@ const LessonEvaluateTeacherScreen = () => {
           </View>
           {/* Xếp loại tiết học */}
           <View style={styles.fieldWrap}>
-            <View style={styles.floatingInputBox}>
-              <Text style={styles.floatingLabel}>
-                Xếp loại tiết học <Text style={styles.label}>*</Text>
+            <View style={styles.confirmInputBox}>
+              <Text style={styles.confirmLabel}>
+                Xếp loại tiết học <Text style={styles.required}>*</Text>
               </Text>
               <TouchableOpacity
                 style={styles.dropdown}
@@ -134,8 +134,12 @@ const LessonEvaluateTeacherScreen = () => {
                 >
                   {rank || "Chọn loại xếp hạng tiết học"}
                 </Text>
-                <Ionicons
-                  name={showRankDropdown ? "chevron-up" : "chevron-down"}
+                <MaterialIcons
+                  name={
+                    showRankDropdown
+                      ? "keyboard-arrow-up"
+                      : "keyboard-arrow-down"
+                  }
                   size={24}
                   color="#29375C"
                   style={{ marginLeft: 8 }}
@@ -178,15 +182,35 @@ const LessonEvaluateTeacherScreen = () => {
             <TouchableOpacity
               onPress={() => setChecked(!checked)}
               style={{
-                width: 24, height: 24, borderRadius: 4, borderWidth: 2, borderColor: '#22315B', alignItems: 'center', justifyContent: 'center', marginRight: 8, backgroundColor: checked ? '#22315B' : 'transparent',
+                width: 24,
+                height: 24,
+                borderRadius: 4,
+                borderWidth: 2,
+                borderColor: "#22315B",
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: 8,
+                backgroundColor: checked ? "#22315B" : "transparent",
               }}
               activeOpacity={0.8}
             >
-              {checked && <Ionicons name="checkmark" size={18} color="#fff" />}
+              {checked && <MaterialIcons name="check" size={18} color="#fff" />}
             </TouchableOpacity>
-            <Text style={{ color: '#22315B', fontSize: 16, fontWeight: '500', flex: 1, flexWrap: 'wrap', lineHeight: 18 }}>
+            <Text
+              style={{
+                color: "#22315B",
+                fontSize: 16,
+                fontWeight: "500",
+                flex: 1,
+                flexWrap: "wrap",
+                lineHeight: 18,
+              }}
+            >
               Tôi hoàn toàn chịu trách nhiệm với nội dung nhận xét của mình.
-              <Text style={{ color: 'red', fontSize: 12, fontWeight: 'bold' }}> *</Text>
+              <Text style={{ color: "red", fontSize: 12, fontWeight: "bold" }}>
+                {" "}
+                *
+              </Text>
             </Text>
           </View>
           {/* Nút xác nhận */}
@@ -261,6 +285,41 @@ const styles = StyleSheet.create({
     color: "#22315B",
     fontWeight: "bold",
   },
+  confirmInputBox: {
+    borderWidth: 1,
+    borderColor: "#29375C",
+    borderRadius: 12,
+    backgroundColor: "#f7f7f7",
+    marginBottom: 25,
+    paddingTop: 15,
+    paddingBottom: 12,
+    paddingHorizontal: 25,
+    marginLeft: 15,
+    marginRight: 15,
+    position: "relative",
+  },
+  confirmLabel: {
+    position: "absolute",
+    top: -16,
+    left: 18,
+    backgroundColor: "#f7f7f7",
+    paddingHorizontal: 6,
+    color: "#29375C",
+    fontFamily: "Baloo2-SemiBold",
+    fontSize: 14,
+    zIndex: 2,
+  },
+  confirmInput: {
+    color: "#29375C",
+    fontSize: 16,
+    fontFamily: "Baloo2-Medium",
+  },
+  required: {
+    color: "#E53935",
+    fontSize: 18,
+    marginLeft: 2,
+    marginTop: -2,
+  },
   dropdown: {
     flexDirection: "row",
     alignItems: "center",
@@ -289,7 +348,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   dropdownItemText: {
-    fontSize: 22,
+    fontSize: 16,
     color: "#22315B",
     fontWeight: "500",
   },

@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 import HeaderLayout from "../../../components/layout/HeaderLayout";
-import DaySelector from "../../../components/schedule/DaySelector";
+// import DaySelector from "../../../components/schedule/DaySelector";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getStudentSchedule } from "../../../services/schedule.service";
@@ -97,20 +97,61 @@ function mapApiToScheduleData(apiData: any): {
   return { schedule, lessonIds };
 }
 
+function getTodayIndex() {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  return dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+}
+
 export default function LeaveRequestScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const [session, setSession] = useState<'Buổi sáng' | 'Buổi chiều'>('Buổi sáng');
-  const [selected, setSelected] = useState<{row: number, col: number}[]>([]);
-  const [scheduleData, setScheduleData] = useState<Activity[][]>([]);
+  const [session, setSession] = useState<"Buổi sáng" | "Buổi chiều">(
+    "Buổi sáng"
+  );
+  const [selected, setSelected] = useState<
+    {
+      row: number;
+      col: number;
+      lessonId: string;
+      session: "Buổi sáng" | "Buổi chiều";
+      week: string;
+      date?: string;
+    }[]
+  >([]);
+  const [scheduleData, setScheduleData] = useState<Activity[][]>(
+    Array.from({ length: 10 }, () =>
+      Array.from({ length: 7 }, () => ({ text: "", type: "user-added" }))
+    )
+  );
+  const [lessonIds, setLessonIds] = useState<string[][]>(
+    Array.from({ length: 10 }, () => Array.from({ length: 7 }, () => ""))
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [lessonDetails, setLessonDetails] = useState<any[][]>([]);
-  const [lessonIds, setLessonIds] = useState<string[][]>([]);
-  const [year, setYear] = useState("2025");
-  const [dateRange, setDateRange] = useState({ start: "12/6", end: "19/6" });
+  const [year, setYear] = useState("2024-2025");
+  const [dateRange, setDateRange] = useState(() => {
+    const weeks = getWeekRangesByYear("2024-2025");
+    return weeks[1];
+  });
   const [showYearModal, setShowYearModal] = useState(false);
   const [showWeekModal, setShowWeekModal] = useState(false);
+  const [currentDayIndex, setCurrentDayIndex] = useState(0);
+  const [lessonDetails, setLessonDetails] = useState<any[][]>(
+    Array.from({ length: 10 }, () => Array.from({ length: 7 }, () => null))
+  );
+  const [selectedDay, setSelectedDay] = useState(getTodayIndex());
+
+  const weekList = getWeekRangesByYear(year);
+
+  const periods = session === "Buổi sáng" ? morningPeriods : afternoonPeriods;
+  const displayedData =
+    session === "Buổi sáng"
+      ? scheduleData.slice(0, morningPeriods.length)
+      : scheduleData.slice(
+          morningPeriods.length,
+          morningPeriods.length + afternoonPeriods.length
+        );
 
   useEffect(() => {
     const fetchSchedule = async () => {
@@ -167,7 +208,9 @@ export default function LeaveRequestScreen() {
     const isExist = selected.some(
       (cell) =>
         cell.row === periodIndex &&
-        cell.col === dayIndex
+        cell.col === dayIndex &&
+        cell.session === session &&
+        cell.week === dateRange.start
     );
     if (isExist) {
       setSelected(
@@ -175,7 +218,9 @@ export default function LeaveRequestScreen() {
           (cell) =>
             !(
               cell.row === periodIndex &&
-              cell.col === dayIndex
+              cell.col === dayIndex &&
+              cell.session === session &&
+              cell.week === dateRange.start
             )
         )
       );
@@ -186,6 +231,10 @@ export default function LeaveRequestScreen() {
         {
           row: periodIndex,
           col: dayIndex,
+          lessonId: lesson?._id || "",
+          session,
+          week: dateRange.start,
+          date: lesson?.date || lesson?.scheduledDate || "",
         },
       ]);
     }
@@ -219,13 +268,25 @@ export default function LeaveRequestScreen() {
         <View style={{ flex: 1 }}>
           <ScheduleHeader
             title={session}
-            dateRange={`${dateRange.start} - ${dateRange.end}`}
+            dateRange={dateRange.label}
             year={year}
-            onPressTitle={() => setSession(session === 'Buổi sáng' ? 'Buổi chiều' : 'Buổi sáng')}
+            onPressTitle={() =>
+              setSession(session === "Buổi sáng" ? "Buổi chiều" : "Buổi sáng")
+            }
+            onChangeYear={handleChangeYear}
+            onChangeDateRange={handleChangeDateRange}
           />
-          <DaySelector days={days} />
+          {/* <DaySelector
+            days={days}
+            onCurrentDayChange={setCurrentDayIndex}
+            showUtilityButton={false}
+          /> */}
           {loading ? (
-            <ActivityIndicator size="large" color="#0000ff" />
+            <ActivityIndicator
+              size="large"
+              color="#3A546D"
+              style={{ marginTop: 30 }}
+            />
           ) : error ? (
             <View
               style={{
@@ -237,15 +298,23 @@ export default function LeaveRequestScreen() {
               <Text style={{ color: "red" }}>{error}</Text>
             </View>
           ) : (
-            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={{ flexGrow: 1 }}
+            >
               <ScheduleDay
-                periods={session === 'Buổi sáng' ? morningPeriods : afternoonPeriods}
+                periods={periods}
                 days={days}
                 onAddActivity={handleSelectSlot}
-                scheduleData={scheduleData}
-                selectedSlots={selected}
+                scheduleData={displayedData}
+                selectedSlots={selected.filter(
+                  (cell) =>
+                    cell.session === session && cell.week === dateRange.start
+                )}
                 onSelectSlot={handleSelectSlot}
                 onSlotPress={handleSelectSlot}
+                currentDayIndex={selectedDay}
+                hideNullSlot={true}
               />
             </ScrollView>
           )}
@@ -311,7 +380,7 @@ export default function LeaveRequestScreen() {
                 }}
               >
                 <FlatList
-                  data={getWeekRangesByYear(year)}
+                  data={weekList}
                   keyExtractor={(item) => item.label}
                   renderItem={({ item }) => (
                     <TouchableOpacity
@@ -353,8 +422,12 @@ export default function LeaveRequestScreen() {
             disabled={selected.length === 0}
             onPress={() => {
               if (selected.length > 0) {
-                const subjects = selected.map(({ row, col }) => scheduleData[row][col]?.text || '');
-                const lessonIdsSelected = selected.map(({ row, col }) => lessonIds[row][col] || '');
+                const subjects = selected.map(
+                  ({ row, col }) => displayedData[row][col]?.text || ""
+                );
+                const lessonIdsSelected = selected.map(
+                  ({ row, col }) => lessonIds[row][col]
+                );
                 router.push({
                   pathname: "/students/leave_request/leave_request_info",
                   params: {

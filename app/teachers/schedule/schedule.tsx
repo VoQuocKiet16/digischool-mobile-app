@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -10,11 +11,9 @@ import {
   View,
 } from "react-native";
 import RefreshableScrollView from "../../../components/RefreshableScrollView";
-import DaySelector from "../../../components/schedule/DaySelector";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getTeacherSchedule } from "../../../services/schedule.service";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface Activity {
   text: string;
@@ -167,7 +166,11 @@ export default function ScheduleTeachersScreen() {
   const [error, setError] = useState("");
   const [showYearModal, setShowYearModal] = useState(false);
   const [showWeekModal, setShowWeekModal] = useState(false);
-  const [currentDayIndex, setCurrentDayIndex] = useState(0);
+  const [currentDayIndex, setCurrentDayIndex] = useState(() => {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = Chủ nhật, 1 = Thứ 2, ..., 6 = Thứ 7
+    return dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  });
 
   const days = defaultDays;
   const weekList = getWeekRangesByYear(year);
@@ -270,7 +273,7 @@ export default function ScheduleTeachersScreen() {
         onChangeYear={handleChangeYear}
         onChangeDateRange={handleChangeDateRange}
       />
-      <DaySelector days={days} onCurrentDayChange={setCurrentDayIndex} />
+      {/* <DaySelector days={days} onCurrentDayChange={setCurrentDayIndex} /> */}
       {loading ? (
         <ActivityIndicator
           size="large"

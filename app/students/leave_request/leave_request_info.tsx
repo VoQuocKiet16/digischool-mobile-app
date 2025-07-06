@@ -37,48 +37,74 @@ export default function LeaveRequestInfoScreen() {
     params.reason ? String(params.reason) : ""
   );
   const [step, setStep] = useState<"form" | "confirm">("form");
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [phoneCriteria, setPhoneCriteria] = useState({
-    length: false,
-    start0: false,
-  });
   const [showLoading, setShowLoading] = useState(false);
   const [loadingSuccess, setLoadingSuccess] = useState(false);
   const [error, setError] = useState("");
 
-  // Xác nhận lại thông tin tiết học xin nghỉ
-  const selectedLessons = selectedSlots.map(
-    ({ row, col }: { row: number; col: number }) => ({
-      subject: periods[row],
-      day: days[col],
-    })
-  );
+  const [phoneCriteria, setPhoneCriteria] = useState({
+    length: false,
+    start0: false,
+  });
 
-  // Lấy ngày và tiết duy nhất (giả sử chỉ chọn 1 ngày)
-  const uniqueDay = selectedLessons.length > 0 ? selectedLessons[0].day : "";
+  const checkPhoneCriteria = (value: string) => {
+    setPhoneCriteria({
+      length: value.trim().length === 10,
+      start0: value.trim().startsWith("0"),
+    });
+  };
 
-  // Tạo mảng lessonsByDayArr từ selectedLessons
-  const lessonsByDayArr = selectedLessons.reduce((acc: any, lesson: any) => {
-    if (!acc[lesson.day]) {
-      acc[lesson.day] = { lessons: [] };
-    }
-    acc[lesson.day].lessons.push(lesson.subject);
-    return acc;
-  }, {});
+  useEffect(() => {
+    checkPhoneCriteria(phone);
+  }, [phone]);
 
-  // Chuyển đổi lessonsByDayArr thành mảng
-  const lessonsByDayArray = Object.entries(lessonsByDayArr);
+  function formatDate(dateStr: string) {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
+  }
 
-  // Xử lý tiếp tục
+  const lessonsByDay: Record<string, { date: string; lessons: string[] }> = {};
+  selectedSlots.forEach((slot: any, idx: number) => {
+    const day = days[slot.col];
+    const date = slot.date || slot.scheduledDate || "";
+    const key = date ? `${day} | ${formatDate(date)}` : day;
+    if (!lessonsByDay[key]) lessonsByDay[key] = { date, lessons: [] };
+    lessonsByDay[key].lessons.push(subjects[idx]);
+  });
+  const lessonsByDayArr = Object.entries(lessonsByDay);
+
   const handleNext = () => {
     if (phone.trim() && reason.trim()) {
       setStep("confirm");
     }
   };
 
-  // Xử lý gửi yêu cầu
-  const handleSubmit = () => {
-    setShowSuccess(true);
+  const handleSubmit = async () => {
+    setShowLoading(true);
+    setLoadingSuccess(false);
+    setError("");
+    try {
+      const res = await createLeaveRequest({
+        lessonIds,
+        phoneNumber: phone,
+        reason,
+      });
+      if (res && res.success) {
+        setLoadingSuccess(true);
+        setTimeout(() => {
+          setShowLoading(false);
+          setLoadingSuccess(false);
+          router.push("/(tabs)");
+        }, 1200);
+      } else {
+        setError("Gửi yêu cầu thất bại!");
+        setShowLoading(false);
+      }
+    } catch (e) {
+      setError("Gửi yêu cầu thất bại!");
+      setShowLoading(false);
+    }
   };
 
   return (
@@ -186,7 +212,7 @@ export default function LeaveRequestInfoScreen() {
                   <MaterialIcons
                     name="edit"
                     size={22}
-                    color="#B6B6B6"
+                    color="#29345C"
                     style={styles.editIcon}
                     onPress={() => {
                       router.push({
@@ -201,7 +227,7 @@ export default function LeaveRequestInfoScreen() {
                     }}
                   />
                 </View>
-                {lessonsByDayArray.map(([key, value]: any, idx: number) => (
+                {lessonsByDayArr.map(([key, value], idx) => (
                   <View key={idx} style={styles.dayBlock}>
                     <View style={styles.dayRow}>
                       <MaterialIcons
@@ -212,7 +238,7 @@ export default function LeaveRequestInfoScreen() {
                       />
                       <Text style={styles.dayText}>{key}</Text>
                     </View>
-                    {value.lessons.map((lesson: string, i: number) => (
+                    {value.lessons.map((lesson, i) => (
                       <View
                         key={i}
                         style={[
@@ -325,7 +351,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#e6eef2",
     borderRadius: 100,
     padding: 10,
-    color: "#29375C",
   },
   dayBlock: {
     marginTop: 16,

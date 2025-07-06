@@ -328,11 +328,8 @@ const AddExamReminder = () => {
         {isEditMode ? (
           <View style={styles.buttonRow}>
             <TouchableOpacity
-              style={[
-                styles.deleteBtn,
-                (!isValid || isDeleting) && styles.deleteBtnDisabled,
-              ]}
-              disabled={!isValid || isDeleting}
+              style={[styles.deleteBtn, isDeleting && styles.deleteBtnDisabled]}
+              disabled={isDeleting}
               onPress={handleDelete}
             >
               <Text

@@ -1,6 +1,17 @@
-import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
+import {
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { Activity } from "../../app/students/schedule/schedule";
+import { useUserData } from "../../hooks/useUserData";
 import ScheduleSlot from "./ScheduleSlot";
 
 interface ScheduleDayProps {
@@ -25,6 +36,16 @@ interface ScheduleDayProps {
   lessonIds?: string[][];
   hideNullSlot?: boolean;
 }
+
+const DAY_COL_WIDTH = 90;
+const PERIOD_COL_WIDTH = 60;
+
+function getTodayIndex() {
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0 = Chủ nhật, 1 = Thứ 2, ..., 6 = Thứ 7
+  return dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+}
+
 const ScheduleDay: React.FC<ScheduleDayProps> = ({
   periods,
   days,
@@ -34,20 +55,114 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
   selectedSlots = [],
   onSelectSlot,
   cellStatusData,
-  currentDayIndex,
+  currentDayIndex: propCurrentDayIndex,
   lessonIds,
   hideNullSlot = false,
 }) => {
+  const [currentDay, setCurrentDay] = useState(getTodayIndex());
+  const currentDayIndex =
+    propCurrentDayIndex !== undefined ? propCurrentDayIndex : currentDay;
+  const { width } = useWindowDimensions();
+  const numCols = days.length + 1;
+  const colWidth = width / numCols;
+  const [menuVisible, setMenuVisible] = useState(false);
+  const { userData } = useUserData();
+  const router = useRouter();
+
+  const toggleMenuVisibility = () => setMenuVisible(!menuVisible);
+  const handleLeaveRequest = () => {
+    setMenuVisible(false);
+    const role = userData?.roleInfo?.type;
+    if (role === "teacher") {
+      router.push("/teachers/leave_request/leave_request");
+    } else {
+      router.push("/students/leave_request/leave_request");
+    }
+  };
+  const handleExportSchedule = () => {
+    setMenuVisible(false);
+    // TODO: Thực hiện chức năng xuất TKB ở đây
+    alert("Chức năng xuất TKB!");
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={styles.table}>
+      {/* Hàng tiêu đề ngày */}
+      <View style={styles.row}>
+        <View
+          style={[
+            styles.dayHeaderCell,
+            { width: colWidth, justifyContent: "center", alignItems: "center" },
+          ]}
+        >
+          <TouchableOpacity
+            style={styles.utilityButton}
+            onPress={toggleMenuVisibility}
+            activeOpacity={0.7}
+          >
+            <MaterialIcons name="arrow-drop-down" size={16} color="#fff" />
+          </TouchableOpacity>
+        </View>
+        {/* Dải phân cách */}
+        <View style={{ width: 0.1, height: 22, backgroundColor: "#f7f7f7" }} />
+        {days.map((day, idx) => (
+          <TouchableOpacity
+            key={idx}
+            style={[
+              styles.dayHeaderCell,
+              { width: colWidth },
+              currentDayIndex === idx && styles.selectedDayButton,
+            ]}
+            onPress={() => setCurrentDay(idx)}
+            activeOpacity={0.7}
+          >
+            <Text
+              style={[
+                styles.dayHeaderText,
+                currentDayIndex === idx && styles.selectedDayText,
+                day === "CN" && !(currentDayIndex === idx) && styles.sundayText,
+              ]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {day}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      {/* Modal menu utilityButton */}
+      <Modal
+        transparent={true}
+        statusBarTranslucent={true}
+        visible={menuVisible}
+        animationType="fade"
+        onRequestClose={toggleMenuVisibility}
+      >
+        <TouchableWithoutFeedback onPress={toggleMenuVisibility}>
+          <View style={{ flex: 1 }}>
+            <View style={styles.menuContainer}>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={handleExportSchedule}
+              >
+                <Text style={styles.menuItemText}>Xuất TKB ra</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={handleLeaveRequest}
+              >
+                <Text style={styles.menuItemText}>Xin phép nghỉ</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
       {/* Các hàng tiết */}
       {periods.map((period, periodIndex) => (
         <View key={periodIndex} style={styles.row}>
-          {/* Cột tiết */}
-          <View style={styles.periodCell}>
+          <View style={[styles.periodCell, { width: colWidth }]}>
             <Text style={styles.periodText}>{period}</Text>
           </View>
-          {/* Các slot của từng ngày */}
           {days.map((_, dayIndex) => {
             const slotData =
               scheduleData[periodIndex] && scheduleData[periodIndex][dayIndex]
@@ -69,21 +184,21 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
             } else if (!slotText || slotText === "") {
               slotText = "Thêm hoạt động";
             }
-
-            // Kiểm tra xem có phải cột của ngày hiện tại không
-            const isCurrentDay =
-              currentDayIndex !== undefined && currentDayIndex === dayIndex;
-
-            // Nếu là leave_request và slot null thì không render gì
+            const isCurrentDay = currentDayIndex === dayIndex;
             if (hideNullSlot && (!slotData.text || slotData.text === "")) {
-              return <View key={dayIndex} style={styles.slotWrapper}></View>;
+              return (
+                <View
+                  key={dayIndex}
+                  style={[styles.slotWrapper, { width: colWidth }]}
+                ></View>
+              );
             }
-
             return (
               <View
                 key={dayIndex}
                 style={[
                   styles.slotWrapper,
+                  { width: colWidth },
                   isCurrentDay && styles.currentDaySlot,
                 ]}
               >
@@ -114,10 +229,11 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f7f7f7" },
+  table: {
+    flexDirection: "column",
+  },
   row: { flexDirection: "row", alignItems: "center" },
   periodCell: {
-    width: 60,
     height: 100,
     justifyContent: "center",
     alignItems: "center",
@@ -127,6 +243,62 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#e0e0e0",
   },
+  utilityButton: {
+    backgroundColor: "#29375C",
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    height: 30,
+  },
+  dayHeaderCell: {
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRightWidth: 1,
+    borderRightColor: "#e0e0e0",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+    backgroundColor: "#f7f7f7",
+  },
+  dayHeaderText: {
+    color: "#22304A",
+    fontSize: 12,
+    fontFamily: "Baloo2-Bold",
+    textAlign: "center",
+  },
+  selectedDayButton: {
+    backgroundColor: "#29375C",
+    borderRadius: 10,
+  },
+  selectedDayText: {
+    color: "#fff",
+  },
+  sundayText: {
+    color: "red",
+  },
+  menuContainer: {
+    position: "absolute",
+    top: 280,
+    left: 10,
+    backgroundColor: "#29375C",
+    borderRadius: 8,
+    width: 150,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  menuItem: {
+    padding: 15,
+  },
+  menuItemText: {
+    color: "#fff",
+    fontSize: 16,
+    fontFamily: "Baloo2-Medium",
+  },
   periodText: {
     color: "#29375C",
     fontSize: 15,
@@ -134,11 +306,9 @@ const styles = StyleSheet.create({
     fontFamily: "Baloo2-SemiBold",
   },
   slotWrapper: {
-    flex: 1,
     height: 100,
     alignItems: "center",
     justifyContent: "center",
-    marginHorizontal: 0,
     borderRightWidth: 1,
     borderRightColor: "#e0e0e0",
     borderBottomWidth: 1,

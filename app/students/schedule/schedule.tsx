@@ -1,9 +1,20 @@
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, View, ActivityIndicator, Text, Modal, TouchableOpacity, FlatList } from 'react-native';
-import DaySelector from '../../../components/schedule/DaySelector';
-import ScheduleDay from '../../../components/schedule/ScheduleDay';
-import ScheduleHeader from '../../../components/schedule/ScheduleHeader';
+import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import RefreshableScrollView from "../../../components/RefreshableScrollView";
+// import DaySelector from "../../../components/schedule/DaySelector";
+import ScheduleDay from "../../../components/schedule/ScheduleDay";
+import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
+import { getStudentSchedule } from "../../../services/schedule.service";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface Activity {
   text: string;
@@ -36,17 +47,19 @@ const afternoonPeriods = ["Tiết 6", "Tiết 7", "Tiết 8", "Tiết 9", "Tiế
 const academicYears = ["2024-2025", "2025-2026"];
 
 function getFirstMonday(date: Date) {
+  // Trả về ngày thứ 2 đầu tiên sau hoặc bằng ngày truyền vào
   const d = new Date(date);
   const day = d.getDay();
-  const diff = day === 1 ? 0 : (8 - day) % 7;
+  const diff = day === 1 ? 0 : (8 - day) % 7; // Nếu đã là thứ 2 thì không cộng, còn lại thì cộng số ngày tới thứ 2
   d.setDate(d.getDate() + diff);
   return d;
 }
 
 function getWeekRangesByYear(year: string) {
+  // Năm học bắt đầu từ 01/08 năm đầu đến 31/05 năm sau
   const [startYear, endYear] = year.split("-").map(Number);
-  const startDate = new Date(startYear, 7, 1);
-  const endDate = new Date(endYear, 4, 31);
+  const startDate = new Date(startYear, 7, 1); // 01/08/yyyy
+  const endDate = new Date(endYear, 4, 31); // 31/05/yyyy
   let current = getFirstMonday(startDate);
   const weeks = [];
   while (current <= endDate) {
@@ -79,6 +92,7 @@ function mapApiToScheduleData(apiData: any): {
   schedule: Activity[][];
   lessonIds: string[][];
 } {
+  // 10 periods x 7 days
   const schedule: Activity[][] = Array.from({ length: 10 }, () =>
     Array.from({ length: 7 }, () => ({ text: "", type: "user-added" }))
   );
@@ -86,11 +100,12 @@ function mapApiToScheduleData(apiData: any): {
     Array.from({ length: 7 }, () => "")
   );
 
+  // Lấy dữ liệu từ response mới
   const scheduleData = apiData?.data?.schedule || [];
 
   scheduleData.forEach((dayData: any) => {
     const dayOfWeek = dayData.dayOfWeek;
-    const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Chủ nhật = 0, chuyển thành index 6
 
     dayData.lessons?.forEach((lesson: any) => {
       const periodIndex = (lesson.period || 1) - 1;
@@ -98,10 +113,13 @@ function mapApiToScheduleData(apiData: any): {
         let text = "";
 
         if (lesson.type === "fixed" && lesson.fixedInfo) {
+          // Xử lý tiết cố định như chào cờ, sinh hoạt lớp
           text = lesson.fixedInfo.description || "";
         } else if (lesson.subject) {
+          // Xử lý tiết học thông thường
           text = lesson.subject.name || "";
         } else if (lesson.type === "empty") {
+          // Tiết trống
           text = "";
         }
 
@@ -110,6 +128,7 @@ function mapApiToScheduleData(apiData: any): {
           type: "default",
         };
 
+        // Lưu lessonId nếu có
         if (lesson._id) {
           lessonIds[periodIndex][dayIndex] = lesson._id;
         }
@@ -120,24 +139,64 @@ function mapApiToScheduleData(apiData: any): {
   return { schedule, lessonIds };
 }
 
+function getTodayIndex() {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  return dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+}
+
 export default function ScheduleStudentsScreen() {
   const router = useRouter();
-  const [session, setSession] = useState<'Buổi sáng' | 'Buổi chiều'>('Buổi sáng');
-  const [scheduleData, setScheduleData] = useState<Activity[][]>(initialScheduleData);
-  const [year, setYear] = useState<string>(academicYears[0]);
-  const [dateRange, setDateRange] = useState<{ start: string; end: string; label: string }>(getWeekRangesByYear(year)[0]);
-  const [showYearModal, setShowYearModal] = useState<boolean>(false);
-  const [showWeekModal, setShowWeekModal] = useState<boolean>(false);
-  const [currentDayIndex, setCurrentDayIndex] = useState<number>(0);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [weekList, setWeekList] = useState(getWeekRangesByYear(year));
-  const [lessonIds, setLessonIds] = useState<string[][]>(Array.from({ length: 10 }, () => Array.from({ length: 7 }, () => "")));
+  const [session, setSession] = useState<"Buổi sáng" | "Buổi chiều">(
+    "Buổi sáng"
+  );
+  const [scheduleData, setScheduleData] =
+    useState<Activity[][]>(initialScheduleData);
+  const [lessonIds, setLessonIds] = useState<string[][]>(
+    Array.from({ length: 10 }, () => Array.from({ length: 7 }, () => ""))
+  );
+  const [year, setYear] = useState("2024-2025");
+  const [dateRange, setDateRange] = useState<{
+    start: string;
+    end: string;
+    label: string;
+  }>(() => {
+    const weeks = getWeekRangesByYear("2024-2025");
+    return weeks[1];
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showYearModal, setShowYearModal] = useState(false);
+  const [showWeekModal, setShowWeekModal] = useState(false);
+  const [currentDayIndex, setCurrentDayIndex] = useState(getTodayIndex());
 
-  const days = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
-  const morningPeriods = ['Tiết 1', 'Tiết 2', 'Tiết 3', 'Tiết 4', 'Tiết 5'];
-  const afternoonPeriods = ['Tiết 6', 'Tiết 7', 'Tiết 8', 'Tiết 9', 'Tiết 10'];
-  const periods = session === 'Buổi sáng' ? morningPeriods : afternoonPeriods;
+  const days = defaultDays;
+  const weekList = getWeekRangesByYear(year);
+
+  const fetchSchedule = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const data = await getStudentSchedule({
+        className: (await AsyncStorage.getItem("userClass")) || "",
+        academicYear: year,
+        startOfWeek: dateRange.start,
+        endOfWeek: dateRange.end,
+      });
+      const { schedule, lessonIds: newLessonIds } = mapApiToScheduleData(data);
+      setScheduleData(schedule);
+      setLessonIds(newLessonIds);
+    } catch (err) {
+      setError("Lỗi tải thời khóa biểu");
+      setScheduleData(initialScheduleData);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSchedule();
+  }, [year, dateRange]);
 
   const handleAddActivity = (
     dayIndex: number,
@@ -166,20 +225,24 @@ export default function ScheduleStudentsScreen() {
     }
   };
 
+  // Hiển thị dữ liệu theo buổi sáng hoặc chiều
   const displayedData =
     session === "Buổi sáng"
       ? scheduleData.slice(0, 5)
       : scheduleData.slice(5, 10);
+  const periods = session === "Buổi sáng" ? morningPeriods : afternoonPeriods;
 
+  // Modal chọn năm học
   const handleChangeYear = () => setShowYearModal(true);
   const handleSelectYear = (selected: string) => {
     setYear(selected);
+    // Đổi năm thì đổi luôn về tuần đầu tiên của năm đó
     const weeks = getWeekRangesByYear(selected);
     setDateRange(weeks[0]);
     setShowYearModal(false);
-    setWeekList(weeks);
   };
 
+  // Modal chọn tuần
   const handleChangeDateRange = () => setShowWeekModal(true);
   const handleSelectWeek = (selected: {
     start: string;
@@ -190,24 +253,11 @@ export default function ScheduleStudentsScreen() {
     setShowWeekModal(false);
   };
 
+  // Chuyển buổi sáng/chiều
   const handleSessionToggle = () => {
     setSession((current) =>
       current === "Buổi sáng" ? "Buổi chiều" : "Buổi sáng"
     );
-  };
-
-  const fetchSchedule = () => {
-    setLoading(true);
-    // Giả sử có hàm fetch dữ liệu từ API
-    // fetchDataFromApi().then((data) => {
-    //   const { schedule, lessonIds } = mapApiToScheduleData(data);
-    //   setScheduleData(schedule);
-    //   setLessonIds(lessonIds);
-    //   setLoading(false);
-    // }).catch((err) => {
-    //   setError(err.message);
-    //   setLoading(false);
-    // });
   };
 
   return (
@@ -220,7 +270,7 @@ export default function ScheduleStudentsScreen() {
         onChangeYear={handleChangeYear}
         onChangeDateRange={handleChangeDateRange}
       />
-      <DaySelector days={days} onCurrentDayChange={setCurrentDayIndex} />
+      {/* <DaySelector days={days} onCurrentDayChange={setCurrentDayIndex} /> */}
       {loading ? (
         <ActivityIndicator
           size="large"
@@ -232,11 +282,12 @@ export default function ScheduleStudentsScreen() {
           <Text style={{ color: "red" }}>{error}</Text>
         </View>
       ) : (
-        <ScrollView
+        <RefreshableScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{ paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
           bounces={true}
+          onRefresh={fetchSchedule}
         >
           <View style={{ flex: 1 }}>
             <ScheduleDay
@@ -253,8 +304,9 @@ export default function ScheduleStudentsScreen() {
               }
             />
           </View>
-        </ScrollView>
+        </RefreshableScrollView>
       )}
+      {/* Modal chọn năm học */}
       <Modal visible={showYearModal} transparent animationType="fade">
         <TouchableOpacity
           style={styles.modalOverlay}
@@ -274,6 +326,7 @@ export default function ScheduleStudentsScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
+      {/* Modal chọn tuần */}
       <Modal visible={showWeekModal} transparent animationType="fade">
         <TouchableOpacity
           style={styles.modalOverlay}

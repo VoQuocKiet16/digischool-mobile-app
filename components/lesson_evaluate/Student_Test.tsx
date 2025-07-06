@@ -65,7 +65,9 @@ const Student_Test = () => {
   return (
     <View>
       {!showCard ? (
-        <PlusIcon onPress={() => setShowCard(true)} text="Thêm học sinh kiểm tra" />
+        <View style={{ marginLeft: 16 }}>
+          <PlusIcon onPress={() => setShowCard(true)} text="Thêm học sinh kiểm tra" />
+        </View>
       ) : (
         <View style={[styles.card, { position: "relative" }]}>
           <View style={styles.headerRow}>
