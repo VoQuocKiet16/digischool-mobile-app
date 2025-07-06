@@ -1,4 +1,4 @@
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   StyleSheet,
@@ -8,12 +8,13 @@ import {
   View,
 } from "react-native";
 import PlusIcon from "../PlusIcon";
+import { ThemedView } from "../ThemedView";
 
 const allStudents = [
-  "Nguyen Van A",
-  "Nguyen Van B",
-  "Nguyen Van C",
-  "Nguyen Van D",
+  'Nguyen Van A',
+  'Nguyen Van B',
+  'Nguyen Van C',
+  'Nguyen Van D',
 ];
 
 interface ViolateItem {
@@ -24,13 +25,13 @@ interface ViolateItem {
 const Student_Violates = () => {
   const [showCard, setShowCard] = useState(false);
   const [violateList, setViolateList] = useState<ViolateItem[]>([
-    { name: "Nguyen Van A", reason: "" },
+    { name: 'Nguyen Van A', reason: '' },
   ]);
   const [dropdownIndex, setDropdownIndex] = useState<number | null>(null);
   const [isReasonFocused, setIsReasonFocused] = useState<number | null>(null);
 
   const handleAddViolate = () => {
-    setViolateList([...violateList, { name: "", reason: "" }]);
+    setViolateList([...violateList, { name: '', reason: '' }]);
   };
 
   const handleRemoveViolate = (index: number) => {
@@ -38,7 +39,7 @@ const Student_Violates = () => {
   };
 
   const handleReasonChange = (index: number, text: string) => {
-    setViolateList((list) => {
+    setViolateList(list => {
       const newList = [...list];
       newList[index].reason = text;
       return newList;
@@ -46,7 +47,7 @@ const Student_Violates = () => {
   };
 
   const handleSelectStudent = (student: string, index: number) => {
-    setViolateList((list) => {
+    setViolateList(list => {
       const newList = [...list];
       newList[index].name = student;
       return newList;
@@ -65,11 +66,12 @@ const Student_Violates = () => {
   return (
     <View>
       {!showCard ? (
-        <View style={{ marginLeft: 16 }}>
-          <PlusIcon onPress={() => setShowCard(true)} text="Thêm học sinh vi phạm" />
-        </View>
+        <PlusIcon
+          onPress={() => setShowCard(true)}
+          text="Thêm học sinh vi phạm"
+        />
       ) : (
-        <View style={[styles.card, { position: "relative" }]}>
+        <ThemedView style={[styles.card, { position: "relative" }]}>
           <View style={styles.headerRow}>
             <View style={styles.headerBar} />
             <Text style={styles.headerText}>Học sinh vi phạm</Text>
@@ -84,15 +86,8 @@ const Student_Violates = () => {
           </View>
           {violateList.map((item, index) => (
             <View key={index} style={styles.violateRow}>
-              <View
-                style={{
-                  flex: 1,
-                  position: "relative",
-                  flexDirection: "row",
-                  alignItems: "center",
-                }}
-              >
-                <View style={{ flex: 1 }}>
+              <View style={{flex: 1, position: 'relative', flexDirection: 'row', alignItems: 'center'}}>
+                <View style={{flex: 1}}>
                   <TouchableOpacity
                     style={styles.violateInputWrap}
                     activeOpacity={0.7}
@@ -111,11 +106,11 @@ const Student_Violates = () => {
                       <Text style={styles.violateText}>
                         {item.name || "Chọn học sinh vi phạm"}
                       </Text>
-                      <FontAwesome
+                      <MaterialIcons
                         name={
                           dropdownIndex === index
-                            ? "chevron-up"
-                            : "chevron-down"
+                            ? "keyboard-arrow-up"
+                            : "keyboard-arrow-down"
                         }
                         size={22}
                         color="#fff"
@@ -152,10 +147,7 @@ const Student_Violates = () => {
                   </TouchableOpacity>
                 </View>
                 <TouchableOpacity
-                  style={[
-                    styles.violateCloseBtn,
-                    { alignSelf: "flex-start", marginLeft: 8 },
-                  ]}
+                  style={[styles.violateCloseBtn, {alignSelf: 'flex-start', marginLeft: 8}]}
                   onPress={() => handleRemoveViolate(index)}
                 >
                   <MaterialIcons
@@ -176,7 +168,7 @@ const Student_Violates = () => {
           <View style={{ marginTop: 10, marginLeft: 10 }}>
             <PlusIcon onPress={handleAddViolate} text="Thêm học sinh vi phạm" />
           </View>
-        </View>
+        </ThemedView>
       )}
     </View>
   );
@@ -190,16 +182,16 @@ const styles = StyleSheet.create({
     padding: 18,
     marginBottom: 18,
     marginTop: 8,
-    alignSelf: "center",
-    shadowColor: "#000",
+    alignSelf: 'center',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 2,
   },
   headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 10,
   },
   headerBar: {
@@ -230,8 +222,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   violateRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 10,
     marginLeft: 10,
   },
@@ -274,7 +266,7 @@ const styles = StyleSheet.create({
     elevation: 4,
     paddingVertical: 2,
     maxHeight: 180,
-    width: "100%",
+    width: '100%',
   },
   dropdownItem: {
     paddingVertical: 10,
