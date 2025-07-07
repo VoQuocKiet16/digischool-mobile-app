@@ -67,12 +67,6 @@ const LessonEvaluateTeacherScreen = () => {
         })),
       };
 
-      console.log(
-        "Sending evaluation data:",
-        JSON.stringify(evaluationData, null, 2)
-      );
-      console.log("LessonId:", lessonId);
-
       await lessonEvaluateService.createTeacherEvaluation(
         lessonId || "",
         evaluationData

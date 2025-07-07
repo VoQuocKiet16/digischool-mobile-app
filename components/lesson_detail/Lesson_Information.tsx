@@ -427,45 +427,48 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
                 </View>
               </View>
             )}
-            {/* Hiển thị đánh giá của student khi teacher đã đánh giá */}
-            {lessonData?.studentEvaluations ? (
-              <View style={styles.statusRowGreen}>
-                <View style={styles.statusIconWrapGreen}>
-                  <MaterialIcons name="comment" size={20} color="#fff" />
-                </View>
-                <ThemedText style={styles.statusTextWhite}>
-                  Đã đánh giá giáo viên
-                </ThemedText>
-              </View>
-            ) : (
-              <TouchableOpacity
-                style={styles.statusRowBlueWrap}
-                onPress={handleEvaluate}
-                activeOpacity={0.7}
-              >
-                <View style={styles.statusRowBlueLeft}>
-                  <View style={styles.statusIconWrapBlue}>
-                    <MaterialIcons name="comment" size={20} color="#2CA6B0" />
+            {/* Card đánh giá giáo viên cho học sinh */}
+            {isCompleted &&
+              role === "student" &&
+              lessonData?.teacherEvaluation &&
+              (lessonData?.studentEvaluations ? (
+                <View style={styles.statusRowGreen}>
+                  <View style={styles.statusIconWrapGreen}>
+                    <MaterialIcons name="feedback" size={20} color="#fff" />
                   </View>
-                  <ThemedText style={styles.statusTextBlue}>
-                    Chưa đánh giá giáo viên
+                  <ThemedText style={styles.statusTextWhite}>
+                    Đã đánh giá giáo viên
                   </ThemedText>
                 </View>
-                <View style={styles.statusArrowWrap}>
+              ) : (
+                <TouchableOpacity
+                  style={styles.statusRowBlueWrap}
+                  onPress={handleEvaluate}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.statusRowBlueLeft}>
+                    <View style={styles.statusIconWrapBlue}>
+                      <MaterialIcons name="comment" size={20} color="#2CA6B0" />
+                    </View>
+                    <ThemedText style={styles.statusTextBlue}>
+                      Chưa đánh giá giáo viên
+                    </ThemedText>
+                  </View>
+                  <View style={styles.statusArrowWrap}>
+                    <MaterialIcons
+                      name="chevron-right"
+                      size={28}
+                      color="#2CA6B0"
+                    />
+                  </View>
                   <MaterialIcons
-                    name="chevron-right"
-                    size={28}
-                    color="#2CA6B0"
+                    name="fmd-bad"
+                    size={20}
+                    color="#F04438"
+                    style={styles.statusAlertDot}
                   />
-                </View>
-                <MaterialIcons
-                  name="fmd-bad"
-                  size={20}
-                  color="#F04438"
-                  style={styles.statusAlertDot}
-                />
-              </TouchableOpacity>
-            )}
+                </TouchableOpacity>
+              ))}
           </>
         )}
       </ThemedView>
