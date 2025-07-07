@@ -66,7 +66,7 @@ export default function ConfirmSubstitute() {
           visible={showSuccess}
           onClose={() => {
             setShowSuccess(false);
-            router.replace("/explore");
+            router.replace("/");
           }}
           title="Thành công"
           message={"Gửi yêu cầu đổi tiết thành công.\nQuay lại trang trước đó?"}

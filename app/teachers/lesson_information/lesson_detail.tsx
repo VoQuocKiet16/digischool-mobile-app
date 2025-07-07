@@ -241,7 +241,10 @@ const LessonDetailScreen = () => {
               style={[styles.menuItem, styles.menuItemActive]}
               onPress={() => {
                 setMenuVisible(false);
-                router.push("/teachers/substitute_request/substitute_request");
+                router.push({
+                  pathname: "/teachers/substitute_request/substitute_request",
+                  params: { lessonId: lessonId }
+                });
               }}
             >
               <Text style={styles.menuText}>Dạy thay</Text>
