@@ -9,11 +9,14 @@ import {
 } from "react-native";
 import HeaderLayout from "../../../components/layout/HeaderLayout";
 import SuccessModal from "../../../components/notifications_modal/SuccessModal";
+import { createSwapLessonRequest } from "../../../services/swap_makeup_service";
 
 export default function ConfirmSwap() {
   const params = useLocalSearchParams();
   const lessonFrom = params.lessonFrom ? JSON.parse(params.lessonFrom as string) : null;
   const lessonTo = params.lessonTo ? JSON.parse(params.lessonTo as string) : null;
+  // Log lessonTo để kiểm tra type khi bị lỗi hiển thị
+  console.log('lessonTo:', lessonTo, 'type:', lessonTo?.type);
   const [reason, setReason] = useState("");
   const teacher = lessonTo?.teacherName || "Không rõ";
   const [showSuccess, setShowSuccess] = useState(false);
@@ -26,9 +29,18 @@ export default function ConfirmSwap() {
     return `${lesson.scheduledDate ? lesson.scheduledDate.slice(0, 10) : ""} → Tiết ${lesson.period || ""} → ${lesson.text || ""}`;
   };
 
-  const handleSubmit = () => {
-    if (isValid) {
+  const handleSubmit = async () => {
+    if (!isValid) return;
+    try {
+      await createSwapLessonRequest({
+        originalLessonId: lessonFrom?.lessonId,
+        replacementLessonId: lessonTo?.lessonId,
+        reason,
+      });
       setShowSuccess(true);
+    } catch (e: any) {
+      console.log('Lỗi gửi yêu cầu đổi tiết:', e);
+      alert(e?.response?.data?.message || "Đã có lỗi xảy ra, vui lòng thử lại!");
     }
   };
 
