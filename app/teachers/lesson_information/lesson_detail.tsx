@@ -254,7 +254,12 @@ const LessonDetailScreen = () => {
               onPress={() => {
                 setMenuVisible(false);
                 router.push({
-                  pathname: "/teachers/substitute_lesson/substitute_lesson",
+                  pathname: "/teachers/swap_lesson/swap_lesson",
+                  params: {
+                    ...(lessonData && lessonData.class && typeof (lessonData.class as any)._id === 'string' ? { classId: (lessonData.class as any)._id } : {}),
+                    className: lessonData?.class?.className,
+                    lessonId: lessonId,
+                  },
                 });
               }}
             >

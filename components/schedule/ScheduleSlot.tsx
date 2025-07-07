@@ -64,17 +64,9 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
     if (cellStatus === "taught") {
       return (
         <View style={styles.container}>
-          <View
-            style={{
-              backgroundColor: "#fff",
-              borderRadius: 12,
-              width: "90%",
-              height: 77,
-              minHeight: 77,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          />
+          <View style={styles.taughtSlot}>
+            {/* Slot đã dạy, không có TouchableOpacity, chỉ là View */}
+          </View>
         </View>
       );
     }
@@ -232,7 +224,7 @@ const styles = StyleSheet.create({
   taughtSlot: {
     backgroundColor: "#fff",
     borderRadius: 12,
-    borderWidth: 1.5,
+    borderWidth: 2.5,
     borderColor: "#B6B6B6",
     borderStyle: "dashed",
     paddingVertical: 12,
