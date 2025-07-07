@@ -1,38 +1,83 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  Alert,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import {
+  lessonEvaluateService,
+  Student,
+} from "../../services/lesson_evaluate.service";
 import PlusIcon from "../PlusIcon";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
 
-const allStudents = [
-  "Nguyen Van A",
-  "Nguyen Van B",
-  "Nguyen Van C",
-  "Nguyen Van D",
-];
-
 interface ViolateItem {
+  student: string;
   name: string;
   reason: string;
 }
 
-const Student_Violates = () => {
+interface Student_ViolatesProps {
+  lessonId: string;
+  onViolationsChange?: (
+    violations: { student: string; reason: string }[]
+  ) => void;
+}
+
+const Student_Violates: React.FC<Student_ViolatesProps> = ({
+  lessonId,
+  onViolationsChange,
+}) => {
   const [showCard, setShowCard] = useState(false);
-  const [violateList, setViolateList] = useState<ViolateItem[]>([
-    { name: "Nguyen Van A", reason: "" },
-  ]);
+  const [violateList, setViolateList] = useState<ViolateItem[]>([]);
   const [dropdownIndex, setDropdownIndex] = useState<number | null>(null);
   const [isReasonFocused, setIsReasonFocused] = useState<number | null>(null);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (showCard && lessonId) {
+      loadStudents();
+    }
+  }, [showCard, lessonId]);
+
+  useEffect(() => {
+    const violations = violateList
+      .filter((item) => item.student && item.reason)
+      .map((item) => ({
+        student: item.student,
+        reason: item.reason,
+      }));
+    onViolationsChange?.(violations);
+  }, [violateList, onViolationsChange]);
+
+  const loadStudents = async () => {
+    if (!lessonId || lessonId.trim() === "") {
+      Alert.alert("Lỗi", "LessonId không hợp lệ");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await lessonEvaluateService.getStudentsByLesson(
+        lessonId
+      );
+      setStudents(response.students);
+    } catch (error) {
+      console.error("Error loading students:", error);
+      Alert.alert("Lỗi", "Không thể tải danh sách học sinh");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddViolate = () => {
-    setViolateList([...violateList, { name: "", reason: "" }]);
+    setViolateList([...violateList, { student: "", name: "", reason: "" }]);
   };
 
   const handleRemoveViolate = (index: number) => {
@@ -47,10 +92,15 @@ const Student_Violates = () => {
     });
   };
 
-  const handleSelectStudent = (student: string, index: number) => {
+  const handleSelectStudent = (
+    studentId: string,
+    studentName: string,
+    index: number
+  ) => {
     setViolateList((list) => {
       const newList = [...list];
-      newList[index].name = student;
+      newList[index].student = studentId;
+      newList[index].name = studentName;
       return newList;
     });
     setDropdownIndex(null);
@@ -72,7 +122,7 @@ const Student_Violates = () => {
             onPress={() => setShowCard(true)}
             text="Thêm học sinh vi phạm"
           />
-        </View> 
+        </View>
       ) : (
         <ThemedView style={styles.card}>
           {/* Header */}
@@ -83,7 +133,7 @@ const Student_Violates = () => {
                 Học sinh vi phạm
               </ThemedText>
               <ThemedText style={styles.headerSubtext}>
-                {violateList.filter((item) => item.name).length} học sinh
+                {violateList.filter((item) => item.student).length} học sinh
               </ThemedText>
             </View>
             <TouchableOpacity
@@ -113,13 +163,13 @@ const Student_Violates = () => {
                       <MaterialIcons
                         name="person"
                         size={20}
-                        color={item.name ? "#fff" : "#999"}
+                        color={item.student ? "#fff" : "#999"}
                         style={{ marginRight: 8 }}
                       />
                       <ThemedText
                         style={[
                           styles.studentName,
-                          !item.name && styles.placeholderText,
+                          !item.student && styles.placeholderText,
                         ]}
                       >
                         {item.name || "Chọn học sinh"}
@@ -148,11 +198,13 @@ const Student_Violates = () => {
                 {/* Dropdown */}
                 {dropdownIndex === index && (
                   <View style={styles.dropdown}>
-                    {allStudents.map((student) => (
+                    {students.map((student) => (
                       <TouchableOpacity
-                        key={student}
+                        key={student.id}
                         style={styles.dropdownItem}
-                        onPress={() => handleSelectStudent(student, index)}
+                        onPress={() =>
+                          handleSelectStudent(student.id, student.name, index)
+                        }
                       >
                         <View style={styles.dropdownAvatar}>
                           <MaterialIcons
@@ -162,7 +214,9 @@ const Student_Violates = () => {
                             style={{ marginRight: 8 }}
                           />
                         </View>
-                        <Text style={styles.dropdownItemText}>{student}</Text>
+                        <Text style={styles.dropdownItemText}>
+                          {student.name}
+                        </Text>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -184,8 +238,6 @@ const Student_Violates = () => {
                     />
                   </View>
                 )}
-
-                
               </View>
             ))}
           </View>
@@ -257,13 +309,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   studentsList: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   studentItem: {
     marginBottom: 16,
     backgroundColor: "#29375C",
     borderRadius: 16,
-    padding: 16,
+    padding: 12,
+    marginLeft: 10,
   },
   studentHeader: {
     flexDirection: "row",

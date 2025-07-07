@@ -68,3 +68,14 @@ export const deleteLessonDescription = async (
     throw error;
   }
 };
+
+export const completeLesson = async (lessonId: string): Promise<any> => {
+  try {
+    const response = await api.patch(
+      `/api/schedules/lesson/${lessonId}/complete`
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
