@@ -3,10 +3,12 @@ import Student_Absent from "@/components/lesson_evaluate/Student_Absent";
 import Student_Test from "@/components/lesson_evaluate/Student_Test";
 import Student_Violates from "@/components/lesson_evaluate/Student_Violates";
 import SuccessModal from "@/components/notifications_modal/SuccessModal";
+import { lessonEvaluateService } from "@/services/lesson_evaluate.service";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -20,6 +22,7 @@ import {
 const RANKS = ["A+", "A", "B+", "B"];
 
 const LessonEvaluateTeacherScreen = () => {
+  const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
   const [lesson, setLesson] = useState("");
   const [content, setContent] = useState("");
   const [comment, setComment] = useState("");
@@ -27,6 +30,15 @@ const LessonEvaluateTeacherScreen = () => {
   const [showRankDropdown, setShowRankDropdown] = useState(false);
   const [checked, setChecked] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [absentStudents, setAbsentStudents] = useState<
+    { student: string; name: string }[]
+  >([]);
+  const [oralTests, setOralTests] = useState<
+    { student: string; name: string; score: number }[]
+  >([]);
+  const [violations, setViolations] = useState<
+    { student: string; reason: string }[]
+  >([]);
   const router = useRouter();
 
   const isValid =
@@ -34,6 +46,51 @@ const LessonEvaluateTeacherScreen = () => {
     (content || "").trim().length > 0 &&
     (rank || "").trim().length > 0 &&
     checked;
+
+  const handleSubmit = async () => {
+    try {
+      const evaluationData = {
+        curriculumLesson: lesson,
+        content: content,
+        comments: comment,
+        rating: rank as "A+" | "A" | "B+" | "B" | "C",
+        absentStudents: absentStudents.map((item) => ({
+          student: item.student,
+        })),
+        oralTests: oralTests.map((item) => ({
+          student: item.student,
+          score: item.score,
+        })),
+        violations: violations.map((item) => ({
+          student: item.student,
+          description: item.reason,
+        })),
+      };
+
+      console.log(
+        "Sending evaluation data:",
+        JSON.stringify(evaluationData, null, 2)
+      );
+      console.log("LessonId:", lessonId);
+
+      await lessonEvaluateService.createEvaluation(
+        lessonId || "",
+        evaluationData
+      );
+      setShowSuccess(true);
+    } catch (error: any) {
+      console.error("Error creating evaluation:", error);
+      console.error("Error response:", error.response?.data);
+      console.error("Error status:", error.response?.status);
+      console.error("Error message:", error.response?.data?.message);
+      Alert.alert(
+        "Lỗi",
+        `Có lỗi xảy ra khi tạo đánh giá tiết học: ${
+          error.response?.data?.message || error.message
+        }`
+      );
+    }
+  };
 
   return (
     <HeaderLayout
@@ -90,15 +147,24 @@ const LessonEvaluateTeacherScreen = () => {
           </View>
           {/* Học sinh vắng */}
           <View style={[styles.fieldWrap, { marginBottom: 25 }]}>
-            <Student_Absent />
+            <Student_Absent
+              lessonId={lessonId || ""}
+              onAbsentStudentsChange={setAbsentStudents}
+            />
           </View>
           {/* Học sinh vi phạm */}
           <View style={[styles.fieldWrap, { marginBottom: 25 }]}>
-            <Student_Violates />
+            <Student_Violates
+              lessonId={lessonId || ""}
+              onViolationsChange={setViolations}
+            />
           </View>
           {/* Kiểm tra miệng */}
           <View style={[styles.fieldWrap, { marginBottom: 46 }]}>
-            <Student_Test />
+            <Student_Test
+              lessonId={lessonId || ""}
+              onOralTestsChange={setOralTests}
+            />
           </View>
           {/* Nhận xét */}
           <View style={styles.fieldWrap}>
@@ -222,7 +288,7 @@ const LessonEvaluateTeacherScreen = () => {
               isValid ? styles.saveBtnActive : styles.saveBtnDisabled,
             ]}
             disabled={!isValid}
-            onPress={() => setShowSuccess(true)}
+            onPress={handleSubmit}
           >
             <Text style={styles.saveBtnText}>Xác nhận</Text>
           </TouchableOpacity>
@@ -230,10 +296,7 @@ const LessonEvaluateTeacherScreen = () => {
             visible={showSuccess}
             onClose={() => {
               setShowSuccess(false);
-              router.push({
-                pathname: "/teachers/lesson_information/lesson_detail",
-                params: { lessonid: lesson },
-              });
+              router.back();
             }}
             title="Thành công"
             message={"Đánh giá tiết học thành công.\nQuay lại trang trước đó?"}

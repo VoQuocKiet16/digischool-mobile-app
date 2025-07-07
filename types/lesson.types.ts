@@ -1,4 +1,5 @@
 export interface LessonData {
+  _id: string;
   lessonId: string;
   topic: string;
   description: string;
@@ -10,6 +11,7 @@ export interface LessonData {
   };
   teacher: {
     name: string;
+    gender: string;
   };
   subject?: {
     name: string;
@@ -27,6 +29,17 @@ export interface LessonData {
   } | null;
   evaluation?: {
     rank: string;
+  } | null;
+  teacherEvaluation?: {
+    _id: string;
+    evaluation: {
+      rating: string;
+      comments: string;
+      details: any;
+    };
+    status: string;
+    createdAt: string;
+    updatedAt: string;
   } | null;
   status: string;
 }

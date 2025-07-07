@@ -1,34 +1,78 @@
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
-import React, { useRef, useState } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
+import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  lessonEvaluateService,
+  Student,
+} from "../../services/lesson_evaluate.service";
 import PlusIcon from "../PlusIcon";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
 
-const allStudents = [
-  'Nguyen Van A',
-  'Nguyen Van B',
-  'Nguyen Van C',
-  'Nguyen Van D',
-];
+interface Student_AbsentProps {
+  lessonId: string;
+  onAbsentStudentsChange?: (
+    absentStudents: { student: string; name: string }[]
+  ) => void;
+}
 
-const Student_Absent = () => {
+const Student_Absent: React.FC<Student_AbsentProps> = ({
+  lessonId,
+  onAbsentStudentsChange,
+}) => {
   const [showCard, setShowCard] = useState(false);
-  const [absentList, setAbsentList] = useState<string[]>(['Nguyen Van C', 'Nguyen Van A']);
+  const [absentList, setAbsentList] = useState<
+    { student: string; name: string }[]
+  >([]);
   const [dropdownIndex, setDropdownIndex] = useState<number | null>(null);
-  const inputRefs = useRef<(View | null)[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (showCard && lessonId) {
+      loadStudents();
+    }
+  }, [showCard, lessonId]);
+
+  useEffect(() => {
+    onAbsentStudentsChange?.(absentList.filter((item) => item.student));
+  }, [absentList, onAbsentStudentsChange]);
+
+  const loadStudents = async () => {
+    if (!lessonId || lessonId.trim() === "") {
+      Alert.alert("Lỗi", "LessonId không hợp lệ");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await lessonEvaluateService.getStudentsByLesson(
+        lessonId
+      );
+      setStudents(response.students);
+    } catch (error) {
+      console.error("Error loading students:", error);
+      Alert.alert("Lỗi", "Không thể tải danh sách học sinh");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddAbsent = () => {
-    setAbsentList([...absentList, '']);
+    setAbsentList([...absentList, { student: "", name: "" }]);
   };
 
   const handleRemoveAbsent = (index: number) => {
     setAbsentList(absentList.filter((_, i) => i !== index));
   };
 
-  const handleSelectStudent = (student: string, index: number) => {
+  const handleSelectStudent = (
+    studentId: string,
+    studentName: string,
+    index: number
+  ) => {
     const newList = [...absentList];
-    newList[index] = student;
+    newList[index] = { student: studentId, name: studentName };
     setAbsentList(newList);
     setDropdownIndex(null);
   };
@@ -51,9 +95,14 @@ const Student_Absent = () => {
         <ThemedView style={[styles.card, { position: "relative" }]}>
           <View style={styles.headerRow}>
             <View style={styles.headerBar} />
-            <ThemedText type="subtitle" style={styles.headerText}>
-              Học sinh vắng
-            </ThemedText>
+            <View style={styles.headerContent}>
+              <ThemedText type="subtitle" style={styles.headerText}>
+                Học sinh vắng
+              </ThemedText>
+              <ThemedText style={styles.headerSubtext}>
+                {absentList.filter((item) => item.student).length} học sinh
+              </ThemedText>
+            </View>
             <TouchableOpacity
               style={styles.closeBtn}
               onPress={() => setShowCard(false)}
@@ -63,65 +112,82 @@ const Student_Absent = () => {
               </View>
             </TouchableOpacity>
           </View>
-          {absentList.map((item, index) => (
-            <View key={index} style={styles.absentRow}>
-              <View style={{flex: 1, position: 'relative', flexDirection: 'row', alignItems: 'center'}}>
-                <View style={{flex: 1}}>
+          <View style={styles.studentsContainer}>
+            {absentList.map((item, index) => (
+              <View key={index} style={styles.studentCard}>
+                <View style={styles.studentRow}>
                   <TouchableOpacity
-                    style={styles.absentInput}
+                    style={styles.studentSelector}
                     activeOpacity={0.7}
                     onPress={() => openDropdown(index)}
                   >
-                    <ThemedText style={styles.absentText}>
-                      {item || "Chọn học sinh vắng"}
-                    </ThemedText>
+                    <View style={styles.studentInfo}>
+                      <MaterialIcons
+                        name="person"
+                        size={20}
+                        color={item.student ? "#F44336" : "#9E9E9E"}
+                        style={styles.studentIcon}
+                      />
+                      <ThemedText
+                        style={[
+                          styles.studentName,
+                          !item.student && styles.placeholderText,
+                        ]}
+                      >
+                        {item.name || "Chọn học sinh"}
+                      </ThemedText>
+                    </View>
                     <MaterialIcons
                       name="keyboard-arrow-down"
-                      size={24}
-                      color="#fff"
-                      style={{ marginLeft: 8 }}
+                      size={20}
+                      color="#9E9E9E"
                     />
                   </TouchableOpacity>
-                  {dropdownIndex === index && (
-                    <View style={styles.dropdown}>
-                      {allStudents.map(student => (
-                        <TouchableOpacity
-                          key={student}
-                          style={styles.dropdownItem}
-                          onPress={() => {
-                            handleSelectStudent(student, index);
-                          }}
-                        >
-                          <ThemedText style={styles.dropdownItemText}>
-                            {student}
-                          </ThemedText>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  )}
+
+                  <TouchableOpacity
+                    style={styles.removeBtn}
+                    onPress={() => handleRemoveAbsent(index)}
+                  >
+                    <MaterialIcons
+                      name="remove-circle-outline"
+                      size={18}
+                      color="#F44336"
+                    />
+                  </TouchableOpacity>
                 </View>
-                <TouchableOpacity
-                  style={[styles.absentCloseBtn, {alignSelf: 'flex-start', marginLeft: 8}]}
-                  onPress={() => handleRemoveAbsent(index)}
-                >
-                  <MaterialIcons
-                    name="close"
-                    size={16}
-                    color="#fff"
-                    style={{
-                      backgroundColor: "#CF2020",
-                      borderRadius: 50,
-                      padding: 5,
-                      marginTop: 10,
-                    }}
-                  />
-                </TouchableOpacity>
+
+                {dropdownIndex === index && (
+                  <View style={styles.dropdown}>
+                    {students.map((student) => (
+                      <TouchableOpacity
+                        key={student.id}
+                        style={styles.dropdownItem}
+                        onPress={() =>
+                          handleSelectStudent(student.id, student.name, index)
+                        }
+                      >
+                        <MaterialIcons
+                          name="person"
+                          size={16}
+                          color="#9E9E9E"
+                          style={{ marginRight: 8 }}
+                        />
+                        <ThemedText style={styles.dropdownItemText}>
+                          {student.name}
+                        </ThemedText>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
               </View>
-            </View>
-          ))}
-          <View style={{ marginTop: 10, marginLeft: 10 }}>
-            <PlusIcon onPress={handleAddAbsent} text="Thêm học sinh vắng" />
+            ))}
           </View>
+          <TouchableOpacity style={styles.addButton} onPress={handleAddAbsent}>
+            <MaterialIcons name="add" size={20} color="#25345C" />
+            <ThemedText style={styles.addButtonText}>
+              Thêm học sinh vắng
+            </ThemedText>
+          </TouchableOpacity>
         </ThemedView>
       )}
     </View>
@@ -136,16 +202,16 @@ const styles = StyleSheet.create({
     padding: 18,
     marginBottom: 18,
     marginTop: 8,
-    alignSelf: 'center',
-    shadowColor: '#000',
+    alignSelf: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 2,
   },
   headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 10,
   },
   headerBar: {
@@ -155,11 +221,19 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     marginRight: 10,
   },
+  headerContent: {
+    flex: 1,
+  },
   headerText: {
     color: "#25345C",
     fontSize: 24,
     fontFamily: "Baloo2-SemiBold",
-    flex: 1,
+    marginBottom: 2,
+  },
+  headerSubtext: {
+    color: "#666666",
+    fontSize: 14,
+    fontFamily: "Baloo2-Regular",
   },
   closeBtn: {
     backgroundColor: "#FFA49F",
@@ -175,44 +249,51 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  absentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-    marginLeft: 10,
+  studentsContainer: {
+    marginBottom: 16,
   },
-  absentInputWrap: {
-    flex: 1,
-    flexDirection: 'column',
-    alignItems: 'center',
-    position: 'relative',
-    width: '90%',
+  studentCard: {
+    marginBottom: 12,
   },
-  absentInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-  },
-  absentInput: {
-    flex: 1,
-    backgroundColor: "#29375C",
-    borderRadius: 15,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
+  studentRow: {
     flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "#29375C",
+    borderRadius: 16,
+    padding: 10,
+    marginLeft: 10,
   },
-  absentText: {
-    color: '#fff',
-    fontSize: 16,
+  studentSelector: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingRight: 8,
+  },
+  studentInfo: {
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
-  absentCloseBtn: {
+  studentIcon: {
+    marginRight: 8,
+  },
+  studentName: {
+    color: "#fff",
+    fontSize: 16,
+    fontFamily: "Baloo2-Medium",
+    flex: 1,
+  },
+  placeholderText: {
+    color: "rgba(255,255,255,0.7)",
+    fontFamily: "Baloo2-Regular",
+  },
+  removeBtn: {
+    padding: 8,
     marginLeft: 8,
-    backgroundColor: 'transparent',
   },
   dropdown: {
-    marginTop: 10,
+    marginTop: 8,
     backgroundColor: "#525D7B",
     borderRadius: 15,
     shadowColor: "#000",
@@ -222,15 +303,32 @@ const styles = StyleSheet.create({
     elevation: 4,
     paddingVertical: 2,
     maxHeight: 180,
-    width: '100%',
+    width: "70%",
+    marginLeft: 10,
   },
   dropdownItem: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 10,
     paddingHorizontal: 16,
   },
   dropdownItemText: {
     fontSize: 16,
     color: "#fff",
+    fontFamily: "Baloo2-Regular",
+  },
+  addButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 10,
+  },
+  addButtonText: {
+    color: "#29375C",
+    fontSize: 16,
+    fontFamily: "Baloo2-Medium",
+    marginLeft: 8,
+    textDecorationLine: "underline",
   },
 });
 

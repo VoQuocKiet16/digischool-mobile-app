@@ -188,13 +188,12 @@ export default function LoginScreen() {
             {email.length > 0 && (
               <TouchableOpacity
                 onPress={() => setEmail("")}
-                style={{ position: "absolute", right: 8 }}
+                style={{ position: "relative"}}
               >
                 <Icon
                   name="close"
                   size={25}
                   color="#25345D"
-                  style={{ marginRight: 10 }}
                 />
               </TouchableOpacity>
             )}
@@ -209,7 +208,7 @@ export default function LoginScreen() {
               style={styles.inputIcon}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, { marginTop: 5}]}
               placeholder="Nhập mật khẩu"
               placeholderTextColor="#7a869a"
               value={password}
@@ -219,13 +218,13 @@ export default function LoginScreen() {
             {password.length > 0 && (
               <TouchableOpacity
                 onPress={() => setPassword("")}
-                style={{ position: "absolute", right: 8 }}
+                style={{ position: "relative"}}
               >
                 <Icon
                   name="close"
                   size={25}
                   color="#25345D"
-                  style={{ marginRight: 40 }}
+                  style={{ marginRight: 10}}
                 />
               </TouchableOpacity>
             )}
