@@ -1,13 +1,9 @@
-import { FontAwesome } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import PlusIcon from "../PlusIcon";
+import { ThemedText } from "../ThemedText";
+import { ThemedView } from "../ThemedView";
 
 const allStudents = [
   "Nguyen Van A",
@@ -61,80 +57,114 @@ const Student_Test = () => {
   };
 
   const openDropdown = (index: number) => {
-    setDropdownIndex(index);
+    if (dropdownIndex === index) {
+      setDropdownIndex(null);
+    } else {
+      setDropdownIndex(index);
+    }
+  };
+
+  const getScoreColor = (score: string | number) => {
+    if (!score || score === "") return "#7D88A7";
+    const num = Number(score);
+    if (num >= 8) return "#4CAF50";
+    if (num >= 6.5) return "#FF9800";
+    return "#F44336";
   };
 
   return (
     <View>
       {!showCard ? (
-        <PlusIcon
-          onPress={() => setShowCard(true)}
-          text="Thêm học sinh kiểm tra"
-        />
+        <View style={{ marginLeft: 16 }}>
+          <PlusIcon
+            onPress={() => setShowCard(true)}
+            text="Thêm học sinh kiểm tra"
+          />
+        </View>
       ) : (
-        <View style={styles.card}>
+        <ThemedView style={[styles.card, { position: "relative" }]}>
           <View style={styles.headerRow}>
             <View style={styles.headerBar} />
-            <Text style={styles.headerText}>Kiểm tra miệng</Text>
+            <View style={styles.headerContent}>
+              <ThemedText type="subtitle" style={styles.headerText}>
+                Kiểm tra miệng
+              </ThemedText>
+              <ThemedText style={styles.headerSubtext}>
+                {testList.filter((item) => item).length} học sinh
+              </ThemedText>
+            </View>
             <TouchableOpacity
               style={styles.closeBtn}
               onPress={() => setShowCard(false)}
             >
               <View style={styles.closeCircle}>
-                <FontAwesome name="close" size={22} color="#fff" />
+                <MaterialIcons name="close" size={22} color="#fff" />
               </View>
             </TouchableOpacity>
           </View>
-          {testList.map((item, index) => (
-            <View key={index} style={styles.testRow}>
-              <View
-                style={{
-                  flex: 1,
-                  position: "relative",
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                }}
-              >
-                <TouchableOpacity
-                  style={styles.testInputWrap}
-                  activeOpacity={0.8}
-                  onPress={() => openDropdown(index)}
-                >
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      width: "100%",
-                    }}
+
+          <View style={styles.studentsContainer}>
+            {testList.map((item, index) => (
+              <View key={index} style={styles.studentCard}>
+                <View style={styles.studentRow}>
+                  <TouchableOpacity
+                    style={styles.studentSelector}
+                    activeOpacity={0.7}
+                    onPress={() => openDropdown(index)}
                   >
-                    <Text style={styles.testText}>
-                      {item || "Chọn học sinh kiểm tra"}
-                    </Text>
-                    {item && (
-                      <View style={styles.scoreInputBox}>
-                        <TextInput
-                          style={styles.scoreInput}
-                          placeholder="Nhập điểm"
-                          placeholderTextColor="#C4C4C4"
-                          keyboardType="numeric"
-                          value={scoreList[index]?.toString() || ""}
-                          onChangeText={(text) =>
-                            handleScoreChange(text, index)
-                          }
-                          maxLength={2}
-                        />
-                      </View>
-                    )}
-                    <FontAwesome
-                      name={
-                        dropdownIndex === index ? "chevron-up" : "chevron-down"
-                      }
-                      size={22}
-                      color="#fff"
-                      style={{ marginLeft: 8 }}
+                    <View style={styles.studentInfo}>
+                      <MaterialIcons
+                        name="person"
+                        size={20}
+                        color={item ? "#4CAF50" : "#9E9E9E"}
+                        style={styles.studentIcon}
+                      />
+                      <ThemedText
+                        style={[
+                          styles.studentName,
+                          !item && styles.placeholderText,
+                        ]}
+                      >
+                        {item || "Chọn học sinh"}
+                      </ThemedText>
+                    </View>
+                    <MaterialIcons
+                      name="keyboard-arrow-down"
+                      size={20}
+                      color="#9E9E9E"
                     />
-                  </View>
-                </TouchableOpacity>
+                  </TouchableOpacity>
+
+                  {item && (
+                    <View style={styles.scoreContainer}>
+                      <TextInput
+                        style={[
+                          styles.scoreInput,
+                          { backgroundColor: getScoreColor(scoreList[index]) },
+                        ]}
+                        placeholder="Điểm"
+                        placeholderTextColor="rgba(255,255,255,0.7)"
+                        keyboardType="numeric"
+                        value={scoreList[index]?.toString() || ""}
+                        onChangeText={(text) => handleScoreChange(text, index)}
+                        maxLength={2}
+                      />
+                      <ThemedText style={styles.scoreLabel}>/10</ThemedText>
+                    </View>
+                  )}
+
+                  <TouchableOpacity
+                    style={styles.removeBtn}
+                    onPress={() => handleRemoveTest(index)}
+                  >
+                    <MaterialIcons
+                      name="remove-circle-outline"
+                      size={18}
+                      color="#F44336"
+                    />
+                  </TouchableOpacity>
+                </View>
+
                 {dropdownIndex === index && (
                   <View style={styles.dropdown}>
                     {allStudents.map((student) => (
@@ -143,26 +173,28 @@ const Student_Test = () => {
                         style={styles.dropdownItem}
                         onPress={() => handleSelectStudent(student, index)}
                       >
-                        <Text style={styles.dropdownItemText}>{student}</Text>
+                        <MaterialIcons
+                          name="person"
+                          size={16}
+                          color="#9E9E9E"
+                          style={{ marginRight: 8 }}
+                        />
+                        <ThemedText style={styles.dropdownItemText}>
+                          {student}
+                        </ThemedText>
                       </TouchableOpacity>
                     ))}
                   </View>
                 )}
               </View>
-              <TouchableOpacity
-                style={{
-                  alignSelf: "flex-start",
-                  marginLeft: 8,
-                  backgroundColor: "transparent",
-                }}
-                onPress={() => handleRemoveTest(index)}
-              >
-                <FontAwesome name="close" size={22} color="#F04438" />
-              </TouchableOpacity>
-            </View>
-          ))}
-          <PlusIcon onPress={handleAddTest} text="Thêm học sinh kiểm tra" />
-        </View>
+            ))}
+          </View>
+
+          <TouchableOpacity style={styles.addButton} onPress={handleAddTest}>
+            <MaterialIcons name="add" size={20} color="#25345C" />
+            <ThemedText style={styles.addButtonText}>Thêm học sinh</ThemedText>
+          </TouchableOpacity>
+        </ThemedView>
       )}
     </View>
   );
@@ -170,8 +202,8 @@ const Student_Test = () => {
 
 const styles = StyleSheet.create({
   card: {
-    width: "98%",
-    backgroundColor: "#E9EBF0",
+    width: "92%",
+    backgroundColor: "#F3F6FA",
     borderRadius: 16,
     padding: 18,
     marginBottom: 18,
@@ -179,7 +211,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 2,
   },
@@ -189,90 +221,140 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   headerBar: {
-    width: 4,
-    height: 28,
+    width: 3,
+    height: 45,
     backgroundColor: "#F9A825",
     borderRadius: 2,
     marginRight: 10,
   },
-  headerText: {
-    color: "#26324D",
-    fontWeight: "700",
-    fontSize: 20,
+  headerContent: {
     flex: 1,
   },
+  headerText: {
+    color: "#25345C",
+    fontSize: 24,
+    fontFamily: "Baloo2-SemiBold",
+    marginBottom: 2,
+  },
+  headerSubtext: {
+    color: "#666666",
+    fontSize: 14,
+    fontFamily: "Baloo2-Regular",
+  },
   closeBtn: {
+    backgroundColor: "#FFA49F",
+    padding: 8,
+    borderRadius: 50,
     marginLeft: 8,
   },
   closeCircle: {
-    backgroundColor: "#F04438",
+    backgroundColor: "#CF2020",
     borderRadius: 16,
-    width: 32,
-    height: 32,
+    width: 24,
+    height: 24,
     alignItems: "center",
     justifyContent: "center",
   },
-  testRow: {
+  studentsContainer: {
+    marginBottom: 16,
+  },
+  studentCard: {
+    marginBottom: 12,
+  },
+  studentRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    backgroundColor: "#29375C",
+    borderRadius: 15,
+    padding: 12,
+    marginLeft: 10,
   },
-  testInputWrap: {
-    backgroundColor: "#A0A3BD",
-    borderRadius: 20,
-    paddingVertical: 18,
-    paddingHorizontal: 18,
-    width: "100%",
-    flexDirection: "column",
-    alignItems: "flex-start",
-    marginTop: 0,
+  studentSelector: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingRight: 8,
   },
-  testText: {
+  studentInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  studentIcon: {
+    marginRight: 8,
+  },
+  studentName: {
     color: "#fff",
     fontSize: 16,
-    fontWeight: "bold",
-    fontFamily: "Baloo 2",
-    marginBottom: 0,
+    fontFamily: "Baloo2-Medium",
+    flex: 1,
   },
-  scoreInputBox: {
-    backgroundColor: "#7D88A7",
-    borderRadius: 12,
-    marginLeft: 12,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    justifyContent: "center",
+  placeholderText: {
+    color: "rgba(255,255,255,0.7)",
+    fontFamily: "Baloo2-Regular",
+  },
+  scoreContainer: {
+    flexDirection: "row",
     alignItems: "center",
+    marginLeft: 12,
   },
   scoreInput: {
-    backgroundColor: "transparent",
+    width: 50,
+    height: 36,
+    borderRadius: 8,
+    textAlign: "center",
+    color: "#fff",
+    fontSize: 16,
+    fontFamily: "Baloo2-Medium",
+    marginRight: 4,
+  },
+  scoreLabel: {
     color: "rgba(255,255,255,0.7)",
     fontSize: 14,
-    fontWeight: "500",
-    paddingVertical: 0,
-    paddingHorizontal: 0,
-    minWidth: 40,
-    textAlign: "center",
+    fontFamily: "Baloo2-Regular",
+  },
+  removeBtn: {
+    padding: 8,
+    marginLeft: 8,
   },
   dropdown: {
-    marginTop: 10,
-    backgroundColor: "#fff",
-    borderRadius: 8,
+    marginTop: 8,
+    backgroundColor: "#525D7B",
+    borderRadius: 15,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
     shadowRadius: 8,
     elevation: 4,
-    paddingVertical: 4,
+    paddingVertical: 2,
     maxHeight: 180,
-    width: "100%",
+    width: "70%",
+    marginLeft: 10,
   },
   dropdownItem: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 10,
     paddingHorizontal: 16,
   },
   dropdownItemText: {
     fontSize: 16,
+    color: "#fff",
+    fontFamily: "Baloo2-Regular",
+  },
+  addButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 10,
+  },
+  addButtonText: {
     color: "#29375C",
+    fontSize: 16,
+    fontFamily: "Baloo2-Medium",
+    marginLeft: 8,
+    textDecorationLine: "underline",
   },
 });
 

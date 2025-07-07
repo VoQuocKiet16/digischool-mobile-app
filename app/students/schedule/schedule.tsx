@@ -13,7 +13,8 @@ import RefreshableScrollView from "../../../components/RefreshableScrollView";
 // import DaySelector from "../../../components/schedule/DaySelector";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
-import { getSchedule } from "../../../services/schedule.service";
+import { getStudentSchedule } from "../../../services/schedule.service";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface Activity {
   text: string;
@@ -176,8 +177,8 @@ export default function ScheduleStudentsScreen() {
     setLoading(true);
     setError("");
     try {
-      const data = await getSchedule({
-        className: "12A1",
+      const data = await getStudentSchedule({
+        className: (await AsyncStorage.getItem("userClass")) || "",
         academicYear: year,
         startOfWeek: dateRange.start,
         endOfWeek: dateRange.end,

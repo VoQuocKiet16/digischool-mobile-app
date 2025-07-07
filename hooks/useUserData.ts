@@ -2,21 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { getMe } from "../services/auth.service";
-
-interface UserData {
-  name: string;
-  email: string;
-  phone: string | null;
-  address: string | null;
-  dateOfBirth: string | null;
-  gender: string | null;
-  studentId: string | null;
-  teacherId: string | null;
-  managerId: string | null;
-  class: any | null;
-  subjects: any[];
-  roleInfo: any | null;
-}
+import { UserData } from "../types/user.types";
 
 export const useUserData = () => {
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -39,6 +25,10 @@ export const useUserData = () => {
       const userRoleInfoString = await AsyncStorage.getItem("userRoleInfo");
 
       if (userName) {
+        const roleInfo = userRoleInfoString
+          ? JSON.parse(userRoleInfoString)
+          : {};
+
         const userFromStorage: UserData = {
           name: userName,
           email: userEmail || "",
@@ -51,7 +41,7 @@ export const useUserData = () => {
           managerId: userManagerId,
           class: userClassString ? JSON.parse(userClassString) : null,
           subjects: userSubjectsString ? JSON.parse(userSubjectsString) : [],
-          roleInfo: userRoleInfoString ? JSON.parse(userRoleInfoString) : null,
+          roleInfo: roleInfo,
         };
         setUserData(userFromStorage);
         setError(null);
@@ -73,6 +63,14 @@ export const useUserData = () => {
       setLoading(true);
       const response = await getMe();
       if (response.success && response.data) {
+        const roleInfo = response.data.roleInfo || {};
+        if (response.data.homeroomClass) {
+          roleInfo.homeroomClass = response.data.homeroomClass;
+        }
+        if (response.data.school) {
+          roleInfo.school = response.data.school;
+        }
+
         const userData: UserData = {
           name: response.data.name || "",
           email: response.data.email || "",
@@ -85,7 +83,7 @@ export const useUserData = () => {
           managerId: response.data.managerId,
           class: response.data.class,
           subjects: response.data.subjects || [],
-          roleInfo: response.data.roleInfo,
+          roleInfo: roleInfo,
         };
         setUserData(userData);
         setError(null);

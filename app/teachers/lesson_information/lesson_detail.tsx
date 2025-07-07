@@ -1,23 +1,107 @@
 import HeaderLayout from "@/components/layout/HeaderLayout";
 import Lesson_Information from "@/components/lesson_detail/Lesson_Information";
+import ConfirmTeachedModal from "@/components/notifications_modal/ConfirmTeachedModal";
 import PlusIcon from "@/components/PlusIcon";
+import RefreshableScrollView from "@/components/RefreshableScrollView";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import React, { useState } from "react";
+import { useFocusEffect, useIsFocused } from "@react-navigation/native";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Modal,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import {
+  deleteLessonDescription,
+  getLessonDetail,
+  updateLessonDescription,
+} from "../../../services/schedule.service";
+import { LessonData } from "../../../types/lesson.types";
 
 const LessonDetailScreen = () => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [lessonData, setLessonData] = useState<LessonData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [shouldAddDescription, setShouldAddDescription] = useState(false);
+  const isFocused = useIsFocused();
+
+  useEffect(() => {
+    if (lessonId) {
+      fetchLessonDetail();
+    }
+  }, [lessonId, refreshKey]);
+
+  // Refresh lesson data khi quay về từ trang khác
+  useFocusEffect(
+    React.useCallback(() => {
+      if (lessonId) {
+        fetchLessonDetail();
+      }
+    }, [lessonId])
+  );
+
+  // Alternative: Refresh when screen becomes focused
+  useEffect(() => {
+    if (isFocused && lessonId && lessonData) {
+      fetchLessonDetail();
+    }
+  }, [isFocused, lessonId]);
+
+  const fetchLessonDetail = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const data = await getLessonDetail(lessonId);
+      setLessonData(data);
+    } catch (err) {
+      setError("Lỗi tải thông tin tiết học");
+      console.error("Error fetching lesson detail:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateDescription = async (description: string) => {
+    try {
+      await updateLessonDescription(lessonId, description);
+      // Cập nhật local state thay vì load lại trang
+      if (lessonData) {
+        setLessonData({
+          ...lessonData,
+          description: description,
+        });
+      }
+    } catch (error) {
+      console.error("Error updating description:", error);
+      throw error;
+    }
+  };
+
+  const handleDeleteDescription = async () => {
+    try {
+      await deleteLessonDescription(lessonId);
+      // Cập nhật local state thay vì load lại trang
+      if (lessonData) {
+        setLessonData({
+          ...lessonData,
+          description: "",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting description:", error);
+      throw error;
+    }
+  };
 
   const handleCompletePress = () => setShowModal(true);
   const handleConfirmComplete = () => {
@@ -25,76 +109,126 @@ const LessonDetailScreen = () => {
     setShowModal(false);
   };
   const handleEvaluatePress = () => {
-    // Giáo viên có thể có chức năng khác, hoặc để trống nếu không cần
+    router.push("/teachers/lesson_information/lesson_evaluate");
   };
+
+  // Tạo subtitle từ dữ liệu lesson
+  const getSubtitle = () => {
+    if (!lessonData) return "Đang tải thông tin tiết học...";
+
+    const session =
+      lessonData.timeSlot?.session === "morning" ? "Sáng" : "Chiều";
+    const period = `Tiết ${lessonData.timeSlot?.period || 1}`;
+    const subject =
+      lessonData.subject?.name ||
+      lessonData.fixedInfo?.description ||
+      "Chưa rõ";
+    const className = lessonData.class?.className || "Chưa rõ";
+
+    return `${session} • ${period} • ${subject} • ${className}`;
+  };
+
+  if (loading) {
+    return (
+      <HeaderLayout
+        title="Chi tiết tiết học"
+        subtitle={getSubtitle()}
+        onBack={() => router.back()}
+      >
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#3A546D" />
+          <Text style={styles.loadingText}>Đang tải thông tin tiết học...</Text>
+        </View>
+      </HeaderLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <HeaderLayout
+        title="Chi tiết tiết học"
+        subtitle={getSubtitle()}
+        onBack={() => router.back()}
+      >
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={fetchLessonDetail}
+          >
+            <Text style={styles.retryButtonText}>Thử lại</Text>
+          </TouchableOpacity>
+        </View>
+      </HeaderLayout>
+    );
+  }
 
   return (
     <HeaderLayout
       title="Chi tiết tiết học"
-      subtitle="Sáng • Tiết 3 • Hóa học • 10a3"
-      onBack={() => router.replace("/(tabs)")}
+      subtitle={getSubtitle()}
+      onBack={() => router.back()}
       rightIcon={
         <TouchableOpacity onPress={() => setMenuVisible(true)}>
           <Ionicons name="menu" size={24} color="#25345D" />
         </TouchableOpacity>
       }
     >
-      <ScrollView
+      <RefreshableScrollView
+        style={{ flex: 1 }}
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+        onRefresh={fetchLessonDetail}
       >
         <Lesson_Information
           isCompleted={isCompleted}
           onCompletePress={handleCompletePress}
           onEvaluatePress={handleEvaluatePress}
           role="teacher"
+          lessonData={lessonData}
+          onUpdateDescription={handleUpdateDescription}
+          onDeleteDescription={handleDeleteDescription}
+          shouldAddDescription={shouldAddDescription}
+          onAddDescriptionComplete={() => setShouldAddDescription(false)}
         />
-        <View style={{ marginHorizontal: 16, marginTop: 0, marginBottom: 12 }}>
-          <PlusIcon
-            text="Dặn dò kiểm tra cho tiết học này"
-            onPress={() =>
-              router.push("/teachers/add_exam_reminder/add_exam_reminder")
-            }
-          />
-        </View>
-      </ScrollView>
-      <Modal
-        visible={showModal}
-        transparent
-        statusBarTranslucent={true}
-        animationType="fade"
-        onRequestClose={() => setShowModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <View style={styles.modalIconWrap}>
-              <Ionicons
-                name="checkmark-done-circle-outline"
-                size={40}
-                color="#29375C"
+        <View style={{ marginHorizontal: 30, marginTop: 0, marginBottom: 12 }}>
+          {!lessonData?.description && (
+            <View style={{ marginBottom: 12 }}>
+              <PlusIcon
+                text="Thêm mô tả"
+                onPress={() => {
+                  setShouldAddDescription(true);
+                }}
               />
             </View>
-            <Text style={styles.modalTitle}>Hoàn thành tiết học</Text>
-            <Text style={styles.modalDesc}>
-              Xác nhận rằng{"\n"}bạn đã hoàn thành tiết học này?
-            </Text>
-            <View style={styles.modalBtnRow}>
-              <TouchableOpacity
-                style={styles.modalBtnOutline}
-                onPress={() => setShowModal(false)}
-              >
-                <Text style={styles.modalBtnOutlineText}>Bỏ qua</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalBtn}
-                onPress={handleConfirmComplete}
-              >
-                <Text style={styles.modalBtnText}>Xác nhận</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          )}
+          {!lessonData?.testInfo && (
+            <PlusIcon
+              text="Dặn dò kiểm tra"
+              onPress={() =>
+                router.push({
+                  pathname: "/teachers/test_information/test_information",
+                  params: {
+                    lessonId: lessonId,
+                    subtitle: getSubtitle(),
+                  },
+                })
+              }
+            />
+          )}
         </View>
-      </Modal>
+      </RefreshableScrollView>
+      <ConfirmTeachedModal
+        visible={showModal}
+        onCancel={() => setShowModal(false)}
+        onConfirm={handleConfirmComplete}
+        title="Hoàn thành tiết học"
+        message={`Xác nhận rằng \n bạn đã hoàn thành tiết học này?`}
+        confirmText="Xác nhận"
+        cancelText="Bỏ qua"
+        icon="check-circle"
+        iconColor="#fff"
+        iconBgColor="#29375C"
+      />
       <Modal
         visible={menuVisible}
         transparent
@@ -155,6 +289,40 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 32,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#666",
+    fontFamily: "Baloo2-Medium",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: "#F04438",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: "#3A546D",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "500",
+  },
   overlay: {
     flex: 1,
     backgroundColor: "transparent",
@@ -189,79 +357,6 @@ const styles = StyleSheet.create({
   menuTextActive: {
     color: "#29375C",
     fontWeight: "bold",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.18)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalBox: {
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    padding: 24,
-    alignItems: "center",
-    width: 300,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  modalIconWrap: {
-    backgroundColor: "#E5E7EB",
-    borderRadius: 32,
-    width: 64,
-    height: 64,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#29375C",
-    marginBottom: 8,
-    marginTop: 2,
-  },
-  modalDesc: {
-    color: "#29375C",
-    fontSize: 15,
-    textAlign: "center",
-    marginBottom: 18,
-  },
-  modalBtnRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    marginTop: 8,
-  },
-  modalBtnOutline: {
-    flex: 1,
-    borderWidth: 1.5,
-    borderColor: "#A0A3BD",
-    borderRadius: 10,
-    paddingVertical: 10,
-    alignItems: "center",
-    marginRight: 8,
-    backgroundColor: "#fff",
-  },
-  modalBtnOutlineText: {
-    color: "#29375C",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  modalBtn: {
-    flex: 1,
-    backgroundColor: "#A0A3BD",
-    borderRadius: 10,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  modalBtnText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
   },
 });
 

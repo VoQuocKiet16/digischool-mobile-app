@@ -1,7 +1,15 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Modal, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, useWindowDimensions, View } from "react-native";
+import {
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { Activity } from "../../app/students/schedule/schedule";
 import { useUserData } from "../../hooks/useUserData";
 import ScheduleSlot from "./ScheduleSlot";
@@ -52,7 +60,8 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
   hideNullSlot = false,
 }) => {
   const [currentDay, setCurrentDay] = useState(getTodayIndex());
-  const currentDayIndex = propCurrentDayIndex !== undefined ? propCurrentDayIndex : currentDay;
+  const currentDayIndex =
+    propCurrentDayIndex !== undefined ? propCurrentDayIndex : currentDay;
   const { width } = useWindowDimensions();
   const numCols = days.length + 1;
   const colWidth = width / numCols;
@@ -80,7 +89,12 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
     <View style={styles.table}>
       {/* Hàng tiêu đề ngày */}
       <View style={styles.row}>
-        <View style={[styles.dayHeaderCell, { width: colWidth, justifyContent: "center", alignItems: "center" }]}>
+        <View
+          style={[
+            styles.dayHeaderCell,
+            { width: colWidth, justifyContent: "center", alignItems: "center" },
+          ]}
+        >
           <TouchableOpacity
             style={styles.utilityButton}
             onPress={toggleMenuVisibility}
@@ -102,11 +116,17 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
             onPress={() => setCurrentDay(idx)}
             activeOpacity={0.7}
           >
-            <Text style={[
-              styles.dayHeaderText,
-              currentDayIndex === idx && styles.selectedDayText,
-              day === "CN" && !(currentDayIndex === idx) && styles.sundayText,
-            ]} numberOfLines={1} ellipsizeMode="tail">{day}</Text>
+            <Text
+              style={[
+                styles.dayHeaderText,
+                currentDayIndex === idx && styles.selectedDayText,
+                day === "CN" && !(currentDayIndex === idx) && styles.sundayText,
+              ]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {day}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -121,10 +141,16 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
         <TouchableWithoutFeedback onPress={toggleMenuVisibility}>
           <View style={{ flex: 1 }}>
             <View style={styles.menuContainer}>
-              <TouchableOpacity style={styles.menuItem} onPress={handleExportSchedule}>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={handleExportSchedule}
+              >
                 <Text style={styles.menuItemText}>Xuất TKB ra</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.menuItem} onPress={handleLeaveRequest}>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={handleLeaveRequest}
+              >
                 <Text style={styles.menuItemText}>Xin phép nghỉ</Text>
               </TouchableOpacity>
             </View>
@@ -134,7 +160,7 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
       {/* Các hàng tiết */}
       {periods.map((period, periodIndex) => (
         <View key={periodIndex} style={styles.row}>
-          <View style={[styles.periodCell, { width: colWidth }]}> 
+          <View style={[styles.periodCell, { width: colWidth }]}>
             <Text style={styles.periodText}>{period}</Text>
           </View>
           {days.map((_, dayIndex) => {
@@ -160,7 +186,12 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
             }
             const isCurrentDay = currentDayIndex === dayIndex;
             if (hideNullSlot && (!slotData.text || slotData.text === "")) {
-              return <View key={dayIndex} style={[styles.slotWrapper, { width: colWidth }]}></View>;
+              return (
+                <View
+                  key={dayIndex}
+                  style={[styles.slotWrapper, { width: colWidth }]}
+                ></View>
+              );
             }
             return (
               <View
@@ -249,8 +280,8 @@ const styles = StyleSheet.create({
   },
   menuContainer: {
     position: "absolute",
-    top: 120,
-    left: 24,
+    top: 280,
+    left: 10,
     backgroundColor: "#29375C",
     borderRadius: 8,
     width: 150,

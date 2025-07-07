@@ -212,7 +212,7 @@ export default function LeaveRequestInfoScreen() {
                   <MaterialIcons
                     name="edit"
                     size={22}
-                    color="#B6B6B6"
+                    color="#29345C"
                     style={styles.editIcon}
                     onPress={() => {
                       router.push({
@@ -351,7 +351,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#e6eef2",
     borderRadius: 100,
     padding: 10,
-    color: "#29375C",
   },
   dayBlock: {
     marginTop: 16,

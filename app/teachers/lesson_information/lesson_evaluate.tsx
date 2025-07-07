@@ -3,7 +3,7 @@ import Student_Absent from "@/components/lesson_evaluate/Student_Absent";
 import Student_Test from "@/components/lesson_evaluate/Student_Test";
 import Student_Violates from "@/components/lesson_evaluate/Student_Violates";
 import SuccessModal from "@/components/notifications_modal/SuccessModal";
-import { Ionicons } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -39,7 +39,9 @@ const LessonEvaluateTeacherScreen = () => {
     <HeaderLayout
       title="Đánh giá tiết học"
       subtitle="Hoàn thành mẫu đánh giá tiết học"
-      onBack={() => {}}
+      onBack={() => {
+        router.back();
+      }}
     >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -49,64 +51,63 @@ const LessonEvaluateTeacherScreen = () => {
         <ScrollView
           contentContainerStyle={{
             paddingBottom: 32,
+            paddingHorizontal: 16,
             marginBottom: 32,
             marginTop: 32,
           }}
           showsVerticalScrollIndicator={false}
         >
           {/* Tiết chương trình */}
-          <View style={styles.inputBox}>
-            <View style={styles.floatingInputBox}>
-              <Text style={styles.floatingLabel}>
-                Tiết chương trình <Text style={{ color: "red" }}>*</Text>
+          <View style={styles.fieldWrap}>
+            <View style={styles.confirmInputBox}>
+              <Text style={styles.confirmLabel}>
+                Tiết chương trình <Text style={styles.required}>*</Text>
               </Text>
               <TextInput
-                style={styles.floatingInput}
+                style={styles.confirmInput}
                 placeholder="Vui lòng nhập tiết chương trình"
-                placeholderTextColor="#A0A3BD"
+                placeholderTextColor="#9CA3AF"
                 value={lesson}
                 onChangeText={setLesson}
               />
             </View>
           </View>
           {/* Tên bài, nội dung công việc */}
-          <View style={styles.inputBox}>
-            <View style={styles.floatingInputBox}>
-              <Text style={styles.floatingLabel}>
+          <View style={styles.fieldWrap}>
+            <View style={styles.confirmInputBox}>
+              <Text style={styles.confirmLabel}>
                 Tên bài, nội dung công việc{" "}
-                <Text style={{ color: "red" }}>*</Text>
+                <Text style={styles.required}>*</Text>
               </Text>
               <TextInput
-                style={styles.floatingInput}
+                style={styles.confirmInput}
                 placeholder="Vui lòng nhập tên bài học, nội dung công việc"
-                placeholderTextColor="#A0A3BD"
+                placeholderTextColor="#9CA3AF"
                 value={content}
                 onChangeText={setContent}
               />
             </View>
           </View>
           {/* Học sinh vắng */}
-          <View style={styles.inputBox}>
+          <View style={[styles.fieldWrap, { marginBottom: 25 }]}>
             <Student_Absent />
           </View>
           {/* Học sinh vi phạm */}
-          <View style={styles.inputBox}>
+          <View style={[styles.fieldWrap, { marginBottom: 25 }]}>
             <Student_Violates />
           </View>
           {/* Kiểm tra miệng */}
-          <View style={styles.inputBox}>
+          <View style={[styles.fieldWrap, { marginBottom: 46 }]}>
             <Student_Test />
           </View>
           {/* Nhận xét */}
-          <View style={styles.inputBox}>
-            <View
-              style={[styles.floatingInputBox, styles.floatingInputBoxSmall]}
-            >
-              <Text style={styles.floatingLabel}>Nhận xét</Text>
+          <View style={styles.fieldWrap}>
+            <View style={styles.confirmInputBox}>
+              <Text style={styles.confirmLabel}>Nhận xét</Text>
               <TextInput
-                style={[styles.floatingInput, { minHeight: 36, fontSize: 12 }]}
+                style={styles.confirmInput}
                 placeholder="Vui lòng nhập nhận xét"
-                placeholderTextColor="#A0A3BD"
+                placeholderTextColor="#9CA3AF"
                 value={comment}
                 onChangeText={setComment}
                 multiline
@@ -116,37 +117,40 @@ const LessonEvaluateTeacherScreen = () => {
             </View>
           </View>
           {/* Xếp loại tiết học */}
-          <View style={styles.inputBox}>
-            <View style={styles.dropdownFloatingBox}>
-              <Text style={styles.floatingLabel}>
-                Xếp loại tiết học <Text style={{ color: "red" }}>*</Text>
+          <View style={styles.fieldWrap}>
+            <View style={styles.confirmInputBox}>
+              <Text style={styles.confirmLabel}>
+                Xếp loại tiết học <Text style={styles.required}>*</Text>
               </Text>
               <TouchableOpacity
-                style={[styles.dropdown, { marginTop: 12 }]}
+                style={styles.dropdown}
                 onPress={() => setShowRankDropdown(!showRankDropdown)}
                 activeOpacity={0.7}
               >
                 <Text
-                  style={[styles.dropdownText, !rank && { color: "#A0A3BD" }]}
+                  style={
+                    rank ? styles.dropdownText : styles.dropdownPlaceholder
+                  }
                 >
                   {rank || "Chọn loại xếp hạng tiết học"}
                 </Text>
-                <Ionicons
-                  name={showRankDropdown ? "chevron-up" : "chevron-down"}
+                <MaterialIcons
+                  name={
+                    showRankDropdown
+                      ? "keyboard-arrow-up"
+                      : "keyboard-arrow-down"
+                  }
                   size={24}
                   color="#29375C"
                   style={{ marginLeft: 8 }}
                 />
               </TouchableOpacity>
               {showRankDropdown && (
-                <View style={styles.dropdownListInsideBox}>
+                <View style={styles.modalContent}>
                   {RANKS.map((r) => (
                     <TouchableOpacity
                       key={r}
-                      style={[
-                        styles.dropdownItem,
-                        rank === r && styles.dropdownItemSelected,
-                      ]}
+                      style={styles.modalItem}
                       onPress={() => {
                         setRank(r);
                         setShowRankDropdown(false);
@@ -171,39 +175,41 @@ const LessonEvaluateTeacherScreen = () => {
             style={{
               flexDirection: "row",
               alignItems: "flex-start",
-              marginHorizontal: 16,
+              marginHorizontal: 10,
               marginBottom: 8,
             }}
           >
             <TouchableOpacity
               onPress={() => setChecked(!checked)}
               style={{
-                width: 24,
-                height: 24,
+                width: 20,
+                height: 20,
                 borderRadius: 4,
                 borderWidth: 2,
-                borderColor: "#29375C",
+                borderColor: "#22315B",
                 alignItems: "center",
                 justifyContent: "center",
                 marginRight: 8,
-                backgroundColor: checked ? "#29375C" : "transparent",
+                marginLeft: 13,
+                backgroundColor: checked ? "#22315B" : "transparent",
               }}
               activeOpacity={0.8}
             >
-              {checked && <Ionicons name="checkmark" size={18} color="#fff" />}
+              {checked && <MaterialIcons name="check" size={16} color="#fff" />}
             </TouchableOpacity>
             <Text
               style={{
-                color: "#29375C",
+                color: "#22315B",
                 fontSize: 16,
                 fontWeight: "500",
                 flex: 1,
                 flexWrap: "wrap",
-                lineHeight: 18,
+                lineHeight: 24,
+                fontFamily: "Baloo2-Medium",
               }}
             >
               Tôi hoàn toàn chịu trách nhiệm với nội dung nhận xét của mình.
-              <Text style={{ color: "red", fontSize: 12, fontWeight: "bold" }}>
+              <Text style={{ color: "red", fontSize: 20, fontWeight: "bold" }}>
                 {" "}
                 *
               </Text>
@@ -212,19 +218,22 @@ const LessonEvaluateTeacherScreen = () => {
           {/* Nút xác nhận */}
           <TouchableOpacity
             style={[
-              styles.actionBtn,
-              isValid ? styles.actionBtnActive : styles.actionBtnDisabled,
+              styles.saveBtn,
+              isValid ? styles.saveBtnActive : styles.saveBtnDisabled,
             ]}
             disabled={!isValid}
             onPress={() => setShowSuccess(true)}
           >
-            <Text style={styles.actionBtnText}>Xác nhận</Text>
+            <Text style={styles.saveBtnText}>Xác nhận</Text>
           </TouchableOpacity>
           <SuccessModal
             visible={showSuccess}
             onClose={() => {
               setShowSuccess(false);
-              router.replace("/teachers/lesson_information/lesson_detail");
+              router.push({
+                pathname: "/teachers/lesson_information/lesson_detail",
+                params: { lessonid: lesson },
+              });
             }}
             title="Thành công"
             message={"Đánh giá tiết học thành công.\nQuay lại trang trước đó?"}
@@ -237,128 +246,136 @@ const LessonEvaluateTeacherScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  inputBox: {
-    marginBottom: 16,
-    marginHorizontal: 16,
+  fieldWrap: {
+    marginBottom: 10,
   },
   label: {
     fontSize: 15,
-    color: "#29375C",
+    color: "#22315B",
     fontWeight: "bold",
     marginBottom: 6,
   },
   floatingInputBox: {
     borderWidth: 2,
-    borderColor: "#29375C",
+    borderColor: "#22315B",
     borderRadius: 12,
-    backgroundColor: "#F6F8FB",
-    paddingTop: 18,
+    backgroundColor: "#f7f7f7",
+    marginBottom: 25,
+    paddingTop: 15,
     paddingBottom: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 25,
+    marginLeft: 15,
+    marginRight: 15,
     position: "relative",
-  },
-  floatingInputBoxSmall: {
-    paddingTop: 8,
-    paddingBottom: 6,
   },
   floatingLabel: {
     position: "absolute",
-    top: -10,
+    top: -16,
     left: 18,
-    backgroundColor: "#F6F8FB",
+    backgroundColor: "#f7f7f7",
     paddingHorizontal: 6,
-    color: "#29375C",
+    color: "#22315B",
     fontWeight: "bold",
     fontSize: 12,
     zIndex: 2,
   },
-  floatingInput: {
-    color: "#29375C",
-    fontSize: 12,
-    fontWeight: "bold",
-    marginTop: 2,
-  },
   input: {
     borderWidth: 2,
-    borderColor: "#29375C",
+    borderColor: "#22315B",
     borderRadius: 12,
     backgroundColor: "#fff",
     paddingVertical: 12,
     paddingHorizontal: 16,
     fontSize: 15,
-    color: "#29375C",
+    color: "#22315B",
     fontWeight: "bold",
   },
-  dropdownFloatingBox: {
-    borderWidth: 2,
+  confirmInputBox: {
+    borderWidth: 1,
     borderColor: "#29375C",
-    borderRadius: 20,
-    backgroundColor: "#fff",
-    paddingTop: 18,
+    borderRadius: 12,
+    backgroundColor: "#f7f7f7",
+    marginBottom: 25,
+    paddingTop: 15,
     paddingBottom: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 25,
+    marginLeft: 15,
+    marginRight: 15,
     position: "relative",
-    marginTop: 0,
+  },
+  confirmLabel: {
+    position: "absolute",
+    top: -16,
+    left: 18,
+    backgroundColor: "#f7f7f7",
+    paddingHorizontal: 6,
+    color: "#29375C",
+    fontFamily: "Baloo2-SemiBold",
+    fontSize: 14,
+    zIndex: 2,
+  },
+  confirmInput: {
+    color: "#29375C",
+    fontSize: 16,
+    fontFamily: "Baloo2-Medium",
+  },
+  required: {
+    color: "#E53935",
+    fontSize: 18,
+    marginLeft: 2,
+    marginTop: -2,
   },
   dropdown: {
-    borderWidth: 0,
-    borderColor: "transparent",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    paddingVertical: 18,
-    paddingHorizontal: 18,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 0,
+    borderWidth: 0,
+    minHeight: 22,
   },
   dropdownText: {
+    color: "#22315B",
     fontSize: 16,
-    color: "#29375C",
     fontWeight: "bold",
     flex: 1,
   },
-  dropdownListInsideBox: {
-    borderWidth: 0,
-    borderRadius: 0,
-    backgroundColor: "#fff",
-    marginTop: 0,
-    overflow: "hidden",
-    paddingBottom: 8,
+  dropdownPlaceholder: {
+    color: "#9CA3AF",
+    fontSize: 16,
+    fontFamily: "Baloo2-Medium",
   },
-  dropdownItem: {
-    paddingVertical: 18,
-    paddingHorizontal: 18,
-    borderRadius: 16,
-    marginHorizontal: 8,
-    marginTop: 6,
+  modalContent: {
+    backgroundColor: "#f7f7f7",
+    borderRadius: 10,
+    padding: 10,
+    elevation: 5,
   },
-  dropdownItemSelected: {
-    backgroundColor: "#ECEEF3",
+  modalItem: {
+    paddingVertical: 8,
   },
   dropdownItemText: {
-    fontSize: 22,
-    color: "#29375C",
+    fontSize: 16,
+    color: "#22315B",
     fontWeight: "500",
   },
-  actionBtn: {
-    borderRadius: 12,
+  saveBtn: {
+    backgroundColor: "#29375C",
+    borderRadius: 20,
     paddingVertical: 14,
     alignItems: "center",
-    marginHorizontal: 16,
-    marginTop: 18,
-    marginBottom: 20,
+    alignSelf: "center",
+    marginTop: 30,
+    width: "95%",
   },
-  actionBtnActive: {
-    backgroundColor: "#25345D",
+  saveBtnActive: {
+    backgroundColor: "#29375C",
   },
-  actionBtnDisabled: {
-    backgroundColor: "#C4C4C4",
+  saveBtnDisabled: {
+    backgroundColor: "#D1D5DB",
   },
-  actionBtnText: {
-    fontWeight: "bold",
-    fontSize: 17,
+  saveBtnText: {
     color: "#fff",
+    fontFamily: "Baloo2-SemiBold",
+    fontSize: 18,
   },
 });
 

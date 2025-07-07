@@ -1,7 +1,6 @@
-import { FontAwesome } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { GestureResponderEvent, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
 
 interface PlusIconProps {
   onPress?: (event: GestureResponderEvent) => void;
@@ -12,7 +11,7 @@ const PlusIcon: React.FC<PlusIconProps> = ({ onPress, text = 'Thêm ghi chú' })
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.iconCircle}>
-        <FontAwesome name="plus" size={24} color="#2d3a5a" />
+        <MaterialIcons name="add" size={24} color="#29375C" />
       </View>
       <Text style={styles.text}>{text}</Text>
     </TouchableOpacity>
@@ -34,9 +33,9 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   text: {
-    color: '#2d3a5a',
-    fontSize: 18,
-    fontWeight: '500',
+    color: '#29375C',
+    fontSize: 16,
+    fontFamily: 'Baloo2-Medium',
   },
 });
 

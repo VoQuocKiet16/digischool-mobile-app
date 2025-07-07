@@ -1,21 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-
-interface UserData {
-  name: string;
-  email: string;
-  phone: string | null;
-  address: string | null;
-  dateOfBirth: string | null;
-  gender: string | null;
-  studentId: string | null;
-  teacherId: string | null;
-  managerId: string | null;
-  class: any | null;
-  subjects: any[];
-  roleInfo: any | null;
-}
+import { UserData } from "../../../../types/user.types";
 
 interface LearnInfoProps {
   userData: UserData | null;

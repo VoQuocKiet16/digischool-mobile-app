@@ -15,7 +15,7 @@ import HeaderLayout from "../../../components/layout/HeaderLayout";
 // import DaySelector from "../../../components/schedule/DaySelector";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
-import { getSchedule } from "../../../services/schedule.service";
+import { getStudentSchedule } from "../../../services/schedule.service";
 import { Activity } from "../schedule/schedule";
 
 const days = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
@@ -158,7 +158,7 @@ export default function LeaveRequestScreen() {
       setLoading(true);
       setError("");
       try {
-        const data = await getSchedule({
+        const data = await getStudentSchedule({
           className: "12A1",
           academicYear: year,
           startOfWeek: dateRange.start,

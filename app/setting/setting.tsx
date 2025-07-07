@@ -25,15 +25,36 @@ const Setting: React.FC = () => {
     }
   };
 
-  const getRoleDisplay = (roles: string[] | string) => {
-    const roleArr = Array.isArray(roles) ? roles : [roles];
-    if (roleArr.includes("student")) return "Học sinh";
-    if (roleArr.includes("teacher")) return "Giáo viên";
-    if (roleArr.includes("manage") || roleArr.includes("manager")) return "Quản lý";
+  const getRoleDisplay = (roles: string[]) => {
+    if (roles.includes("student")) return "Học sinh";
+    if (roles.includes("teacher")) return "Giáo viên";
+    if (roles.includes("admin")) return "Quản trị viên";
     return "Người dùng";
   };
 
-  // console.log("userData in Setting:", userData);
+  const getRoleDetail = () => {
+    if (!userData) return "Đang tải...";
+
+    const roles = userData.roleInfo?.role || [];
+
+    if (roles.includes("student")) {
+      // Hiển thị lớp học cho học sinh
+      return userData.class?.className || "Chưa có thông tin lớp";
+    } else if (roles.includes("teacher")) {
+      // Hiển thị bộ môn cho giáo viên
+      if (userData.subjects && userData.subjects.length > 0) {
+        const subjectNames = userData.subjects
+          .map((subject: any) => subject.subjectName || subject)
+          .join(", ");
+        return subjectNames;
+      }
+      return "Chưa có thông tin bộ môn";
+    } else if (roles.includes("admin")) {
+      return "Quản trị hệ thống";
+    }
+
+    return "Người dùng";
+  };
 
   return (
     <HeaderLayout title="Cài đặt" onBack={() => router.back()}>
@@ -57,7 +78,9 @@ const Setting: React.FC = () => {
             </Text>
             <Text style={styles.role}>
               {userData
-                ? `${getRoleDisplay(userData.roleInfo?.role || [])} - 12A4`
+                ? `${getRoleDisplay(
+                    userData.roleInfo?.role || []
+                  )} - ${getRoleDetail()}`
                 : "Đang tải..."}
             </Text>
           </View>

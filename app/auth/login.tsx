@@ -98,10 +98,10 @@ export default function LoginScreen() {
                   userResponse.data.studentId
                 );
               }
-              if (userResponse.data.teacherId !== null) {
+              if (userResponse.data.id !== null) {
                 await AsyncStorage.setItem(
                   "userTeacherId",
-                  userResponse.data.teacherId
+                  userResponse.data.id
                 );
               }
               if (userResponse.data.managerId !== null) {
@@ -111,10 +111,10 @@ export default function LoginScreen() {
                 );
               }
 
-              if (userResponse.data.class !== null) {
+              if (userResponse.data.class?.className !== null) {
                 await AsyncStorage.setItem(
                   "userClass",
-                  JSON.stringify(userResponse.data.class)
+                  userResponse.data.class.className
                 );
               }
               if (userResponse.data.subjects) {
