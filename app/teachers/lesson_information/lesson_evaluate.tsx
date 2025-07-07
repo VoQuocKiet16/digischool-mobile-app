@@ -73,7 +73,7 @@ const LessonEvaluateTeacherScreen = () => {
       );
       console.log("LessonId:", lessonId);
 
-      await lessonEvaluateService.createEvaluation(
+      await lessonEvaluateService.createTeacherEvaluation(
         lessonId || "",
         evaluationData
       );

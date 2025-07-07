@@ -81,7 +81,10 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
         params: { lessonId: lessonData?._id },
       });
     } else {
-      router.push("/students/lesson_information/lesson_evaluate");
+      router.push({
+        pathname: "/students/lesson_information/lesson_evaluate",
+        params: { lessonId: lessonData?._id },
+      });
     }
   };
 
@@ -313,35 +316,51 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
           </ThemedText>
         </View>
         {/* Nếu chưa hoàn thành tiết học */}
-        {!isCompleted && (
-          <TouchableOpacity
-            style={styles.statusRowOrangeWrap}
-            onPress={onCompletePress}
-            activeOpacity={0.7}
-          >
-            <View style={styles.statusRowOrangeLeft}>
-              <View style={styles.statusIconWrapOrange}>
-                <MaterialIcons
-                  name="assignment-turned-in"
-                  size={20}
-                  color="#fff"
-                />
+        {!isCompleted &&
+          (role === "teacher" ? (
+            <TouchableOpacity
+              style={styles.statusRowOrangeWrap}
+              onPress={onCompletePress}
+              activeOpacity={0.7}
+            >
+              <View style={styles.statusRowOrangeLeft}>
+                <View style={styles.statusIconWrapOrange}>
+                  <MaterialIcons
+                    name="assignment-turned-in"
+                    size={20}
+                    color="#fff"
+                  />
+                </View>
+                <ThemedText style={styles.statusTextOrange}>
+                  Chưa hoàn thành tiết học
+                </ThemedText>
               </View>
-              <ThemedText style={styles.statusTextOrange}>
-                Chưa hoàn thành tiết học
-              </ThemedText>
+              <MaterialIcons
+                name="fmd-bad"
+                size={20}
+                color="#F04438"
+                style={styles.statusAlertDot}
+              />
+              <View style={styles.statusArrowWrap}>
+                <MaterialIcons name="chevron-right" size={28} color="#fff" />
+              </View>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.statusRowOrangeWrap}>
+              <View style={styles.statusRowOrangeLeft}>
+                <View style={styles.statusIconWrapOrange}>
+                  <MaterialIcons
+                    name="assignment-turned-in"
+                    size={20}
+                    color="#fff"
+                  />
+                </View>
+                <ThemedText style={styles.statusTextOrange}>
+                  Chưa hoàn thành tiết học
+                </ThemedText>
+              </View>
             </View>
-            <MaterialIcons
-              name="fmd-bad"
-              size={20}
-              color="#F04438"
-              style={styles.statusAlertDot}
-            />
-            <View style={styles.statusArrowWrap}>
-              <MaterialIcons name="chevron-right" size={28} color="#fff" />
-            </View>
-          </TouchableOpacity>
-        )}
+          ))}
         {/* Nếu đã hoàn thành tiết học */}
         {isCompleted && (
           <>
@@ -368,7 +387,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
                   Đánh giá: {lessonData.teacherEvaluation.evaluation.rating}
                 </ThemedText>
               </View>
-            ) : (
+            ) : role === "teacher" ? (
               <TouchableOpacity
                 style={styles.statusRowBlueWrap}
                 onPress={handleEvaluate}
@@ -395,6 +414,56 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
                     color="#2CA6B0"
                   />
                 </View>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.statusRowBlueWrap}>
+                <View style={styles.statusRowBlueLeft}>
+                  <View style={styles.statusIconWrapBlue}>
+                    <MaterialIcons name="feedback" size={20} color="#2CA6B0" />
+                  </View>
+                  <ThemedText style={styles.statusTextBlue}>
+                    Chưa đánh giá tiết học
+                  </ThemedText>
+                </View>
+              </View>
+            )}
+            {/* Hiển thị đánh giá của student khi teacher đã đánh giá */}
+            {lessonData?.studentEvaluations ? (
+              <View style={styles.statusRowGreen}>
+                <View style={styles.statusIconWrapGreen}>
+                  <MaterialIcons name="comment" size={20} color="#fff" />
+                </View>
+                <ThemedText style={styles.statusTextWhite}>
+                  Đã đánh giá giáo viên
+                </ThemedText>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.statusRowBlueWrap}
+                onPress={handleEvaluate}
+                activeOpacity={0.7}
+              >
+                <View style={styles.statusRowBlueLeft}>
+                  <View style={styles.statusIconWrapBlue}>
+                    <MaterialIcons name="comment" size={20} color="#2CA6B0" />
+                  </View>
+                  <ThemedText style={styles.statusTextBlue}>
+                    Chưa đánh giá giáo viên
+                  </ThemedText>
+                </View>
+                <View style={styles.statusArrowWrap}>
+                  <MaterialIcons
+                    name="chevron-right"
+                    size={28}
+                    color="#2CA6B0"
+                  />
+                </View>
+                <MaterialIcons
+                  name="fmd-bad"
+                  size={20}
+                  color="#F04438"
+                  style={styles.statusAlertDot}
+                />
               </TouchableOpacity>
             )}
           </>

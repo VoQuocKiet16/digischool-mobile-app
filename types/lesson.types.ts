@@ -42,4 +42,21 @@ export interface LessonData {
     updatedAt: string;
   } | null;
   status: string;
+  studentEvaluations?: {
+    _id: string;
+    student: {
+      _id: string;
+      name: string;
+      email: string;
+      studentId: string;
+    };
+    evaluation: {
+      teachingClarity: number;
+      teachingSupport: number;
+      teacherInteraction: number;
+      overallRating: number;
+    };
+    comments: string;
+    evaluatedAt: string;
+  }[];
 }

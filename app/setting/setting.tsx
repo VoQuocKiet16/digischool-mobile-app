@@ -38,15 +38,12 @@ const Setting: React.FC = () => {
     const roles = userData.roleInfo?.role || [];
 
     if (roles.includes("student")) {
-      // Hiển thị lớp học cho học sinh
       return userData.class?.className || "Chưa có thông tin lớp";
     } else if (roles.includes("teacher")) {
-      // Hiển thị bộ môn cho giáo viên
       if (userData.subjects && userData.subjects.length > 0) {
-        const subjectNames = userData.subjects
-          .map((subject: any) => subject.subjectName || subject)
+        return userData.subjects
+          .map((subject: any) => subject.subjectName || subject.name || subject)
           .join(", ");
-        return subjectNames;
       }
       return "Chưa có thông tin bộ môn";
     } else if (roles.includes("admin")) {

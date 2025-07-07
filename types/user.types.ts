@@ -16,6 +16,6 @@ export interface UserData {
   teacherId: string | null;
   managerId: string | null;
   class: any | null;
-  subjects: any[];
+  subjects: any | null;
   roleInfo: RoleInfo | null;
 }

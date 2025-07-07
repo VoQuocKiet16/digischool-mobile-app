@@ -78,7 +78,10 @@ export const lessonEvaluateService = {
   },
 
   // Tạo đánh giá tiết học
-  createEvaluation: async (lessonId: string, data: LessonEvaluationRequest) => {
+  createTeacherEvaluation: async (
+    lessonId: string,
+    data: LessonEvaluationRequest
+  ) => {
     try {
       const response = await api.post(
         `/api/teacher-evaluations/lessons/${lessonId}/evaluate`,
@@ -87,6 +90,30 @@ export const lessonEvaluateService = {
       return response.data;
     } catch (error) {
       console.error("Error creating evaluation:", error);
+      throw error;
+    }
+  },
+
+  // Tạo đánh giá tiết học cho học sinh
+  createStudentEvaluation: async (
+    lessonId: string,
+    data: {
+      teachingClarity: number;
+      teachingSupport: number;
+      teacherInteraction: number;
+      completedWell: boolean;
+      reason?: string;
+      comments?: string;
+    }
+  ) => {
+    try {
+      const response = await api.post(
+        `/api/student-evaluations/lessons/${lessonId}/evaluate`,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error creating student evaluation:", error);
       throw error;
     }
   },

@@ -111,10 +111,10 @@ export default function LoginScreen() {
                 );
               }
 
-              if (userResponse.data.class?.className !== null) {
+              if (userResponse.data.class) {
                 await AsyncStorage.setItem(
                   "userClass",
-                  userResponse.data.class.className
+                  JSON.stringify(userResponse.data.class)
                 );
               }
               if (userResponse.data.subjects) {
@@ -125,9 +125,17 @@ export default function LoginScreen() {
               }
 
               if (userResponse.data.roleInfo) {
+                const roleInfo = {
+                  ...userResponse.data.roleInfo,
+                  role: userResponse.data.role || [],
+                  type:
+                    userResponse.data.roleInfo.type ||
+                    (userResponse.data.role && userResponse.data.role[0]) ||
+                    "",
+                };
                 await AsyncStorage.setItem(
                   "userRoleInfo",
-                  JSON.stringify(userResponse.data.roleInfo)
+                  JSON.stringify(roleInfo)
                 );
               }
               setUserData(userResponse.data);
@@ -188,13 +196,9 @@ export default function LoginScreen() {
             {email.length > 0 && (
               <TouchableOpacity
                 onPress={() => setEmail("")}
-                style={{ position: "relative"}}
+                style={{ position: "relative" }}
               >
-                <Icon
-                  name="close"
-                  size={25}
-                  color="#25345D"
-                />
+                <Icon name="close" size={25} color="#25345D" />
               </TouchableOpacity>
             )}
           </View>
@@ -208,7 +212,7 @@ export default function LoginScreen() {
               style={styles.inputIcon}
             />
             <TextInput
-              style={[styles.input, { marginTop: 5}]}
+              style={[styles.input, { marginTop: 5 }]}
               placeholder="Nhập mật khẩu"
               placeholderTextColor="#7a869a"
               value={password}
@@ -218,13 +222,13 @@ export default function LoginScreen() {
             {password.length > 0 && (
               <TouchableOpacity
                 onPress={() => setPassword("")}
-                style={{ position: "relative"}}
+                style={{ position: "relative" }}
               >
                 <Icon
                   name="close"
                   size={25}
                   color="#25345D"
-                  style={{ marginRight: 10}}
+                  style={{ marginRight: 10 }}
                 />
               </TouchableOpacity>
             )}
