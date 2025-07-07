@@ -10,7 +10,7 @@ import {
   View
 } from "react-native";
 import Svg, { Line, Text as SvgText } from 'react-native-svg';
-import Header from '../../components/Header';
+import Header from '../components/Header';
 
 const BLOCKS = ["Khối 10", "Khối 11", "Khối 12"];
 const SEMESTERS = ["Học kỳ I", "Học kỳ II"];
@@ -90,7 +90,7 @@ export default function ManageProcess() {
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
       {/* Header */}
-      <Header title="Tiến trình" studentName={"Khôi"} />
+      <Header title="Tiến trình" name="QL Nguyễn Văn A" />
       {/* Filter lớn */}
       <View style={styles.filterBlockWrap}>
         <TouchableOpacity

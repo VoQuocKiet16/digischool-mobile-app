@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import HeaderLayout from "../../../components/layout/HeaderLayout";
-import DaySelector from "../../../components/schedule/DaySelector";
+// import DaySelector from "../../../components/schedule/DaySelector";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 
@@ -112,7 +112,7 @@ export default function SubstituteLesson() {
           year="2025"
           onPressTitle={() => {}}
         />
-        <DaySelector days={DAYS} />
+        {/* <DaySelector days={DAYS} /> */}
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
           <ScheduleDay
             periods={PERIODS}

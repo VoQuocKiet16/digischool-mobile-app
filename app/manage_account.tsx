@@ -1,9 +1,10 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import Header from "../../components/Header";
+import Header from "../components/Header";
 
 const FILTERS = ["Học sinh", "Giáo viên"];
 const BLOCKS = ["Khối 10", "Khối 11", "Khối 12"];
@@ -23,19 +24,26 @@ export default function ManageAccount() {
   const [classIdx, setClassIdx] = useState<number|null>(null);
   const [blockDropdownOpen, setBlockDropdownOpen] = useState(false);
   const [classDropdownOpen, setClassDropdownOpen] = useState(false);
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    AsyncStorage.getItem("userName").then(name => {
+      if (name) setUserName(name);
+    });
+  }, []);
 
   // Dữ liệu mẫu
   const students = [
-    { name: 'Nguyen Van A', class: '10A1', code: 'HS-101', avatar: require('../../assets/images/avt_default.png') },
-    { name: 'Nguyen Van B', class: '10A2', code: 'HS-102', avatar: require('../../assets/images/avt_default.png') },
-    { name: 'Nguyen Van C', class: '10A3', code: 'HS-103', avatar: require('../../assets/images/avt_default.png') },
-    { name: 'Nguyen Van D', class: '10A4', code: 'HS-104', avatar: require('../../assets/images/avt_default.png') },
+    { name: 'Nguyen Van A', class: '10A1', code: 'HS-101', avatar: require('../assets/images/avt_default.png') },
+    { name: 'Nguyen Van B', class: '10A2', code: 'HS-102', avatar: require('../assets/images/avt_default.png') },
+    { name: 'Nguyen Van C', class: '10A3', code: 'HS-103', avatar: require('../assets/images/avt_default.png') },
+    { name: 'Nguyen Van D', class: '10A4', code: 'HS-104', avatar: require('../assets/images/avt_default.png') },
   ];
   const teachers = [
-    { name: 'Tran Thi B', subject: 'Toán', code: 'GV-201', avatar: require('../../assets/images/avt_default.png') },
-    { name: 'Le Van C', subject: 'Vật lý', code: 'GV-202', avatar: require('../../assets/images/avt_default.png') },
-    { name: 'Pham Van D', subject: 'Ngữ Văn', code: 'GV-203', avatar: require('../../assets/images/avt_default.png') },
-    { name: 'Nguyen Thi E', subject: 'Hóa học', code: 'GV-204', avatar: require('../../assets/images/avt_default.png') },
+    { name: 'Tran Thi B', subject: 'Toán', code: 'GV-201', avatar: require('../assets/images/avt_default.png') },
+    { name: 'Le Van C', subject: 'Vật lý', code: 'GV-202', avatar: require('../assets/images/avt_default.png') },
+    { name: 'Pham Van D', subject: 'Ngữ Văn', code: 'GV-203', avatar: require('../assets/images/avt_default.png') },
+    { name: 'Nguyen Thi E', subject: 'Hóa học', code: 'GV-204', avatar: require('../assets/images/avt_default.png') },
   ];
   const filteredStudents = students.filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -50,7 +58,7 @@ export default function ManageAccount() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      <Header title="Tài khoản" studentName={"Khôi"} />
+      <Header title="Tài khoản" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} />
       {/* Filter chọn Học sinh/Giáo viên */}
       <View style={styles.filterRow}>
         <TouchableOpacity style={styles.arrowBtn} onPress={() => setFilterIdx((filterIdx - 1 + FILTERS.length) % FILTERS.length)}>
@@ -91,7 +99,7 @@ export default function ManageAccount() {
                     <Text style={styles.accountClass}>Lớp: {s.class}</Text>
                     <Text style={styles.accountCode}>Mã học sinh: {s.code}</Text>
                   </View>
-                  <TouchableOpacity style={styles.accountDetailBtn} onPress={() => router.push('/')}>
+                  <TouchableOpacity style={styles.accountDetailBtn} onPress={() => router.push('/manage/detail_account')}>
                     <Text style={styles.accountDetailText}>Xem chi tiết</Text>
                     <MaterialIcons name="chevron-right" size={20} color="#fff" />
                   </TouchableOpacity>
@@ -109,7 +117,7 @@ export default function ManageAccount() {
                     <Text style={styles.accountClass}>Bộ môn: {t.subject}</Text>
                     <Text style={styles.accountCode}>Mã giáo viên: {t.code}</Text>
                   </View>
-                  <TouchableOpacity style={styles.accountDetailBtn} onPress={() => router.push('/')}>
+                  <TouchableOpacity style={styles.accountDetailBtn} onPress={() => router.push('/manage/detail_account')}>
                     <Text style={styles.accountDetailText}>Xem chi tiết</Text>
                     <MaterialIcons name="chevron-right" size={20} color="#fff" />
                   </TouchableOpacity>
@@ -119,7 +127,7 @@ export default function ManageAccount() {
       </ScrollView>
       {/* Nút thêm tài khoản (PlusIcon) */}
       <View style={styles.plusIconWrap}>
-        <TouchableOpacity activeOpacity={0.8} style={styles.plusIconCircle} onPress={() => router.push('/')}>
+        <TouchableOpacity activeOpacity={0.8} style={styles.plusIconCircle} onPress={() => router.push('/manage/add_account')}>
           <MaterialIcons name="add" size={36} color="#22304A" />
         </TouchableOpacity>
       </View>

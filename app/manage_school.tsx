@@ -1,12 +1,13 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Header from "../../components/Header";
-import ChartSchoolTopday from "../../components/manage/ChartSchoolTopday";
-import ChartSchoolWeek from "../../components/manage/ChartSchoolWeek";
-import ChartStudentTopday from "../../components/manage/ChartStudentTopday";
-import ChartStudentWeek from "../../components/manage/ChartStudentWeek";
-import ChartTeacher from "../../components/manage/ChartTeacher";
+import Header from "../components/Header";
+import ChartSchoolTopday from "../components/manage/ChartSchoolTopday";
+import ChartSchoolWeek from "../components/manage/ChartSchoolWeek";
+import ChartStudentTopday from "../components/manage/ChartStudentTopday";
+import ChartStudentWeek from "../components/manage/ChartStudentWeek";
+import ChartTeacher from "../components/manage/ChartTeacher";
 
 const FILTERS = ["Toàn trường", "Giáo viên", "Học sinh"];
 const SUB_FILTERS = ["Hôm nay", "Tuần này"];
@@ -14,6 +15,13 @@ const SUB_FILTERS = ["Hôm nay", "Tuần này"];
 export default function ManageSchool() {
   const [filter, setFilter] = useState(0);
   const [subFilter, setSubFilter] = useState(0);
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    AsyncStorage.getItem("userName").then(name => {
+      if (name) setUserName(name);
+    });
+  }, []);
 
   // Lấy ngày giờ hiện tại
   const now = new Date();
@@ -23,8 +31,8 @@ export default function ManageSchool() {
   const dateStr = `${weekdays[now.getDay()]}, ${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()}`;
 
   return (
-    <View style={{flex: 1}}>
-      <Header title="Quản lý" />
+    <View style={{flex: 1, backgroundColor: '#F7F8FA'}}>
+      <Header title="Quản lý trường" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"}/>
       <ScrollView contentContainerStyle={{paddingBottom: 24}} showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
           <View style={styles.row}>
@@ -96,7 +104,7 @@ export default function ManageSchool() {
 
 const styles = StyleSheet.create({
   container: {
-    // backgroundColor: '#F7F8FA',
+    backgroundColor: '#F7F8FA',
     flex: 1,
     alignItems: 'center',
   },
