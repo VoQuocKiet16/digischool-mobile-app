@@ -185,8 +185,7 @@ export default function ScheduleTeachersScreen() {
         startOfWeek: dateRange.start,
         endOfWeek: dateRange.end,
       });
-      const { schedule, lessonIds: newLessonIds } =
-        mapApiToTeacherScheduleData(data);
+      const { schedule, lessonIds: newLessonIds } = mapApiToTeacherScheduleData(data);
       setScheduleData(schedule);
       setLessonIds(newLessonIds);
     } catch (err) {

@@ -11,10 +11,10 @@ import {
 } from "react-native";
 import RefreshableScrollView from "../../../components/RefreshableScrollView";
 // import DaySelector from "../../../components/schedule/DaySelector";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getStudentSchedule } from "../../../services/schedule.service";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface Activity {
   text: string;
@@ -177,8 +177,20 @@ export default function ScheduleStudentsScreen() {
     setLoading(true);
     setError("");
     try {
+      const userClassStr = (await AsyncStorage.getItem("userClass")) || "";
+      
+      // Parse userClass từ JSON string
+      let className = "";
+      try {
+        const userClassObj = JSON.parse(userClassStr);
+        className = userClassObj.className || userClassObj.id || "";
+      } catch (parseError) {
+        // Nếu không parse được, dùng trực tiếp
+        className = userClassStr;
+      }
+      
       const data = await getStudentSchedule({
-        className: (await AsyncStorage.getItem("userClass")) || "",
+        className,
         academicYear: year,
         startOfWeek: dateRange.start,
         endOfWeek: dateRange.end,
