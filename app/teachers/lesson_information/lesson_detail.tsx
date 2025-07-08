@@ -288,7 +288,8 @@ const LessonDetailScreen = () => {
                   params: {
                     ...(lessonData && lessonData.class && typeof (lessonData.class as any)._id === 'string' ? { classId: (lessonData.class as any)._id } : {}),
                     className: lessonData?.class?.className,
-                    lessonId: lessonId,
+                    lessonId: lessonData?.lessonId || lessonData?._id || lessonId,
+                    lessonFrom: JSON.stringify(lessonData),
                   },
                 });
               }}

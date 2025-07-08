@@ -35,6 +35,7 @@ interface ScheduleDayProps {
   currentDayIndex?: number;
   lessonIds?: string[][];
   hideNullSlot?: boolean;
+  isSwapLesson?: boolean;
 }
 
 const DAY_COL_WIDTH = 90;
@@ -58,6 +59,7 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
   currentDayIndex: propCurrentDayIndex,
   lessonIds,
   hideNullSlot = false,
+  isSwapLesson = false,
 }) => {
   const [currentDay, setCurrentDay] = useState(getTodayIndex());
   const currentDayIndex =
@@ -191,6 +193,15 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
                   key={dayIndex}
                   style={[styles.slotWrapper, { width: colWidth }]}
                 ></View>
+              );
+            }
+            // Ẩn luôn slot mặc định không có lesson (text rỗng, type 'default') chỉ cho swap_lesson
+            if (isSwapLesson && (!slotData.text || slotData.text === "") && slotData.type === "default") {
+              return (
+                <View
+                  key={dayIndex}
+                  style={[styles.slotWrapper, { width: colWidth }]}
+                />
               );
             }
             return (

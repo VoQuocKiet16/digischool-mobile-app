@@ -13,7 +13,9 @@ import { createSwapLessonRequest } from "../../../services/swap_makeup_service";
 
 export default function ConfirmSwap() {
   const params = useLocalSearchParams();
+  console.log("params:", params);
   const lessonFrom = params.lessonFrom ? JSON.parse(params.lessonFrom as string) : null;
+  console.log("lessonFrom (confirm):", lessonFrom);
   const lessonTo = params.lessonTo ? JSON.parse(params.lessonTo as string) : null;
   // Log lessonTo để kiểm tra type khi bị lỗi hiển thị
   console.log('lessonTo:', lessonTo, 'type:', lessonTo?.type);
@@ -25,8 +27,16 @@ export default function ConfirmSwap() {
   // Hàm format thông tin lesson
   const formatLesson = (lesson: any) => {
     if (!lesson) return "";
-    // Tuỳ vào dữ liệu thực tế, ví dụ:
-    return `${lesson.scheduledDate ? lesson.scheduledDate.slice(0, 10) : ""} → Tiết ${lesson.period || ""} → ${lesson.text || ""}`;
+    const period = lesson.period || lesson.timeSlot?.period || "";
+    const subject =
+      lesson.subject?.name ||
+      lesson.text ||
+      lesson.fixedInfo?.description ||
+      "";
+    const date = lesson.scheduledDate
+      ? lesson.scheduledDate.slice(0, 10)
+      : "";
+    return `${date ? date + " • " : ""}Tiết ${period} • ${subject}`;
   };
 
   const handleSubmit = async () => {

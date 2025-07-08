@@ -48,17 +48,18 @@ function getWeekRangesByYear(year: string) {
     const weekEnd = new Date(current);
     weekEnd.setDate(weekStart.getDate() + 6); // Chủ nhật
     if (weekEnd > endDate) weekEnd.setTime(endDate.getTime());
+
+    // Sử dụng local date để tránh vấn đề múi giờ
+    const startDateStr = `${weekStart.getFullYear()}-${(weekStart.getMonth() + 1).toString().padStart(2, "0")}-${weekStart.getDate().toString().padStart(2, "0")}`;
+    const endDateStr = `${weekEnd.getFullYear()}-${(weekEnd.getMonth() + 1).toString().padStart(2, "0")}-${weekEnd.getDate().toString().padStart(2, "0")}`;
+
     weeks.push({
-      start: weekStart.toISOString().slice(0, 10),
-      end: weekEnd.toISOString().slice(0, 10),
+      start: startDateStr,
+      end: endDateStr,
       label:
-        `${weekStart.getDate().toString().padStart(2, "0")}/${(
-          weekStart.getMonth() + 1
-        ).toString().padStart(2, "0")}` +
+        `${weekStart.getDate().toString().padStart(2, "0")}/${(weekStart.getMonth() + 1).toString().padStart(2, "0")}` +
         " - " +
-        `${weekEnd.getDate().toString().padStart(2, "0")}/${(
-          weekEnd.getMonth() + 1
-        ).toString().padStart(2, "0")}`,
+        `${weekEnd.getDate().toString().padStart(2, "0")}/${(weekEnd.getMonth() + 1).toString().padStart(2, "0")}`,
     });
     current.setDate(current.getDate() + 7);
   }
@@ -72,7 +73,7 @@ export default function SwapLesson() {
   const lessonId = params.lessonId as string | undefined;
 
   const [selected, setSelected] = useState<PeriodCell[]>([]);
-  const [scheduleData, setScheduleData] = useState<any[][]>([]);
+  const [scheduleData, setScheduleData] = useState<(any | null)[][]>([]);
   const [loading, setLoading] = useState(false);
   const [session, setSession] = useState<"Buổi sáng" | "Buổi chiều">("Buổi sáng");
   const [year, setYear] = useState("2024-2025");
@@ -90,7 +91,6 @@ export default function SwapLesson() {
   const DAYS = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
 
   useEffect(() => {
-    console.log("dateRange start:", dateRange.start, "end:", dateRange.end, "label:", dateRange.label);
     const fetchSchedule = async () => {
       setLoading(true);
       try {
@@ -101,7 +101,6 @@ export default function SwapLesson() {
           startOfWeek: dateRange.start,
           endOfWeek: dateRange.end,
         });
-        console.log("API schedule raw:", data?.data?.schedule);
         // Map dữ liệu cho ScheduleDay giống học sinh
         const schedule = Array.from({ length: 10 }, () =>
           Array.from({ length: 7 }, () => ({
@@ -119,6 +118,8 @@ export default function SwapLesson() {
           const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Chủ nhật = 0, index 6
           const date = dayData.date || "";
           dayData.lessons?.forEach((lesson: any) => {
+            // BỎ QUA lesson type: 'empty'
+            if (lesson.type === 'empty') return;
             const periodIndex = (lesson.period || 1) - 1;
             if (periodIndex >= 0 && periodIndex < 10) {
               schedule[periodIndex][dayIndex] = {
@@ -139,7 +140,6 @@ export default function SwapLesson() {
           });
         });
         setScheduleData(schedule);
-        console.log("scheduleData:", schedule);
       } catch (e) {
         setScheduleData([]);
       } finally {
@@ -191,13 +191,23 @@ export default function SwapLesson() {
       const { row, col } = selected[0];
       const periodOffset = session === "Buổi sáng" ? 0 : 5;
       const lessonTo = scheduleData[row + periodOffset][col];
-      console.log("row:", row, "col:", col, "lessonTo:", scheduleData[row][col]);
-      // Tìm lessonFrom (tiết hiện tại) trong toàn bộ scheduleData
-      const lessonFrom = scheduleData.flat().find((slot) => slot.lessonId === currentLessonId);
+      // Lấy lessonFrom từ params nếu có, hoặc từ scheduleData nếu không
+      let lessonFrom = null;
+      if (params.lessonFrom) {
+        try {
+          lessonFrom = JSON.parse(params.lessonFrom as string);
+        } catch {}
+      }
+      // Nếu không có trong params, thử lấy từ scheduleData (theo lessonId)
+      if (!lessonFrom && currentLessonId) {
+        lessonFrom = scheduleData.flat().find(
+          (slot) => slot.lessonId === currentLessonId || slot._id === currentLessonId
+        );
+      }
       router.replace({
         pathname: "/teachers/confirm_swap/confirm_swap",
         params: {
-          lessonFrom: JSON.stringify(lessonFrom),
+          lessonFrom: lessonFrom ? JSON.stringify(lessonFrom) : null,
           lessonTo: JSON.stringify(lessonTo),
         },
       });
@@ -256,6 +266,7 @@ export default function SwapLesson() {
               selectedSlots={selected}
               onSelectSlot={handleSelect}
               cellStatusData={cellStatusData}
+              isSwapLesson={true}
             />
           </ScrollView>
         )}
