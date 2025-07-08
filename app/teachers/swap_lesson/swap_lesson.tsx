@@ -29,16 +29,24 @@ const TAUGHT_PERIODS = [
 
 const academicYears = ["2024-2025", "2025-2026"];
 
+function getFirstMonday(date: Date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 1 ? 0 : (8 - day) % 7; // Nếu đã là thứ 2 thì không cộng, còn lại thì cộng số ngày tới thứ 2
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
 function getWeekRangesByYear(year: string) {
   const [startYear, endYear] = year.split("-").map(Number);
-  const startDate = new Date(startYear, 7, 1); // 01/08/yyyy
+  const startDate = getFirstMonday(new Date(startYear, 7, 1)); // 01/08/yyyy, lấy đúng Thứ 2 đầu tiên
   const endDate = new Date(endYear, 4, 31); // 31/05/yyyy
-  let current = getFirstMonday(startDate);
+  let current = new Date(startDate);
   const weeks = [];
   while (current <= endDate) {
     const weekStart = new Date(current);
     const weekEnd = new Date(current);
-    weekEnd.setDate(weekStart.getDate() + 6);
+    weekEnd.setDate(weekStart.getDate() + 6); // Chủ nhật
     if (weekEnd > endDate) weekEnd.setTime(endDate.getTime());
     weeks.push({
       start: weekStart.toISOString().slice(0, 10),
@@ -46,27 +54,15 @@ function getWeekRangesByYear(year: string) {
       label:
         `${weekStart.getDate().toString().padStart(2, "0")}/${(
           weekStart.getMonth() + 1
-        )
-          .toString()
-          .padStart(2, "0")}` +
+        ).toString().padStart(2, "0")}` +
         " - " +
         `${weekEnd.getDate().toString().padStart(2, "0")}/${(
           weekEnd.getMonth() + 1
-        )
-          .toString()
-          .padStart(2, "0")}`,
+        ).toString().padStart(2, "0")}`,
     });
     current.setDate(current.getDate() + 7);
   }
   return weeks;
-}
-
-function getFirstMonday(date: Date) {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = day === 1 ? 0 : (8 - day) % 7;
-  d.setDate(d.getDate() + diff);
-  return d;
 }
 
 export default function SwapLesson() {
@@ -94,6 +90,7 @@ export default function SwapLesson() {
   const DAYS = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
 
   useEffect(() => {
+    console.log("dateRange start:", dateRange.start, "end:", dateRange.end, "label:", dateRange.label);
     const fetchSchedule = async () => {
       setLoading(true);
       try {
@@ -104,35 +101,45 @@ export default function SwapLesson() {
           startOfWeek: dateRange.start,
           endOfWeek: dateRange.end,
         });
-        // Chuẩn hoá lại thứ tự ngày: 0=Chủ nhật, 1=Thứ 2, ..., 6=Thứ 7
-        const daysOfWeekOrder = [1, 2, 3, 4, 5, 6, 0]; // Thứ 2 -> CN
-        const scheduleByDay = daysOfWeekOrder.map((dow, colIdx) => {
-          const dayData = data?.data?.schedule?.find((d: any) => d.dayOfWeek === dow) || { lessons: [] };
-          const periods = (dayData.lessons || []).map((l: any) => l.period);
-          return dayData;
-        });
-        // Map dữ liệu cho ScheduleDay
-        const schedule = Array.from({ length: 10 }, (_, rowIdx) =>
-          scheduleByDay.map((dayData) => {
-            const lessons = dayData.lessons || [];
-            const lesson = lessons.find((l: any) => Number(l.period) === rowIdx + 1);
-            return {
-              text:
-                lesson && lesson.subject
-                  ? lesson.subject.name
-                  : lesson && lesson.fixedInfo
-                  ? lesson.fixedInfo.description
-                  : "",
-              type: "default",
-              lessonId: lesson?._id || "",
-              status: lesson?.status || "",
-              scheduledDate: dayData.date || "",
-              period: lesson?.period || "",
-              teacherName: lesson?.teacher?.name || lesson?.teacherName || "",
-            };
-          })
+        console.log("API schedule raw:", data?.data?.schedule);
+        // Map dữ liệu cho ScheduleDay giống học sinh
+        const schedule = Array.from({ length: 10 }, () =>
+          Array.from({ length: 7 }, () => ({
+            text: "",
+            type: "default",
+            lessonId: "",
+            status: "",
+            scheduledDate: "",
+            period: "",
+            teacherName: "",
+          }))
         );
+        (data?.data?.schedule || []).forEach((dayData: any) => {
+          const dayOfWeek = dayData.dayOfWeek;
+          const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Chủ nhật = 0, index 6
+          const date = dayData.date || "";
+          dayData.lessons?.forEach((lesson: any) => {
+            const periodIndex = (lesson.period || 1) - 1;
+            if (periodIndex >= 0 && periodIndex < 10) {
+              schedule[periodIndex][dayIndex] = {
+                text:
+                  lesson && lesson.subject
+                    ? lesson.subject.name
+                    : lesson && lesson.fixedInfo
+                    ? lesson.fixedInfo.description
+                    : "",
+                type: lesson ? (lesson.type || "default") : "default",
+                lessonId: lesson?.lessonId || lesson?._id || "",
+                status: lesson?.status || "",
+                scheduledDate: date,
+                period: lesson?.period || (periodIndex + 1),
+                teacherName: lesson?.teacher?.name || lesson?.teacherName || "",
+              };
+            }
+          });
+        });
         setScheduleData(schedule);
+        console.log("scheduleData:", schedule);
       } catch (e) {
         setScheduleData([]);
       } finally {
@@ -184,6 +191,7 @@ export default function SwapLesson() {
       const { row, col } = selected[0];
       const periodOffset = session === "Buổi sáng" ? 0 : 5;
       const lessonTo = scheduleData[row + periodOffset][col];
+      console.log("row:", row, "col:", col, "lessonTo:", scheduleData[row][col]);
       // Tìm lessonFrom (tiết hiện tại) trong toàn bộ scheduleData
       const lessonFrom = scheduleData.flat().find((slot) => slot.lessonId === currentLessonId);
       router.replace({
