@@ -62,14 +62,26 @@ function getWeekRangesByYear(year: string) {
   const endDate = new Date(endYear, 4, 31); // 31/05/yyyy
   let current = getFirstMonday(startDate);
   const weeks = [];
+
   while (current <= endDate) {
     const weekStart = new Date(current);
     const weekEnd = new Date(current);
     weekEnd.setDate(weekStart.getDate() + 6);
     if (weekEnd > endDate) weekEnd.setTime(endDate.getTime());
+
+    // Sử dụng local date để tránh vấn đề múi giờ
+    const startDateStr = `${weekStart.getFullYear()}-${(
+      weekStart.getMonth() + 1
+    )
+      .toString()
+      .padStart(2, "0")}-${weekStart.getDate().toString().padStart(2, "0")}`;
+    const endDateStr = `${weekEnd.getFullYear()}-${(weekEnd.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}-${weekEnd.getDate().toString().padStart(2, "0")}`;
+
     weeks.push({
-      start: weekStart.toISOString().slice(0, 10),
-      end: weekEnd.toISOString().slice(0, 10),
+      start: startDateStr,
+      end: endDateStr,
       label:
         `${weekStart.getDate().toString().padStart(2, "0")}/${(
           weekStart.getMonth() + 1
@@ -162,7 +174,7 @@ export default function ScheduleStudentsScreen() {
     label: string;
   }>(() => {
     const weeks = getWeekRangesByYear("2024-2025");
-    return weeks[1];
+    return weeks[0]; // Sử dụng tuần đầu tiên thay vì tuần thứ 2
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -178,7 +190,7 @@ export default function ScheduleStudentsScreen() {
     setError("");
     try {
       const userClassStr = (await AsyncStorage.getItem("userClass")) || "";
-      
+
       // Parse userClass từ JSON string
       let className = "";
       try {
@@ -188,7 +200,7 @@ export default function ScheduleStudentsScreen() {
         // Nếu không parse được, dùng trực tiếp
         className = userClassStr;
       }
-      
+
       const data = await getStudentSchedule({
         className,
         academicYear: year,
