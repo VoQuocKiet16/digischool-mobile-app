@@ -43,7 +43,7 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
 }) => {
   const router = useRouter();
 
-  const isEmpty = text === "Thêm hoạt động" || !text;
+  const isEmpty = text === "Thêm" || !text;
 
   const handleAdd = () => {
     if (isEmpty && onAddActivity) {
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 10,
-    width: "90%",
+    width: "92%",
     height: 77,
     minHeight: 77,
     justifyContent: "center",

@@ -1,25 +1,79 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import React, { useState } from "react";
-import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import {
+  lessonEvaluateService,
+  Student,
+} from "../../services/lesson_evaluate.service";
 import PlusIcon from "../PlusIcon";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
 
-const allStudents = [
-  "Nguyen Van A",
-  "Nguyen Van B",
-  "Nguyen Van C",
-  "Nguyen Van D",
-];
+interface Student_TestProps {
+  lessonId: string;
+  onOralTestsChange?: (
+    oralTests: { student: string; name: string; score: number }[]
+  ) => void;
+}
 
-const Student_Test = () => {
+const Student_Test: React.FC<Student_TestProps> = ({
+  lessonId,
+  onOralTestsChange,
+}) => {
   const [showCard, setShowCard] = useState(false);
-  const [testList, setTestList] = useState<string[]>(["Nguyen Van A"]);
+  const [testList, setTestList] = useState<{ student: string; name: string }[]>(
+    []
+  );
   const [dropdownIndex, setDropdownIndex] = useState<number | null>(null);
-  const [scoreList, setScoreList] = useState<(string | number)[]>([""]);
+  const [scoreList, setScoreList] = useState<(string | number)[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (showCard && lessonId) {
+      loadStudents();
+    }
+  }, [showCard, lessonId]);
+
+  useEffect(() => {
+    const oralTests = testList
+      .map((student, index) => ({
+        student: student.student,
+        name: student.name,
+        score: Number(scoreList[index]) || 0,
+      }))
+      .filter((item) => item.student && item.score > 0);
+    onOralTestsChange?.(oralTests);
+  }, [testList, scoreList, onOralTestsChange]);
+
+  const loadStudents = async () => {
+    if (!lessonId || lessonId.trim() === "") {
+      Alert.alert("Lỗi", "LessonId không hợp lệ");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await lessonEvaluateService.getStudentsByLesson(
+        lessonId
+      );
+      setStudents(response.students);
+    } catch (error) {
+      console.error("Error loading students:", error);
+      Alert.alert("Lỗi", "Không thể tải danh sách học sinh");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddTest = () => {
-    setTestList([...testList, ""]);
+    setTestList([...testList, { student: "", name: "" }]);
     setScoreList([...scoreList, ""]);
   };
 
@@ -28,32 +82,15 @@ const Student_Test = () => {
     setScoreList(scoreList.filter((_, i) => i !== index));
   };
 
-  const handleSelectStudent = (student: string, index: number) => {
+  const handleSelectStudent = (
+    studentId: string,
+    studentName: string,
+    index: number
+  ) => {
     const newList = [...testList];
-    newList[index] = student;
+    newList[index] = { student: studentId, name: studentName };
     setTestList(newList);
     setDropdownIndex(null);
-  };
-
-  const handleScoreChange = (text: string, index: number) => {
-    // Chỉ cho phép nhập số, rỗng hoặc 1-10
-    let value = text.replace(/[^0-9]/g, "");
-    if (value === "") {
-      setScoreList((list) => {
-        const newList = [...list];
-        newList[index] = "";
-        return newList;
-      });
-      return;
-    }
-    let num = parseInt(value, 10);
-    if (num < 1) num = 1;
-    if (num > 10) num = 10;
-    setScoreList((list) => {
-      const newList = [...list];
-      newList[index] = num;
-      return newList;
-    });
   };
 
   const openDropdown = (index: number) => {
@@ -90,7 +127,7 @@ const Student_Test = () => {
                 Kiểm tra miệng
               </ThemedText>
               <ThemedText style={styles.headerSubtext}>
-                {testList.filter((item) => item).length} học sinh
+                {testList.filter((item) => item.student).length} học sinh
               </ThemedText>
             </View>
             <TouchableOpacity
@@ -116,16 +153,16 @@ const Student_Test = () => {
                       <MaterialIcons
                         name="person"
                         size={20}
-                        color={item ? "#4CAF50" : "#9E9E9E"}
+                        color={item.student ? "#4CAF50" : "#9E9E9E"}
                         style={styles.studentIcon}
                       />
                       <ThemedText
                         style={[
                           styles.studentName,
-                          !item && styles.placeholderText,
+                          !item.student && styles.placeholderText,
                         ]}
                       >
-                        {item || "Chọn học sinh"}
+                        {item.name || "Chọn học sinh"}
                       </ThemedText>
                     </View>
                     <MaterialIcons
@@ -135,7 +172,7 @@ const Student_Test = () => {
                     />
                   </TouchableOpacity>
 
-                  {item && (
+                  {item.student && (
                     <View style={styles.scoreContainer}>
                       <TextInput
                         style={[
@@ -146,7 +183,23 @@ const Student_Test = () => {
                         placeholderTextColor="rgba(255,255,255,0.7)"
                         keyboardType="numeric"
                         value={scoreList[index]?.toString() || ""}
-                        onChangeText={(text) => handleScoreChange(text, index)}
+                        onChangeText={(text) => {
+                          let value = text.replace(/[^0-9]/g, "");
+                          if (value === "") {
+                            setScoreList((list) => {
+                              const newList = [...list];
+                              newList[index] = "";
+                              return newList;
+                            });
+                          } else {
+                            let num = parseInt(value, 10);
+                            if (num < 1) num = 1;
+                            if (num > 10) num = 10;
+                            const newScoreList = [...scoreList];
+                            newScoreList[index] = num;
+                            setScoreList(newScoreList);
+                          }
+                        }}
                         maxLength={2}
                       />
                       <ThemedText style={styles.scoreLabel}>/10</ThemedText>
@@ -167,11 +220,13 @@ const Student_Test = () => {
 
                 {dropdownIndex === index && (
                   <View style={styles.dropdown}>
-                    {allStudents.map((student) => (
+                    {students.map((student) => (
                       <TouchableOpacity
-                        key={student}
+                        key={student.id}
                         style={styles.dropdownItem}
-                        onPress={() => handleSelectStudent(student, index)}
+                        onPress={() =>
+                          handleSelectStudent(student.id, student.name, index)
+                        }
                       >
                         <MaterialIcons
                           name="person"
@@ -180,7 +235,7 @@ const Student_Test = () => {
                           style={{ marginRight: 8 }}
                         />
                         <ThemedText style={styles.dropdownItemText}>
-                          {student}
+                          {student.name}
                         </ThemedText>
                       </TouchableOpacity>
                     ))}
@@ -265,8 +320,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#29375C",
-    borderRadius: 15,
-    padding: 12,
+    borderRadius: 16,
+    padding: 10,
     marginLeft: 10,
   },
   studentSelector: {

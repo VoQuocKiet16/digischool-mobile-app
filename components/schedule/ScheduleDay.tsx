@@ -182,7 +182,7 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
             ) {
               slotText = "Trống";
             } else if (!slotText || slotText === "") {
-              slotText = "Thêm hoạt động";
+              slotText = "Thêm";
             }
             const isCurrentDay = currentDayIndex === dayIndex;
             if (hideNullSlot && (!slotData.text || slotData.text === "")) {

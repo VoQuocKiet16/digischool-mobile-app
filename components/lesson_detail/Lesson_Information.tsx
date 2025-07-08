@@ -76,9 +76,15 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
 
   const handleEvaluate = () => {
     if (role === "teacher") {
-      router.push("/teachers/lesson_information/lesson_evaluate");
+      router.push({
+        pathname: "/teachers/lesson_information/lesson_evaluate",
+        params: { lessonId: lessonData?._id },
+      });
     } else {
-      router.push("/students/lesson_information/lesson_evaluate");
+      router.push({
+        pathname: "/students/lesson_information/lesson_evaluate",
+        params: { lessonId: lessonData?._id },
+      });
     }
   };
 
@@ -90,6 +96,14 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
     if (!lessonData?.timeSlot) return "Chưa có thông tin thời gian";
     const { startTime, endTime } = lessonData.timeSlot;
     return `${startTime} - ${endTime}`;
+  };
+
+  const getGenderTeacher = () => {
+    return lessonData?.teacher?.gender === "male"
+      ? "Thầy"
+      : lessonData?.teacher?.gender === "female"
+      ? "Cô"
+      : "Chưa có thông tin giáo viên";
   };
 
   const getTeacherName = () => {
@@ -112,8 +126,8 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
     setIsSaving(true);
     try {
       if (descValue.trim() === "") {
-        // Nếu text input rỗng, xóa description
-        if (onDeleteDescription) {
+        // Nếu text input rỗng, xóa description hoặc không làm gì nếu chưa có description
+        if (lessonData?.description && onDeleteDescription) {
           await onDeleteDescription();
         }
         setShowDescriptionCard(false);
@@ -128,6 +142,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
       }
       setIsEditingDesc(false);
     } catch (error) {
+      console.error("Error saving description:", error);
       Alert.alert("Lỗi", "Không thể cập nhật mô tả");
     } finally {
       setIsSaving(false);
@@ -173,7 +188,9 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
         </View>
         <View style={styles.infoRow}>
           <MaterialIcons name="person" size={18} color="#25345C" />
-          <ThemedText style={styles.infoText}>{getTeacherName()}</ThemedText>
+          <ThemedText style={styles.infoText}>
+            {getGenderTeacher()} {getTeacherName()}
+          </ThemedText>
         </View>
       </ThemedView>
 
@@ -299,35 +316,51 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
           </ThemedText>
         </View>
         {/* Nếu chưa hoàn thành tiết học */}
-        {!isCompleted && (
-          <TouchableOpacity
-            style={styles.statusRowOrangeWrap}
-            onPress={onCompletePress}
-            activeOpacity={0.7}
-          >
-            <View style={styles.statusRowOrangeLeft}>
-              <View style={styles.statusIconWrapOrange}>
-                <MaterialIcons
-                  name="assignment-turned-in"
-                  size={20}
-                  color="#fff"
-                />
+        {!isCompleted &&
+          (role === "teacher" ? (
+            <TouchableOpacity
+              style={styles.statusRowOrangeWrap}
+              onPress={onCompletePress}
+              activeOpacity={0.7}
+            >
+              <View style={styles.statusRowOrangeLeft}>
+                <View style={styles.statusIconWrapOrange}>
+                  <MaterialIcons
+                    name="assignment-turned-in"
+                    size={20}
+                    color="#fff"
+                  />
+                </View>
+                <ThemedText style={styles.statusTextOrange}>
+                  Chưa hoàn thành tiết học
+                </ThemedText>
               </View>
-              <ThemedText style={styles.statusTextOrange}>
-                Chưa hoàn thành tiết học
-              </ThemedText>
+              <MaterialIcons
+                name="fmd-bad"
+                size={20}
+                color="#F04438"
+                style={styles.statusAlertDot}
+              />
+              <View style={styles.statusArrowWrap}>
+                <MaterialIcons name="chevron-right" size={28} color="#fff" />
+              </View>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.statusRowOrangeWrap}>
+              <View style={styles.statusRowOrangeLeft}>
+                <View style={styles.statusIconWrapOrange}>
+                  <MaterialIcons
+                    name="assignment-turned-in"
+                    size={20}
+                    color="#fff"
+                  />
+                </View>
+                <ThemedText style={styles.statusTextOrange}>
+                  Chưa hoàn thành tiết học
+                </ThemedText>
+              </View>
             </View>
-            <MaterialIcons
-              name="fmd-bad"
-              size={20}
-              color="#F04438"
-              style={styles.statusAlertDot}
-            />
-            <View style={styles.statusArrowWrap}>
-              <MaterialIcons name="chevron-right" size={28} color="#fff" />
-            </View>
-          </TouchableOpacity>
-        )}
+          ))}
         {/* Nếu đã hoàn thành tiết học */}
         {isCompleted && (
           <>
@@ -340,26 +373,21 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
               </ThemedText>
             </View>
             {/* Card đánh giá tiết học */}
-            {isEvaluated ? (
+            {lessonData?.teacherEvaluation ? (
               <View
                 style={[
                   styles.statusRowGreen,
                   { backgroundColor: "#5FC16E", marginTop: 0 },
                 ]}
               >
-                <View
-                  style={[
-                    styles.statusIconWrapGreen,
-                    { backgroundColor: "#4CAF50" },
-                  ]}
-                >
-                  <MaterialIcons name="error-outline" size={20} color="#fff" />
+                <View style={[styles.statusIconWrapGreen]}>
+                  <MaterialIcons name="feedback" size={20} color="#fff" />
                 </View>
                 <ThemedText style={styles.statusTextWhite}>
-                  Đánh giá: {rank || lessonData?.evaluation?.rank || "A+"}
+                  Đánh giá: {lessonData.teacherEvaluation.evaluation.rating}
                 </ThemedText>
               </View>
-            ) : (
+            ) : role === "teacher" ? (
               <TouchableOpacity
                 style={styles.statusRowBlueWrap}
                 onPress={handleEvaluate}
@@ -367,11 +395,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
               >
                 <View style={styles.statusRowBlueLeft}>
                   <View style={styles.statusIconWrapBlue}>
-                    <MaterialIcons
-                      name="feedback"
-                      size={20}
-                      color="#2CA6B0"
-                    />
+                    <MaterialIcons name="feedback" size={20} color="#2CA6B0" />
                   </View>
                   <ThemedText style={styles.statusTextBlue}>
                     Chưa đánh giá tiết học
@@ -391,7 +415,60 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
                   />
                 </View>
               </TouchableOpacity>
+            ) : (
+              <View style={styles.statusRowBlueWrap}>
+                <View style={styles.statusRowBlueLeft}>
+                  <View style={styles.statusIconWrapBlue}>
+                    <MaterialIcons name="feedback" size={20} color="#2CA6B0" />
+                  </View>
+                  <ThemedText style={styles.statusTextBlue}>
+                    Chưa đánh giá tiết học
+                  </ThemedText>
+                </View>
+              </View>
             )}
+            {/* Card đánh giá giáo viên cho học sinh */}
+            {isCompleted &&
+              role === "student" &&
+              lessonData?.teacherEvaluation &&
+              (lessonData?.studentEvaluations ? (
+                <View style={styles.statusRowGreen}>
+                  <View style={styles.statusIconWrapGreen}>
+                    <MaterialIcons name="feedback" size={20} color="#fff" />
+                  </View>
+                  <ThemedText style={styles.statusTextWhite}>
+                    Đã đánh giá giáo viên
+                  </ThemedText>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={styles.statusRowBlueWrap}
+                  onPress={handleEvaluate}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.statusRowBlueLeft}>
+                    <View style={styles.statusIconWrapBlue}>
+                      <MaterialIcons name="comment" size={20} color="#2CA6B0" />
+                    </View>
+                    <ThemedText style={styles.statusTextBlue}>
+                      Chưa đánh giá giáo viên
+                    </ThemedText>
+                  </View>
+                  <View style={styles.statusArrowWrap}>
+                    <MaterialIcons
+                      name="chevron-right"
+                      size={28}
+                      color="#2CA6B0"
+                    />
+                  </View>
+                  <MaterialIcons
+                    name="fmd-bad"
+                    size={20}
+                    color="#F04438"
+                    style={styles.statusAlertDot}
+                  />
+                </TouchableOpacity>
+              ))}
           </>
         )}
       </ThemedView>

@@ -85,7 +85,7 @@ export default function LeaveRequestInfoScreen() {
     setLoadingSuccess(false);
     setError("");
     try {
-      console.log('Dữ liệu gửi API xin nghỉ:', {
+      console.log("Dữ liệu gửi API xin nghỉ:", {
         lessonIds,
         phoneNumber: phone,
         reason,
@@ -95,7 +95,7 @@ export default function LeaveRequestInfoScreen() {
         phoneNumber: phone,
         reason,
       });
-      console.log('API xin nghỉ trả về:', res);
+      console.log("API xin nghỉ trả về:", res);
       if (res && res.success) {
         setLoadingSuccess(true);
         setTimeout(() => {
@@ -104,16 +104,18 @@ export default function LeaveRequestInfoScreen() {
           router.push("/");
         }, 1200);
       } else {
-        console.error('API xin nghỉ trả về lỗi:', res);
+        console.error("API xin nghỉ trả về lỗi:", res);
         setError("Gửi yêu cầu thất bại!");
         setShowLoading(false);
       }
     } catch (e: any) {
-      console.error('Lỗi gửi yêu cầu xin nghỉ:', e);
+      console.error("Lỗi gửi yêu cầu xin nghỉ:", e);
       if (e.response?.data?.message) {
         setError(e.response.data.message);
       } else {
-        setError("Tiết học này đã được xin nghỉ hoặc có lỗi xảy ra. Vui lòng thử lại!");
+        setError(
+          "Tiết học này đã được xin nghỉ hoặc có lỗi xảy ra. Vui lòng thử lại!"
+        );
       }
       setShowLoading(false);
     }
