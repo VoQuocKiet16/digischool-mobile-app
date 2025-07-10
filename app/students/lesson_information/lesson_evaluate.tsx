@@ -1,5 +1,5 @@
 import HeaderLayout from "@/components/layout/HeaderLayout";
-import SuccessModal from "@/components/notifications_modal/SuccessModal";
+import LoadingModal from "@/components/LoadingModal";
 import { lessonEvaluateService } from "@/services/lesson_evaluate.service";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
@@ -28,8 +28,10 @@ const LessonEvaluateScreen = () => {
   const [ratings, setRatings] = useState([0, 0, 0]);
   const [comment, setComment] = useState("");
   const [checked, setChecked] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [showLoading, setShowLoading] = useState(false);
+  const [loadingSuccess, setLoadingSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const handleRating = (qIdx: number, value: number) => {
     const newRatings = [...ratings];
@@ -44,10 +46,15 @@ const LessonEvaluateScreen = () => {
 
   const handleSubmit = async () => {
     if (!lessonId) {
-      alert("Không tìm thấy tiết học để đánh giá!");
+      setError("Không tìm thấy tiết học để đánh giá!");
       return;
     }
-    setLoading(true);
+
+    setIsSubmitting(true);
+    setShowLoading(true);
+    setLoadingSuccess(false);
+    setError("");
+
     try {
       const payload: any = {
         teachingClarity: ratings[0],
@@ -62,14 +69,21 @@ const LessonEvaluateScreen = () => {
         lessonId as string,
         payload
       );
-      setShowSuccess(true);
+
+      setLoadingSuccess(true);
+      setTimeout(() => {
+        setShowLoading(false);
+        setLoadingSuccess(false);
+        setIsSubmitting(false);
+        router.back();
+      }, 1000);
     } catch (err: any) {
-      alert(
+      setError(
         err?.response?.data?.message ||
           "Gửi đánh giá thất bại. Vui lòng thử lại!"
       );
-    } finally {
-      setLoading(false);
+      setShowLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -144,17 +158,31 @@ const LessonEvaluateScreen = () => {
           Tôi hoàn toàn chịu trách nhiệm với nội dung nhận xét của mình.
         </Text>
       </TouchableOpacity>
+
+      {error ? (
+        <Text
+          style={{
+            color: "red",
+            textAlign: "center",
+            marginBottom: 8,
+            fontFamily: "Baloo2-Medium",
+          }}
+        >
+          {error}
+        </Text>
+      ) : null}
+
       <TouchableOpacity
         style={[
           styles.saveBtn,
-          canSubmit ? styles.saveBtnActive : styles.saveBtnDisabled,
+          (!canSubmit || isSubmitting) && styles.saveBtnDisabled,
         ]}
         onPress={canSubmit ? handleSubmit : undefined}
         activeOpacity={canSubmit ? 0.8 : 1}
-        disabled={!canSubmit || loading}
+        disabled={!canSubmit || isSubmitting}
       >
         <Text style={styles.saveBtnText}>
-          {loading ? "Đang gửi..." : "Xác nhận"}
+          {isSubmitting ? "Đang gửi..." : "Xác nhận"}
         </Text>
       </TouchableOpacity>
     </View>
@@ -177,12 +205,15 @@ const LessonEvaluateScreen = () => {
           {currentStep === 1 ? renderStep1() : renderStep2()}
         </ScrollView>
       </HeaderLayout>
-      <SuccessModal
-        visible={showSuccess}
-        onClose={() => router.back()}
-        title="Thành công"
-        message={`Đánh giá tiết học thành công.\nQuay lại trang trước đó?`}
-        buttonText="Xác nhận"
+
+      <LoadingModal
+        visible={showLoading}
+        text={
+          loadingSuccess
+            ? "Đánh giá tiết học thành công"
+            : "Đang gửi đánh giá tiết học..."
+        }
+        success={loadingSuccess}
       />
     </View>
   );

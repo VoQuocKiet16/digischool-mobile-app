@@ -36,6 +36,11 @@ interface ScheduleDayProps {
   lessonIds?: string[][];
   hideNullSlot?: boolean;
   isSwapLesson?: boolean;
+  dateRange?: {
+    start: string;
+    end: string;
+    label: string;
+  };
 }
 
 const DAY_COL_WIDTH = 90;
@@ -45,6 +50,33 @@ function getTodayIndex() {
   const today = new Date();
   const dayOfWeek = today.getDay(); // 0 = Chủ nhật, 1 = Thứ 2, ..., 6 = Thứ 7
   return dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+}
+
+// Hàm tính toán ngày cụ thể dựa trên dateRange và dayIndex
+function getSpecificDate(
+  dateRange: { start: string; end: string },
+  dayIndex: number
+): Date {
+  const startDate = new Date(dateRange.start);
+  const dayOfWeek = startDate.getDay();
+  const daysToAdd = dayIndex - (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
+
+  const specificDate = new Date(startDate);
+  specificDate.setDate(startDate.getDate() + daysToAdd);
+
+  return specificDate;
+}
+
+// Hàm format ngày thành chuỗi tiếng Việt
+function formatVietnameseDate(date: Date): string {
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  };
+
+  return date.toLocaleDateString("vi-VN", options);
 }
 
 const ScheduleDay: React.FC<ScheduleDayProps> = ({
@@ -60,6 +92,7 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
   lessonIds,
   hideNullSlot = false,
   isSwapLesson = false,
+  dateRange,
 }) => {
   const [currentDay, setCurrentDay] = useState(getTodayIndex());
   const currentDayIndex =
@@ -68,10 +101,23 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
   const numCols = days.length + 1;
   const colWidth = width / numCols;
   const [menuVisible, setMenuVisible] = useState(false);
+  const [dateInfoModalVisible, setDateInfoModalVisible] = useState(false);
+  const [selectedDateInfo, setSelectedDateInfo] = useState("");
   const { userData } = useUserData();
   const router = useRouter();
 
   const toggleMenuVisibility = () => setMenuVisible(!menuVisible);
+
+  // Hàm hiển thị thông tin ngày
+  const showDateInfo = (dayIndex: number) => {
+    if (dateRange) {
+      const specificDate = getSpecificDate(dateRange, dayIndex);
+      const formattedDate = formatVietnameseDate(specificDate);
+      setSelectedDateInfo(formattedDate);
+      setDateInfoModalVisible(true);
+    }
+  };
+
   const handleLeaveRequest = () => {
     setMenuVisible(false);
     const role = userData?.roleInfo?.type;
@@ -115,7 +161,10 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
               { width: colWidth },
               currentDayIndex === idx && styles.selectedDayButton,
             ]}
-            onPress={() => setCurrentDay(idx)}
+            onPress={() => {
+              setCurrentDay(idx);
+              showDateInfo(idx);
+            }}
             activeOpacity={0.7}
           >
             <Text
@@ -132,6 +181,24 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
           </TouchableOpacity>
         ))}
       </View>
+
+      {/* Modal thông tin ngày */}
+<Modal
+  visible={dateInfoModalVisible}
+  transparent
+  animationType="fade"
+  onRequestClose={() => setDateInfoModalVisible(false)}
+>
+  <TouchableWithoutFeedback onPress={() => setDateInfoModalVisible(false)}>
+    <View style={styles.dateInfoModalOverlay}>
+      <View style={styles.dateInfoModalContent}>
+        <Text style={styles.dateInfoTitle}>Thông tin ngày</Text>
+        <Text style={styles.dateInfoText}>{selectedDateInfo}</Text>
+      </View>
+    </View>
+  </TouchableWithoutFeedback>
+</Modal>
+
       {/* Modal menu utilityButton */}
       <Modal
         transparent={true}
@@ -159,6 +226,7 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
           </View>
         </TouchableWithoutFeedback>
       </Modal>
+
       {/* Các hàng tiết */}
       {periods.map((period, periodIndex) => (
         <View key={periodIndex} style={styles.row}>
@@ -196,7 +264,11 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
               );
             }
             // Ẩn luôn slot mặc định không có lesson (text rỗng, type 'default') chỉ cho swap_lesson
-            if (isSwapLesson && (!slotData.text || slotData.text === "") && slotData.type === "default") {
+            if (
+              isSwapLesson &&
+              (!slotData.text || slotData.text === "") &&
+              slotData.type === "default"
+            ) {
               return (
                 <View
                   key={dayIndex}
@@ -328,6 +400,40 @@ const styles = StyleSheet.create({
   },
   currentDaySlot: {
     backgroundColor: "#BACDDD",
+  },
+  // Styles cho modal thông tin ngày
+  dateInfoModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dateInfoModalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 24,
+    margin: 20,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    minWidth: 280,
+  },
+  dateInfoTitle: {
+    fontSize: 18,
+    fontFamily: "Baloo2-Bold",
+    color: "#29375C",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  dateInfoText: {
+    fontSize: 16,
+    fontFamily: "Baloo2-Medium",
+    color: "#22304A",
+    textAlign: "center",
+    lineHeight: 24,
   },
 });
 
