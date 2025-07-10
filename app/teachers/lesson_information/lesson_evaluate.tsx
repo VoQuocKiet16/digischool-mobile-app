@@ -2,9 +2,10 @@ import HeaderLayout from "@/components/layout/HeaderLayout";
 import Student_Absent from "@/components/lesson_evaluate/Student_Absent";
 import Student_Test from "@/components/lesson_evaluate/Student_Test";
 import Student_Violates from "@/components/lesson_evaluate/Student_Violates";
-import SuccessModal from "@/components/notifications_modal/SuccessModal";
+import LoadingModal from "@/components/LoadingModal";
+import { lessonEvaluateService } from "@/services/lesson_evaluate.service";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -20,13 +21,26 @@ import {
 const RANKS = ["A+", "A", "B+", "B"];
 
 const LessonEvaluateTeacherScreen = () => {
+  const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
   const [lesson, setLesson] = useState("");
   const [content, setContent] = useState("");
   const [comment, setComment] = useState("");
   const [rank, setRank] = useState("");
   const [showRankDropdown, setShowRankDropdown] = useState(false);
   const [checked, setChecked] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [showLoading, setShowLoading] = useState(false);
+  const [loadingSuccess, setLoadingSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [absentStudents, setAbsentStudents] = useState<
+    { student: string; name: string }[]
+  >([]);
+  const [oralTests, setOralTests] = useState<
+    { student: string; name: string; score: number }[]
+  >([]);
+  const [violations, setViolations] = useState<
+    { student: string; reason: string }[]
+  >([]);
   const router = useRouter();
 
   const isValid =
@@ -34,6 +48,54 @@ const LessonEvaluateTeacherScreen = () => {
     (content || "").trim().length > 0 &&
     (rank || "").trim().length > 0 &&
     checked;
+
+  const handleSubmit = async () => {
+    if (isValid && lessonId) {
+      setIsSubmitting(true);
+      setShowLoading(true);
+      setLoadingSuccess(false);
+      setError("");
+      try {
+        const evaluationData = {
+          curriculumLesson: lesson,
+          content: content,
+          comments: comment,
+          rating: rank as "A+" | "A" | "B+" | "B" | "C",
+          absentStudents: absentStudents.map((item) => ({
+            student: item.student,
+          })),
+          oralTests: oralTests.map((item) => ({
+            student: item.student,
+            score: item.score,
+          })),
+          violations: violations.map((item) => ({
+            student: item.student,
+            description: item.reason,
+          })),
+        };
+
+        await lessonEvaluateService.createTeacherEvaluation(
+          lessonId,
+          evaluationData
+        );
+
+        setLoadingSuccess(true);
+        setTimeout(() => {
+          setShowLoading(false);
+          setLoadingSuccess(false);
+          setIsSubmitting(false);
+          router.back();
+        }, 1000);
+      } catch (error: any) {
+        console.error("Error creating evaluation:", error);
+        setError(
+          error.response?.data?.message || "Tạo đánh giá tiết học thất bại!"
+        );
+        setShowLoading(false);
+        setIsSubmitting(false);
+      }
+    }
+  };
 
   return (
     <HeaderLayout
@@ -90,15 +152,24 @@ const LessonEvaluateTeacherScreen = () => {
           </View>
           {/* Học sinh vắng */}
           <View style={[styles.fieldWrap, { marginBottom: 25 }]}>
-            <Student_Absent />
+            <Student_Absent
+              lessonId={lessonId || ""}
+              onAbsentStudentsChange={setAbsentStudents}
+            />
           </View>
           {/* Học sinh vi phạm */}
           <View style={[styles.fieldWrap, { marginBottom: 25 }]}>
-            <Student_Violates />
+            <Student_Violates
+              lessonId={lessonId || ""}
+              onViolationsChange={setViolations}
+            />
           </View>
           {/* Kiểm tra miệng */}
           <View style={[styles.fieldWrap, { marginBottom: 46 }]}>
-            <Student_Test />
+            <Student_Test
+              lessonId={lessonId || ""}
+              onOralTestsChange={setOralTests}
+            />
           </View>
           {/* Nhận xét */}
           <View style={styles.fieldWrap}>
@@ -215,29 +286,42 @@ const LessonEvaluateTeacherScreen = () => {
               </Text>
             </Text>
           </View>
+
+          {error ? (
+            <Text
+              style={{
+                color: "red",
+                textAlign: "center",
+                marginBottom: 8,
+                fontFamily: "Baloo2-Medium",
+              }}
+            >
+              {error}
+            </Text>
+          ) : null}
+
           {/* Nút xác nhận */}
           <TouchableOpacity
             style={[
               styles.saveBtn,
-              isValid ? styles.saveBtnActive : styles.saveBtnDisabled,
+              (!isValid || isSubmitting) && styles.saveBtnDisabled,
             ]}
-            disabled={!isValid}
-            onPress={() => setShowSuccess(true)}
+            disabled={!isValid || isSubmitting}
+            onPress={handleSubmit}
           >
-            <Text style={styles.saveBtnText}>Xác nhận</Text>
+            <Text style={styles.saveBtnText}>
+              {isSubmitting ? "Đang lưu..." : "Xác nhận"}
+            </Text>
           </TouchableOpacity>
-          <SuccessModal
-            visible={showSuccess}
-            onClose={() => {
-              setShowSuccess(false);
-              router.push({
-                pathname: "/teachers/lesson_information/lesson_detail",
-                params: { lessonid: lesson },
-              });
-            }}
-            title="Thành công"
-            message={"Đánh giá tiết học thành công.\nQuay lại trang trước đó?"}
-            buttonText="Xác nhận"
+
+          <LoadingModal
+            visible={showLoading}
+            text={
+              loadingSuccess
+                ? "Đánh giá tiết học thành công"
+                : "Đang tạo đánh giá tiết học..."
+            }
+            success={loadingSuccess}
           />
         </ScrollView>
       </KeyboardAvoidingView>
@@ -365,9 +449,6 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginTop: 30,
     width: "95%",
-  },
-  saveBtnActive: {
-    backgroundColor: "#29375C",
   },
   saveBtnDisabled: {
     backgroundColor: "#D1D5DB",

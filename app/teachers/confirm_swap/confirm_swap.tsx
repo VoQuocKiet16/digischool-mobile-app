@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
   StyleSheet,
@@ -9,20 +9,48 @@ import {
 } from "react-native";
 import HeaderLayout from "../../../components/layout/HeaderLayout";
 import SuccessModal from "../../../components/notifications_modal/SuccessModal";
+import { createSwapLessonRequest } from "../../../services/swap_makeup_service";
 
-export default function ConfirmSubstitute() {
+export default function ConfirmSwap() {
+  const params = useLocalSearchParams();
+  console.log("params:", params);
+  const lessonFrom = params.lessonFrom ? JSON.parse(params.lessonFrom as string) : null;
+  console.log("lessonFrom (confirm):", lessonFrom);
+  const lessonTo = params.lessonTo ? JSON.parse(params.lessonTo as string) : null;
+  // Log lessonTo để kiểm tra type khi bị lỗi hiển thị
+  console.log('lessonTo:', lessonTo, 'type:', lessonTo?.type);
   const [reason, setReason] = useState("");
-  const [teacher, setTeacher] = useState("Thầy/Cô Nguyen Van G");
+  const teacher = lessonTo?.teacherName || "Không rõ";
   const [showSuccess, setShowSuccess] = useState(false);
   const isValid = reason.trim().length > 0;
 
-  // Dữ liệu mẫu, thực tế sẽ truyền từ trang trước
-  const lessonFrom = "Sáng → Thứ 3 (13/6/2025) → Tiết 3 → Hóa học";
-  const lessonTo = "Sáng → Thứ 6 (16/6/2025) → Tiết 3 → Địa lý";
+  // Hàm format thông tin lesson
+  const formatLesson = (lesson: any) => {
+    if (!lesson) return "";
+    const period = lesson.period || lesson.timeSlot?.period || "";
+    const subject =
+      lesson.subject?.name ||
+      lesson.text ||
+      lesson.fixedInfo?.description ||
+      "";
+    const date = lesson.scheduledDate
+      ? lesson.scheduledDate.slice(0, 10)
+      : "";
+    return `${date ? date + " • " : ""}Tiết ${period} • ${subject}`;
+  };
 
-  const handleSubmit = () => {
-    if (isValid) {
+  const handleSubmit = async () => {
+    if (!isValid) return;
+    try {
+      await createSwapLessonRequest({
+        originalLessonId: lessonFrom?.lessonId,
+        replacementLessonId: lessonTo?.lessonId,
+        reason,
+      });
       setShowSuccess(true);
+    } catch (e: any) {
+      console.log('Lỗi gửi yêu cầu đổi tiết:', e);
+      alert(e?.response?.data?.message || "Đã có lỗi xảy ra, vui lòng thử lại!");
     }
   };
 
@@ -35,11 +63,11 @@ export default function ConfirmSubstitute() {
       <View style={styles.container}>
         <View style={styles.outlineInputBox}>
           <Text style={styles.floatingLabel}>Tiết học cần đổi</Text>
-          <Text style={styles.inputTextOutline}>{lessonFrom}</Text>
+          <Text style={styles.inputTextOutline}>{formatLesson(lessonFrom)}</Text>
         </View>
         <View style={styles.outlineInputBox}>
           <Text style={styles.floatingLabel}>Tiết học thay thế</Text>
-          <Text style={styles.inputTextOutline}>{lessonTo}</Text>
+          <Text style={styles.inputTextOutline}>{formatLesson(lessonTo)}</Text>
         </View>
         <View style={styles.outlineInputBox}>
           <Text style={styles.floatingLabel}>Giáo viên tiết học thay thế</Text>
@@ -66,7 +94,7 @@ export default function ConfirmSubstitute() {
           visible={showSuccess}
           onClose={() => {
             setShowSuccess(false);
-            router.replace("/explore");
+            router.replace("/");
           }}
           title="Thành công"
           message={"Gửi yêu cầu đổi tiết thành công.\nQuay lại trang trước đó?"}

@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
   StyleSheet,
@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import HeaderLayout from "../../../components/layout/HeaderLayout";
 import SuccessModal from "../../../components/notifications_modal/SuccessModal";
+import { createSubstituteRequest, getAvailableTeachers } from "../../../services/substitute_request";
 
 const TEACHERS = [
   "Thầy/Cô Nguyen Van C",
@@ -17,16 +18,62 @@ const TEACHERS = [
 ];
 
 export default function SubstituteRequest() {
+  const { lessonId } = useLocalSearchParams();
+  const lessonIdStr = Array.isArray(lessonId) ? lessonId[0] : lessonId;
   const [reason, setReason] = useState("");
   const [teacher, setTeacher] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [teachers, setTeachers] = useState<any[]>([]);
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string>("");
+  const [reasonError, setReasonError] = useState("");
 
-  const isValid = reason.trim() && teacher.trim();
+  console.log('LessonId nhận được:', lessonIdStr);
 
-  const handleSend = () => {
-    if (isValid) {
-      setShowSuccess(true);
+  const isValid = reason.trim() && selectedTeacherId.trim();
+
+  const handleSend = async () => {
+    if (isValid && lessonIdStr) {
+      try {
+        console.log('Dữ liệu gửi đi:', {
+          lessonId: lessonIdStr,
+          candidateTeachers: [selectedTeacherId],
+          reason,
+        });
+        await createSubstituteRequest({
+          lessonId: lessonIdStr,
+          candidateTeachers: [selectedTeacherId],
+          reason,
+        });
+        setShowSuccess(true);
+      } catch (e) {
+        console.error('Lỗi gửi yêu cầu dạy thay:', e);
+        alert("Gửi yêu cầu thất bại. Vui lòng thử lại!");
+      }
+    }
+  };
+
+  const handleOpenDropdown = async () => {
+    setShowDropdown(!showDropdown);
+    if (!showDropdown && teachers.length === 0 && lessonIdStr) {
+      try {
+        const data = await getAvailableTeachers(lessonIdStr);
+        setTeachers(data);
+      } catch (e) {
+        // Xử lý lỗi nếu cần
+      }
+    }
+  };
+
+  const validateReason = (text: string) => {
+    if (!text.trim()) {
+      setReasonError("Lý do không được để trống");
+    } else if (text.trim().length < 10) {
+      setReasonError("Lý do phải từ 10 ký tự trở lên");
+    } else if (text.trim().length > 1000) {
+      setReasonError("Lý do không được vượt quá 1000 ký tự");
+    } else {
+      setReasonError("");
     }
   };
 
@@ -44,11 +91,17 @@ export default function SubstituteRequest() {
             <TextInput
               style={styles.inputTextOutline}
               value={reason}
-              onChangeText={setReason}
+              onChangeText={text => {
+                setReason(text);
+                validateReason(text);
+              }}
               placeholder="Vui lòng nhập lý do yêu cầu dạy thay"
               placeholderTextColor="#B6B6B6"
             />
           </View>
+          {reasonError ? (
+            <Text style={{ color: 'red', marginTop: 4, fontSize: 13 }}>{reasonError}</Text>
+          ) : null}
         </View>
         {/* Giáo viên thay thế */}
         <View style={styles.fieldWrap}>
@@ -58,7 +111,7 @@ export default function SubstituteRequest() {
             </Text>
             <TouchableOpacity
               style={styles.dropdown}
-              onPress={() => setShowDropdown(!showDropdown)}
+              onPress={handleOpenDropdown}
               activeOpacity={0.8}
             >
               <Text
@@ -72,23 +125,33 @@ export default function SubstituteRequest() {
             </TouchableOpacity>
             {showDropdown && (
               <View style={styles.modalContent}>
-                {TEACHERS.map((t, idx) => (
-                  <TouchableOpacity
-                    key={t}
-                    style={styles.modalItem}
-                    onPress={() => {
-                      setTeacher(t);
-                      setShowDropdown(false);
-                    }}
-                  >
-                    <View style={styles.teacherRow}>
-                      <Text style={styles.modalItemText}>{t}</Text>
-                      {idx === 0 && (
-                        <Text style={styles.suggestionTag}>Gợi ý chọn</Text>
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                ))}
+                {teachers.length === 0 ? (
+                  <Text>Không có giáo viên phù hợp</Text>
+                ) : (
+                  teachers.map((t, idx) => (
+                    <TouchableOpacity
+                      key={t.id}
+                      style={styles.modalItem}
+                      onPress={() => {
+                        setTeacher(t.name);
+                        setSelectedTeacherId(t.id);
+                        setShowDropdown(false);
+                      }}
+                    >
+                      <View style={styles.teacherRow}>
+                        <Text style={styles.modalItemText}>{t.name}</Text>
+                        {!t.hasConflict && idx === 0 && (
+                          <Text style={styles.suggestionTag}>Gợi ý chọn</Text>
+                        )}
+                        {t.hasConflict && (
+                          <Text style={{ color: "red", fontSize: 12 }}>
+                           Giáo viên đang có lịch dạy
+                          </Text>
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  ))
+                )}
               </View>
             )}
           </View>

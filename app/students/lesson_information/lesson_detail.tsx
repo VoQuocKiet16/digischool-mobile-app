@@ -1,13 +1,13 @@
 import HeaderLayout from "@/components/layout/HeaderLayout";
 import Lesson_Information from "@/components/lesson_detail/Lesson_Information";
+import RefreshableScrollView from "@/components/RefreshableScrollView";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -18,15 +18,24 @@ import { LessonData } from "../../../types/lesson.types";
 
 const LessonDetailScreen = () => {
   const [menuVisible, setMenuVisible] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
   const [lessonData, setLessonData] = useState<LessonData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
+  const pollingRef = useRef<NodeJS.Timeout | number | null>(null);
 
   useEffect(() => {
     if (lessonId) {
       fetchLessonDetail();
+      // Setup polling mỗi 5s
+      pollingRef.current = setInterval(() => {
+        pollLessonDetail();
+      }, 5000);
     }
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
   }, [lessonId]);
 
   const fetchLessonDetail = async () => {
@@ -35,6 +44,11 @@ const LessonDetailScreen = () => {
     try {
       const data = await getLessonDetail(lessonId);
       setLessonData(data);
+      if (data?.status === "completed") {
+        setIsCompleted(true);
+      } else {
+        setIsCompleted(false);
+      }
     } catch (err) {
       setError("Lỗi tải thông tin tiết học");
       console.error("Error fetching lesson detail:", err);
@@ -43,13 +57,30 @@ const LessonDetailScreen = () => {
     }
   };
 
+  const pollLessonDetail = async () => {
+    try {
+      const data = await getLessonDetail(lessonId);
+      setLessonData(data);
+      if (data?.status === "completed") {
+        setIsCompleted(true);
+      } else {
+        setIsCompleted(false);
+      }
+    } catch (err) {
+      // Không show error khi polling ngầm
+    }
+  };
+
   const handleEvaluatePress = () => {
-    router.push("/students/lesson_information/lesson_evaluate");
+    router.push({
+      pathname: "/students/lesson_information/lesson_evaluate",
+      params: { lessonId: lessonData?._id },
+    });
   };
 
   // Tạo subtitle từ dữ liệu lesson
   const getSubtitle = () => {
-    if (!lessonData) return "Chưa rõ • Chưa rõ • Chưa rõ • Chưa rõ";
+    if (!lessonData) return "Đang tải thông tin tiết học...";
 
     const session =
       lessonData.timeSlot?.session === "morning" ? "Sáng" : "Chiều";
@@ -109,16 +140,19 @@ const LessonDetailScreen = () => {
         </TouchableOpacity>
       }
     >
-      <ScrollView
+      <RefreshableScrollView
+        style={{ flex: 1 }}
         contentContainerStyle={styles.scrollContent}
+        onRefresh={fetchLessonDetail}
         showsVerticalScrollIndicator={false}
       >
         <Lesson_Information
+          isCompleted={isCompleted}
           onEvaluatePress={handleEvaluatePress}
           role="student"
           lessonData={lessonData}
         />
-      </ScrollView>
+      </RefreshableScrollView>
       <Modal
         visible={menuVisible}
         transparent

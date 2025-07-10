@@ -9,6 +9,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Modal,
   Pressable,
   StyleSheet,
@@ -17,6 +18,7 @@ import {
   View,
 } from "react-native";
 import {
+  completeLesson,
   deleteLessonDescription,
   getLessonDetail,
   updateLessonDescription,
@@ -63,6 +65,12 @@ const LessonDetailScreen = () => {
     try {
       const data = await getLessonDetail(lessonId);
       setLessonData(data);
+      // Kiểm tra status để set isCompleted
+      if (data?.status === "completed") {
+        setIsCompleted(true);
+      } else {
+        setIsCompleted(false);
+      }
     } catch (err) {
       setError("Lỗi tải thông tin tiết học");
       console.error("Error fetching lesson detail:", err);
@@ -104,12 +112,34 @@ const LessonDetailScreen = () => {
   };
 
   const handleCompletePress = () => setShowModal(true);
-  const handleConfirmComplete = () => {
-    setIsCompleted(true);
-    setShowModal(false);
+  const handleConfirmComplete = async () => {
+    try {
+      await completeLesson(lessonId);
+
+      // Cập nhật local state thay vì load lại trang
+      if (lessonData) {
+        setLessonData({
+          ...lessonData,
+          status: "completed",
+        });
+      }
+      setIsCompleted(true);
+      setShowModal(false);
+    } catch (error: any) {
+      console.error("Error completing lesson:", error);
+      Alert.alert(
+        "Lỗi",
+        `Không thể hoàn thành tiết học: ${
+          error.response?.data?.message || error.message
+        }`
+      );
+    }
   };
   const handleEvaluatePress = () => {
-    router.push("/teachers/lesson_information/lesson_evaluate");
+    router.push({
+      pathname: "/teachers/lesson_information/lesson_evaluate",
+      params: { lessonId: lessonData?._id },
+    });
   };
 
   // Tạo subtitle từ dữ liệu lesson
@@ -191,7 +221,7 @@ const LessonDetailScreen = () => {
           onAddDescriptionComplete={() => setShouldAddDescription(false)}
         />
         <View style={{ marginHorizontal: 30, marginTop: 0, marginBottom: 12 }}>
-          {!lessonData?.description && (
+          {!lessonData?.description && lessonData?.status !== "completed" && (
             <View style={{ marginBottom: 12 }}>
               <PlusIcon
                 text="Thêm mô tả"
@@ -201,7 +231,7 @@ const LessonDetailScreen = () => {
               />
             </View>
           )}
-          {!lessonData?.testInfo && (
+          {!lessonData?.testInfo && lessonData?.status !== "completed" && (
             <PlusIcon
               text="Dặn dò kiểm tra"
               onPress={() =>
@@ -241,7 +271,10 @@ const LessonDetailScreen = () => {
               style={[styles.menuItem, styles.menuItemActive]}
               onPress={() => {
                 setMenuVisible(false);
-                router.push("/teachers/substitute_request/substitute_request");
+                router.push({
+                  pathname: "/teachers/substitute_request/substitute_request",
+                  params: { lessonId: lessonId }
+                });
               }}
             >
               <Text style={styles.menuText}>Dạy thay</Text>
@@ -251,7 +284,13 @@ const LessonDetailScreen = () => {
               onPress={() => {
                 setMenuVisible(false);
                 router.push({
-                  pathname: "/teachers/substitute_lesson/substitute_lesson",
+                  pathname: "/teachers/swap_lesson/swap_lesson",
+                  params: {
+                    ...(lessonData && lessonData.class && typeof (lessonData.class as any)._id === 'string' ? { classId: (lessonData.class as any)._id } : {}),
+                    className: lessonData?.class?.className,
+                    lessonId: lessonData?.lessonId || lessonData?._id || lessonId,
+                    lessonFrom: JSON.stringify(lessonData),
+                  },
                 });
               }}
             >

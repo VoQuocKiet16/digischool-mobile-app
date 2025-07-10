@@ -61,14 +61,26 @@ function getWeekRangesByYear(year: string) {
   const endDate = new Date(endYear, 4, 31); // 31/05/yyyy
   let current = getFirstMonday(startDate);
   const weeks = [];
+
   while (current <= endDate) {
     const weekStart = new Date(current);
     const weekEnd = new Date(current);
     weekEnd.setDate(weekStart.getDate() + 6);
     if (weekEnd > endDate) weekEnd.setTime(endDate.getTime());
+
+    // Sử dụng local date để tránh vấn đề múi giờ
+    const startDateStr = `${weekStart.getFullYear()}-${(
+      weekStart.getMonth() + 1
+    )
+      .toString()
+      .padStart(2, "0")}-${weekStart.getDate().toString().padStart(2, "0")}`;
+    const endDateStr = `${weekEnd.getFullYear()}-${(weekEnd.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}-${weekEnd.getDate().toString().padStart(2, "0")}`;
+
     weeks.push({
-      start: weekStart.toISOString().slice(0, 10),
-      end: weekEnd.toISOString().slice(0, 10),
+      start: startDateStr,
+      end: endDateStr,
       label:
         `${weekStart.getDate().toString().padStart(2, "0")}/${(
           weekStart.getMonth() + 1
@@ -305,6 +317,7 @@ export default function ScheduleTeachersScreen() {
                   ? lessonIds.slice(0, 5)
                   : lessonIds.slice(5, 10)
               }
+              dateRange={dateRange}
             />
           </View>
         </RefreshableScrollView>

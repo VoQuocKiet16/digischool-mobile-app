@@ -1,4 +1,5 @@
 export interface LessonData {
+  _id: string;
   lessonId: string;
   topic: string;
   description: string;
@@ -10,6 +11,7 @@ export interface LessonData {
   };
   teacher: {
     name: string;
+    gender: string;
   };
   subject?: {
     name: string;
@@ -28,5 +30,33 @@ export interface LessonData {
   evaluation?: {
     rank: string;
   } | null;
+  teacherEvaluation?: {
+    _id: string;
+    evaluation: {
+      rating: string;
+      comments: string;
+      details: any;
+    };
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+  } | null;
   status: string;
+  studentEvaluations?: {
+    _id: string;
+    student: {
+      _id: string;
+      name: string;
+      email: string;
+      studentId: string;
+    };
+    evaluation: {
+      teachingClarity: number;
+      teachingSupport: number;
+      teacherInteraction: number;
+      overallRating: number;
+    };
+    comments: string;
+    evaluatedAt: string;
+  }[];
 }
