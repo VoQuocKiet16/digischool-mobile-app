@@ -2,13 +2,12 @@ import HeaderLayout from "@/components/layout/HeaderLayout";
 import Student_Absent from "@/components/lesson_evaluate/Student_Absent";
 import Student_Test from "@/components/lesson_evaluate/Student_Test";
 import Student_Violates from "@/components/lesson_evaluate/Student_Violates";
-import SuccessModal from "@/components/notifications_modal/SuccessModal";
+import LoadingModal from "@/components/LoadingModal";
 import { lessonEvaluateService } from "@/services/lesson_evaluate.service";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -29,7 +28,10 @@ const LessonEvaluateTeacherScreen = () => {
   const [rank, setRank] = useState("");
   const [showRankDropdown, setShowRankDropdown] = useState(false);
   const [checked, setChecked] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [showLoading, setShowLoading] = useState(false);
+  const [loadingSuccess, setLoadingSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
   const [absentStudents, setAbsentStudents] = useState<
     { student: string; name: string }[]
   >([]);
@@ -48,41 +50,50 @@ const LessonEvaluateTeacherScreen = () => {
     checked;
 
   const handleSubmit = async () => {
-    try {
-      const evaluationData = {
-        curriculumLesson: lesson,
-        content: content,
-        comments: comment,
-        rating: rank as "A+" | "A" | "B+" | "B" | "C",
-        absentStudents: absentStudents.map((item) => ({
-          student: item.student,
-        })),
-        oralTests: oralTests.map((item) => ({
-          student: item.student,
-          score: item.score,
-        })),
-        violations: violations.map((item) => ({
-          student: item.student,
-          description: item.reason,
-        })),
-      };
+    if (isValid && lessonId) {
+      setIsSubmitting(true);
+      setShowLoading(true);
+      setLoadingSuccess(false);
+      setError("");
+      try {
+        const evaluationData = {
+          curriculumLesson: lesson,
+          content: content,
+          comments: comment,
+          rating: rank as "A+" | "A" | "B+" | "B" | "C",
+          absentStudents: absentStudents.map((item) => ({
+            student: item.student,
+          })),
+          oralTests: oralTests.map((item) => ({
+            student: item.student,
+            score: item.score,
+          })),
+          violations: violations.map((item) => ({
+            student: item.student,
+            description: item.reason,
+          })),
+        };
 
-      await lessonEvaluateService.createTeacherEvaluation(
-        lessonId || "",
-        evaluationData
-      );
-      setShowSuccess(true);
-    } catch (error: any) {
-      console.error("Error creating evaluation:", error);
-      console.error("Error response:", error.response?.data);
-      console.error("Error status:", error.response?.status);
-      console.error("Error message:", error.response?.data?.message);
-      Alert.alert(
-        "Lỗi",
-        `Có lỗi xảy ra khi tạo đánh giá tiết học: ${
-          error.response?.data?.message || error.message
-        }`
-      );
+        await lessonEvaluateService.createTeacherEvaluation(
+          lessonId,
+          evaluationData
+        );
+
+        setLoadingSuccess(true);
+        setTimeout(() => {
+          setShowLoading(false);
+          setLoadingSuccess(false);
+          setIsSubmitting(false);
+          router.back();
+        }, 1000);
+      } catch (error: any) {
+        console.error("Error creating evaluation:", error);
+        setError(
+          error.response?.data?.message || "Tạo đánh giá tiết học thất bại!"
+        );
+        setShowLoading(false);
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -275,26 +286,42 @@ const LessonEvaluateTeacherScreen = () => {
               </Text>
             </Text>
           </View>
+
+          {error ? (
+            <Text
+              style={{
+                color: "red",
+                textAlign: "center",
+                marginBottom: 8,
+                fontFamily: "Baloo2-Medium",
+              }}
+            >
+              {error}
+            </Text>
+          ) : null}
+
           {/* Nút xác nhận */}
           <TouchableOpacity
             style={[
               styles.saveBtn,
-              isValid ? styles.saveBtnActive : styles.saveBtnDisabled,
+              (!isValid || isSubmitting) && styles.saveBtnDisabled,
             ]}
-            disabled={!isValid}
+            disabled={!isValid || isSubmitting}
             onPress={handleSubmit}
           >
-            <Text style={styles.saveBtnText}>Xác nhận</Text>
+            <Text style={styles.saveBtnText}>
+              {isSubmitting ? "Đang lưu..." : "Xác nhận"}
+            </Text>
           </TouchableOpacity>
-          <SuccessModal
-            visible={showSuccess}
-            onClose={() => {
-              setShowSuccess(false);
-              router.back();
-            }}
-            title="Thành công"
-            message={"Đánh giá tiết học thành công.\nQuay lại trang trước đó?"}
-            buttonText="Xác nhận"
+
+          <LoadingModal
+            visible={showLoading}
+            text={
+              loadingSuccess
+                ? "Đánh giá tiết học thành công"
+                : "Đang tạo đánh giá tiết học..."
+            }
+            success={loadingSuccess}
           />
         </ScrollView>
       </KeyboardAvoidingView>
@@ -422,9 +449,6 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginTop: 30,
     width: "95%",
-  },
-  saveBtnActive: {
-    backgroundColor: "#29375C",
   },
   saveBtnDisabled: {
     backgroundColor: "#D1D5DB",

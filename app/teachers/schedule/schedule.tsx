@@ -317,6 +317,7 @@ export default function ScheduleTeachersScreen() {
                   ? lessonIds.slice(0, 5)
                   : lessonIds.slice(5, 10)
               }
+              dateRange={dateRange}
             />
           </View>
         </RefreshableScrollView>
