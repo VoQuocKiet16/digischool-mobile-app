@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import HeaderLayout from "../../../components/layout/HeaderLayout";
 import SuccessModal from "../../../components/notifications_modal/SuccessModal";
-import { createSwapLessonRequest } from "../../../services/swap_makeup_service";
+import { createSwapLessonRequest } from "../../../services/lesson_request.service";
 
 export default function ConfirmSwap() {
   const params = useLocalSearchParams();

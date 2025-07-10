@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import HeaderLayout from "../../../components/layout/HeaderLayout";
 import SuccessModal from "../../../components/notifications_modal/SuccessModal";
-import { createSubstituteRequest, getAvailableTeachers } from "../../../services/substitute_request";
+import { createSubstituteRequest, getAvailableTeachers } from "../../../services/lesson_request.service";
 
 const TEACHERS = [
   "Thầy/Cô Nguyen Van C",
@@ -42,7 +42,7 @@ export default function SubstituteRequest() {
         });
         await createSubstituteRequest({
           lessonId: lessonIdStr,
-          candidateTeachers: [selectedTeacherId],
+          candidateTeacherIds: [selectedTeacherId],
           reason,
         });
         setShowSuccess(true);
@@ -58,7 +58,7 @@ export default function SubstituteRequest() {
     if (!showDropdown && teachers.length === 0 && lessonIdStr) {
       try {
         const data = await getAvailableTeachers(lessonIdStr);
-        setTeachers(data);
+        setTeachers(data.availableTeachers || []);
       } catch (e) {
         // Xử lý lỗi nếu cần
       }
