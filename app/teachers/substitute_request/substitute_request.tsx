@@ -28,8 +28,6 @@ export default function SubstituteRequest() {
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>("");
   const [reasonError, setReasonError] = useState("");
 
-  console.log('LessonId nhận được:', lessonIdStr);
-
   const isValid = reason.trim() && selectedTeacherId.trim();
 
   const handleSend = async () => {
