@@ -1,5 +1,6 @@
+import { MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -8,8 +9,12 @@ import {
   View,
 } from "react-native";
 import HeaderLayout from "../../../components/layout/HeaderLayout";
-import SuccessModal from "../../../components/notifications_modal/SuccessModal";
-import { createSubstituteRequest, getAvailableTeachers } from "../../../services/substitute_request";
+import LoadingModal from "../../../components/LoadingModal";
+// Đã bỏ SuccessModal
+import {
+  createSubstituteRequest,
+  getAvailableTeachers,
+} from "../../../services/lesson_request.service";
 
 const TEACHERS = [
   "Thầy/Cô Nguyen Van C",
@@ -23,83 +28,83 @@ export default function SubstituteRequest() {
   const [reason, setReason] = useState("");
   const [teacher, setTeacher] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [showLoading, setShowLoading] = useState(false);
+  const [loadingSuccess, setLoadingSuccess] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [teachers, setTeachers] = useState<any[]>([]);
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>("");
-  const [reasonError, setReasonError] = useState("");
+
+  useEffect(() => {
+    if (lessonIdStr) {
+      (async () => {
+        try {
+          const data = await getAvailableTeachers(lessonIdStr);
+          setTeachers(data.availableTeachers || []);
+        } catch (e) {
+          // Xử lý lỗi nếu cần
+        }
+      })();
+    }
+  }, [lessonIdStr]);
 
   const isValid = reason.trim() && selectedTeacherId.trim();
 
   const handleSend = async () => {
     if (isValid && lessonIdStr) {
+      setIsUpdating(true);
+      setShowLoading(true);
+      setLoadingSuccess(false);
       try {
-        console.log('Dữ liệu gửi đi:', {
+        console.log("Dữ liệu gửi đi:", {
           lessonId: lessonIdStr,
           candidateTeachers: [selectedTeacherId],
           reason,
         });
         await createSubstituteRequest({
           lessonId: lessonIdStr,
-          candidateTeachers: [selectedTeacherId],
+          candidateTeacherIds: [selectedTeacherId],
           reason,
         });
-        setShowSuccess(true);
+        setLoadingSuccess(true);
+        setTimeout(() => {
+          setShowLoading(false);
+          setLoadingSuccess(false);
+          setIsUpdating(false);
+          router.back();
+        }, 1000);
       } catch (e) {
-        console.error('Lỗi gửi yêu cầu dạy thay:', e);
-        alert("Gửi yêu cầu thất bại. Vui lòng thử lại!");
+        setShowLoading(false);
+        setIsUpdating(false);
+        console.error("Lỗi gửi yêu cầu dạy thay:", e);
       }
     }
   };
 
   const handleOpenDropdown = async () => {
     setShowDropdown(!showDropdown);
-    if (!showDropdown && teachers.length === 0 && lessonIdStr) {
-      try {
-        const data = await getAvailableTeachers(lessonIdStr);
-        setTeachers(data);
-      } catch (e) {
-        // Xử lý lỗi nếu cần
-      }
-    }
-  };
-
-  const validateReason = (text: string) => {
-    if (!text.trim()) {
-      setReasonError("Lý do không được để trống");
-    } else if (text.trim().length < 10) {
-      setReasonError("Lý do phải từ 10 ký tự trở lên");
-    } else if (text.trim().length > 1000) {
-      setReasonError("Lý do không được vượt quá 1000 ký tự");
-    } else {
-      setReasonError("");
-    }
   };
 
   return (
     <HeaderLayout
       title="Yêu cầu dạy thay"
       subtitle="Hoàn thành mẫu yêu cầu dạy thay"
-      onBack={() => router.replace("/")}
+      onBack={() => router.back()}
     >
       <View style={styles.container}>
         {/* Lý do */}
         <View style={styles.fieldWrap}>
           <View style={styles.outlineInputBox}>
-            <Text style={styles.floatingLabel}>Lý do</Text>
+            <Text style={styles.floatingLabel}>
+              Lý do <Text style={styles.required}>*</Text>
+            </Text>
             <TextInput
               style={styles.inputTextOutline}
               value={reason}
-              onChangeText={text => {
-                setReason(text);
-                validateReason(text);
-              }}
+              onChangeText={setReason}
               placeholder="Vui lòng nhập lý do yêu cầu dạy thay"
-              placeholderTextColor="#B6B6B6"
+              placeholderTextColor="#9CA3AF"
             />
           </View>
-          {reasonError ? (
-            <Text style={{ color: 'red', marginTop: 4, fontSize: 13 }}>{reasonError}</Text>
-          ) : null}
         </View>
         {/* Giáo viên thay thế */}
         <View style={styles.fieldWrap}>
@@ -119,7 +124,11 @@ export default function SubstituteRequest() {
               >
                 {teacher || "Chọn giáo viên thay thế"}
               </Text>
-              <Text style={styles.dropdownIcon}>▼</Text>
+              <MaterialIcons
+                name="keyboard-arrow-down"
+                size={24}
+                color="#29375C"
+              />
             </TouchableOpacity>
             {showDropdown && (
               <View style={styles.modalContent}>
@@ -143,7 +152,7 @@ export default function SubstituteRequest() {
                         )}
                         {t.hasConflict && (
                           <Text style={{ color: "red", fontSize: 12 }}>
-                           Giáo viên đang có lịch dạy
+                            Giáo viên đang có lịch dạy
                           </Text>
                         )}
                       </View>
@@ -156,21 +165,21 @@ export default function SubstituteRequest() {
         </View>
         {/* Nút gửi yêu cầu */}
         <TouchableOpacity
-          style={[styles.sendBtn, !isValid && styles.sendBtnDisabled]}
-          disabled={!isValid}
+          style={[
+            styles.sendBtn,
+            (!isValid || isUpdating) && styles.sendBtnDisabled,
+          ]}
+          disabled={!isValid || isUpdating}
           onPress={handleSend}
         >
-          <Text style={styles.sendBtnText}>Gửi yêu cầu</Text>
+          <Text style={styles.sendBtnText}>
+            {isUpdating ? "Đang gửi..." : "Gửi yêu cầu"}
+          </Text>
         </TouchableOpacity>
-        <SuccessModal
-          visible={showSuccess}
-          onClose={() => {
-            setShowSuccess(false);
-            router.replace("/");
-          }}
-          title="Thành công"
-          message={"Gửi yêu cầu dạy thay thành công.\nQuay lại trang trước đó?"}
-          buttonText="Xác nhận"
+        <LoadingModal
+          visible={showLoading}
+          text={loadingSuccess ? "Gửi thành công" : "Đang gửi yêu cầu..."}
+          success={loadingSuccess}
         />
       </View>
     </HeaderLayout>
@@ -179,7 +188,6 @@ export default function SubstituteRequest() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#fff",
     flex: 1,
     padding: 20,
   },
@@ -187,98 +195,91 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   outlineInputBox: {
-    borderWidth: 1.2,
-    borderColor: "#B6C5E1",
-    borderRadius: 8,
-    paddingTop: 18,
+    borderWidth: 1,
+    borderColor: "#29375C",
+    borderRadius: 12,
+    backgroundColor: "#f7f7f7",
+    marginBottom: 25,
+    paddingTop: 15,
     paddingBottom: 12,
-    paddingHorizontal: 12,
-    backgroundColor: "#fff",
-    marginTop: 8,
+    paddingHorizontal: 25,
+    marginLeft: 15,
+    marginRight: 15,
     position: "relative",
   },
   floatingLabel: {
     position: "absolute",
-    top: -10,
+    top: -16,
     left: 18,
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 4,
-    fontSize: 15,
-    color: "#25345D",
-    fontWeight: "bold",
+    backgroundColor: "#f7f7f7",
+    paddingHorizontal: 6,
+    color: "#29375C",
+    fontFamily: "Baloo2-SemiBold",
+    fontSize: 14,
     zIndex: 2,
   },
   inputTextOutline: {
-    fontSize: 15,
-    color: "#25345D",
-    fontWeight: "bold",
-    paddingVertical: 0,
+    color: "#29375C",
+    fontSize: 16,
+    fontFamily: "Baloo2-Medium",
   },
   required: {
     color: "#E53935",
-    fontSize: 16,
+    fontSize: 18,
+    marginLeft: 2,
+    marginTop: -2,
   },
   dropdown: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     borderWidth: 0,
-    borderRadius: 8,
-    paddingVertical: 0,
-    paddingHorizontal: 0,
     minHeight: 22,
-    marginTop: 18,
   },
   dropdownText: {
-    color: "#25345D",
-    fontSize: 15,
-    fontWeight: "bold",
+    color: "#29375C",
+    fontSize: 16,
+    fontFamily: "Baloo2-Medium",
   },
   dropdownPlaceholder: {
-    color: "#B6B6B6",
-    fontSize: 15,
-    fontWeight: "normal",
-  },
-  dropdownIcon: {
-    color: "#A0A3BD",
+    color: "#9CA3AF",
     fontSize: 16,
-    marginLeft: 8,
+    fontFamily: "Baloo2-Medium",
   },
   modalContent: {
-    backgroundColor: "#fff",
+    backgroundColor: "#f7f7f7",
     borderRadius: 10,
-    padding: 8,
-    minWidth: 220,
+    padding: 10,
     elevation: 5,
-    borderWidth: 1.2,
-    borderColor: "#B6C5E1",
-    marginTop: 4,
+    borderWidth: 0,
+    marginTop: 0,
   },
   modalItem: {
-    paddingVertical: 10,
-    paddingHorizontal: 8,
+    paddingVertical: 8,
   },
   modalItemText: {
     fontSize: 16,
-    color: "#25345D",
+    color: "#29375C",
+    fontFamily: "Baloo2-Medium",
   },
   sendBtn: {
     backgroundColor: "#29375C",
-    borderRadius: 12,
+    borderRadius: 20,
     paddingVertical: 14,
     alignItems: "center",
-    marginTop: 24,
+    alignSelf: "center",
+    marginTop: 8,
+    width: "90%",
     opacity: 1,
   },
   sendBtnDisabled: {
-    backgroundColor: "#B6B6B6",
-    opacity: 0.5,
+    backgroundColor: "#D1D5DB",
+    opacity: 1,
   },
   sendBtnText: {
     color: "#fff",
-    fontWeight: "bold",
-    fontSize: 17,
-    letterSpacing: 1,
+    fontFamily: "Baloo2-SemiBold",
+    fontSize: 18,
   },
   teacherRow: {
     flexDirection: "row",

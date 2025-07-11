@@ -65,7 +65,7 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
       return (
         <View style={styles.container}>
           <View style={styles.taughtSlot}>
-            {/* Slot đã dạy, không có TouchableOpacity, chỉ là View */}
+            <Text style={styles.taughtSlotText}>Đã dạy</Text>
           </View>
         </View>
       );
@@ -222,9 +222,9 @@ const styles = StyleSheet.create({
     fontFamily: "Baloo2-SemiBold",
   },
   taughtSlot: {
-    backgroundColor: "#fff",
+    backgroundColor: "#f7f7f7",
     borderRadius: 12,
-    borderWidth: 2.5,
+    borderWidth: 1,
     borderColor: "#B6B6B6",
     borderStyle: "dashed",
     paddingVertical: 12,
@@ -275,9 +275,9 @@ const styles = StyleSheet.create({
     fontFamily: "Baloo2-SemiBold",
   },
   exchangeableSlot: {
-    backgroundColor: "#fff",
+    backgroundColor: "#f7f7f7",
     borderRadius: 12,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: "#F9B233",
     borderStyle: "dashed",
     paddingVertical: 12,

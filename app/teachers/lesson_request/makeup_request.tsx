@@ -9,7 +9,7 @@ import {
 import HeaderLayout from "../../../components/layout/HeaderLayout";
 import SuccessModal from "../../../components/notifications_modal/SuccessModal";
 
-export default function ConfirmMakeupLesson() {
+export default function MakeupRequest() {
   const [reason, setReason] = useState("");
   const [className, setClassName] = useState("10A3");
   const [showSuccess, setShowSuccess] = useState(false);
