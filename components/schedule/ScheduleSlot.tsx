@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   emptySlot: {
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: "#D0D5DD",
     borderStyle: "dashed",
     borderRadius: 12,
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F04438",
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: "#fff",
   },
   notificationText: {

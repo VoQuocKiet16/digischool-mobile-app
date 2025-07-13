@@ -11,44 +11,31 @@ import {
   View,
 } from "react-native";
 import HeaderLayout from "../../../components/layout/HeaderLayout";
-// import DaySelector from "../../../components/schedule/DaySelector";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getStudentSchedule } from "../../../services/schedule.service";
-
-type PeriodCell = { row: number; col: number };
-
-const TODAY_INDEX = 2; // Thứ 4 (index 2)
-const CURRENT_PERIOD_INDEX = 1; // Tiết 2 (index 1)
-const TAUGHT_PERIODS = [
-  { row: 0, col: 0 },
-  { row: 0, col: 1 },
-  { row: 1, col: 0 },
-];
 
 const academicYears = ["2024-2025", "2025-2026"];
 
 function getFirstMonday(date: Date) {
   const d = new Date(date);
   const day = d.getDay();
-  const diff = day === 1 ? 0 : (8 - day) % 7; // Nếu đã là thứ 2 thì không cộng, còn lại thì cộng số ngày tới thứ 2
+  const diff = day === 1 ? 0 : (8 - day) % 7;
   d.setDate(d.getDate() + diff);
   return d;
 }
 
 function getWeekRangesByYear(year: string) {
   const [startYear, endYear] = year.split("-").map(Number);
-  const startDate = getFirstMonday(new Date(startYear, 7, 1)); // 01/08/yyyy, lấy đúng Thứ 2 đầu tiên
-  const endDate = new Date(endYear, 4, 31); // 31/05/yyyy
+  const startDate = getFirstMonday(new Date(startYear, 7, 1));
+  const endDate = new Date(endYear, 4, 31);
   let current = new Date(startDate);
   const weeks = [];
   while (current <= endDate) {
     const weekStart = new Date(current);
     const weekEnd = new Date(current);
-    weekEnd.setDate(weekStart.getDate() + 6); // Chủ nhật
+    weekEnd.setDate(weekStart.getDate() + 6);
     if (weekEnd > endDate) weekEnd.setTime(endDate.getTime());
-
-    // Sử dụng local date để tránh vấn đề múi giờ
     const startDateStr = `${weekStart.getFullYear()}-${(
       weekStart.getMonth() + 1
     )
@@ -57,7 +44,6 @@ function getWeekRangesByYear(year: string) {
     const endDateStr = `${weekEnd.getFullYear()}-${(weekEnd.getMonth() + 1)
       .toString()
       .padStart(2, "0")}-${weekEnd.getDate().toString().padStart(2, "0")}`;
-
     weeks.push({
       start: startDateStr,
       end: endDateStr,
@@ -79,14 +65,10 @@ function getWeekRangesByYear(year: string) {
   return weeks;
 }
 
-export default function SwapLesson() {
+export default function MakeupSchedule() {
   const params = useLocalSearchParams();
   const className = params.className as string | undefined;
   const lessonId = params.lessonId as string | undefined;
-  const lessonFrom = params.lessonFrom
-    ? JSON.parse(params.lessonFrom as string)
-    : null;
-
   // State selected lưu theo tuần và session
   const [selected, setSelected] = useState<
     { row: number; col: number; week: string; session: string }[]
@@ -107,14 +89,12 @@ export default function SwapLesson() {
 
   const morningPeriods = ["Tiết 1", "Tiết 2", "Tiết 3", "Tiết 4", "Tiết 5"];
   const afternoonPeriods = ["Tiết 6", "Tiết 7", "Tiết 8", "Tiết 9", "Tiết 10"];
-
   const DAYS = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
 
   useEffect(() => {
     const fetchSchedule = async () => {
       setLoading(true);
       try {
-        // Gọi API lấy TKB lớp theo tuần và năm học đã chọn
         const data = await getStudentSchedule({
           className: className || "",
           academicYear: year,
@@ -136,16 +116,16 @@ export default function SwapLesson() {
         );
         (data?.data?.schedule || []).forEach((dayData: any) => {
           const dayOfWeek = dayData.dayOfWeek;
-          const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Chủ nhật = 0, index 6
+          const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
           const date = dayData.date || "";
           dayData.lessons?.forEach((lesson: any) => {
-            // BỎ QUA lesson type: 'empty'
-            if (lesson.type === "empty") return;
             const periodIndex = (lesson.period || 1) - 1;
             if (periodIndex >= 0 && periodIndex < 10) {
               schedule[periodIndex][dayIndex] = {
                 text:
-                  lesson && lesson.subject
+                  lesson.type === "empty"
+                    ? "Trống"
+                    : lesson && lesson.subject
                     ? lesson.subject.name
                     : lesson && lesson.fixedInfo
                     ? lesson.fixedInfo.description
@@ -171,30 +151,106 @@ export default function SwapLesson() {
     if (className) fetchSchedule();
   }, [className, year, dateRange]);
 
-  const isTaught = (row: number, col: number) =>
-    TAUGHT_PERIODS.some((p) => p.row === row && p.col === col);
-  const isCurrent = (row: number, col: number) =>
-    row === CURRENT_PERIOD_INDEX && col === TODAY_INDEX;
-  const isSelected = (row: number, col: number) =>
-    selected.some((p) => p.row === row && p.col === col);
-
-  // Lấy lessonId hiện tại từ params
-  const currentLessonId = lessonId;
-
-  // Tạo cellStatusData: cộng periodOffset để phân biệt buổi sáng/chiều
+  // Tạo cellStatusData: chỉ cho phép chọn slot empty, slot đã dạy là taught, slot hiện tại luôn hiển thị
   const periodOffset = session === "Buổi sáng" ? 0 : 5;
   const cellStatusData = Array.from({ length: 5 }, (__, periodIdx) =>
     Array.from({ length: 7 }, (___, dayIdx) => {
       const slot = scheduleData[periodIdx + periodOffset]?.[dayIdx];
-      const lessonId = slot?._id;
-      const status = slot?.status;
-      if (status === "completed") return "taught";
-      if (lessonId && lessonId === currentLessonId) return "current";
-      return "exchangeable";
+      if (!slot) return "default";
+      if (slot._id && slot._id === lessonId) return "current";
+      if (slot.status === "completed") return "taught";
+      if (slot.type === "empty") return "exchangeable";
+      return "default";
     })
   );
 
-  // Chỉ cho phép chọn các ô exchangeable
+  // Lấy subjectId hoặc subjectName của lesson hiện tại (dùng để ẩn các slot cùng subject)
+  let currentLessonSubjectId = undefined;
+  let currentLessonSubjectName = undefined;
+  for (let i = 0; i < scheduleData.length; i++) {
+    for (let j = 0; j < scheduleData[i].length; j++) {
+      const slot = scheduleData[i][j];
+      if (slot && slot._id === lessonId) {
+        if (slot.subject && slot.subject._id)
+          currentLessonSubjectId = slot.subject._id;
+        if (slot.subject && slot.subject.name)
+          currentLessonSubjectName = slot.subject.name;
+      }
+    }
+  }
+
+  // Tính todayIndex và currentPeriodIndex theo ngày hệ thống
+  function getTodayIndex() {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = Chủ nhật, 1 = Thứ 2, ..., 6 = Thứ 7
+    return dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  }
+  const todayIndex = getTodayIndex();
+  // currentPeriodIndex: tiết hiện tại trong buổi (0-4), mặc định là 0 (Tiết 1)
+  const now = new Date();
+  let currentPeriodIndex = 0;
+  // Nếu muốn chính xác hơn, có thể lấy theo giờ hiện tại (ví dụ 7h-8h là tiết 1, ...)
+  // Ở đây mặc định là tiết 1
+
+  // Filter dữ liệu để ẩn slot có subject trùng subject của lesson hiện tại (trừ slot hiện tại và slot đã dạy)
+  const filteredDisplayedData =
+    session === "Buổi sáng"
+      ? scheduleData.slice(0, 5).map((row, periodIdx) =>
+          row.map((slot, dayIdx) => {
+            if (!slot) return null;
+            if (slot._id && slot._id === lessonId) return slot; // slot hiện tại
+            if (slot.status === "completed") return slot; // slot đã dạy
+            // Ẩn slot có subject trùng subject hiện tại
+            if (
+              slot.subject &&
+              ((currentLessonSubjectId &&
+                slot.subject._id === currentLessonSubjectId) ||
+                (currentLessonSubjectName &&
+                  slot.subject.name === currentLessonSubjectName))
+            ) {
+              return null;
+            }
+            // Ẩn slot empty ở quá khứ
+            if (
+              slot.type === "empty" &&
+              (dayIdx < todayIndex ||
+                (dayIdx === todayIndex && periodIdx < currentPeriodIndex))
+            ) {
+              return null;
+            }
+            if (slot.type === "empty") return slot; // slot trống
+            return null; // ẩn slot khác
+          })
+        )
+      : scheduleData.slice(5, 10).map((row, periodIdx) =>
+          row.map((slot, dayIdx) => {
+            if (!slot) return null;
+            if (slot._id && slot._id === lessonId) return slot; // slot hiện tại
+            if (slot.status === "completed") return slot; // slot đã dạy
+            // Ẩn slot có subject trùng subject hiện tại
+            if (
+              slot.subject &&
+              ((currentLessonSubjectId &&
+                slot.subject._id === currentLessonSubjectId) ||
+                (currentLessonSubjectName &&
+                  slot.subject.name === currentLessonSubjectName))
+            ) {
+              return null;
+            }
+            // Ẩn slot empty ở quá khứ
+            if (
+              slot.type === "empty" &&
+              (dayIdx < todayIndex ||
+                (dayIdx === todayIndex && periodIdx < currentPeriodIndex))
+            ) {
+              return null;
+            }
+            if (slot.type === "empty") return slot; // slot trống
+            return null; // ẩn slot khác
+          })
+        );
+
+  // Chỉ cho phép chọn 1 slot empty
   const handleSelect = (dayIndex: number, periodIndex: number) => {
     const row = periodIndex;
     const col = dayIndex;
@@ -209,10 +265,8 @@ export default function SwapLesson() {
         cell.session === sessionValue
     );
     if (isExist) {
-      // Bỏ chọn slot hiện tại
       setSelected([]);
     } else {
-      // Luôn chỉ giữ 1 slot duy nhất trên toàn bộ các tuần/buổi
       setSelected([{ row, col, week, session: sessionValue }]);
     }
   };
@@ -224,21 +278,21 @@ export default function SwapLesson() {
       const { row, col } = selected[0];
       const periodOffset = session === "Buổi sáng" ? 0 : 5;
       const slot = scheduleData[row + periodOffset][col];
-      const lessonTo = {
-        _id: slot._id,
-        period: slot.period,
-        subject: slot.subject,
-        text: slot.text,
-        fixedInfo: slot.fixedInfo,
-        scheduledDate: slot.scheduledDate,
-        teacherName: slot.teacherName,
-        session: slot.timeSlot?.session,
-      };
-      router.replace({
-        pathname: "/teachers/lesson_request/swap_request",
+      // Lấy lessonFrom (tiết cần bù) là lesson hiện tại
+      let lessonFrom = null;
+      for (let i = 0; i < scheduleData.length; i++) {
+        for (let j = 0; j < scheduleData[i].length; j++) {
+          const s = scheduleData[i][j];
+          if (s && s._id === lessonId) lessonFrom = s;
+        }
+      }
+      const lessonTo = slot;
+      router.push({
+        pathname: "/teachers/lesson_request/makeup_request",
         params: {
           lessonFrom: lessonFrom ? JSON.stringify(lessonFrom) : null,
-          lessonTo: JSON.stringify(lessonTo),
+          lessonTo: lessonTo ? JSON.stringify(lessonTo) : null,
+          className: className || "",
         },
       });
     }
@@ -279,8 +333,8 @@ export default function SwapLesson() {
 
   return (
     <HeaderLayout
-      title={`Tiết học thay thế`}
-      subtitle="Chọn tiết học thay thế cho tiết học hiện tại"
+      title={`Tiết học dạy bù`}
+      subtitle="Chọn tiết học trống để dạy bù"
       onBack={() => router.back()}
     >
       <View style={styles.container}>
@@ -310,11 +364,12 @@ export default function SwapLesson() {
               days={DAYS}
               onAddActivity={() => {}}
               onSlotPress={handleSelect}
-              scheduleData={displayedData}
+              scheduleData={filteredDisplayedData}
               selectedSlots={selectedSlots}
               onSelectSlot={handleSelect}
               cellStatusData={cellStatusData}
-              isSwapLesson={true}
+              isSwapLesson={false}
+              hideNullSlot={true}
             />
           </ScrollView>
         )}
@@ -460,7 +515,7 @@ export default function SwapLesson() {
                 },
               ]}
             />
-            <Text style={styles.legendText}>Tiết sẽ đổi</Text>
+            <Text style={styles.legendText}>Tiết trống</Text>
           </View>
         </View>
         {/* Nút tiếp tục */}
@@ -510,44 +565,6 @@ const styles = StyleSheet.create({
     color: "#29375C",
     fontSize: 13,
     fontWeight: "500",
-  },
-  continueBtn: {
-    backgroundColor: "#29375C",
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginTop: 16,
-    opacity: 1,
-  },
-  continueBtnDisabled: {
-    backgroundColor: "#A0A3BD",
-    opacity: 0.7,
-  },
-  continueBtnText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 18,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContent: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 10,
-    width: "80%",
-    maxHeight: "80%",
-  },
-  modalItem: {
-    padding: 10,
-  },
-  modalItemText: {
-    color: "#29375C",
-    fontSize: 16,
-    fontWeight: "bold",
   },
   button: {
     backgroundColor: "#29375C",
