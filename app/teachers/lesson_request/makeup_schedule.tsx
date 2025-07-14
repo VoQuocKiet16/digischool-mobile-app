@@ -287,7 +287,7 @@ export default function MakeupSchedule() {
         }
       }
       const lessonTo = slot;
-      router.push({
+      router.replace({
         pathname: "/teachers/lesson_request/makeup_request",
         params: {
           lessonFrom: lessonFrom ? JSON.stringify(lessonFrom) : null,

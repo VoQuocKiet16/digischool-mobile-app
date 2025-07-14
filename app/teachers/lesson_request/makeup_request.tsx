@@ -8,7 +8,8 @@ import {
   View,
 } from "react-native";
 import HeaderLayout from "../../../components/layout/HeaderLayout";
-import SuccessModal from "../../../components/notifications_modal/SuccessModal";
+import LoadingModal from "../../../components/LoadingModal";
+import { createMakeupLessonRequest } from "../../../services/lesson_request.service";
 
 export default function MakeupRequest() {
   const params = useLocalSearchParams();
@@ -20,7 +21,8 @@ export default function MakeupRequest() {
     : null;
   const className = (params.className as string) || "";
   const [reason, setReason] = useState("");
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [showLoading, setShowLoading] = useState(false);
+  const [loadingSuccess, setLoadingSuccess] = useState(false);
   const isValid = reason.trim().length > 0;
 
   // Hàm format thông tin lesson giống swap_request
@@ -36,9 +38,28 @@ export default function MakeupRequest() {
     return `${date ? date + " • " : ""}Tiết ${period} • ${subject}`;
   };
 
-  const handleSubmit = () => {
-    if (isValid) {
-      setShowSuccess(true);
+  const handleSubmit = async () => {
+    if (!isValid) return;
+    setShowLoading(true);
+    setLoadingSuccess(false);
+    try {
+      await createMakeupLessonRequest({
+        originalLessonId: lessonFrom?._id || "",
+        replacementLessonId: lessonTo?._id || "",
+        reason: reason.trim(),
+      });
+      setLoadingSuccess(true);
+      setTimeout(() => {
+        setShowLoading(false);
+        setLoadingSuccess(false);
+        router.back();
+      }, 1000);
+    } catch (e: any) {
+      setShowLoading(false);
+      setLoadingSuccess(false);
+      alert(
+        e?.response?.data?.message || "Đã có lỗi xảy ra, vui lòng thử lại!"
+      );
     }
   };
 
@@ -84,15 +105,10 @@ export default function MakeupRequest() {
         >
           <Text style={styles.sendBtnText}>Gửi yêu cầu</Text>
         </TouchableOpacity>
-        <SuccessModal
-          visible={showSuccess}
-          onClose={() => {
-            setShowSuccess(false);
-            // Quay lại trang trước hoặc trang chính
-          }}
-          title="Thành công"
-          message={"Gửi yêu cầu dạy bù thành công.\nQuay lại trang trước đó?"}
-          buttonText="Xác nhận"
+        <LoadingModal
+          visible={showLoading}
+          text={loadingSuccess ? "Gửi thành công" : "Đang gửi yêu cầu..."}
+          success={loadingSuccess}
         />
       </View>
     </HeaderLayout>

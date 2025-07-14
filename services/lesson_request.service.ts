@@ -45,3 +45,21 @@ export const createSwapLessonRequest = async ({
   });
   return res.data;
 };
+
+// Makeup lesson request
+export const createMakeupLessonRequest = async ({
+  originalLessonId,
+  replacementLessonId,
+  reason,
+}: {
+  originalLessonId: string;
+  replacementLessonId: string;
+  reason: string;
+}) => {
+  const res = await api.post("/api/schedules/lesson-request/makeup/create", {
+    originalLessonId,
+    replacementLessonId,
+    reason,
+  });
+  return res.data;
+};
