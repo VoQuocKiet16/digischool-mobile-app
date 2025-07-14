@@ -1,10 +1,12 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    StyleSheet, Text, TextInput, TouchableOpacity, View
+  StyleSheet, Text, TextInput, TouchableOpacity, View
 } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import RemindPicker from "../../components/RemindPicker";
+import { deleteNote, updateNote } from "../../services/note_lesson.service";
+import { getLessonSubtitle } from "../../utils/lessonSubtitle";
 
 const REMIND_OPTIONS = [
   "Trước 10 phút", "Trước 20 phút", "Trước 30 phút", "Trước 40 phút", "Trước 50 phút"
@@ -15,6 +17,7 @@ const PADDING_COUNT = 2;
 const DetailNoteScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const lessonData = params.lessonData ? JSON.parse(params.lessonData as string) : null;
   const [title, setTitle] = useState(typeof params.title === 'string' ? params.title : "");
   const [note, setNote] = useState(typeof params.content === 'string' ? params.content : "");
   const [remind, setRemind] = useState(true);
@@ -23,11 +26,12 @@ const DetailNoteScreen = () => {
   );
 
   const isValid = title.trim() && note.trim();
+  const id = typeof params.id === 'string' ? params.id : undefined;
 
   return (
     <HeaderLayout
       title="Chi tiết ghi chú"
-      subtitle="Sáng → Tiết 3 → Hóa học → 10a3"
+      subtitle={getLessonSubtitle(lessonData)}
       onBack={() => router.back()}
     >
       <View style={styles.container}>
@@ -77,8 +81,14 @@ const DetailNoteScreen = () => {
         <View style={styles.buttonRow}>
           <TouchableOpacity
             style={styles.deleteBtn}
-            onPress={() => {
-              // Xử lý xoá ghi chú
+            onPress={async () => {
+              if (!id) return;
+              const res = await deleteNote(id);
+              if (res.success) {
+                router.back();
+              } else {
+                alert(res.message || "Xoá ghi chú thất bại");
+              }
             }}
           >
             <Text style={styles.deleteBtnText}>Xoá bỏ</Text>
@@ -86,8 +96,22 @@ const DetailNoteScreen = () => {
           <TouchableOpacity
             style={[styles.saveBtn, !isValid && styles.saveBtnDisabled]}
             disabled={!isValid}
-            onPress={() => {
-              // Xử lý lưu ghi chú
+            onPress={async () => {
+              if (!id) return;
+              const remindMinutes = typeof remindTime === 'string' ? Number(remindTime.match(/\d+/)?.[0]) : undefined;
+              const data: any = { title, content: note };
+              if (remindMinutes !== undefined && !isNaN(remindMinutes)) {
+                data.remindMinutes = remindMinutes;
+              }
+              console.log('Update note id:', id);
+              console.log('Update note data:', data);
+              const res = await updateNote(id, data);
+              console.log('API updateNote result:', res);
+              if (res.success) {
+                router.back();
+              } else {
+                alert(res.message || "Cập nhật ghi chú thất bại");
+              }
             }}
           >
             <Text style={[styles.saveBtnText, !isValid && { color: "#A0A0A0" }]}>Lưu</Text>

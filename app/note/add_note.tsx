@@ -1,15 +1,17 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
-import SuccessModal from "../../components/notifications_modal/SuccessModal";
+import LoadingModal from "../../components/LoadingModal";
 import RemindPicker from "../../components/RemindPicker";
+import { createNote } from "../../services/note_lesson.service";
+import { getLessonSubtitle } from "../../utils/lessonSubtitle";
 
 const REMIND_OPTIONS = [
   "Trước 10 phút",
@@ -26,14 +28,18 @@ const AddNoteScreen = () => {
   const [note, setNote] = useState("");
   const [remind, setRemind] = useState(true);
   const [remindTime, setRemindTime] = useState(REMIND_OPTIONS[2]);
+  const [showLoading, setShowLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const { lessonId, lessonData: lessonDataParam } = useLocalSearchParams<{ lessonId: string, lessonData?: string }>();
+  const lessonData = lessonDataParam ? JSON.parse(lessonDataParam) : null;
+  const [loading, setLoading] = useState(false);
 
   const isValid = title.trim() && note.trim();
 
   return (
     <HeaderLayout
       title="Thêm ghi chú mới"
-      subtitle="Sáng → Tiết 3 → Hóa học → 10a3"
+      subtitle={getLessonSubtitle(lessonData)}
       onBack={() => router.back()}
     >
       <View style={styles.container}>
@@ -91,24 +97,38 @@ const AddNoteScreen = () => {
             styles.addBtn,
             isValid ? styles.addBtnActive : styles.addBtnDisabled,
           ]}
-          disabled={!isValid}
-          onPress={() => {
-            setShowSuccess(true);
+          disabled={!isValid || loading}
+          onPress={async () => {
+            if (!lessonId) return;
+            setLoading(true);
+            setShowLoading(true);
+            const remindMinutes = remind ? Number(remindTime.match(/\d+/)?.[0]) : undefined;
+            const res = await createNote({
+              title,
+              content: note,
+              lesson: lessonId,
+              remindMinutes,
+            });
+            setLoading(false);
+            if (res.success) {
+              setShowSuccess(true);
+              setTimeout(() => {
+                setShowLoading(false);
+                setShowSuccess(false);
+                router.back();
+              }, 1200);
+            } else {
+              setShowLoading(false);
+              alert(res.message || "Tạo ghi chú thất bại");
+            }
           }}
         >
-          <Text style={[styles.addBtnText, !isValid && { color: "#A0A0A0" }]}>
-            Thêm
-          </Text>
+          <Text style={[styles.addBtnText, (!isValid || loading) && { color: "#A0A0A0" }]}>Thêm</Text>
         </TouchableOpacity>
-        <SuccessModal
-          visible={showSuccess}
-          onClose={() => {
-            setShowSuccess(false);
-            router.back();
-          }}
-          title="Thành công"
-          message={"Thêm ghi chú thành công!"}
-          buttonText="Đóng"
+        <LoadingModal
+          visible={showLoading}
+          text={showSuccess ? "Thêm ghi chú thành công!" : "Đang thêm ghi chú..."}
+          success={showSuccess}
         />
       </View>
     </HeaderLayout>

@@ -24,6 +24,7 @@ import {
   updateLessonDescription,
 } from "../../../services/schedule.service";
 import { LessonData } from "../../../types/lesson.types";
+import { getLessonSubtitle } from "../../../utils/lessonSubtitle";
 
 const LessonDetailScreen = () => {
   const [menuVisible, setMenuVisible] = useState(false);
@@ -142,27 +143,11 @@ const LessonDetailScreen = () => {
     });
   };
 
-  // Tạo subtitle từ dữ liệu lesson
-  const getSubtitle = () => {
-    if (!lessonData) return "Đang tải thông tin tiết học...";
-
-    const session =
-      lessonData.timeSlot?.session === "morning" ? "Sáng" : "Chiều";
-    const period = `Tiết ${lessonData.timeSlot?.period || 1}`;
-    const subject =
-      lessonData.subject?.name ||
-      lessonData.fixedInfo?.description ||
-      "Chưa rõ";
-    const className = lessonData.class?.className || "Chưa rõ";
-
-    return `${session} • ${period} • ${subject} • ${className}`;
-  };
-
   if (loading) {
     return (
       <HeaderLayout
         title="Chi tiết tiết học"
-        subtitle={getSubtitle()}
+        subtitle={getLessonSubtitle(lessonData)}
         onBack={() => router.back()}
       >
         <View style={styles.loadingContainer}>
@@ -177,7 +162,7 @@ const LessonDetailScreen = () => {
     return (
       <HeaderLayout
         title="Chi tiết tiết học"
-        subtitle={getSubtitle()}
+        subtitle={getLessonSubtitle(lessonData)}
         onBack={() => router.back()}
       >
         <View style={styles.errorContainer}>
@@ -196,7 +181,7 @@ const LessonDetailScreen = () => {
   return (
     <HeaderLayout
       title="Chi tiết tiết học"
-      subtitle={getSubtitle()}
+      subtitle={getLessonSubtitle(lessonData)}
       onBack={() => router.back()}
       rightIcon={
         <TouchableOpacity onPress={() => setMenuVisible(true)}>
@@ -239,7 +224,7 @@ const LessonDetailScreen = () => {
                   pathname: "/teachers/test_information/test_information",
                   params: {
                     lessonId: lessonId,
-                    subtitle: getSubtitle(),
+                    subtitle: getLessonSubtitle(lessonData),
                   },
                 })
               }
@@ -334,7 +319,10 @@ const LessonDetailScreen = () => {
                 ]}
                 onPress={() => {
                   setMenuVisible(false);
-                  router.push({ pathname: "/note/note" });
+                  router.push({
+                    pathname: "/note/note",
+                    params: { lessonId: lessonId, lessonData: JSON.stringify(lessonData) },
+                  });
                 }}
               >
                 <MaterialIcons name="note" size={20} color="#fff" />

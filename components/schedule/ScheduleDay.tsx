@@ -188,6 +188,7 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
   transparent
   animationType="fade"
   onRequestClose={() => setDateInfoModalVisible(false)}
+  statusBarTranslucent={true}
 >
   <TouchableWithoutFeedback onPress={() => setDateInfoModalVisible(false)}>
     <View style={styles.dateInfoModalOverlay}>

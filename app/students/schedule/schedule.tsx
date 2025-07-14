@@ -332,7 +332,7 @@ export default function ScheduleStudentsScreen() {
         </RefreshableScrollView>
       )}
       {/* Modal chọn năm học */}
-      <Modal visible={showYearModal} transparent animationType="fade">
+      <Modal visible={showYearModal} transparent animationType="fade" statusBarTranslucent={true}>
         <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
@@ -352,7 +352,7 @@ export default function ScheduleStudentsScreen() {
         </TouchableOpacity>
       </Modal>
       {/* Modal chọn tuần */}
-      <Modal visible={showWeekModal} transparent animationType="fade">
+      <Modal visible={showWeekModal} transparent animationType="fade" statusBarTranslucent={true}>
         <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
