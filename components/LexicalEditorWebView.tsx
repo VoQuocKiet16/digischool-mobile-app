@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Keyboard, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
@@ -10,21 +10,34 @@ interface LexicalEditorWebViewProps {
 
 const LexicalEditorWebView = ({ value, onChange, height = 220 }: LexicalEditorWebViewProps) => {
   const webviewRef = useRef<WebView>(null);
-  const initialValue = useRef(value);
+  const lastValue = useRef<string | undefined>(undefined);
+  const [webviewReady, setWebviewReady] = useState(false);
 
-  // Gửi nội dung từ RN vào WebView khi value thay đổi
+  // Khi WebView load xong, mới gửi value vào
+  const handleWebViewLoad = () => {
+    setWebviewReady(true);
+  };
+
   useEffect(() => {
-    if (webviewRef.current && value !== undefined && value !== null) {
+    if (
+      webviewReady &&
+      webviewRef.current &&
+      value !== undefined &&
+      value !== null &&
+      value !== lastValue.current
+    ) {
       webviewRef.current.postMessage(value);
+      lastValue.current = value;
     }
-  }, [value]);
+  }, [value, webviewReady]);
 
   return (
-    <View style={[styles.container, { height }]}> 
+    <View style={[styles.container, { height }]}>
       <WebView
         ref={webviewRef}
         originWhitelist={['*']}
         source={require('../assets/lexical-editor.html')}
+        onLoadEnd={handleWebViewLoad}
         onMessage={event => {
           if (event.nativeEvent.data === '__BLUR__') {
             Keyboard.dismiss();

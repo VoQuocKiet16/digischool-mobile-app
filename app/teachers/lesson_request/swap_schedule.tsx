@@ -4,7 +4,6 @@ import {
   ActivityIndicator,
   FlatList,
   Modal,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -50,16 +49,30 @@ function getWeekRangesByYear(year: string) {
     if (weekEnd > endDate) weekEnd.setTime(endDate.getTime());
 
     // Sử dụng local date để tránh vấn đề múi giờ
-    const startDateStr = `${weekStart.getFullYear()}-${(weekStart.getMonth() + 1).toString().padStart(2, "0")}-${weekStart.getDate().toString().padStart(2, "0")}`;
-    const endDateStr = `${weekEnd.getFullYear()}-${(weekEnd.getMonth() + 1).toString().padStart(2, "0")}-${weekEnd.getDate().toString().padStart(2, "0")}`;
+    const startDateStr = `${weekStart.getFullYear()}-${(
+      weekStart.getMonth() + 1
+    )
+      .toString()
+      .padStart(2, "0")}-${weekStart.getDate().toString().padStart(2, "0")}`;
+    const endDateStr = `${weekEnd.getFullYear()}-${(weekEnd.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}-${weekEnd.getDate().toString().padStart(2, "0")}`;
 
     weeks.push({
       start: startDateStr,
       end: endDateStr,
       label:
-        `${weekStart.getDate().toString().padStart(2, "0")}/${(weekStart.getMonth() + 1).toString().padStart(2, "0")}` +
+        `${weekStart.getDate().toString().padStart(2, "0")}/${(
+          weekStart.getMonth() + 1
+        )
+          .toString()
+          .padStart(2, "0")}` +
         " - " +
-        `${weekEnd.getDate().toString().padStart(2, "0")}/${(weekEnd.getMonth() + 1).toString().padStart(2, "0")}`,
+        `${weekEnd.getDate().toString().padStart(2, "0")}/${(
+          weekEnd.getMonth() + 1
+        )
+          .toString()
+          .padStart(2, "0")}`,
     });
     current.setDate(current.getDate() + 7);
   }
@@ -68,14 +81,21 @@ function getWeekRangesByYear(year: string) {
 
 export default function SwapLesson() {
   const params = useLocalSearchParams();
-  const classId = params.classId as string | undefined;
   const className = params.className as string | undefined;
   const lessonId = params.lessonId as string | undefined;
+  const lessonFrom = params.lessonFrom
+    ? JSON.parse(params.lessonFrom as string)
+    : null;
 
-  const [selected, setSelected] = useState<PeriodCell[]>([]);
+  // State selected lưu theo tuần và session
+  const [selected, setSelected] = useState<
+    { row: number; col: number; week: string; session: string }[]
+  >([]);
   const [scheduleData, setScheduleData] = useState<(any | null)[][]>([]);
   const [loading, setLoading] = useState(false);
-  const [session, setSession] = useState<"Buổi sáng" | "Buổi chiều">("Buổi sáng");
+  const [session, setSession] = useState<"Buổi sáng" | "Buổi chiều">(
+    "Buổi sáng"
+  );
   const [year, setYear] = useState("2024-2025");
   const [dateRange, setDateRange] = useState(() => {
     const weeks = getWeekRangesByYear("2024-2025");
@@ -107,6 +127,7 @@ export default function SwapLesson() {
             text: "",
             type: "default",
             lessonId: "",
+            _id: "",
             status: "",
             scheduledDate: "",
             period: "",
@@ -119,7 +140,7 @@ export default function SwapLesson() {
           const date = dayData.date || "";
           dayData.lessons?.forEach((lesson: any) => {
             // BỎ QUA lesson type: 'empty'
-            if (lesson.type === 'empty') return;
+            if (lesson.type === "empty") return;
             const periodIndex = (lesson.period || 1) - 1;
             if (periodIndex >= 0 && periodIndex < 10) {
               schedule[periodIndex][dayIndex] = {
@@ -129,11 +150,12 @@ export default function SwapLesson() {
                     : lesson && lesson.fixedInfo
                     ? lesson.fixedInfo.description
                     : "",
-                type: lesson ? (lesson.type || "default") : "default",
-                lessonId: lesson?.lessonId || lesson?._id || "",
+                type: lesson ? lesson.type || "default" : "default",
+                lessonId: lesson?.lessonId || "",
+                _id: lesson?._id || "",
                 status: lesson?.status || "",
                 scheduledDate: date,
-                period: lesson?.period || (periodIndex + 1),
+                period: lesson?.period || periodIndex + 1,
                 teacherName: lesson?.teacher?.name || lesson?.teacherName || "",
               };
             }
@@ -164,7 +186,7 @@ export default function SwapLesson() {
   const cellStatusData = Array.from({ length: 5 }, (__, periodIdx) =>
     Array.from({ length: 7 }, (___, dayIdx) => {
       const slot = scheduleData[periodIdx + periodOffset]?.[dayIdx];
-      const lessonId = slot?.lessonId;
+      const lessonId = slot?._id;
       const status = slot?.status;
       if (status === "completed") return "taught";
       if (lessonId && lessonId === currentLessonId) return "current";
@@ -177,10 +199,21 @@ export default function SwapLesson() {
     const row = periodIndex;
     const col = dayIndex;
     if (cellStatusData[row][col] !== "exchangeable") return;
-    if (isSelected(row, col)) {
+    const week = dateRange.start;
+    const sessionValue = session;
+    const isExist = selected.some(
+      (cell) =>
+        cell.row === row &&
+        cell.col === col &&
+        cell.week === week &&
+        cell.session === sessionValue
+    );
+    if (isExist) {
+      // Bỏ chọn slot hiện tại
       setSelected([]);
     } else {
-      setSelected([{ row, col }]);
+      // Luôn chỉ giữ 1 slot duy nhất trên toàn bộ các tuần/buổi
+      setSelected([{ row, col, week, session: sessionValue }]);
     }
   };
 
@@ -190,22 +223,19 @@ export default function SwapLesson() {
     if (isContinueEnabled && selected.length === 1) {
       const { row, col } = selected[0];
       const periodOffset = session === "Buổi sáng" ? 0 : 5;
-      const lessonTo = scheduleData[row + periodOffset][col];
-      // Lấy lessonFrom từ params nếu có, hoặc từ scheduleData nếu không
-      let lessonFrom = null;
-      if (params.lessonFrom) {
-        try {
-          lessonFrom = JSON.parse(params.lessonFrom as string);
-        } catch {}
-      }
-      // Nếu không có trong params, thử lấy từ scheduleData (theo lessonId)
-      if (!lessonFrom && currentLessonId) {
-        lessonFrom = scheduleData.flat().find(
-          (slot) => slot.lessonId === currentLessonId || slot._id === currentLessonId
-        );
-      }
+      const slot = scheduleData[row + periodOffset][col];
+      const lessonTo = {
+        _id: slot._id,
+        period: slot.period,
+        subject: slot.subject,
+        text: slot.text,
+        fixedInfo: slot.fixedInfo,
+        scheduledDate: slot.scheduledDate,
+        teacherName: slot.teacherName,
+        session: slot.timeSlot?.session,
+      };
       router.replace({
-        pathname: "/teachers/confirm_swap/confirm_swap",
+        pathname: "/teachers/lesson_request/swap_request",
         params: {
           lessonFrom: lessonFrom ? JSON.stringify(lessonFrom) : null,
           lessonTo: JSON.stringify(lessonTo),
@@ -228,7 +258,11 @@ export default function SwapLesson() {
     setShowYearModal(false);
   };
   const handleChangeDateRange = () => setShowWeekModal(true);
-  const handleSelectWeek = (selected: { start: string; end: string; label: string }) => {
+  const handleSelectWeek = (selected: {
+    start: string;
+    end: string;
+    label: string;
+  }) => {
     setDateRange(selected);
     setShowWeekModal(false);
   };
@@ -238,11 +272,16 @@ export default function SwapLesson() {
       ? scheduleData.slice(0, 5)
       : scheduleData.slice(5, 10);
 
+  // Lọc selected cho tuần và session hiện tại
+  const selectedSlots = selected.filter(
+    (cell) => cell.week === dateRange.start && cell.session === session
+  );
+
   return (
     <HeaderLayout
-      title={`Tiết - ${className || ""}`}
+      title={`Tiết học thay thế`}
       subtitle="Chọn tiết học thay thế cho tiết học hiện tại"
-      onBack={() => router.replace("/")}
+      onBack={() => router.back()}
     >
       <View style={styles.container}>
         <ScheduleHeader
@@ -254,16 +293,25 @@ export default function SwapLesson() {
           onChangeDateRange={handleChangeDateRange}
         />
         {loading ? (
-          <ActivityIndicator size="large" color="#29375C" style={{ marginTop: 30 }} />
+          <ActivityIndicator
+            size="large"
+            color="#29375C"
+            style={{ marginTop: 30 }}
+          />
         ) : (
-          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ flexGrow: 1 }}
+          >
             <ScheduleDay
-              periods={session === "Buổi sáng" ? morningPeriods : afternoonPeriods}
+              periods={
+                session === "Buổi sáng" ? morningPeriods : afternoonPeriods
+              }
               days={DAYS}
               onAddActivity={() => {}}
               onSlotPress={handleSelect}
               scheduleData={displayedData}
-              selectedSlots={selected}
+              selectedSlots={selectedSlots}
               onSelectSlot={handleSelect}
               cellStatusData={cellStatusData}
               isSwapLesson={true}
@@ -273,18 +321,39 @@ export default function SwapLesson() {
         {/* Modal chọn năm học */}
         <Modal visible={showYearModal} transparent animationType="fade">
           <TouchableOpacity
-            style={styles.modalOverlay}
+            style={{
+              flex: 1,
+              backgroundColor: "rgba(0,0,0,0.2)",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
             activeOpacity={1}
             onPressOut={() => setShowYearModal(false)}
           >
-            <View style={styles.modalContent}>
+            <View
+              style={{
+                backgroundColor: "#fff",
+                borderRadius: 12,
+                padding: 16,
+                minWidth: 160,
+                elevation: 5,
+              }}
+            >
               {academicYears.map((y) => (
                 <TouchableOpacity
                   key={y}
-                  style={styles.modalItem}
+                  style={{ paddingVertical: 12, paddingHorizontal: 8 }}
                   onPress={() => handleSelectYear(y)}
                 >
-                  <Text style={styles.modalItemText}>{y}</Text>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      color: "#3A546D",
+                      textAlign: "center",
+                    }}
+                  >
+                    {y}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -293,22 +362,65 @@ export default function SwapLesson() {
         {/* Modal chọn tuần */}
         <Modal visible={showWeekModal} transparent animationType="fade">
           <TouchableOpacity
-            style={styles.modalOverlay}
+            style={{
+              flex: 1,
+              backgroundColor: "rgba(0,0,0,0.2)",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
             activeOpacity={1}
             onPressOut={() => setShowWeekModal(false)}
           >
-            <View style={[styles.modalContent, { maxHeight: 400 }]}> 
+            <View
+              style={{
+                backgroundColor: "#fff",
+                borderRadius: 12,
+                padding: 16,
+                minWidth: 160,
+                elevation: 5,
+                maxHeight: 400,
+              }}
+            >
               <FlatList
                 data={weekList}
                 keyExtractor={(item) => item.label}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={styles.modalItem}
-                    onPress={() => handleSelectWeek(item)}
-                  >
-                    <Text style={styles.modalItemText}>{item.label}</Text>
-                  </TouchableOpacity>
-                )}
+                renderItem={({ item }) => {
+                  const hasSelected = selected.some(
+                    (cell) => cell.week === item.start
+                  );
+                  return (
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        paddingVertical: 12,
+                        paddingHorizontal: 8,
+                      }}
+                      onPress={() => handleSelectWeek(item)}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          color: "#3A546D",
+                          textAlign: "center",
+                        }}
+                      >
+                        {item.label}
+                      </Text>
+                      {hasSelected && (
+                        <View
+                          style={{
+                            width: 5,
+                            height: 5,
+                            borderRadius: 4,
+                            backgroundColor: "red",
+                            marginLeft: 8,
+                          }}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  );
+                }}
               />
             </View>
           </TouchableOpacity>
@@ -352,24 +464,22 @@ export default function SwapLesson() {
           </View>
         </View>
         {/* Nút tiếp tục */}
-        <SafeAreaView
-          style={{
-            backgroundColor: "#fff",
-            marginBottom: 30,
-            paddingHorizontal: 16,
-          }}
-        >
+        <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={[
-              styles.continueBtn,
-              !isContinueEnabled && styles.continueBtnDisabled,
-            ]}
+            style={[styles.button, !isContinueEnabled && styles.buttonDisabled]}
             onPress={handleContinue}
             disabled={!isContinueEnabled}
           >
-            <Text style={styles.continueBtnText}>Tiếp tục</Text>
+            <Text
+              style={[
+                styles.buttonText,
+                !isContinueEnabled && styles.buttonTextDisabled,
+              ]}
+            >
+              Tiếp tục
+            </Text>
           </TouchableOpacity>
-        </SafeAreaView>
+        </View>
       </View>
     </HeaderLayout>
   );
@@ -439,5 +549,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+  button: {
+    backgroundColor: "#29375C",
+    borderRadius: 20,
+    paddingVertical: 14,
+    alignItems: "center",
+    alignSelf: "center",
+    marginTop: 8,
+    width: "90%",
+  },
+  buttonDisabled: { backgroundColor: "#D1D5DB" },
+  buttonText: {
+    color: "#fff",
+    fontFamily: "Baloo2-SemiBold",
+    fontSize: 18,
+  },
+  buttonTextDisabled: {
+    color: "#9CA3AF",
+    fontFamily: "Baloo2-SemiBold",
+    fontSize: 18,
+  },
+  buttonContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    backgroundColor: "#fff",
+  },
 });
-

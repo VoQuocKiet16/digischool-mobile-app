@@ -9,7 +9,7 @@ export const createLeaveRequest = async ({
   phoneNumber: string;
   reason: string;
 }) => {
-  const res = await api.post("/api/leave-requests/create", {
+  const res = await api.post("/api/student-leave-requests/create", {
     lessonIds,
     phoneNumber,
     reason,

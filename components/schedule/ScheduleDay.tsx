@@ -188,6 +188,7 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
   transparent
   animationType="fade"
   onRequestClose={() => setDateInfoModalVisible(false)}
+  statusBarTranslucent={true}
 >
   <TouchableWithoutFeedback onPress={() => setDateInfoModalVisible(false)}>
     <View style={styles.dateInfoModalOverlay}>
@@ -211,16 +212,22 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
           <View style={{ flex: 1 }}>
             <View style={styles.menuContainer}>
               <TouchableOpacity
-                style={styles.menuItem}
+                style={[styles.menuItem, { flexDirection: 'row', alignItems: 'center' }]}
                 onPress={handleExportSchedule}
               >
-                <Text style={styles.menuItemText}>Xuất TKB ra</Text>
+                <MaterialIcons name="file-download" size={20} color="#fff" />
+                <Text style={[styles.menuItemText, { marginLeft: 8 }]}>
+                  Xuất TKB ra
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.menuItem}
+                style={[styles.menuItem, { flexDirection: 'row', alignItems: 'center' }]}
                 onPress={handleLeaveRequest}
               >
-                <Text style={styles.menuItemText}>Xin phép nghỉ</Text>
+                <MaterialIcons name="event-busy" size={20} color="#fff" />
+                <Text style={[styles.menuItemText, { marginLeft: 8 }]}>
+                  Xin phép nghỉ
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -367,7 +374,7 @@ const styles = StyleSheet.create({
     left: 10,
     backgroundColor: "#29375C",
     borderRadius: 8,
-    width: 150,
+    width: 160,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,

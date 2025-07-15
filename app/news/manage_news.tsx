@@ -1,75 +1,70 @@
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { FlatList, Image, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import HeaderLayout from '../../components/layout/HeaderLayout';
 import PlusIcon from '../../components/PlusIcon';
-
-const NEWS = [
-  {
-    id: '1',
-    title: 'Bí kíp chinh phục phương trình bậc hai',
-    desc: 'Phương trình bậc hai - một "đối thủ" quen thuộc trong toán học, nhưng làm thế nào để hạ gục nó một cách nhanh gọn?',
-    time: '4 giờ trước',
-    image: { uri: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=400&q=80' },
-    pinned: true,
-  },
-  {
-    id: '2',
-    title: 'Bí kíp chinh phục phương trình bậc hai',
-    desc: 'Phương trình bậc hai - một "đối thủ" quen thuộc trong toán học, nhưng làm thế nào để hạ gục nó một cách nhanh gọn?',
-    time: '4 giờ trước',
-    image: { uri: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=400&q=80' },
-    pinned: true,
-  },
-  {
-    id: '3',
-    title: 'Bí kíp chinh phục phương trình bậc hai',
-    desc: 'Phương trình bậc hai - một "đối thủ" quen thuộc trong toán học, nhưng làm thế nào để hạ gục nó một cách nhanh gọn?',
-    time: '4 giờ trước',
-    image: { uri: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=400&q=80' },
-    pinned: true,
-  },
-  {
-    id: '4',
-    title: 'Bí kíp chinh phục phương trình bậc hai',
-    desc: 'Phương trình bậc hai - một "đối thủ" quen thuộc trong toán học, nhưng làm thế nào để hạ gục nó một cách nhanh gọn?',
-    time: '4 giờ trước',
-    image: { uri: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=400&q=80' },
-    pinned: true,
-  },
-];
+import { getMyNews } from '../../services/news.service';
 
 export default function ManageNewsScreen() {
+  const [news, setNews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchNews = async () => {
+      setLoading(true);
+      setError(null);
+      const res = await getMyNews();
+      if (res.success) {
+        setNews(res.data || []);
+      } else {
+        setError(res.message || 'Lỗi không xác định');
+      }
+      setLoading(false);
+    };
+    fetchNews();
+  }, []);
+
   return (
     <HeaderLayout
       title="Danh sách tin đăng"
-      subtitle="Tin đăng của thầy Trung"
+      subtitle="Tin đăng của giáo viên"
     >
       <View style={styles.container}>
-        <FlatList
-          data={NEWS}
-          keyExtractor={item => item.id}
-          contentContainerStyle={{ paddingTop: 8, paddingBottom: 24 }}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <Image source={item.image} style={styles.cardImage} />
-              <View style={styles.cardContent}>
-                <View style={styles.cardHeader}>
-                  <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
-                  <Ionicons name="pin" size={20} color="#25345D" style={{ marginLeft: 4 }} />
+        {loading ? (
+          <ActivityIndicator size="large" color="#25345D" style={{ marginTop: 40 }} />
+        ) : error ? (
+          <Text style={{ color: 'red', marginTop: 40 }}>{error}</Text>
+        ) : (
+          <FlatList
+            data={news}
+            keyExtractor={item => item._id}
+            contentContainerStyle={{ paddingTop: 8, paddingBottom: 24 }}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <TouchableOpacity onPress={() => router.push(`/news/edit_news?id=${item._id}`)} activeOpacity={0.8}>
+                <View style={styles.card}>
+                  <Image source={{ uri: item.coverImage }} style={styles.cardImage} />
+                  <View style={styles.cardContent}>
+                    <View style={styles.cardHeader}>
+                      <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
+                      <Ionicons name="pin" size={20} color="#25345D" style={{ marginLeft: 4 }} />
+                    </View>
+                    <Text style={styles.cardDesc} numberOfLines={2}>{item.content?.replace(/<[^>]+>/g, '')}</Text>
+                    <View style={styles.cardFooter}>
+                      <Ionicons name="time-outline" size={16} color="#7D88A7" style={{ marginRight: 4 }} />
+                      <Text style={styles.cardTime}>{item.createdAt ? new Date(item.createdAt).toLocaleString('vi-VN') : ''}</Text>
+                    </View>
+                  </View>
                 </View>
-                <Text style={styles.cardDesc} numberOfLines={2}>{item.desc}</Text>
-                <View style={styles.cardFooter}>
-                  <Ionicons name="time-outline" size={16} color="#7D88A7" style={{ marginRight: 4 }} />
-                  <Text style={styles.cardTime}>{item.time}</Text>
-                </View>
-              </View>
-            </View>
-          )}
-        />
+              </TouchableOpacity>
+            )}
+          />
+        )}
         <View style={styles.plusWrap}>
-          <PlusIcon text="Thêm tin tức" onPress={() => { /* TODO: chuyển sang trang thêm tin */ }} />
+          <PlusIcon text="Thêm tin tức" onPress={() => router.push('/news/add_news')} />
         </View>
       </View>
     </HeaderLayout>

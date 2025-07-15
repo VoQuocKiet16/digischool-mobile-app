@@ -138,6 +138,9 @@ export default function LoginScreen() {
                   JSON.stringify(roleInfo)
                 );
               }
+              if (userResponse.data.id) {
+                await AsyncStorage.setItem("userId", userResponse.data.id);
+              }
               setUserData(userResponse.data);
             }
           } catch (error) {

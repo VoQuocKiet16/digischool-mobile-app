@@ -3,7 +3,7 @@ import Lesson_Information from "@/components/lesson_detail/Lesson_Information";
 import ConfirmTeachedModal from "@/components/notifications_modal/ConfirmTeachedModal";
 import PlusIcon from "@/components/PlusIcon";
 import RefreshableScrollView from "@/components/RefreshableScrollView";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -11,10 +11,10 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
-  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import {
@@ -24,6 +24,7 @@ import {
   updateLessonDescription,
 } from "../../../services/schedule.service";
 import { LessonData } from "../../../types/lesson.types";
+import { getLessonSubtitle } from "../../../utils/lessonSubtitle";
 
 const LessonDetailScreen = () => {
   const [menuVisible, setMenuVisible] = useState(false);
@@ -142,27 +143,11 @@ const LessonDetailScreen = () => {
     });
   };
 
-  // Tạo subtitle từ dữ liệu lesson
-  const getSubtitle = () => {
-    if (!lessonData) return "Đang tải thông tin tiết học...";
-
-    const session =
-      lessonData.timeSlot?.session === "morning" ? "Sáng" : "Chiều";
-    const period = `Tiết ${lessonData.timeSlot?.period || 1}`;
-    const subject =
-      lessonData.subject?.name ||
-      lessonData.fixedInfo?.description ||
-      "Chưa rõ";
-    const className = lessonData.class?.className || "Chưa rõ";
-
-    return `${session} • ${period} • ${subject} • ${className}`;
-  };
-
   if (loading) {
     return (
       <HeaderLayout
         title="Chi tiết tiết học"
-        subtitle={getSubtitle()}
+        subtitle={getLessonSubtitle(lessonData)}
         onBack={() => router.back()}
       >
         <View style={styles.loadingContainer}>
@@ -177,7 +162,7 @@ const LessonDetailScreen = () => {
     return (
       <HeaderLayout
         title="Chi tiết tiết học"
-        subtitle={getSubtitle()}
+        subtitle={getLessonSubtitle(lessonData)}
         onBack={() => router.back()}
       >
         <View style={styles.errorContainer}>
@@ -196,7 +181,7 @@ const LessonDetailScreen = () => {
   return (
     <HeaderLayout
       title="Chi tiết tiết học"
-      subtitle={getSubtitle()}
+      subtitle={getLessonSubtitle(lessonData)}
       onBack={() => router.back()}
       rightIcon={
         <TouchableOpacity onPress={() => setMenuVisible(true)}>
@@ -239,7 +224,7 @@ const LessonDetailScreen = () => {
                   pathname: "/teachers/test_information/test_information",
                   params: {
                     lessonId: lessonId,
-                    subtitle: getSubtitle(),
+                    subtitle: getLessonSubtitle(lessonData),
                   },
                 })
               }
@@ -265,60 +250,89 @@ const LessonDetailScreen = () => {
         animationType="fade"
         onRequestClose={() => setMenuVisible(false)}
       >
-        <Pressable style={styles.overlay} onPress={() => setMenuVisible(false)}>
-          <View style={styles.menuBox}>
-            <TouchableOpacity
-              style={[styles.menuItem, styles.menuItemActive]}
-              onPress={() => {
-                setMenuVisible(false);
-                router.push({
-                  pathname: "/teachers/substitute_request/substitute_request",
-                  params: { lessonId: lessonId }
-                });
-              }}
-            >
-              <Text style={styles.menuText}>Dạy thay</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                setMenuVisible(false);
-                router.push({
-                  pathname: "/teachers/swap_lesson/swap_lesson",
-                  params: {
-                    ...(lessonData && lessonData.class && typeof (lessonData.class as any)._id === 'string' ? { classId: (lessonData.class as any)._id } : {}),
-                    className: lessonData?.class?.className,
-                    lessonId: lessonData?.lessonId || lessonData?._id || lessonId,
-                    lessonFrom: JSON.stringify(lessonData),
-                  },
-                });
-              }}
-            >
-              <Text style={styles.menuText}>Đổi tiết</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                setMenuVisible(false);
-                router.push({
-                  pathname:
-                    "/teachers/select_makeup_lesson/select_makeup_lesson",
-                });
-              }}
-            >
-              <Text style={styles.menuText}>Dạy bù</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                setMenuVisible(false);
-                router.push({ pathname: "/note/note" });
-              }}
-            >
-              <Text style={styles.menuText}>Ghi chú</Text>
-            </TouchableOpacity>
+        <TouchableWithoutFeedback onPress={() => setMenuVisible(false)}>
+          <View style={styles.overlay}>
+            <View style={styles.menuBox}>
+              <TouchableOpacity
+                style={[
+                  styles.menuItem,
+                  { flexDirection: "row", alignItems: "center" },
+                ]}
+                onPress={() => {
+                  setMenuVisible(false);
+                  router.push({
+                    pathname: "/teachers/lesson_request/substitute_request",
+                    params: { lessonId: lessonId },
+                  });
+                }}
+              >
+                <MaterialIcons name="swap-horiz" size={20} color="#fff" />
+                <Text style={[styles.menuText, { marginLeft: 8 }]}>
+                  Dạy thay
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.menuItem,
+                  { flexDirection: "row", alignItems: "center" },
+                ]}
+                onPress={() => {
+                  setMenuVisible(false);
+                  router.push({
+                    pathname: "/teachers/lesson_request/swap_schedule",
+                    params: {
+                      lessonId: lessonId,
+                      className: lessonData?.class?.className,
+                      lessonFrom: JSON.stringify(lessonData),
+                    },
+                  });
+                }}
+              >
+                <MaterialIcons name="compare-arrows" size={20} color="#fff" />
+                <Text style={[styles.menuText, { marginLeft: 8 }]}>
+                  Đổi tiết
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.menuItem,
+                  { flexDirection: "row", alignItems: "center" },
+                ]}
+                onPress={() => {
+                  setMenuVisible(false);
+                  router.push({
+                    pathname: "/teachers/lesson_request/makeup_schedule",
+                    params: {
+                      lessonId: lessonId,
+                      className: lessonData?.class?.className,
+                    },
+                  });
+                }}
+              >
+                <MaterialIcons name="event-available" size={20} color="#fff" />
+                <Text style={[styles.menuText, { marginLeft: 8 }]}>Dạy bù</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.menuItem,
+                  { flexDirection: "row", alignItems: "center" },
+                ]}
+                onPress={() => {
+                  setMenuVisible(false);
+                  router.push({
+                    pathname: "/note/note",
+                    params: { lessonId: lessonId, lessonData: JSON.stringify(lessonData) },
+                  });
+                }}
+              >
+                <MaterialIcons name="note" size={20} color="#fff" />
+                <Text style={[styles.menuText, { marginLeft: 8 }]}>
+                  Ghi chú
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </Pressable>
+        </TouchableWithoutFeedback>
       </Modal>
     </HeaderLayout>
   );
@@ -363,12 +377,15 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   overlay: {
+    position: "absolute",
+    top: 120,
+    left: 0,
+    right: 20,
+    bottom: 0,
     flex: 1,
     backgroundColor: "transparent",
     justifyContent: "flex-start",
     alignItems: "flex-end",
-    paddingTop: 48,
-    paddingRight: 12,
   },
   menuBox: {
     backgroundColor: "#25345D",
@@ -381,11 +398,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 6,
-    backgroundColor: "#7D88A7",
     marginTop: 5,
-  },
-  menuItemActive: {
-    backgroundColor: "#A0A3BD",
   },
   menuText: {
     color: "#fff",

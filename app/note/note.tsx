@@ -1,67 +1,27 @@
 import { FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import React from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState } from "react";
 import { Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import NoteIcon from "../../components/PlusIcon";
+import { getNotesByLesson } from "../../services/note_lesson.service";
+import { getLessonSubtitle } from "../../utils/lessonSubtitle";
 
-const notes = [
-  {
-    id: "1",
-    title: "Ghi chú 1",
-    content:
-      "Phản ứng oxi hóa - khử: Lập phương trình (2H₂ + O₂ → 2H₂O). Làm bài 1, 2 (SGK p.45). Chuẩn bị kiểm tra.",
-    remindTime: "50",
-  },
-  {
-    id: "2",
-    title: "Ghi chú 2",
-    content:
-      "Phản ứng oxi hóa - khử: Lập phương trình (2H₂ + O₂ → 2H₂O). Làm bài 1, 2 (SGK p.45). Chuẩn bị kiểm tra.",
-    remindTime: "30'",
-  },
-  {
-    id: "3",
-    title: "Ghi chú 3",
-    content:
-      "Phản ứng oxi hóa - khử: Lập phương trình (2H₂ + O₂ → 2H₂O). Làm bài 1, 2 (SGK p.45). Chuẩn bị kiểm tra.",
-    remindTime: "30'",
-  },
-  {
-    id: "4",
-    title: "Ghi chú 4",
-    content:
-      "Phản ứng oxi hóa - khử: Lập phương trình (2H₂ + O₂ → 2H₂O). Làm bài 1, 2 (SGK p.45). Chuẩn bị kiểm tra.",
-    remindTime: "30'",
-  },
-  {
-    id: "5",
-    title: "Ghi chú 5",
-    content:
-      "Phản ứng oxi hóa - khử: Lập phương trình (2H₂ + O₂ → 2H₂O). Làm bài 1, 2 (SGK p.45). Chuẩn bị kiểm tra.",
-    remindTime: "30'",
-  },
-  {
-    id: "6",
-    title: "Ghi chú 6",
-    content:
-      "Phản ứng oxi hóa - khử: Lập phương trình (2H₂ + O₂ → 2H₂O). Làm bài 1, 2 (SGK p.45). Chuẩn bị kiểm tra.",
-    remindTime: "30'",
-  },
-];
 
 const numColumns = 2;
 const screenWidth = Dimensions.get("window").width;
 const cardWidth = (screenWidth - 48) / 2;
 
+const truncate = (str: string, n: number) => (str.length > n ? str.slice(0, n) + '...' : str);
+
 const NoteCard = ({ title, content, remindTime, onPress }: { title: string; content: string; remindTime: string; onPress?: () => void }) => (
   <View style={[styles.card, { width: cardWidth }]}>
     <TouchableOpacity activeOpacity={0.8} onPress={onPress} style={{flex: 1}}>
       <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>{title}</Text>
+        <Text style={styles.cardTitle}>{truncate(title, 20)}</Text>
         <FontAwesome name="thumb-tack" size={18} color="#2d3a5a" />
       </View>
-      <Text style={styles.cardContent}>{content}</Text>
+      <Text style={styles.cardContent}>{truncate(content, 30)}</Text>
       <View style={styles.cardFooter}>
         <MaterialCommunityIcons name="clock-outline" size={16} color="#2d3a5a" />
         <Text style={styles.remindText}>Nhắc hẹn trước {remindTime}</Text>
@@ -71,29 +31,53 @@ const NoteCard = ({ title, content, remindTime, onPress }: { title: string; cont
 );
 
 const NoteScreen = () => {
+  const { lessonId, lessonData: lessonDataParam } = useLocalSearchParams<{ lessonId: string, lessonData?: string }>();
+  const [lessonData, setLessonData] = useState<any>(lessonDataParam ? JSON.parse(lessonDataParam) : null);
+  const [notes, setNotes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (lessonId) {
+      fetchNotes();
+    }
+  }, [lessonId]);
+
+  const fetchNotes = async () => {
+    setLoading(true);
+    const res = await getNotesByLesson(lessonId);
+    console.log('API getNotesByLesson result:', res);
+    setLoading(false);
+    if (res.success && Array.isArray(res.data?.data)) {
+      setNotes(res.data.data);
+    } else {
+      setNotes([]);
+    }
+  };
+
   return (
     <HeaderLayout
       title="Danh sách ghi chú"
-      subtitle="Sáng → Tiết 3 → Hóa học → 10a3"
-      onBack={() => {}}
+      subtitle={getLessonSubtitle(lessonData)}
+      onBack={() => router.back()}
     >
       <View style={styles.container}>
         <FlatList
           data={notes}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item._id}
           numColumns={numColumns}
           renderItem={({ item }) => (
             <NoteCard
               title={item.title}
               content={item.content}
-              remindTime={item.remindTime}
+              remindTime={item.time ? `${item.time} phút` : ""}
               onPress={() => router.push({
                 pathname: '/note/detail_note',
                 params: {
-                  id: item.id,
+                  id: item._id,
                   title: item.title,
                   content: item.content,
-                  remindTime: item.remindTime,
+                  remindTime: item.time,
+                  lessonData: JSON.stringify(lessonData),
                 }
               })}
             />
@@ -101,9 +85,11 @@ const NoteScreen = () => {
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          refreshing={loading}
+          onRefresh={fetchNotes}
         />
         <View style={styles.addNoteWrapper}>
-          <NoteIcon onPress={() => router.push('/note/add_note')} />
+          <NoteIcon onPress={() => router.push({ pathname: '/note/add_note', params: { lessonId, lessonData: JSON.stringify(lessonData) } })} />
         </View>
       </View>
     </HeaderLayout>

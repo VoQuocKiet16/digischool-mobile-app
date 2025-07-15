@@ -2,7 +2,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import Header from "../components/Header";
-import { listenForegroundNotification, requestNotificationPermission } from '../services/notification.service';
 import ScheduleStudentsScreen from "./students/schedule/schedule";
 import ScheduleTeacherScreen from "./teachers/schedule/schedule";
 
@@ -32,15 +31,6 @@ export default function HomeScreen() {
     });
   }, []);
 
-  useEffect(() => {
-    requestNotificationPermission();
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = listenForegroundNotification();
-    return unsubscribe;
-  }, []);
-
   if (loading) {
     return (
       <View style={styles.container}>
@@ -67,7 +57,6 @@ export default function HomeScreen() {
   }
 
   if (roles.includes("manager")) {
-    
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#25345D" />
