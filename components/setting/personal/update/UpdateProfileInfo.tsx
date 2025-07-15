@@ -45,7 +45,7 @@ export default function UpdateProfileInfo() {
         <Ionicons
           name={showInfo ? "chevron-down" : "chevron-forward"}
           size={24}
-          color="#25345D"
+          color="#29375C"
           style={styles.icon}
         />
       </TouchableOpacity>
@@ -85,7 +85,7 @@ export default function UpdateProfileInfo() {
                 <MaterialIcons
                   name="calendar-today"
                   size={22}
-                  color="#25345D"
+                  color="#29375C"
                 />
               </TouchableOpacity>
             </View>
@@ -106,7 +106,7 @@ export default function UpdateProfileInfo() {
                 style={styles.inputIconOutline}
                 onPress={() => setShowGenderDropdown((v) => !v)}
               >
-                <Ionicons name="chevron-down" size={22} color="#25345D" />
+                <Ionicons name="chevron-down" size={22} color="#29375C" />
               </TouchableOpacity>
               {showGenderDropdown && (
                 <View style={styles.dropdownList}>
@@ -122,7 +122,7 @@ export default function UpdateProfileInfo() {
                       <Text
                         style={{
                           fontSize: 16,
-                          color: "#25345D",
+                          color: "#29375C",
                           fontWeight:
                             gender === option.value ? "bold" : "normal",
                         }}
@@ -165,12 +165,12 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 25,
-    color: "#25345D",
+    color: "#29375C",
     flex: 1,
     fontFamily: "Baloo2-Bold",
   },
   icon: {
-    color: "#25345D",
+    color: "#29375C",
     marginLeft: 6,
     backgroundColor: "#C4C4C4",
     borderRadius: 20,
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   },
   outlineInputBox: {
     borderWidth: 1,
-    borderColor: "#25345D",
+    borderColor: "#29375C",
     borderRadius: 12,
     paddingVertical: 17,
     paddingHorizontal: 25,
@@ -196,18 +196,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#f7f7f7",
     paddingHorizontal: 4,
     fontSize: 14,
-    color: "#25345D",
+    color: "#29375C",
     fontFamily: "Baloo2-SemiBold",
     zIndex: 2,
   },
   inputTextOutline: {
     fontSize: 16,
-    color: "#25345D",
+    color: "#29375C",
     fontFamily: "Baloo2-SemiBold",
   },
   label: {
     fontSize: 14,
-    color: "#25345D",
+    color: "#29375C",
     fontWeight: "500",
   },
   required: {
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#25345D",
+    borderColor: "#29375C",
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 8,
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
   inputText: {
     flex: 1,
     fontSize: 16,
-    color: "#25345D",
+    color: "#29375C",
     fontWeight: "bold",
     paddingVertical: 2,
   },
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 10,
     borderWidth: 1.2,
-    borderColor: "#25345D",
+    borderColor: "#29375C",
     elevation: 5,
     zIndex: 10,
   },

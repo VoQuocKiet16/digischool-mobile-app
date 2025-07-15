@@ -117,7 +117,7 @@ export default function SetPasswordScreen() {
               <Icon
                 name="lock"
                 size={22}
-                color="#25345D"
+                color="#29375C"
                 style={styles.inputIcon}
               />
               <TextInput
@@ -139,7 +139,7 @@ export default function SetPasswordScreen() {
           <Icon
             name="lock"
             size={22}
-            color="#25345D"
+            color="#29375C"
             style={styles.inputIcon}
           />
           <TextInput
@@ -179,7 +179,7 @@ export default function SetPasswordScreen() {
           <Icon
             name="lock"
             size={22}
-            color="#25345D"
+            color="#29375C"
             style={styles.inputIcon}
           />
           <TextInput
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    color: "#25345D",
+    color: "#29375C",
     marginBottom: 6,
     marginTop: 12,
     fontWeight: "500",
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1.5,
-    borderColor: "#25345D",
+    borderColor: "#29375C",
     borderRadius: 10,
     paddingHorizontal: 16,
     marginBottom: 8,
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 18,
-    color: "#25345D",
+    color: "#29375C",
     fontFamily: "Baloo2-Regular",
   },
   errorText: {
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderWidth: 1.5,
-    borderColor: "#25345D",
+    borderColor: "#29375C",
     borderRadius: 5,
     marginRight: 8,
     justifyContent: "center",
@@ -309,15 +309,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   checkboxChecked: {
-    backgroundColor: "#25345D",
+    backgroundColor: "#29375C",
   },
   checkboxLabel: {
     fontSize: 15,
-    color: "#25345D",
+    color: "#29375C",
     fontFamily: "Baloo2-Regular",
   },
   saveButton: {
-    backgroundColor: "#25345D",
+    backgroundColor: "#29375C",
     borderRadius: 25,
     paddingVertical: 10,
     alignItems: "center",

@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: "#25345D",
+    color: "#29375C",
     backgroundColor: "transparent",
     paddingVertical: 0,
   },
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   name: {
     fontWeight: "bold",
     fontSize: 16,
-    color: "#25345D",
+    color: "#29375C",
     marginBottom: 2,
   },
   lastMessage: {

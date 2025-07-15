@@ -1,10 +1,10 @@
 import React from "react";
 import {
-    Platform,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const REMIND_OPTIONS = [
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 15,
-    color: "#25345D",
+    color: "#29375C",
     fontWeight: "bold",
     marginBottom: 4,
   },
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   },
   remindBox: {
     borderWidth: 1.2,
-    borderColor: "#25345D",
+    borderColor: "#29375C",
     borderRadius: 14,
     backgroundColor: "#F7F7F7",
     padding: 16,
@@ -142,12 +142,12 @@ const styles = StyleSheet.create({
   },
   remindLabel: {
     fontSize: 15,
-    color: "#25345D",
+    color: "#29375C",
     fontWeight: "bold",
   },
   selectBox: {
     borderWidth: 1,
-    borderColor: "#25345D",
+    borderColor: "#29375C",
     borderRadius: 8,
     backgroundColor: "#E9ECF2",
     paddingVertical: 10,
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   selectedText: {
-    color: "#25345D",
+    color: "#29375C",
     fontSize: 15,
     fontWeight: "bold",
   },
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   selectItemText: {
-    color: "#25345D",
+    color: "#29375C",
     fontSize: 15,
   },
   selectedItem: {
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   },
   saveBtn: {
     flex: 1,
-    backgroundColor: "#25345D",
+    backgroundColor: "#29375C",
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: "center",

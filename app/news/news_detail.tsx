@@ -1,11 +1,22 @@
-import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
-import RenderHtml from 'react-native-render-html';
-import HeaderLayout from '../../components/layout/HeaderLayout';
-import { favoriteNews, getNewsDetail, unfavoriteNews } from '../../services/news.service';
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import RenderHtml from "react-native-render-html";
+import HeaderLayout from "../../components/layout/HeaderLayout";
+import {
+  favoriteNews,
+  getNewsDetail,
+  unfavoriteNews,
+} from "../../services/news.service";
 
 export default function NewsDetailScreen() {
   const router = useRouter();
@@ -15,7 +26,7 @@ export default function NewsDetailScreen() {
   const [error, setError] = useState<string | null>(null);
   const [favorite, setFavorite] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
-  const screenWidth = Dimensions.get('window').width;
+  const screenWidth = Dimensions.get("window").width;
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -25,11 +36,15 @@ export default function NewsDetailScreen() {
       if (res.success) {
         setNews(res.data);
         // Kiểm tra userId trong mảng favorites
-        const userId = await AsyncStorage.getItem('userId');
-        const favArr = Array.isArray(res.data.favorites) ? res.data.favorites : [];
-        setFavorite(userId ? favArr.map(String).includes(String(userId)) : false);
+        const userId = await AsyncStorage.getItem("userId");
+        const favArr = Array.isArray(res.data.favorites)
+          ? res.data.favorites
+          : [];
+        setFavorite(
+          userId ? favArr.map(String).includes(String(userId)) : false
+        );
       } else {
-        setError(res.message || 'Lỗi không xác định');
+        setError(res.message || "Lỗi không xác định");
       }
       setLoading(false);
     };
@@ -49,8 +64,18 @@ export default function NewsDetailScreen() {
     setFavoriteLoading(false);
   };
 
-  if (loading) return <View style={styles.center}><ActivityIndicator size="large" color="#25345D" /></View>;
-  if (error || !news) return <View style={styles.center}><Text style={{ color: 'red' }}>{error || 'Không tìm thấy tin'}</Text></View>;
+  if (loading)
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#29375C" />
+      </View>
+    );
+  if (error || !news)
+    return (
+      <View style={styles.center}>
+        <Text style={{ color: "red" }}>{error || "Không tìm thấy tin"}</Text>
+      </View>
+    );
 
   return (
     <HeaderLayout
@@ -58,32 +83,45 @@ export default function NewsDetailScreen() {
       onBack={() => router.back()}
       rightIcon={
         favoriteLoading ? (
-          <ActivityIndicator size={22} color="#25345D" />
+          <ActivityIndicator size={22} color="#29375C" />
         ) : (
-          <Ionicons name={favorite ? 'bookmark' : 'bookmark-outline'} size={28} color="#25345D" />
+          <Ionicons
+            name={favorite ? "bookmark" : "bookmark-outline"}
+            size={28}
+            color="#29375C"
+          />
         )
       }
       onRightIconPress={handleToggleFavorite}
     >
-      <ScrollView contentContainerStyle={styles.contentWrap} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.contentWrap}
+        showsVerticalScrollIndicator={false}
+      >
         <RenderHtml
           contentWidth={screenWidth - 32}
-          source={{ html: news.content || '' }}
+          source={{ html: news.content || "" }}
           tagsStyles={{
-            body: { color: '#25345D', fontSize: 16, fontFamily: 'Baloo2-Medium' },
+            body: {
+              color: "#29375C",
+              fontSize: 16,
+              fontFamily: "Baloo2-Medium",
+            },
             p: { marginBottom: 8, lineHeight: 22 },
-            b: { fontWeight: 'bold' },
+            b: { fontWeight: "bold" },
             ul: { marginBottom: 8 },
             li: { marginBottom: 4 },
           }}
         />
         {/* Hashtag */}
-        {news.hashtag && (
-          <Text style={styles.hashtag}>{news.hashtag}</Text>
-        )}
+        {news.hashtag && <Text style={styles.hashtag}>{news.hashtag}</Text>}
         {/* Tác giả và thời gian */}
-        <Text style={styles.author}>{news.createdBy?.name || ''}</Text>
-        <Text style={styles.time}>{news.createdAt ? new Date(news.createdAt).toLocaleString('vi-VN') : ''}</Text>
+        <Text style={styles.author}>{news.createdBy?.name || ""}</Text>
+        <Text style={styles.time}>
+          {news.createdAt
+            ? new Date(news.createdAt).toLocaleString("vi-VN")
+            : ""}
+        </Text>
       </ScrollView>
     </HeaderLayout>
   );
@@ -92,7 +130,7 @@ export default function NewsDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   contentWrap: {
     paddingHorizontal: 16,
@@ -100,27 +138,27 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   hashtag: {
-    color: '#3B6EF6',
+    color: "#3B6EF6",
     fontSize: 15,
     marginTop: 12,
     marginBottom: 2,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   author: {
-    color: '#25345D',
+    color: "#29375C",
     fontSize: 15,
     marginTop: 8,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   time: {
-    color: '#7D88A7',
+    color: "#7D88A7",
     fontSize: 14,
     marginTop: 2,
   },
   center: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
 });

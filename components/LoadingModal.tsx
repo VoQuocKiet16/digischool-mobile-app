@@ -1,6 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect, useRef } from "react";
-import { Animated, ActivityIndicator, Modal, Text, View } from "react-native";
+import { ActivityIndicator, Animated, Modal, Text, View } from "react-native";
 
 export default function LoadingModal({
   visible,
@@ -60,14 +60,14 @@ export default function LoadingModal({
               <MaterialIcons name="check-circle" size={54} color="#29375C" />
             </Animated.View>
           ) : (
-            <ActivityIndicator size="large" color="#25345D" />
+            <ActivityIndicator size="large" color="#29375C" />
           )}
           <Text
             style={{
               marginTop: 16,
               fontFamily: "Baloo2-Medium",
               fontSize: 16,
-              color: "#25345D",
+              color: "#29375C",
             }}
           >
             {text || "Đang xử lý..."}

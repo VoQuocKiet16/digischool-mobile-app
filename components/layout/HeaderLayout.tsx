@@ -36,7 +36,7 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({
           style={styles.backBtn}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Ionicons name="chevron-back" size={24} color="#25345D" />
+          <Ionicons name="chevron-back" size={24} color="#29375C" />
         </TouchableOpacity>
         <View style={styles.titleContainer}>
           <Text style={[styles.title, style]} numberOfLines={1}>
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 28,
     fontWeight: "bold",
-    color: "#25345D",
+    color: "#29375C",
     marginBottom: 2,
     maxWidth: "100%",
     fontFamily: "Baloo2-Bold",
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   subtitle: {
     textAlign: "center",
     fontSize: 14,
-    color: "#25345D",
+    color: "#29375C",
     fontWeight: "500",
     marginTop: 0,
     maxWidth: "100%",

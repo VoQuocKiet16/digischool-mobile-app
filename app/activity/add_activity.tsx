@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
   NativeScrollEvent,
@@ -8,7 +8,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import SuccessModal from "../../components/notifications_modal/SuccessModal";
@@ -39,7 +39,7 @@ export default function AddActivity() {
     if (remind && scrollRef.current) {
       const idx = REMIND_OPTIONS.indexOf(remindTime);
       if (idx !== -1) {
-        scrollRef.current.scrollTo({ y: (idx) * ITEM_HEIGHT, animated: true });
+        scrollRef.current.scrollTo({ y: idx * ITEM_HEIGHT, animated: true });
       }
     }
   }, [remindTime, remind]);
@@ -70,18 +70,23 @@ export default function AddActivity() {
         //     remindTime: remind ? remindTime : null
         //   }),
         // });
-        
+
         // if (response.ok) {
-          setShowSuccess(true);
+        setShowSuccess(true);
         // }
       } catch (error) {
-        console.error('Error adding activity:', error);
+        console.error("Error adding activity:", error);
       }
     }
   };
 
   return (
-    <HeaderLayout title="Thêm hoạt động" subtitle="Tạo thông tin hoạt động" onBack={() => router.back()} style={{ fontSize: 20, fontWeight: 'bold' }}>
+    <HeaderLayout
+      title="Thêm hoạt động"
+      subtitle="Tạo thông tin hoạt động"
+      onBack={() => router.back()}
+      style={{ fontSize: 20, fontWeight: "bold" }}
+    >
       <View style={styles.container}>
         {/* Tiêu đề hoạt động */}
         <View style={styles.fieldWrap}>
@@ -138,7 +143,9 @@ export default function AddActivity() {
             router.back();
           }}
           title="Thành công"
-          message={"Thêm hoạt động cá nhân thành công.\nQuay lại trang trước đó?"}
+          message={
+            "Thêm hoạt động cá nhân thành công.\nQuay lại trang trước đó?"
+          }
           buttonText="Xác nhận"
         />
       </View>
@@ -174,13 +181,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     paddingHorizontal: 4,
     fontSize: 15,
-    color: "#25345D",
+    color: "#29375C",
     fontWeight: "bold",
     zIndex: 2,
   },
   inputTextOutline: {
     fontSize: 15,
-    color: "#25345D",
+    color: "#29375C",
     fontWeight: "bold",
     paddingVertical: 0,
   },
@@ -189,7 +196,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   addBtn: {
-    backgroundColor: "#25345D",
+    backgroundColor: "#29375C",
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: "center",

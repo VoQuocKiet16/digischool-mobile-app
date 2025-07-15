@@ -30,7 +30,10 @@ const AddNoteScreen = () => {
   const [remindTime, setRemindTime] = useState(REMIND_OPTIONS[2]);
   const [showLoading, setShowLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const { lessonId, lessonData: lessonDataParam } = useLocalSearchParams<{ lessonId: string, lessonData?: string }>();
+  const { lessonId, lessonData: lessonDataParam } = useLocalSearchParams<{
+    lessonId: string;
+    lessonData?: string;
+  }>();
   const lessonData = lessonDataParam ? JSON.parse(lessonDataParam) : null;
   const [loading, setLoading] = useState(false);
 
@@ -102,7 +105,9 @@ const AddNoteScreen = () => {
             if (!lessonId) return;
             setLoading(true);
             setShowLoading(true);
-            const remindMinutes = remind ? Number(remindTime.match(/\d+/)?.[0]) : undefined;
+            const remindMinutes = remind
+              ? Number(remindTime.match(/\d+/)?.[0])
+              : undefined;
             const res = await createNote({
               title,
               content: note,
@@ -123,11 +128,20 @@ const AddNoteScreen = () => {
             }
           }}
         >
-          <Text style={[styles.addBtnText, (!isValid || loading) && { color: "#A0A0A0" }]}>Thêm</Text>
+          <Text
+            style={[
+              styles.addBtnText,
+              (!isValid || loading) && { color: "#A0A0A0" },
+            ]}
+          >
+            Thêm
+          </Text>
         </TouchableOpacity>
         <LoadingModal
           visible={showLoading}
-          text={showSuccess ? "Thêm ghi chú thành công!" : "Đang thêm ghi chú..."}
+          text={
+            showSuccess ? "Thêm ghi chú thành công!" : "Đang thêm ghi chú..."
+          }
           success={showSuccess}
         />
       </View>
@@ -147,7 +161,7 @@ const styles = StyleSheet.create({
   },
   outlineInputBox: {
     borderWidth: 1.2,
-    borderColor: "#25345D",
+    borderColor: "#29375C",
     borderRadius: 8,
     paddingTop: 18,
     paddingBottom: 12,
@@ -163,13 +177,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     paddingHorizontal: 4,
     fontSize: 15,
-    color: "#25345D",
+    color: "#29375C",
     fontWeight: "bold",
     zIndex: 2,
   },
   inputTextOutline: {
     fontSize: 15,
-    color: "#25345D",
+    color: "#29375C",
     fontWeight: "bold",
     paddingVertical: 0,
   },
@@ -184,7 +198,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   addBtnActive: {
-    backgroundColor: "#25345D",
+    backgroundColor: "#29375C",
   },
   addBtnDisabled: {
     backgroundColor: "#C4C4C4",

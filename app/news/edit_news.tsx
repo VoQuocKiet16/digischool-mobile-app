@@ -1,22 +1,22 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as FileSystem from 'expo-file-system';
-import * as ImagePicker from 'expo-image-picker';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as FileSystem from "expo-file-system";
+import * as ImagePicker from "expo-image-picker";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    Alert,
-    Image,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import LexicalEditorWebView from "../../components/LexicalEditorWebView";
-import LoadingModal from '../../components/LoadingModal';
-import api from '../../services/api.config';
-import { getNewsDetail } from '../../services/news.service';
+import LoadingModal from "../../components/LoadingModal";
+import api from "../../services/api.config";
+import { getNewsDetail } from "../../services/news.service";
 
 export default function EditNewsScreen() {
   const { id } = useLocalSearchParams();
@@ -44,13 +44,14 @@ export default function EditNewsScreen() {
   }, [id]);
 
   // Kiểm tra hợp lệ
-  const isValid = !!coverImage && title.trim().length > 0 && content.trim().length > 0;
+  const isValid =
+    !!coverImage && title.trim().length > 0 && content.trim().length > 0;
 
   // Hàm chọn ảnh
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      alert('Bạn cần cấp quyền truy cập ảnh để chọn ảnh bìa!');
+    if (status !== "granted") {
+      alert("Bạn cần cấp quyền truy cập ảnh để chọn ảnh bìa!");
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -67,7 +68,9 @@ export default function EditNewsScreen() {
   // Hàm chuyển uri sang base64
   const getBase64FromUri = async (uri: string) => {
     try {
-      const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
       return `data:image/jpeg;base64,${base64}`;
     } catch (e) {
       return null;
@@ -79,11 +82,11 @@ export default function EditNewsScreen() {
     if (!isValid || loading) return;
     setLoading(true);
     let base64Image = null;
-    if (coverImage && !coverImage.startsWith('data:image')) {
+    if (coverImage && !coverImage.startsWith("data:image")) {
       base64Image = await getBase64FromUri(coverImage);
       if (!base64Image) {
         setLoading(false);
-        Alert.alert('Lỗi', 'Không thể chuyển đổi ảnh');
+        Alert.alert("Lỗi", "Không thể chuyển đổi ảnh");
         return;
       }
     } else {
@@ -93,7 +96,7 @@ export default function EditNewsScreen() {
       await api.patch(`/api/news/update/${id}`, {
         title: title.trim(),
         content: content.trim(),
-        coverImage: base64Image || '',
+        coverImage: base64Image || "",
       });
       setShowSuccess(true);
       setTimeout(() => {
@@ -101,17 +104,19 @@ export default function EditNewsScreen() {
         router.back();
       }, 1200);
     } catch (e: any) {
-      Alert.alert('Lỗi', e?.response?.data?.message || 'Cập nhật thất bại');
+      Alert.alert("Lỗi", e?.response?.data?.message || "Cập nhật thất bại");
     }
     setLoading(false);
   };
 
   // Hàm xoá tin
   const handleDelete = async () => {
-    Alert.alert('Xác nhận', 'Bạn có chắc muốn xoá tin này?', [
-      { text: 'Huỷ', style: 'cancel' },
+    Alert.alert("Xác nhận", "Bạn có chắc muốn xoá tin này?", [
+      { text: "Huỷ", style: "cancel" },
       {
-        text: 'Xoá', style: 'destructive', onPress: async () => {
+        text: "Xoá",
+        style: "destructive",
+        onPress: async () => {
           setLoading(true);
           try {
             await api.delete(`/api/news/delete/${id}`);
@@ -121,11 +126,11 @@ export default function EditNewsScreen() {
               router.back();
             }, 1200);
           } catch (e: any) {
-            Alert.alert('Lỗi', e?.response?.data?.message || 'Xoá thất bại');
+            Alert.alert("Lỗi", e?.response?.data?.message || "Xoá thất bại");
           }
           setLoading(false);
-        }
-      }
+        },
+      },
     ]);
   };
 
@@ -139,7 +144,11 @@ export default function EditNewsScreen() {
     >
       <View style={styles.container}>
         {/* Ảnh bìa */}
-        <TouchableOpacity style={styles.coverBox} activeOpacity={0.7} onPress={pickImage}>
+        <TouchableOpacity
+          style={styles.coverBox}
+          activeOpacity={0.7}
+          onPress={pickImage}
+        >
           {coverImage ? (
             <Image source={{ uri: coverImage }} style={styles.coverImage} />
           ) : (
@@ -170,7 +179,7 @@ export default function EditNewsScreen() {
           {!initLoading && (
             <LexicalEditorWebView
               value={content}
-              onChange={text => {
+              onChange={(text) => {
                 if (text !== content) {
                   setContent(text);
                 }
@@ -180,17 +189,32 @@ export default function EditNewsScreen() {
           )}
         </View>
         {/* Nút cập nhật và xoá */}
-        <View style={{ flexDirection: 'row', width: '90%', justifyContent: 'space-between', marginTop: 16 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            width: "90%",
+            justifyContent: "space-between",
+            marginTop: 16,
+          }}
+        >
           <TouchableOpacity
-            style={[styles.button, { backgroundColor: '#25345D', flex: 1, marginRight: 8 }]}
+            style={[
+              styles.button,
+              { backgroundColor: "#29375C", flex: 1, marginRight: 8 },
+            ]}
             activeOpacity={isValid && !loading ? 0.7 : 1}
             disabled={!isValid || loading}
             onPress={handleUpdate}
           >
-            <Text style={styles.buttonText}>{loading ? 'Đang cập nhật...' : 'Cập nhật'}</Text>
+            <Text style={styles.buttonText}>
+              {loading ? "Đang cập nhật..." : "Cập nhật"}
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.button, { backgroundColor: '#E74C3C', flex: 1, marginLeft: 8 }]}
+            style={[
+              styles.button,
+              { backgroundColor: "#E74C3C", flex: 1, marginLeft: 8 },
+            ]}
             activeOpacity={!loading ? 0.7 : 1}
             disabled={loading}
             onPress={handleDelete}
@@ -199,7 +223,11 @@ export default function EditNewsScreen() {
           </TouchableOpacity>
         </View>
         {/* Loading & Success Modal */}
-        <LoadingModal visible={loading || showSuccess} text={showSuccess ? 'Thao tác thành công!' : 'Đang xử lý...'} success={showSuccess} />
+        <LoadingModal
+          visible={loading || showSuccess}
+          text={showSuccess ? "Thao tác thành công!" : "Đang xử lý..."}
+          success={showSuccess}
+        />
       </View>
     </HeaderLayout>
   );
@@ -247,7 +275,7 @@ const styles = StyleSheet.create({
   label: {
     fontWeight: "bold",
     fontSize: 15,
-    color: "#25345D",
+    color: "#29375C",
     marginBottom: 4,
     marginLeft: 2,
   },
@@ -257,18 +285,18 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1.5,
-    borderColor: "#25345D",
+    borderColor: "#29375C",
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 15,
-    color: "#25345D",
+    color: "#29375C",
     backgroundColor: "#fff",
     marginBottom: 2,
   },
   editorBox: {
     borderWidth: 1.5,
-    borderColor: "#25345D",
+    borderColor: "#29375C",
     borderRadius: 12,
     backgroundColor: "#fff",
     overflow: "hidden",
@@ -284,4 +312,4 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 18,
   },
-}); 
+});

@@ -28,7 +28,7 @@ const Personal: React.FC = () => {
     <HeaderLayout
       title="Thông tin cá nhân"
       onBack={() => router.back()}
-      rightIcon={<Ionicons name="pencil" size={22} color="#25345D" />}
+      rightIcon={<Ionicons name="pencil" size={22} color="#29375C" />}
       onRightIconPress={() => router.push("/setting/update_personal")}
     >
       <RefreshableScrollView

@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontWeight: "bold",
-    color: "#25345D",
+    color: "#29375C",
     fontSize: 15,
     marginBottom: 8,
   },
@@ -125,12 +125,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 15,
-    color: "#25345D",
+    color: "#29375C",
     backgroundColor: "#F6F8FB",
     marginBottom: 16,
   },
   searchBtn: {
-    backgroundColor: "#25345D",
+    backgroundColor: "#29375C",
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: "center",
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   listWrapper: {
-    backgroundColor: "#25345D",
+    backgroundColor: "#29375C",
     borderTopLeftRadius: 48,
     borderTopRightRadius: 48,
     marginTop: 32,

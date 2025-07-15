@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   },
   role: {
     fontSize: 18,
-    color: "#25345D",
+    color: "#29375C",
     fontFamily: "Baloo2-Medium",
     marginBottom: 25,
     alignSelf: "center",
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   saveBtn: {
-    backgroundColor: "#25345D",
+    backgroundColor: "#29375C",
     borderRadius: 12,
     paddingVertical: 15,
     paddingHorizontal: 130,

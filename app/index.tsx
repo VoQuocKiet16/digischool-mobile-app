@@ -34,7 +34,7 @@ export default function HomeScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#25345D" />
+        <ActivityIndicator size="large" color="#29375C" />
       </View>
     );
   }
@@ -59,7 +59,7 @@ export default function HomeScreen() {
   if (roles.includes("manager")) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#25345D" />
+        <ActivityIndicator size="large" color="#29375C" />
       </View>
     );
   }

@@ -21,7 +21,9 @@ const RemindPicker: React.FC<RemindPickerProps> = ({
   PADDING_COUNT,
 }) => {
   const scrollRef = useRef<ScrollView>(null);
-  const [scrollingRemindTime, setScrollingRemindTime] = useState<string | null>(null);
+  const [scrollingRemindTime, setScrollingRemindTime] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     if (remind && scrollRef.current) {
@@ -50,34 +52,34 @@ const RemindPicker: React.FC<RemindPickerProps> = ({
   // Các style động phụ thuộc ITEM_HEIGHT, PADDING_COUNT
   const pickerContainerStyle = {
     height: ITEM_HEIGHT * (PADDING_COUNT * 2 + 1),
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
     marginTop: 8,
     marginBottom: 8,
-    position: 'relative' as const,
+    position: "relative" as const,
   };
   const pickerSelectedOverlayStyle = {
-    position: 'absolute' as const,
+    position: "absolute" as const,
     top: ITEM_HEIGHT * PADDING_COUNT,
     left: 0,
     right: 0,
     height: ITEM_HEIGHT,
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
     zIndex: 2,
   };
   const pickerSelectedItemStyle = {
-    backgroundColor: '#AEB6C1',
+    backgroundColor: "#AEB6C1",
     borderRadius: 16,
-    width: '98%' as const,
+    width: "98%" as const,
     height: ITEM_HEIGHT,
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
   };
   const remindOptionStyle = {
     height: ITEM_HEIGHT,
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
   };
 
   return (
@@ -86,7 +88,7 @@ const RemindPicker: React.FC<RemindPickerProps> = ({
       <Switch
         value={remind}
         onValueChange={setRemind}
-        trackColor={{ false: "#ccc", true: "#25345D" }}
+        trackColor={{ false: "#ccc", true: "#29375C" }}
         thumbColor={remind ? "#fff" : "#f4f3f4"}
         ios_backgroundColor="#ccc"
         style={styles.remindSwitch}
@@ -98,7 +100,9 @@ const RemindPicker: React.FC<RemindPickerProps> = ({
           <View style={pickerSelectedOverlayStyle} pointerEvents="none">
             <View style={pickerSelectedItemStyle}>
               <Text style={styles.pickerSelectedText}>
-                {scrollingRemindTime !== null ? scrollingRemindTime : remindTime}
+                {scrollingRemindTime !== null
+                  ? scrollingRemindTime
+                  : remindTime}
               </Text>
             </View>
           </View>
@@ -141,7 +145,7 @@ const RemindPicker: React.FC<RemindPickerProps> = ({
 const styles = StyleSheet.create({
   remindBoxCustom: {
     borderWidth: 1.5,
-    borderColor: "#25345D",
+    borderColor: "#29375C",
     borderRadius: 12,
     backgroundColor: "#fff",
     padding: 18,
@@ -157,7 +161,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingHorizontal: 6,
     fontSize: 15,
-    color: "#25345D",
+    color: "#29375C",
     fontWeight: "bold",
     zIndex: 2,
   },
@@ -168,17 +172,17 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   pickerSelectedText: {
-    color: '#25345D',
-    fontWeight: 'bold',
+    color: "#29375C",
+    fontWeight: "bold",
     fontSize: 17,
   },
   remindOptionsList: {
-    width: '100%',
+    width: "100%",
   },
   remindOptionText: {
-    color: '#B6B6B6',
+    color: "#B6B6B6",
     fontSize: 17,
-    fontWeight: '400',
+    fontWeight: "400",
   },
 });
 

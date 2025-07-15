@@ -1,9 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  View
-} from "react-native";
+import { ActivityIndicator, View } from "react-native";
 import Header from "../components/Header";
 import MessageListScreen from "./message/message_list";
 
@@ -26,7 +23,7 @@ export default function MessageScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#25345D" />
+        <ActivityIndicator size="large" color="#29375C" />
       </View>
     );
   }
@@ -49,7 +46,7 @@ export default function MessageScreen() {
     // UI cho manager
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#25345D" />
+        <ActivityIndicator size="large" color="#29375C" />
       </View>
     );
   }

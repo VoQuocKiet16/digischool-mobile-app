@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as FileSystem from 'expo-file-system';
-import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
+import * as FileSystem from "expo-file-system";
+import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   Image,
@@ -13,8 +13,8 @@ import {
 } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import LexicalEditorWebView from "../../components/LexicalEditorWebView";
-import LoadingModal from '../../components/LoadingModal';
-import { createNews } from '../../services/news.service';
+import LoadingModal from "../../components/LoadingModal";
+import { createNews } from "../../services/news.service";
 
 export default function AddNewsScreen() {
   const [title, setTitle] = useState("");
@@ -25,13 +25,14 @@ export default function AddNewsScreen() {
   const router = useRouter();
 
   // Kiểm tra hợp lệ
-  const isValid = !!coverImage && title.trim().length > 0 && content.trim().length > 0;
+  const isValid =
+    !!coverImage && title.trim().length > 0 && content.trim().length > 0;
 
   // Hàm chọn ảnh
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      alert('Bạn cần cấp quyền truy cập ảnh để chọn ảnh bìa!');
+    if (status !== "granted") {
+      alert("Bạn cần cấp quyền truy cập ảnh để chọn ảnh bìa!");
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -48,7 +49,9 @@ export default function AddNewsScreen() {
   // Hàm chuyển uri sang base64
   const getBase64FromUri = async (uri: string) => {
     try {
-      const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
       return `data:image/jpeg;base64,${base64}`;
     } catch (e) {
       return null;
@@ -71,7 +74,7 @@ export default function AddNewsScreen() {
     const res = await createNews({
       title: title.trim(),
       content: content.trim(),
-      coverImage: base64Image || '',
+      coverImage: base64Image || "",
     });
     setLoading(false);
     if (res.success) {
@@ -93,7 +96,11 @@ export default function AddNewsScreen() {
     >
       <View style={styles.container}>
         {/* Ảnh bìa */}
-        <TouchableOpacity style={styles.coverBox} activeOpacity={0.7} onPress={pickImage}>
+        <TouchableOpacity
+          style={styles.coverBox}
+          activeOpacity={0.7}
+          onPress={pickImage}
+        >
           {coverImage ? (
             <Image source={{ uri: coverImage }} style={styles.coverImage} />
           ) : (
@@ -130,15 +137,24 @@ export default function AddNewsScreen() {
         </View>
         {/* Nút đăng tin */}
         <TouchableOpacity
-          style={[styles.button, { backgroundColor: isValid ? '#25345D' : '#E6E9F0' }]}
+          style={[
+            styles.button,
+            { backgroundColor: isValid ? "#29375C" : "#E6E9F0" },
+          ]}
           activeOpacity={isValid ? 0.7 : 1}
           disabled={!isValid || loading}
           onPress={handleSubmit}
         >
-          <Text style={[styles.buttonText, !isValid && { color: '#A0A0A0' }]}>{loading ? 'Đang đăng...' : 'Đăng tin'}</Text>
+          <Text style={[styles.buttonText, !isValid && { color: "#A0A0A0" }]}>
+            {loading ? "Đang đăng..." : "Đăng tin"}
+          </Text>
         </TouchableOpacity>
         {/* Loading & Success Modal */}
-        <LoadingModal visible={loading || showSuccess} text={showSuccess ? 'Đăng tin thành công!' : 'Đang đăng tin...'} success={showSuccess} />
+        <LoadingModal
+          visible={loading || showSuccess}
+          text={showSuccess ? "Đăng tin thành công!" : "Đang đăng tin..."}
+          success={showSuccess}
+        />
       </View>
     </HeaderLayout>
   );
@@ -186,7 +202,7 @@ const styles = StyleSheet.create({
   label: {
     fontWeight: "bold",
     fontSize: 15,
-    color: "#25345D",
+    color: "#29375C",
     marginBottom: 4,
     marginLeft: 2,
   },
@@ -196,18 +212,18 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1.5,
-    borderColor: "#25345D",
+    borderColor: "#29375C",
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 15,
-    color: "#25345D",
+    color: "#29375C",
     backgroundColor: "#fff",
     marginBottom: 2,
   },
   editorBox: {
     borderWidth: 1.5,
-    borderColor: "#25345D",
+    borderColor: "#29375C",
     borderRadius: 12,
     backgroundColor: "#fff",
     overflow: "hidden",

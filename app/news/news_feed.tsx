@@ -262,7 +262,7 @@ export default function NewsFeedScreen() {
               onPress={() => setShowMenu(!showMenu)}
               style={{ padding: 6 }}
             >
-              <Ionicons name="menu" size={28} color="#25345D" />
+              <Ionicons name="menu" size={28} color="#29375C" />
             </TouchableOpacity>
             {showMenu && (
               <View style={styles.menuPopup}>
@@ -358,7 +358,7 @@ export default function NewsFeedScreen() {
       {loading ? (
         <ActivityIndicator
           size="large"
-          color="#25345D"
+          color="#29375C"
           style={{ marginTop: 40 }}
         />
       ) : error ? (
@@ -519,10 +519,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   tabBtnActive: {
-    backgroundColor: "#25345D",
+    backgroundColor: "#29375C",
   },
   tabText: {
-    color: "#25345D",
+    color: "#29375C",
     fontWeight: "bold",
     fontSize: 16,
   },
@@ -551,7 +551,7 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   subjectIconActive: {
-    borderColor: "#25345D",
+    borderColor: "#29375C",
     backgroundColor: "#E6E9F0",
   },
   subjectIcon: {
@@ -560,18 +560,18 @@ const styles = StyleSheet.create({
   },
   subjectLabel: {
     fontSize: 13,
-    color: "#25345D",
+    color: "#29375C",
     fontWeight: "500",
     marginBottom: 2,
   },
   subjectLabelActive: {
-    color: "#25345D",
+    color: "#29375C",
     fontWeight: "bold",
   },
   subjectUnderline: {
     width: 24,
     height: 3,
-    backgroundColor: "#25345D",
+    backgroundColor: "#29375C",
     borderRadius: 2,
     marginTop: 2,
   },
@@ -654,7 +654,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 36,
     right: 0,
-    backgroundColor: "#25345D",
+    backgroundColor: "#29375C",
     borderRadius: 10,
     paddingVertical: 4,
     width: 160,

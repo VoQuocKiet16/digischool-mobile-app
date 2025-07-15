@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   infoText: {
-    color: "#25345D",
+    color: "#29375C",
     fontWeight: "500",
     fontSize: 15,
     marginTop: 4,

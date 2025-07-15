@@ -107,7 +107,7 @@ const Setting: React.FC = () => {
             <Ionicons
               name="chevron-forward"
               size={22}
-              color="#25345D"
+              color="#29375C"
               style={styles.menuArrow}
             />
           </TouchableOpacity>
@@ -119,7 +119,7 @@ const Setting: React.FC = () => {
             <Ionicons
               name="chevron-forward"
               size={22}
-              color="#25345D"
+              color="#29375C"
               style={styles.menuArrow}
             />
           </TouchableOpacity>
@@ -135,7 +135,7 @@ const Setting: React.FC = () => {
             <Ionicons
               name="chevron-forward"
               size={22}
-              color="#25345D"
+              color="#29375C"
               style={styles.menuArrow}
             />
           </TouchableOpacity>
@@ -147,7 +147,7 @@ const Setting: React.FC = () => {
             <Ionicons
               name="chevron-forward"
               size={22}
-              color="#25345D"
+              color="#29375C"
               style={styles.menuArrow}
             />
           </TouchableOpacity>
@@ -185,12 +185,12 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#25345D",
+    color: "#29375C",
     fontFamily: "Baloo2-Bold",
   },
   role: {
     fontSize: 18,
-    color: "#25345D",
+    color: "#29375C",
     marginTop: 2,
     fontFamily: "Baloo2-Medium",
   },
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 10,
-    backgroundColor: "#25345D",
+    backgroundColor: "#29375C",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 16,
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   menuText: {
     flex: 1,
     fontSize: 18,
-    color: "#25345D",
+    color: "#29375C",
     fontWeight: "bold",
     fontFamily: "Baloo2-SemiBold",
   },
