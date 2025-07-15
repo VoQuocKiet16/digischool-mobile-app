@@ -8,20 +8,23 @@ import {
 import { useFonts } from "expo-font";
 import { Slot, usePathname, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   ActivityIndicator,
+  Animated,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import "react-native-reanimated";
+import { NotificationProvider } from "../contexts/NotificationContext";
 import { UserProvider, useUserContext } from "../contexts/UserContext";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { useRegisterForPushNotifications } from "../hooks/useRegisterForPushNotifications";
 
 // Import các màn hình
 import Index from "./index";
@@ -181,6 +184,7 @@ function RootLayoutContent() {
     "/news/edit_news",
     "/message/message_box",
     "/notification/notification_detail",
+    "/notification/notification_create",
   ];
   // Kiểm tra có cần ẩn tabbar không
   const isTabBarHidden = hiddenTabBarRoutes.some((route) =>
@@ -192,6 +196,16 @@ function RootLayoutContent() {
       router.replace(route as any);
     }
   };
+
+  const tabBarAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.timing(tabBarAnim, {
+      toValue: isTabBarHidden ? 0 : 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [isTabBarHidden]);
 
   useEffect(() => {
     AsyncStorage.getItem("token").then((token) => {
@@ -209,6 +223,11 @@ function RootLayoutContent() {
     }
   }, [role, pathname]);
 
+  useRegisterForPushNotifications((token) => {
+    // TODO: Gửi token này về backend để lưu với userId
+    console.log("Expo Push Token:", token);
+  });
+
   if (!loaded) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -221,8 +240,28 @@ function RootLayoutContent() {
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <View style={{ flex: 1 }}>
         <Slot />
-        {role && !isTabBarHidden && (
-          <View style={styles.tabBar}>
+        {role && (
+          <Animated.View
+            style={[
+              styles.tabBar,
+              {
+                opacity: tabBarAnim,
+                transform: [
+                  {
+                    translateY: tabBarAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [100, 0],
+                    }),
+                  },
+                ],
+                position: "absolute",
+                left: 0,
+                right: 0,
+                bottom: 0,
+              },
+            ]}
+            pointerEvents={isTabBarHidden ? "none" : "auto"}
+          >
             {tabs.map((tab) => (
               <TouchableOpacity
                 key={tab.route}
@@ -247,7 +286,7 @@ function RootLayoutContent() {
                 </Text>
               </TouchableOpacity>
             ))}
-          </View>
+          </Animated.View>
         )}
       </View>
       <StatusBar style="auto" />
@@ -258,7 +297,9 @@ function RootLayoutContent() {
 export default function RootLayout() {
   return (
     <UserProvider>
-      <RootLayoutContent />
+      <NotificationProvider>
+        <RootLayoutContent />
+      </NotificationProvider>
     </UserProvider>
   );
 }

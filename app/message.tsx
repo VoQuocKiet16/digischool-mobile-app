@@ -2,12 +2,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import Header from "../components/Header";
+import { useNotificationContext } from "../contexts/NotificationContext";
 import MessageListScreen from "./message/message_list";
 
 export default function MessageScreen() {
   const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
+  const { hasUnreadNotification } = useNotificationContext();
 
   useEffect(() => {
     Promise.all([
@@ -35,6 +37,7 @@ export default function MessageScreen() {
         <Header
           title="Trò chuyện"
           name={userName ? `GV ${userName}` : "GV Nguyễn Văn A"}
+          hasUnreadNotification={hasUnreadNotification}
         />
         {/* TODO: Thay bằng component chat cho giáo viên nếu có */}
         <MessageListScreen userName={userName} roles={roles} />
@@ -57,6 +60,7 @@ export default function MessageScreen() {
       <Header
         title="Trò chuyện"
         name={userName ? `HS ${userName}` : "HS Nguyễn Văn A"}
+        hasUnreadNotification={hasUnreadNotification}
       />
       <MessageListScreen userName={userName} roles={roles} />
     </View>

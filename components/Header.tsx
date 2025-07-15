@@ -13,9 +13,14 @@ import { ThemedView } from "./ThemedView";
 interface HeaderProps {
   title: string;
   name: string;
+  hasUnreadNotification?: boolean;
 }
 
-export default function Header({ title, name }: HeaderProps) {
+export default function Header({
+  title,
+  name,
+  hasUnreadNotification,
+}: HeaderProps) {
   const router = useRouter();
   const colorScheme = useColorScheme();
 
@@ -36,8 +41,20 @@ export default function Header({ title, name }: HeaderProps) {
             style={styles.logo}
           />
           <View style={styles.textWrap}>
-            <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">{title}</Text>
-            <Text style={styles.studentName} numberOfLines={1} ellipsizeMode="tail">Xin chào, {name}</Text>
+            <Text
+              style={styles.headerTitle}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {title}
+            </Text>
+            <Text
+              style={styles.studentName}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              Xin chào, {name}
+            </Text>
           </View>
         </View>
         <View style={styles.headerRight}>
@@ -47,7 +64,7 @@ export default function Header({ title, name }: HeaderProps) {
             style={styles.bellWrap}
           >
             <Ionicons name="notifications-outline" size={24} color="#29375C" />
-            <View style={styles.bellDot} />
+            {hasUnreadNotification ? <View style={styles.bellDot} /> : null}
           </TouchableOpacity>
           <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.7}>
             <Image
@@ -118,14 +135,12 @@ const styles = StyleSheet.create({
   },
   bellDot: {
     position: "absolute",
-    top: 8,
-    right: 8,
+    top: 9,
+    right: 10,
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: "#e74c3c",
-    borderWidth: 1.2,
-    borderColor: "#fff",
   },
   avatar: {
     width: 40,

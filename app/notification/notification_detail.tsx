@@ -1,6 +1,13 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Animated,
+} from "react-native";
 import { WebView } from "react-native-webview";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 
@@ -23,31 +30,94 @@ export default function NotificationDetailScreen() {
   const senderName = params.sender_name || "";
   const senderGender = params.sender_gender || "";
   const createdAt = params.createdAt || "";
+  // Parse relatedObject an toàn
+  let relatedObject = null;
+  if (params.relatedObject_id) {
+    let ro = params.relatedObject_id;
+    if (Array.isArray(ro)) ro = ro[0];
+    try {
+      relatedObject = JSON.parse(ro);
+    } catch {}
+  }
+
+  const relatedObjectId = params.relatedObject_id;
+  const relatedObjectRequestType = params.relatedObject_requestType;
+
+  const showActionBar = [
+    "substitute_request",
+    "swap_request",
+    "teacher_leave_request",
+    "student_leave_request",
+  ].includes(relatedObjectRequestType as string);
+
+  const slideAnim = React.useRef(new Animated.Value(100)).current; // Initial position off-screen
+
+  React.useEffect(() => {
+    if (showActionBar) {
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [showActionBar]);
+
+  const handleApprove = () => {
+    // TODO: Gọi API approve theo relatedObjectRequestType và relatedObjectId
+  };
+
+  const handleReject = () => {
+    // TODO: Gọi API reject theo relatedObjectRequestType và relatedObjectId
+  };
 
   return (
-<HeaderLayout title="Chi tiết thông báo" onBack={() => router.back()}>
-<View style={styles.contentWrap}>
-  {title ? <Text style={styles.title}>{title}</Text> : null}
-  <WebView
-    originWhitelist={["*"]}
-    source={{
-      html: `<style>body { font-size: 40px; line-height: 1.5; font-family: "Baloo2", sans-serif; }</style>${content as string}`,
-    }}
-    style={styles.webview}
-    scrollEnabled={false}
-  />
-  <View style={{ height: 24 }} />
-  {senderName ? (
-    <Text style={styles.sender}>
-      {senderGender === "male" ? "Thầy" : "Cô"} {senderName}{" "}
-      <Text style={{ color: "#29375C", fontWeight: "medium" }}>đã gửi</Text>
-    </Text>
-  ) : null}
-  {createdAt ? (
-    <Text style={styles.time}>{timeAgo(createdAt as string)}</Text>
-  ) : null}
-</View>
-</HeaderLayout>
+    <HeaderLayout title="Chi tiết thông báo" onBack={() => router.back()}>
+      <ScrollView style={styles.contentWrap}>
+        {title ? <Text style={styles.title}>{title}</Text> : null}
+        <WebView
+          originWhitelist={["*"]}
+          source={{
+            html: `
+              <style>
+                @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400..800&family=Manrope:wght@200..800&family=Space+Grotesk:wght@300..700&display=swap');
+              </style>
+              <style>
+                body {
+                  font-size: 50px;
+                  line-height: 1.5;
+                  font-family: "Baloo 2", sans-serif;
+                  font-weight: 450;
+                }
+              </style>
+              ${content as string}
+            `,
+          }}
+          style={styles.webview}
+          scrollEnabled={false}
+        />
+        {senderName ? (
+          <Text style={styles.sender}>
+            {senderGender === "male" ? "Thầy" : "Cô"} {senderName}{" "}
+          </Text>
+        ) : null}
+        {createdAt ? (
+          <Text style={styles.time}>{timeAgo(createdAt as string)}</Text>
+        ) : null}
+      </ScrollView>
+      {showActionBar && (
+        <Animated.View style={[styles.actionBar, { transform: [{ translateY: slideAnim }] }]}>
+          <Text style={styles.actionTitle}>Phản hồi yêu cầu</Text>
+          <View style={styles.actionButtons}>
+            <TouchableOpacity style={styles.rejectBtn} onPress={handleReject}>
+              <Text style={styles.rejectText}>Từ chối</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.acceptBtn} onPress={handleApprove}>
+              <Text style={styles.acceptText}>Chấp nhận</Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      )}
+    </HeaderLayout>
   );
 }
 
@@ -60,7 +130,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     color: "#000",
-    marginBottom: 16,
+    marginBottom: 10,
     fontFamily: "Baloo2-SemiBold",
   },
   webview: {
@@ -70,14 +140,63 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   sender: {
-    fontWeight: "medium",
-    color: "#29375C",
-    fontSize: 15,
+    color: "#000",
+    fontSize: 18,
     marginBottom: 6,
+    fontFamily: "Baloo2-Medium",
   },
   time: {
     color: "#A0A0A0",
     fontSize: 15,
-    fontWeight: "500",
+    fontFamily: "Baloo2-Medium",
+  },
+  actionBar: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "#3B4A6B",
+    paddingVertical: 20,
+    paddingHorizontal: 30,
+    alignItems: "flex-start",
+  },
+  actionTitle: {
+    color: "#fff",
+    fontSize: 20,
+    marginBottom: 10,
+    fontFamily: "Baloo2-SemiBold",
+  },
+  actionButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    marginBottom: 15,
+  },
+  rejectBtn: {
+    flex: 1,
+    borderColor: "#fff",
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingVertical: 12,
+    marginRight: 10,
+    alignItems: "center",
+  },
+  acceptBtn: {
+    flex: 1,
+    backgroundColor: "#22304A",
+    borderRadius: 20,
+    paddingVertical: 12,
+    marginLeft: 10,
+    alignItems: "center",
+  },
+  rejectText: {
+    color: "#fff",
+    fontFamily: "Baloo2-SemiBold",
+    fontSize: 16,
+  },
+  acceptText: {
+    color: "#fff",
+    fontFamily: "Baloo2-SemiBold",
+    fontSize: 16,
   },
 });

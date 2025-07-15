@@ -1,5 +1,5 @@
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -11,9 +11,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import {
   getNotifications,
+  markAllNotificationsAsRead,
   markNotificationAsRead,
   Notification,
 } from "../../services/notification.service";
@@ -44,7 +46,15 @@ function truncateText(text: string, maxLength = 90) {
 export default function NotificationListScreen() {
   const [tab, setTab] = useState("user");
   const [search, setSearch] = useState("");
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notificationsUser, setNotificationsUser] = useState<Notification[]>(
+    []
+  );
+  const [notificationsActivity, setNotificationsActivity] = useState<
+    Notification[]
+  >([]);
+  const [notificationsSystem, setNotificationsSystem] = useState<
+    Notification[]
+  >([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
@@ -59,7 +69,7 @@ export default function NotificationListScreen() {
     })();
   }, []);
 
-  const fetchNotifications = async () => {
+  const fetchAllNotifications = async () => {
     setLoading(true);
     setError("");
     try {
@@ -69,8 +79,14 @@ export default function NotificationListScreen() {
         setLoading(false);
         return;
       }
-      const res = await getNotifications({ type: tab, token });
-      setNotifications(res.data || []);
+      const [user, activity, system] = await Promise.all([
+        getNotifications({ type: "user", token }),
+        getNotifications({ type: "activity", token }),
+        getNotifications({ type: "system", token }),
+      ]);
+      setNotificationsUser(user.data || []);
+      setNotificationsActivity(activity.data || []);
+      setNotificationsSystem(system.data || []);
     } catch (err) {
       setError("Không thể tải thông báo");
     }
@@ -78,15 +94,64 @@ export default function NotificationListScreen() {
   };
 
   useEffect(() => {
-    fetchNotifications();
+    fetchAllNotifications();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab]);
+  }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchAllNotifications();
+    }, [])
+  );
+
+  const safeUserId = userId || "";
+  const unreadCounts = {
+    user: notificationsUser.filter(
+      (n) => !n.isReadBy || !n.isReadBy.includes(safeUserId)
+    ).length,
+    activity: notificationsActivity.filter(
+      (n) => !n.isReadBy || !n.isReadBy.includes(safeUserId)
+    ).length,
+    system: notificationsSystem.filter(
+      (n) => !n.isReadBy || !n.isReadBy.includes(safeUserId)
+    ).length,
+  };
+
+  const notifications =
+    tab === "user"
+      ? notificationsUser
+      : tab === "activity"
+      ? notificationsActivity
+      : notificationsSystem;
 
   const filteredNotifications = notifications.filter(
     (n) =>
       n.title?.toLowerCase().includes(search.toLowerCase()) ||
       n.content?.toLowerCase().includes(search.toLowerCase())
   );
+
+  // Đếm số lượng chưa đọc cho từng tab
+  const unreadCountsForDisplay = {
+    user: notificationsUser.filter(
+      (n) => !n.isReadBy || !n.isReadBy.includes(safeUserId)
+    ).length,
+    activity: notificationsActivity.filter(
+      (n) => !n.isReadBy || !n.isReadBy.includes(safeUserId)
+    ).length,
+    system: notificationsSystem.filter(
+      (n) => !n.isReadBy || !n.isReadBy.includes(safeUserId)
+    ).length,
+  };
+
+  // Đánh dấu tất cả đã đọc
+  const handleMarkAllRead = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) return;
+      await markAllNotificationsAsRead(token);
+      fetchAllNotifications();
+    } catch {}
+  };
 
   const handlePressNotification = async (item: Notification) => {
     try {
@@ -95,7 +160,7 @@ export default function NotificationListScreen() {
         await markNotificationAsRead(item._id, token);
       }
     } catch (err) {
-      // Có thể log lỗi nếu cần
+      alert("Lỗi khi đánh dấu thông báo đã đọc");
     }
     router.push({
       pathname: "/notification/notification_detail",
@@ -106,6 +171,8 @@ export default function NotificationListScreen() {
         sender_gender: item.sender?.gender || "",
         sender_id: item.sender?._id || "",
         createdAt: item.createdAt,
+        relatedObject_id: item.relatedObject?.id || "",
+        relatedObject_requestType: item.relatedObject?.requestType || "",
       },
     });
   };
@@ -126,11 +193,33 @@ export default function NotificationListScreen() {
             style={[styles.tabBtn, tab === t.key && styles.tabBtnActive]}
             onPress={() => setTab(t.key)}
           >
-            <Text
-              style={[styles.tabText, tab === t.key && styles.tabTextActive]}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
-              {t.label}
-            </Text>
+              <Text
+                style={[styles.tabText, tab === t.key && styles.tabTextActive]}
+              >
+                {t.label}
+              </Text>
+              {unreadCountsForDisplay[t.key as "user" | "activity" | "system"] >
+                0 && (
+                <View style={styles.unreadBadgeWrap}>
+                  <Text style={styles.unreadBadgeText}>
+                    {unreadCountsForDisplay[
+                      t.key as "user" | "activity" | "system"
+                    ] > 9
+                      ? "9+"
+                      : unreadCountsForDisplay[
+                          t.key as "user" | "activity" | "system"
+                        ]}
+                  </Text>
+                </View>
+              )}
+            </View>
           </TouchableOpacity>
         ))}
       </View>
@@ -150,15 +239,55 @@ export default function NotificationListScreen() {
             onChangeText={setSearch}
           />
           <TouchableOpacity style={styles.bellBtn}>
-            <MaterialIcons name="notifications-active" size={24} color="#29375C" />
+            <MaterialIcons
+              name="notifications-active"
+              size={24}
+              color="#29375C"
+            />
           </TouchableOpacity>
         </View>
       </View>
+      {filteredNotifications.length > 0 && (
+        <TouchableOpacity style={styles.markAllBtn} onPress={handleMarkAllRead}>
+          <Text style={styles.markAllBtnText}>Đánh dấu tất cả đã đọc</Text>
+          <MaterialIcons name="mark-email-unread" size={26} color="#29375C" />
+        </TouchableOpacity>
+      )}
       {loading ? (
-        <Text style={{ textAlign: "center", marginTop: 20 }}>Đang tải...</Text>
+        <Text
+          style={{
+            textAlign: "center",
+            marginTop: 20,
+            fontFamily: "Baloo2-Medium",
+            fontSize: 14,
+            color: "#A0A0A0",
+          }}
+        >
+          Đang tải...
+        </Text>
       ) : error ? (
-        <Text style={{ textAlign: "center", color: "red", marginTop: 20 }}>
+        <Text
+          style={{
+            textAlign: "center",
+            color: "red",
+            marginTop: 20,
+            fontFamily: "Baloo2-Medium",
+            fontSize: 14,
+          }}
+        >
           {error}
+        </Text>
+      ) : filteredNotifications.length === 0 ? (
+        <Text
+          style={{
+            textAlign: "center",
+            marginTop: 20,
+            fontFamily: "Baloo2-Medium",
+            fontSize: 14,
+            color: "#A0A0A0",
+          }}
+        >
+          Không có thông báo nào
         </Text>
       ) : (
         <FlatList
@@ -183,20 +312,27 @@ export default function NotificationListScreen() {
                         {timeAgo(item.createdAt)}
                       </Text>
                     </View>
-                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
                       <Text
                         style={[
                           styles.notiText,
-                          isUnread && { fontFamily: "Baloo2-SemiBold", color: "#000" },
+                          isUnread && {
+                            fontFamily: "Baloo2-SemiBold",
+                            color: "#000",
+                          },
                         ]}
                         numberOfLines={2}
                         ellipsizeMode="tail"
                       >
                         {truncateText(item.content)}
                       </Text>
-                      {isUnread && (
-                        <Text style={ styles.markIcon }>•</Text>
-                      )}
+                      {isUnread && <Text style={styles.markIcon}>•</Text>}
                     </View>
                   </View>
                 </View>
@@ -311,9 +447,45 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   markIcon: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
     color: "#B71C1C",
     fontSize: 40,
     marginBottom: -15,
+  },
+  unreadBadge: {
+    color: "#F9B233",
+    fontSize: 14,
+    fontFamily: "Baloo2-SemiBold",
+  },
+  unreadBadgeWrap: {
+    backgroundColor: "#F9B233",
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    marginLeft: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+  },
+  unreadBadgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontFamily: "Baloo2-Bold",
+    textAlign: "center",
+  },
+  markAllBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginRight: 10,
+  },
+  markAllBtnText: {
+    fontSize: 14,
+    fontFamily: "Baloo2-Medium",
+    color: "#29375C",
+    marginRight: 8,
+    textDecorationLine: "underline",
   },
 });

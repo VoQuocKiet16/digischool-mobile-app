@@ -10,7 +10,10 @@ export interface Notification {
   };
   receivers?: string[];
   receiverScope?: any;
-  relatedObject?: string;
+  relatedObject?: {
+    id: string;
+    requestType: string;
+  };
   isReadBy?: string[];
   createdAt: string;
   updatedAt: string;
@@ -47,6 +50,17 @@ export const getNotifications = async ({
 export const markNotificationAsRead = async (id: string, token: string) => {
   const res = await api.patch(
     `api/notifications/read/${id}`,
+    {},
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return res.data;
+};
+
+export const markAllNotificationsAsRead = async (token: string) => {
+  const res = await api.patch(
+    `api/notifications/read-all`,
     {},
     {
       headers: { Authorization: `Bearer ${token}` },
