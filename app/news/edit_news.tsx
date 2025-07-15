@@ -1,28 +1,47 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
-import React, { useState } from "react";
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from "react";
 import {
-  Image,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Image,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import LexicalEditorWebView from "../../components/LexicalEditorWebView";
 import LoadingModal from '../../components/LoadingModal';
-import { createNews } from '../../services/news.service';
+import api from '../../services/api.config';
+import { getNewsDetail } from '../../services/news.service';
 
-export default function AddNewsScreen() {
+export default function EditNewsScreen() {
+  const { id } = useLocalSearchParams();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [initLoading, setInitLoading] = useState(true);
   const router = useRouter();
+
+  // Lấy chi tiết tin để fill vào form
+  useEffect(() => {
+    const fetchDetail = async () => {
+      setInitLoading(true);
+      const res = await getNewsDetail(id as string);
+      if (res.success && res.data) {
+        setTitle(res.data.title || "");
+        setContent(res.data.content || "");
+        setCoverImage(res.data.coverImage || null);
+      }
+      setInitLoading(false);
+    };
+    if (id) fetchDetail();
+  }, [id]);
 
   // Kiểm tra hợp lệ
   const isValid = !!coverImage && title.trim().length > 0 && content.trim().length > 0;
@@ -55,40 +74,67 @@ export default function AddNewsScreen() {
     }
   };
 
-  // Hàm xử lý đăng tin
-  const handleSubmit = async () => {
+  // Hàm cập nhật tin
+  const handleUpdate = async () => {
     if (!isValid || loading) return;
     setLoading(true);
     let base64Image = null;
-    if (coverImage) {
+    if (coverImage && !coverImage.startsWith('data:image')) {
       base64Image = await getBase64FromUri(coverImage);
       if (!base64Image) {
         setLoading(false);
-        // Có thể show lỗi bằng modal hoặc Toast nếu muốn
+        Alert.alert('Lỗi', 'Không thể chuyển đổi ảnh');
         return;
       }
-    }
-    const res = await createNews({
-      title: title.trim(),
-      content: content.trim(),
-      coverImage: base64Image || '',
-    });
-    setLoading(false);
-    if (res.success) {
-      setShowSuccess(true);
-      setTitle("");
-      setContent("");
-      setCoverImage(null);
-      setTimeout(() => setShowSuccess(false), 1200);
     } else {
-      // Có thể show lỗi bằng modal hoặc Toast nếu muốn
+      base64Image = coverImage;
     }
+    try {
+      await api.patch(`/api/news/update/${id}`, {
+        title: title.trim(),
+        content: content.trim(),
+        coverImage: base64Image || '',
+      });
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        router.back();
+      }, 1200);
+    } catch (e: any) {
+      Alert.alert('Lỗi', e?.response?.data?.message || 'Cập nhật thất bại');
+    }
+    setLoading(false);
   };
+
+  // Hàm xoá tin
+  const handleDelete = async () => {
+    Alert.alert('Xác nhận', 'Bạn có chắc muốn xoá tin này?', [
+      { text: 'Huỷ', style: 'cancel' },
+      {
+        text: 'Xoá', style: 'destructive', onPress: async () => {
+          setLoading(true);
+          try {
+            await api.delete(`/api/news/delete/${id}`);
+            setShowSuccess(true);
+            setTimeout(() => {
+              setShowSuccess(false);
+              router.back();
+            }, 1200);
+          } catch (e: any) {
+            Alert.alert('Lỗi', e?.response?.data?.message || 'Xoá thất bại');
+          }
+          setLoading(false);
+        }
+      }
+    ]);
+  };
+
+  if (initLoading) return <LoadingModal visible text="Đang tải dữ liệu..." />;
 
   return (
     <HeaderLayout
-      title="Thêm tin tức"
-      subtitle="Tạo bài đăng chia sẻ thông tin thú vị"
+      title="Chỉnh sửa tin tức"
+      subtitle="Cập nhật hoặc xoá bài đăng"
       onBack={() => router.back()}
     >
       <View style={styles.container}>
@@ -121,24 +167,39 @@ export default function AddNewsScreen() {
           <Text style={styles.label}>
             Nội dung <Text style={styles.required}>*</Text>
           </Text>
-
-          <LexicalEditorWebView
-            value={content}
-            onChange={setContent}
-            height={240}
-          />
+          {!initLoading && (
+            <LexicalEditorWebView
+              value={content}
+              onChange={text => {
+                if (text !== content) {
+                  setContent(text);
+                }
+              }}
+              height={240}
+            />
+          )}
         </View>
-        {/* Nút đăng tin */}
-        <TouchableOpacity
-          style={[styles.button, { backgroundColor: isValid ? '#25345D' : '#E6E9F0' }]}
-          activeOpacity={isValid ? 0.7 : 1}
-          disabled={!isValid || loading}
-          onPress={handleSubmit}
-        >
-          <Text style={[styles.buttonText, !isValid && { color: '#A0A0A0' }]}>{loading ? 'Đang đăng...' : 'Đăng tin'}</Text>
-        </TouchableOpacity>
+        {/* Nút cập nhật và xoá */}
+        <View style={{ flexDirection: 'row', width: '90%', justifyContent: 'space-between', marginTop: 16 }}>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: '#25345D', flex: 1, marginRight: 8 }]}
+            activeOpacity={isValid && !loading ? 0.7 : 1}
+            disabled={!isValid || loading}
+            onPress={handleUpdate}
+          >
+            <Text style={styles.buttonText}>{loading ? 'Đang cập nhật...' : 'Cập nhật'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: '#E74C3C', flex: 1, marginLeft: 8 }]}
+            activeOpacity={!loading ? 0.7 : 1}
+            disabled={loading}
+            onPress={handleDelete}
+          >
+            <Text style={styles.buttonText}>Xoá</Text>
+          </TouchableOpacity>
+        </View>
         {/* Loading & Success Modal */}
-        <LoadingModal visible={loading || showSuccess} text={showSuccess ? 'Đăng tin thành công!' : 'Đang đăng tin...'} success={showSuccess} />
+        <LoadingModal visible={loading || showSuccess} text={showSuccess ? 'Thao tác thành công!' : 'Đang xử lý...'} success={showSuccess} />
       </View>
     </HeaderLayout>
   );
@@ -213,16 +274,14 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   button: {
-    width: "90%",
     backgroundColor: "#BFC6D1",
     borderRadius: 16,
     paddingVertical: 16,
     alignItems: "center",
-    marginTop: 16,
   },
   buttonText: {
     color: "#fff",
     fontWeight: "bold",
     fontSize: 18,
   },
-});
+}); 
