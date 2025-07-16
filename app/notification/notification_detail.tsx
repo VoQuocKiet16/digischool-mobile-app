@@ -1,15 +1,17 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
+  Animated,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  Animated,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import HeaderLayout from "../../components/layout/HeaderLayout";
+import { approveOrRejectRequest } from "../../services/approve_reject.service";
 
 function timeAgo(dateString: string): string {
   const now = new Date();
@@ -46,11 +48,13 @@ export default function NotificationDetailScreen() {
   const showActionBar = [
     "substitute_request",
     "swap_request",
+    "makeup_request",
     "teacher_leave_request",
     "student_leave_request",
   ].includes(relatedObjectRequestType as string);
 
   const slideAnim = React.useRef(new Animated.Value(100)).current; // Initial position off-screen
+  const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
     if (showActionBar) {
@@ -62,12 +66,56 @@ export default function NotificationDetailScreen() {
     }
   }, [showActionBar]);
 
-  const handleApprove = () => {
-    // TODO: Gọi API approve theo relatedObjectRequestType và relatedObjectId
+  const handleApprove = async () => {
+    if (!relatedObjectRequestType || !relatedObjectId) {
+      alert("Thiếu thông tin yêu cầu");
+      return;
+    }
+    setLoading(true);
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) throw new Error("Không tìm thấy token");
+      console.log("[APPROVE] requestType:", relatedObjectRequestType, "requestId:", relatedObjectId, "token:", token);
+      const res = await approveOrRejectRequest(
+        relatedObjectRequestType as string,
+        relatedObjectId as string,
+        "approve",
+        token
+      );
+      console.log("[APPROVE] response:", res);
+      alert("Chấp nhận thành công!");
+      router.back();
+    } catch (err: any) {
+      console.log("[APPROVE] error:", err, err?.response?.data);
+      alert("Có lỗi xảy ra khi chấp nhận: " + (err?.message || err));
+    }
+    setLoading(false);
   };
 
-  const handleReject = () => {
-    // TODO: Gọi API reject theo relatedObjectRequestType và relatedObjectId
+  const handleReject = async () => {
+    if (!relatedObjectRequestType || !relatedObjectId) {
+      alert("Thiếu thông tin yêu cầu");
+      return;
+    }
+    setLoading(true);
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) throw new Error("Không tìm thấy token");
+      console.log("[REJECT] requestType:", relatedObjectRequestType, "requestId:", relatedObjectId, "token:", token);
+      const res = await approveOrRejectRequest(
+        relatedObjectRequestType as string,
+        relatedObjectId as string,
+        "reject",
+        token
+      );
+      console.log("[REJECT] response:", res);
+      alert("Từ chối thành công!");
+      router.back();
+    } catch (err: any) {
+      console.log("[REJECT] error:", err, err?.response?.data);
+      alert("Có lỗi xảy ra khi từ chối: " + (err?.message || err));
+    }
+    setLoading(false);
   };
 
   return (
@@ -108,11 +156,11 @@ export default function NotificationDetailScreen() {
         <Animated.View style={[styles.actionBar, { transform: [{ translateY: slideAnim }] }]}>
           <Text style={styles.actionTitle}>Phản hồi yêu cầu</Text>
           <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.rejectBtn} onPress={handleReject}>
-              <Text style={styles.rejectText}>Từ chối</Text>
+            <TouchableOpacity style={styles.rejectBtn} onPress={handleReject} disabled={loading}>
+              <Text style={styles.rejectText}>{loading ? "Đang xử lý..." : "Từ chối"}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.acceptBtn} onPress={handleApprove}>
-              <Text style={styles.acceptText}>Chấp nhận</Text>
+            <TouchableOpacity style={styles.acceptBtn} onPress={handleApprove} disabled={loading}>
+              <Text style={styles.acceptText}>{loading ? "Đang xử lý..." : "Chấp nhận"}</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
