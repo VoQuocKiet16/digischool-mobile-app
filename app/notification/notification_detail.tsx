@@ -46,6 +46,7 @@ export default function NotificationDetailScreen() {
   const showActionBar = [
     "substitute_request",
     "swap_request",
+    "makeup_request",
     "teacher_leave_request",
     "student_leave_request",
   ].includes(relatedObjectRequestType as string);

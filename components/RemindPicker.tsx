@@ -85,14 +85,23 @@ const RemindPicker: React.FC<RemindPickerProps> = ({
   return (
     <View style={styles.remindBoxCustom}>
       <Text style={styles.remindFloatingLabel}>Nhắc nhở</Text>
-      <Switch
-        value={remind}
-        onValueChange={setRemind}
-        trackColor={{ false: "#ccc", true: "#29375C" }}
-        thumbColor={remind ? "#fff" : "#f4f3f4"}
-        ios_backgroundColor="#ccc"
-        style={styles.remindSwitch}
-      />
+      <View style={styles.remindRow}>
+      <Text style={styles.remindText}>
+        {remind
+          ? scrollingRemindTime !== null
+            ? scrollingRemindTime
+            : remindTime
+          : "Không nhắc nhỡ"}
+        </Text>
+        <Switch
+          value={remind}
+          onValueChange={setRemind}
+          trackColor={{ false: "#ccc", true: "#29375C" }}
+          thumbColor={remind ? "#fff" : "#f4f3f4"}
+          ios_backgroundColor="#ccc"
+          style={styles.remindSwitch}
+        />
+      </View>
       {/* Chỉ hiện phần chọn thời gian khi remind = true */}
       {remind && (
         <View style={pickerContainerStyle}>
@@ -144,36 +153,47 @@ const RemindPicker: React.FC<RemindPickerProps> = ({
 
 const styles = StyleSheet.create({
   remindBoxCustom: {
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: "#29375C",
     borderRadius: 12,
-    backgroundColor: "#fff",
-    padding: 18,
-    marginBottom: 32,
+    backgroundColor: "#f7f7f7",
+    paddingTop: 15,
+    paddingBottom: 12,
+    paddingHorizontal: 25,
+    marginLeft: 15,
+    marginRight: 15,
+    marginBottom: 25,
     marginTop: 8,
     position: "relative",
-    minHeight: 160,
+    minHeight: 50, // Giảm chiều cao cho phù hợp
   },
   remindFloatingLabel: {
     position: "absolute",
-    top: -10,
-    left: 16,
-    backgroundColor: "#fff",
+    top: -16,
+    left: 18,
+    backgroundColor: "#f7f7f7",
     paddingHorizontal: 6,
-    fontSize: 15,
+    fontSize: 14,
     color: "#29375C",
-    fontWeight: "bold",
+    fontFamily: "Baloo2-SemiBold",
     zIndex: 2,
   },
+  remindRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   remindSwitch: {
-    position: "absolute",
-    top: 8,
-    right: 12,
     zIndex: 2,
+  },
+  remindText: {
+    color: "#29375C",
+    fontFamily: "Baloo2-Medium",
+    fontSize: 16,
   },
   pickerSelectedText: {
     color: "#29375C",
-    fontWeight: "bold",
+    fontFamily: "Baloo2-Medium",
     fontSize: 17,
   },
   remindOptionsList: {
@@ -182,6 +202,7 @@ const styles = StyleSheet.create({
   remindOptionText: {
     color: "#B6B6B6",
     fontSize: 17,
+    fontFamily: "Baloo2-Medium",
     fontWeight: "400",
   },
 });

@@ -36,12 +36,19 @@ const NoteCard = ({
     <TouchableOpacity activeOpacity={0.8} onPress={onPress} style={{ flex: 1 }}>
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>{truncate(title, 10)}</Text>
-        <MaterialIcons name="push-pin" size={18} color="#2d3a5a" style={{ transform: [{ rotate: '40deg' }] }} />
+        <MaterialIcons
+          name="push-pin"
+          size={18}
+          color="#2d3a5a"
+          style={{ transform: [{ rotate: "40deg" }] }}
+        />
       </View>
       <Text style={styles.cardContent}>{truncate(content, 50)}</Text>
       <View style={styles.cardFooter}>
         <MaterialIcons name="access-time" size={16} color="#2d3a5a" />
-        <Text style={styles.remindText}>Nhắc hẹn trước {remindTime}</Text>
+        <Text style={styles.remindText}>
+          {remindTime ? `Nhắc hẹn trước ${remindTime}` : "Không nhắc nhở"}
+        </Text>
       </View>
     </TouchableOpacity>
   </View>
@@ -186,7 +193,7 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     fontSize: 14,
-    color: "#29375C",
+    color: "#616A81",
     fontFamily: "Baloo2-Medium",
     marginBottom: 16,
   },
@@ -202,7 +209,7 @@ const styles = StyleSheet.create({
     fontFamily: "Baloo2-Medium",
   },
   addNoteWrapper: {
-    marginTop: 32,
+    marginTop: 24,
     marginLeft: 16,
     marginBottom: 24,
   },
