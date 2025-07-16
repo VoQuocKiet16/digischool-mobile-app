@@ -96,14 +96,27 @@ export default function SwapLesson() {
   const [session, setSession] = useState<"Buổi sáng" | "Buổi chiều">(
     "Buổi sáng"
   );
-  const [year, setYear] = useState("2024-2025");
-  const [dateRange, setDateRange] = useState(() => {
-    const weeks = getWeekRangesByYear("2024-2025");
-    return weeks[1];
-  });
+  const lessonDate = params.lessonDate as string | undefined;
+  const lessonYear = params.lessonYear as string | undefined;
+  const [year, setYear] = useState(lessonYear || "2024-2025");
+  const weekList = getWeekRangesByYear(year);
   const [showYearModal, setShowYearModal] = useState(false);
   const [showWeekModal, setShowWeekModal] = useState(false);
-  const weekList = getWeekRangesByYear(year);
+
+  function findWeekByDate(dateStr: string | undefined, weeks: any[]) {
+    if (!dateStr) return undefined;
+    const date = new Date(dateStr);
+    return weeks.find(
+      (w) => new Date(w.start) <= date && date <= new Date(w.end)
+    );
+  }
+
+  const [dateRange, setDateRange] = useState<{ start: string; end: string; label: string } | null>(null);
+
+  useEffect(() => {
+    const found = findWeekByDate(lessonDate, weekList);
+    setDateRange(found || weekList[0]);
+  }, [year, lessonDate]);
 
   const morningPeriods = ["Tiết 1", "Tiết 2", "Tiết 3", "Tiết 4", "Tiết 5"];
   const afternoonPeriods = ["Tiết 6", "Tiết 7", "Tiết 8", "Tiết 9", "Tiết 10"];
@@ -118,8 +131,8 @@ export default function SwapLesson() {
         const data = await getStudentSchedule({
           className: className || "",
           academicYear: year,
-          startOfWeek: dateRange.start,
-          endOfWeek: dateRange.end,
+          startOfWeek: dateRange?.start || "",
+          endOfWeek: dateRange?.end || "",
         });
         // Map dữ liệu cho ScheduleDay giống học sinh
         const schedule = Array.from({ length: 10 }, () =>
@@ -199,7 +212,7 @@ export default function SwapLesson() {
     const row = periodIndex;
     const col = dayIndex;
     if (cellStatusData[row][col] !== "exchangeable") return;
-    const week = dateRange.start;
+    const week = dateRange?.start || "";
     const sessionValue = session;
     const isExist = selected.some(
       (cell) =>
@@ -274,7 +287,7 @@ export default function SwapLesson() {
 
   // Lọc selected cho tuần và session hiện tại
   const selectedSlots = selected.filter(
-    (cell) => cell.week === dateRange.start && cell.session === session
+    (cell) => cell.week === dateRange?.start && cell.session === session
   );
 
   return (
@@ -286,7 +299,7 @@ export default function SwapLesson() {
       <View style={styles.container}>
         <ScheduleHeader
           title={session}
-          dateRange={dateRange.label}
+          dateRange={dateRange?.label || ""}
           year={year}
           onPressTitle={handleSessionToggle}
           onChangeYear={handleChangeYear}
