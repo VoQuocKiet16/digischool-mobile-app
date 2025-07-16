@@ -184,7 +184,13 @@ function RootLayoutContent() {
     "/message/message_box",
     "/notification/notification_detail",
     "/notification/notification_create",
-    "/note/note"
+    "/note/note",
+    "/note/detail_note",
+    "/note/add_note",
+    "/teachers/leave_request/leave_request",
+    "/teachers/leave_request/leave_request_info",
+    "/students/leave_request/leave_request",
+    "/students/leave_request/leave_request_info",
   ];
   // Kiểm tra có cần ẩn tabbar không
   const isTabBarHidden = hiddenTabBarRoutes.some((route) =>

@@ -174,7 +174,7 @@ export default function ScheduleStudentsScreen() {
     label: string;
   }>(() => {
     const weeks = getWeekRangesByYear("2024-2025");
-    return weeks[1]; // Sử dụng tuần đầu tiên thay vì tuần thứ 2
+    return weeks[2]; // Sử dụng tuần đầu tiên thay vì tuần thứ 2
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

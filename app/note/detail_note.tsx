@@ -8,6 +8,8 @@ import {
   View,
 } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
+import LoadingModal from "../../components/LoadingModal";
+import ConfirmDeleteModal from "../../components/notifications_modal/ConfirmDeleteModal";
 import RemindPicker from "../../components/RemindPicker";
 import { deleteNote, updateNote } from "../../services/note_lesson.service";
 import { getLessonSubtitle } from "../../utils/lessonSubtitle";
@@ -34,15 +36,93 @@ const DetailNoteScreen = () => {
   const [note, setNote] = useState(
     typeof params.content === "string" ? params.content : ""
   );
-  const [remind, setRemind] = useState(true);
-  const [remindTime, setRemindTime] = useState(
-    typeof params.remindTime === "string"
-      ? params.remindTime
-      : REMIND_OPTIONS[2]
+  const [remind, setRemind] = useState(
+    typeof params.remindTime === "string" && params.remindTime !== ""
+      ? true
+      : false
   );
-
+  // Map remindTime (có thể là số phút) sang option "Trước xx phút"
+  let initialRemindTime = REMIND_OPTIONS[2];
+  if (typeof params.remindTime === "string" && params.remindTime !== "") {
+    // Nếu là số, map sang option
+    const match = params.remindTime.match(/\d+/);
+    if (match) {
+      const found = REMIND_OPTIONS.find((opt) => opt.includes(match[0]!));
+      if (found) initialRemindTime = found;
+    } else if (REMIND_OPTIONS.includes(params.remindTime)) {
+      initialRemindTime = params.remindTime;
+    }
+  }
+  const [remindTime, setRemindTime] = useState(initialRemindTime);
+  const [showLoading, setShowLoading] = useState(false);
+  const [loadingSuccess, setLoadingSuccess] = useState(false);
+  const [error, setError] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const isValid = title.trim() && note.trim();
   const id = typeof params.id === "string" ? params.id : undefined;
+
+  const handleUpdate = async () => {
+    if (!id) return;
+    setIsUpdating(true);
+    setShowLoading(true);
+    setLoadingSuccess(false);
+    setError("");
+    try {
+      const data: any = { title, content: note };
+      if (remind) {
+        data.remindMinutes = Number(remindTime.match(/\d+/)?.[0]);
+      } else {
+        data.remindMinutes = undefined;
+      }
+      const res = await updateNote(id, data);
+      if (res.success) {
+        setLoadingSuccess(true);
+        setTimeout(() => {
+          setShowLoading(false);
+          setLoadingSuccess(false);
+          setIsUpdating(false);
+          router.back();
+        }, 1000);
+      } else {
+        setError(res.message || "Cập nhật ghi chú thất bại!");
+        setShowLoading(false);
+        setIsUpdating(false);
+      }
+    } catch (e) {
+      setError("Cập nhật ghi chú thất bại!");
+      setShowLoading(false);
+      setIsUpdating(false);
+    }
+  };
+
+  const handleDelete = () => {
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!id) return;
+    setIsDeleting(true);
+    setShowLoading(true);
+    setError("");
+    try {
+      const res = await deleteNote(id);
+      setShowDeleteModal(false);
+      setShowLoading(false);
+      setIsDeleting(false);
+      if (res.success) {
+        router.back();
+      } else {
+        setError(res.message || "Xoá ghi chú thất bại!");
+      }
+    } catch (e) {
+      setShowDeleteModal(false);
+      setShowLoading(false);
+      setIsDeleting(false);
+      setError("Xoá ghi chú thất bại!");
+    }
+  };
 
   return (
     <HeaderLayout
@@ -61,8 +141,8 @@ const DetailNoteScreen = () => {
               style={styles.inputTextOutline}
               value={title}
               onChangeText={setTitle}
-              placeholder=" "
-              placeholderTextColor="#B6B6B6"
+              placeholder="Nhập tiêu đề ghi chú"
+              placeholderTextColor="#9CA3AF"
             />
           </View>
         </View>
@@ -79,8 +159,8 @@ const DetailNoteScreen = () => {
               ]}
               value={note}
               onChangeText={setNote}
-              placeholder=" "
-              placeholderTextColor="#B6B6B6"
+              placeholder="Nhập nội dung ghi chú"
+              placeholderTextColor="#9CA3AF"
               multiline={true}
               blurOnSubmit={true}
             />
@@ -96,53 +176,62 @@ const DetailNoteScreen = () => {
           ITEM_HEIGHT={ITEM_HEIGHT}
           PADDING_COUNT={PADDING_COUNT}
         />
+        {error ? (
+          <Text
+            style={{
+              color: "red",
+              textAlign: "center",
+              marginBottom: 8,
+              fontFamily: "Baloo2-Medium",
+            }}
+          >
+            {error}
+          </Text>
+        ) : null}
         {/* Nút Xoá và Lưu */}
         <View style={styles.buttonRow}>
           <TouchableOpacity
-            style={styles.deleteBtn}
-            onPress={async () => {
-              if (!id) return;
-              const res = await deleteNote(id);
-              if (res.success) {
-                router.back();
-              } else {
-                alert(res.message || "Xoá ghi chú thất bại");
-              }
-            }}
-          >
-            <Text style={styles.deleteBtnText}>Xoá bỏ</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.saveBtn, !isValid && styles.saveBtnDisabled]}
-            disabled={!isValid}
-            onPress={async () => {
-              if (!id) return;
-              const remindMinutes =
-                typeof remindTime === "string"
-                  ? Number(remindTime.match(/\d+/)?.[0])
-                  : undefined;
-              const data: any = { title, content: note };
-              if (remindMinutes !== undefined && !isNaN(remindMinutes)) {
-                data.remindMinutes = remindMinutes;
-              }
-              console.log("Update note id:", id);
-              console.log("Update note data:", data);
-              const res = await updateNote(id, data);
-              console.log("API updateNote result:", res);
-              if (res.success) {
-                router.back();
-              } else {
-                alert(res.message || "Cập nhật ghi chú thất bại");
-              }
-            }}
+            style={[styles.deleteBtn, isDeleting && styles.deleteBtnDisabled]}
+            disabled={isDeleting}
+            onPress={handleDelete}
           >
             <Text
-              style={[styles.saveBtnText, !isValid && { color: "#A0A0A0" }]}
+              style={[styles.deleteBtnText, isDeleting && { color: "#29375C" }]}
             >
-              Lưu
+              {isDeleting ? "Đang xóa..." : "Xóa bỏ"}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.saveBtn,
+              (!isValid || isUpdating) && styles.saveBtnDisabled,
+            ]}
+            disabled={!isValid || isUpdating}
+            onPress={handleUpdate}
+          >
+            <Text style={styles.saveBtnText}>
+              {isUpdating ? "Đang lưu..." : "Lưu"}
             </Text>
           </TouchableOpacity>
         </View>
+        <LoadingModal
+          visible={showLoading}
+          text={
+            loadingSuccess
+              ? "Cập nhật thành công"
+              : isDeleting
+              ? "Đang xóa ghi chú..."
+              : "Đang cập nhật ghi chú..."
+          }
+          success={loadingSuccess}
+        />
+        <ConfirmDeleteModal
+          visible={showDeleteModal}
+          onCancel={() => setShowDeleteModal(false)}
+          onConfirm={confirmDelete}
+          title="Xác nhận xóa?"
+          message={`Xóa bỏ sẽ không thể hoàn lại được!\nBạn chắc chắn muốn xóa bỏ?`}
+        />
       </View>
     </HeaderLayout>
   );
@@ -151,44 +240,45 @@ const DetailNoteScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-    paddingHorizontal: 20,
-    paddingTop: 8,
+    padding: 20,
   },
   fieldWrap: {
     marginBottom: 16,
   },
   outlineInputBox: {
-    borderWidth: 1.2,
+    borderWidth: 1,
     borderColor: "#29375C",
-    borderRadius: 8,
-    paddingTop: 18,
+    borderRadius: 12,
+    backgroundColor: "#f7f7f7",
+    marginBottom: 25,
+    paddingTop: 15,
     paddingBottom: 12,
-    paddingHorizontal: 12,
-    backgroundColor: "#fff",
-    marginTop: 8,
+    paddingHorizontal: 25,
+    marginLeft: 15,
+    marginRight: 15,
     position: "relative",
   },
   floatingLabel: {
     position: "absolute",
-    top: -10,
+    top: -16,
     left: 18,
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 4,
-    fontSize: 15,
+    backgroundColor: "#f7f7f7",
+    paddingHorizontal: 6,
     color: "#29375C",
-    fontWeight: "bold",
+    fontFamily: "Baloo2-SemiBold",
+    fontSize: 14,
     zIndex: 2,
   },
   inputTextOutline: {
-    fontSize: 15,
     color: "#29375C",
-    fontWeight: "bold",
-    paddingVertical: 0,
+    fontSize: 16,
+    fontFamily: "Baloo2-Medium",
   },
   required: {
-    color: "#F55C5C",
-    fontWeight: "bold",
+    color: "#E53935",
+    fontSize: 18,
+    marginLeft: 2,
+    marginTop: -2,
   },
   buttonRow: {
     flexDirection: "row",
@@ -197,33 +287,36 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   deleteBtn: {
-    flex: 1,
-    backgroundColor: "#FFAFAF",
-    borderRadius: 12,
-    paddingVertical: 14,
+    backgroundColor: "#FFA29D",
+    borderRadius: 25,
+    paddingVertical: 10,
     alignItems: "center",
-    marginRight: 8,
+    alignSelf: "center",
+    width: "45%",
+  },
+  deleteBtnDisabled: {
+    backgroundColor: "#D1D5DB",
   },
   deleteBtnText: {
-    color: "#29375C",
-    fontWeight: "bold",
-    fontSize: 17,
+    color: "#CF2020",
+    fontFamily: "Baloo2-SemiBold",
+    fontSize: 18,
   },
   saveBtn: {
-    flex: 1,
     backgroundColor: "#29375C",
-    borderRadius: 12,
-    paddingVertical: 14,
+    borderRadius: 25,
+    paddingVertical: 10,
     alignItems: "center",
-    marginLeft: 8,
+    alignSelf: "center",
+    width: "45%",
   },
   saveBtnDisabled: {
-    backgroundColor: "#C4C4C4",
+    backgroundColor: "#D1D5DB",
   },
   saveBtnText: {
     color: "#fff",
-    fontWeight: "bold",
-    fontSize: 17,
+    fontFamily: "Baloo2-SemiBold",
+    fontSize: 18,
   },
 });
 
