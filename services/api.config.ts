@@ -3,7 +3,7 @@ import axios from "axios";
 
 const api = axios.create({
   // baseURL: "https://digischool-app-374067302360.asia-southeast1.run.app",
-  baseURL: "http://192.168.1.11:8080",
+  baseURL: "http://192.168.2.157:8080",
   headers: {
     "Content-Type": "application/json",
   },

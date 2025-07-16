@@ -24,7 +24,6 @@ import { UserProvider, useUserContext } from "../contexts/UserContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { useRegisterForPushNotifications } from "../hooks/useRegisterForPushNotifications";
 
 // Import các màn hình
 import Index from "./index";
@@ -185,6 +184,7 @@ function RootLayoutContent() {
     "/message/message_box",
     "/notification/notification_detail",
     "/notification/notification_create",
+    "/note/note"
   ];
   // Kiểm tra có cần ẩn tabbar không
   const isTabBarHidden = hiddenTabBarRoutes.some((route) =>
@@ -222,11 +222,6 @@ function RootLayoutContent() {
       router.replace("/manage_school");
     }
   }, [role, pathname]);
-
-  useRegisterForPushNotifications((token) => {
-    // TODO: Gửi token này về backend để lưu với userId
-    console.log("Expo Push Token:", token);
-  });
 
   if (!loaded) {
     return (

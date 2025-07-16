@@ -247,12 +247,16 @@ export default function NotificationListScreen() {
           </TouchableOpacity>
         </View>
       </View>
-      {filteredNotifications.length > 0 && (
-        <TouchableOpacity style={styles.markAllBtn} onPress={handleMarkAllRead}>
-          <Text style={styles.markAllBtnText}>Đánh dấu tất cả đã đọc</Text>
-          <MaterialIcons name="mark-email-unread" size={26} color="#29375C" />
-        </TouchableOpacity>
-      )}
+      {filteredNotifications.length > 0 &&
+        unreadCounts[tab as "user" | "activity" | "system"] > 0 && (
+          <TouchableOpacity
+            style={styles.markAllBtn}
+            onPress={handleMarkAllRead}
+          >
+            <Text style={styles.markAllBtnText}>Đánh dấu tất cả đã đọc</Text>
+            <MaterialIcons name="mark-email-unread" size={26} color="#29375C" />
+          </TouchableOpacity>
+        )}
       {loading ? (
         <Text
           style={{
@@ -340,6 +344,8 @@ export default function NotificationListScreen() {
             );
           }}
           showsVerticalScrollIndicator={false}
+          onRefresh={fetchAllNotifications}
+          refreshing={loading}
         />
       )}
     </HeaderLayout>
