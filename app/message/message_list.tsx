@@ -1,7 +1,10 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   StyleSheet,
@@ -10,62 +13,54 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import chatService from "../../services/chat.service";
 
-interface MessageListScreenProps {
-  userName?: string;
-  roles?: string[];
-}
+// Giả sử token và myId lấy từ context hoặc props, ở đây hardcode để demo
+type Props = {
+  token?: string;
+};
 
-const chatData = [
-  {
-    id: "1",
-    name: "Nguyễn Văn A",
-    avatar: require("../../assets/images/avt_default.png"),
-    lastMessage: "Bạn: Hey, please pay the rent for me before tomorrow.",
-    time: "Now",
-    unread: 10,
-  },
-  // ... có thể lặp lại cho demo ...
-  {
-    id: "2",
-    name: "Nguyễn Văn A",
-    avatar: require("../../assets/images/avt_default.png"),
-    lastMessage: "Bạn: Hey, please pay the rent for me before tomorrow.",
-    time: "Now",
-    unread: 10,
-  },
-  {
-    id: "3",
-    name: "Nguyễn Văn A",
-    avatar: require("../../assets/images/avt_default.png"),
-    lastMessage: "Bạn: Hey, please pay the rent for me before tomorrow.",
-    time: "Now",
-    unread: 10,
-  },
-  {
-    id: "4",
-    name: "Nguyễn Văn A",
-    avatar: require("../../assets/images/avt_default.png"),
-    lastMessage: "Bạn: Hey, please pay the rent for me before tomorrow.",
-    time: "Now",
-    unread: 10,
-  },
-  {
-    id: "5",
-    name: "Nguyễn Văn A",
-    avatar: require("../../assets/images/avt_default.png"),
-    lastMessage: "Bạn: Hey, please pay the rent for me before tomorrow.",
-    time: "Now",
-    unread: 10,
-  },
-];
-
-export default function MessageListScreen({
-  userName,
-  roles,
-}: MessageListScreenProps) {
+export default function MessageListScreen({ token = "demo-token" }: Props) {
   const [search, setSearch] = useState("");
+  const [chatData, setChatData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [myId, setMyId] = useState<string | undefined>(undefined);
   const router = useRouter();
+
+  useEffect(() => {
+    AsyncStorage.getItem("userId").then((id) => setMyId(id ?? undefined));
+  }, []);
+
+  useEffect(() => {
+    const fetchConversations = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const res = await chatService.getConversations(token);
+        if (res.success) {
+          setChatData(res.data);
+        } else {
+          setError(res.message || "Lỗi không xác định");
+          setChatData([]);
+        }
+      } catch (e) {
+        setError("Lỗi kết nối server");
+        setChatData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchConversations();
+  }, [token]);
+
+  useEffect(() => {
+    if (error) {
+      Alert.alert("Lỗi", error);
+    }
+  }, [error]);
+
+  if (!myId) return <ActivityIndicator style={{ marginTop: 40 }} />;
 
   return (
     <View style={styles.container}>
@@ -104,34 +99,48 @@ export default function MessageListScreen({
         </TouchableOpacity>
       </View>
       {/* Danh sách chat */}
-      <FlatList
-        data={chatData}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => router.push("/message/message_box")}
-            activeOpacity={0.8}
-          >
-            <View style={styles.chatItem}>
-              <Image source={item.avatar} style={styles.avatar} />
-              <View style={styles.chatContent}>
-                <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.lastMessage} numberOfLines={1}>
-                  {item.lastMessage}
-                </Text>
-              </View>
-              <View style={styles.rightInfo}>
-                <Text style={styles.time}>{item.time}</Text>
-                <View style={styles.unreadBadge}>
-                  <Text style={styles.unreadText}>{item.unread}</Text>
+      {loading ? (
+        <ActivityIndicator style={{ marginTop: 40 }} />
+      ) : error ? (
+        <Text style={{ color: "red", textAlign: "center", marginTop: 40 }}>{error}</Text>
+      ) : (
+        <FlatList
+          data={chatData}
+          keyExtractor={(item) => item.userId?.toString() || item.id?.toString() || Math.random().toString()}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              onPress={() => router.push({
+                pathname: "/message/message_box",
+                params: { userId: item.userId || item.id, token, myId, name: item.name },
+              })}
+              activeOpacity={0.8}
+            >
+              <View style={styles.chatItem}>
+                <Image
+                  source={item.avatar ? { uri: item.avatar } : require('../../assets/images/avt_default.png')}
+                  style={styles.avatar}
+                />
+                <View style={styles.chatContent}>
+                  <Text style={styles.name}>{item.name}</Text>
+                  <Text style={styles.lastMessage} numberOfLines={1}>
+                    {item.lastMessage}
+                  </Text>
+                </View>
+                <View style={styles.rightInfo}>
+                  <Text style={styles.time}>{item.time}</Text>
+                  {item.unread > 0 && (
+                    <View style={styles.unreadBadge}>
+                      <Text style={styles.unreadText}>{item.unread}</Text>
+                    </View>
+                  )}
                 </View>
               </View>
-            </View>
-          </TouchableOpacity>
-        )}
-        contentContainerStyle={{ paddingBottom: 16 }}
-        showsVerticalScrollIndicator={false}
-      />
+            </TouchableOpacity>
+          )}
+          contentContainerStyle={{ paddingBottom: 16 }}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </View>
   );
 }
