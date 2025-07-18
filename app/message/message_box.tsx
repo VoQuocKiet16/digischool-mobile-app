@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -20,7 +19,7 @@ import chatService from "../../services/chat.service";
 
 export default function MessageBoxScreen() {
   // Nhận params từ router
-  const { userId, name } = useLocalSearchParams();
+  const { userId, token, myId, name } = useLocalSearchParams();
 
   const router = useRouter();
   const [messages, setMessages] = useState<any[]>([]);
@@ -30,30 +29,25 @@ export default function MessageBoxScreen() {
   const [sending, setSending] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const [selectedImage, setSelectedImage] = useState<any>(null);
-  const [myId, setMyId] = useState<string | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    AsyncStorage.getItem("userId").then(setMyId);
-    AsyncStorage.getItem("token").then(setToken);
-  }, []);
 
   // Lấy lịch sử chat và kết nối socket
   useEffect(() => {
-    if (!userId || !token || !myId) return;
-
+    if (!userId || !token || !myId) {
+      return;
+    }
     setLoading(true);
     setError("");
     chatService
       .getMessagesWith(userId as string, token as string)
       .then((res) => {
-        setLoading(false); // Đảm bảo luôn tắt loading
+        // console.log("[getMessagesWith] response:", res);
         if (res.success) {
-          setMessages(Array.isArray(res.data) ? res.data.reverse() : []);
+          setMessages(res.data.reverse());
         } else {
           setError(res.message || "Lỗi không xác định");
           setMessages([]);
         }
+        setLoading(false);
       })
       .catch((err) => {
         setError("Lỗi kết nối server");
@@ -61,24 +55,22 @@ export default function MessageBoxScreen() {
         setLoading(false);
         console.log("[getMessagesWith] catch error:", err);
       });
-
+    // Kết nối socket
+    chatService.connect(myId as string, token as string);
     // Lắng nghe tin nhắn mới
-    const handleNewMessage = (msg: any) => {
-      setMessages((prev) => {
-        if (prev.some((m) => m._id === msg._id || (m.content === msg.content && m.sender === msg.sender && m.createdAt === msg.createdAt))) return prev;
-        return [...prev, msg];
-      });
-      flatListRef.current?.scrollToEnd({ animated: true });
-    };
-    chatService.onNewMessage(handleNewMessage);
+    chatService.onNewMessage((msg) => {
+      if (
+        (msg.sender === userId && msg.receiver === myId) ||
+        (msg.sender === myId && msg.receiver === userId)
+      ) {
+        setMessages((prev) => [...prev, msg]);
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }
+    });
     return () => {
-      chatService.offNewMessage(handleNewMessage);
+      chatService.disconnect();
     };
   }, [userId, token, myId]);
-
-  // Xoá useEffect lắng nghe message_read
-  // Xoá useEffect gửi mark_read khi vào phòng chat
-  // Xoá mọi đoạn code cập nhật status: "read" hoặc "Chưa xem"/"Đã xem" trong renderMessage
 
   useEffect(() => {
     if (error) {
@@ -170,7 +162,6 @@ export default function MessageBoxScreen() {
       setSending(false);
       return;
     }
-    // KHÔNG setMessages ở đây nữa! Chỉ rely vào socket để render tin nhắn
     chatService.sendMessageSocket({
       sender: myId,
       receiver: userId,
@@ -187,12 +178,9 @@ export default function MessageBoxScreen() {
     return myMsgs.length > 0 ? myMsgs[myMsgs.length - 1]._id : null;
   })();
 
-  const renderMessage = ({ item, index }: { item: any, index: number }) => {
+  const renderMessage = ({ item }: { item: any }) => {
     const isMe = item.sender === myId;
-    const prevMsg = messages[index - 1];
-    const showAvatar =
-      (index === 0 || prevMsg?.sender !== item.sender);
-
+    const isMyLastMsg = isMe && item._id === myLastMessageId;
     return (
       <View
         style={[
@@ -200,8 +188,7 @@ export default function MessageBoxScreen() {
           isMe ? styles.messageRowMe : styles.messageRowOther,
         ]}
       >
-        {/* Avatar bên trái cho người nhận */}
-        {!isMe && (showAvatar ? (
+        {!isMe && (
           <Image
             source={
               item.avatar
@@ -210,9 +197,7 @@ export default function MessageBoxScreen() {
             }
             style={styles.avatar}
           />
-        ) : (
-          <View style={styles.avatar} />
-        ))}
+        )}
         <View
           style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleOther]}
         >
@@ -237,9 +222,21 @@ export default function MessageBoxScreen() {
             </Text>
           )}
           <Text style={styles.time}>{item.time || ""}</Text>
+          {isMyLastMsg && (
+            <Text
+              style={{
+                fontSize: 11,
+                color: isMe ? "#fff" : "#29375C",
+                opacity: 0.7,
+                marginTop: 2,
+                alignSelf: "flex-end",
+              }}
+            >
+              {item.status === "read" ? "Đã xem" : "Chưa xem"}
+            </Text>
+          )}
         </View>
-        {/* Avatar bên phải cho người gửi */}
-        {isMe && (showAvatar ? (
+        {isMe && (
           <Image
             source={
               item.avatar
@@ -248,22 +245,10 @@ export default function MessageBoxScreen() {
             }
             style={styles.avatar}
           />
-        ) : (
-          <View style={styles.avatar} />
-        ))}
+        )}
       </View>
     );
   };
-
-
-
-  if (!userId || !token || !myId) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" }}>
-        <ActivityIndicator size="large" color="#29375C" />
-      </View>
-    );
-  }
 
   return (
     <KeyboardAvoidingView
@@ -296,19 +281,16 @@ export default function MessageBoxScreen() {
             <FlatList
               ref={flatListRef}
               data={messages}
-              keyExtractor={(item, idx) =>
-                item._id?.toString() || item.id?.toString() || idx.toString()
+              keyExtractor={(item) =>
+                item._id?.toString() ||
+                item.id?.toString() ||
+                Math.random().toString()
               }
-              renderItem={({ item, index }) => renderMessage({ item, index })}
+              renderItem={renderMessage}
               contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator={false}
               onContentSizeChange={() =>
                 flatListRef.current?.scrollToEnd({ animated: true })
-              }
-              ListEmptyComponent={
-                <Text style={{ textAlign: "center", color: "#A0A0A0", marginTop: 40 }}>
-                  Hãy bắt đầu cuộc trò chuyện!
-                </Text>
               }
             />
           )}
