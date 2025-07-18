@@ -157,7 +157,24 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
           }
           renderItem={({ item }) => (
             <TouchableOpacity
-              onPress={() =>
+              onPress={async () => {
+                if (item.unread > 0) {
+                  // Gửi mark_read lên server khi user click vào conversation
+                  chatService.markConversationRead(item.userId || item.id, token);
+                  setChatData((prevData) => {
+                    const idx = prevData.findIndex(
+                      (c) => c.userId === item.userId || c.id === item.id
+                    );
+                    if (idx === -1) return prevData;
+                    const updated = { ...prevData[idx], unread: 0 };
+                    const newData = [
+                      updated,
+                      ...prevData.slice(0, idx),
+                      ...prevData.slice(idx + 1),
+                    ];
+                    return newData;
+                  });
+                }
                 router.push({
                   pathname: "/message/message_box",
                   params: {
@@ -166,8 +183,8 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
                     myId,
                     name: item.name,
                   },
-                })
-              }
+                });
+              }}
               activeOpacity={0.8}
             >
               <View style={styles.chatItem}>

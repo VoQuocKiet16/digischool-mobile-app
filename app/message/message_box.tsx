@@ -70,6 +70,28 @@ export default function MessageBoxScreen() {
     };
   }, [userId, token, myId]);
 
+  // Gửi mark_read khi vào phòng chat
+  useEffect(() => {
+    if (userId && myId && chatService.socket) {
+      chatService.socket.emit("mark_read", { from: myId, to: userId });
+    }
+  }, [userId, myId]);
+
+  // Khi nhận message_read, cập nhật toàn bộ tin nhắn từ đối phương thành 'read'
+  useEffect(() => {
+    const handleMessageRead = ({ from }: { from: string }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.sender === from ? { ...msg, status: "read" } : msg
+        )
+      );
+    };
+    chatService.onMessageRead(handleMessageRead);
+    return () => {
+      chatService.offMessageRead(handleMessageRead);
+    };
+  }, []);
+
   useEffect(() => {
     if (error) {
       Alert.alert("Lỗi", error);
@@ -176,9 +198,12 @@ export default function MessageBoxScreen() {
     return myMsgs.length > 0 ? myMsgs[myMsgs.length - 1]._id : null;
   })();
 
-  const renderMessage = ({ item }: { item: any }) => {
+  const renderMessage = ({ item, index }: { item: any, index: number }) => {
     const isMe = item.sender === myId;
-    const isMyLastMsg = isMe && item._id === myLastMessageId;
+    const prevMsg = messages[index - 1];
+    const showAvatar =
+      (index === 0 || prevMsg?.sender !== item.sender);
+
     return (
       <View
         style={[
@@ -186,7 +211,8 @@ export default function MessageBoxScreen() {
           isMe ? styles.messageRowMe : styles.messageRowOther,
         ]}
       >
-        {!isMe && (
+        {/* Avatar bên trái cho người nhận */}
+        {!isMe && (showAvatar ? (
           <Image
             source={
               item.avatar
@@ -195,7 +221,9 @@ export default function MessageBoxScreen() {
             }
             style={styles.avatar}
           />
-        )}
+        ) : (
+          <View style={styles.avatar} />
+        ))}
         <View
           style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleOther]}
         >
@@ -220,7 +248,7 @@ export default function MessageBoxScreen() {
             </Text>
           )}
           <Text style={styles.time}>{item.time || ""}</Text>
-          {isMyLastMsg && (
+          {isMe && index === messages.length - 1 && (
             <Text
               style={{
                 fontSize: 11,
@@ -234,7 +262,8 @@ export default function MessageBoxScreen() {
             </Text>
           )}
         </View>
-        {isMe && (
+        {/* Avatar bên phải cho người gửi */}
+        {isMe && (showAvatar ? (
           <Image
             source={
               item.avatar
@@ -243,7 +272,9 @@ export default function MessageBoxScreen() {
             }
             style={styles.avatar}
           />
-        )}
+        ) : (
+          <View style={styles.avatar} />
+        ))}
       </View>
     );
   };
@@ -279,12 +310,10 @@ export default function MessageBoxScreen() {
             <FlatList
               ref={flatListRef}
               data={messages}
-              keyExtractor={(item) =>
-                item._id?.toString() ||
-                item.id?.toString() ||
-                Math.random().toString()
+              keyExtractor={(item, idx) =>
+                item._id?.toString() || item.id?.toString() || idx.toString()
               }
-              renderItem={renderMessage}
+              renderItem={({ item, index }) => renderMessage({ item, index })}
               contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator={false}
               onContentSizeChange={() =>

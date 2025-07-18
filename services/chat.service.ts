@@ -6,12 +6,14 @@ const SOCKET_URL =
 
 class ChatService {
   socket: Socket | null = null;
+  myId: string | null = null;
 
   connect(userId: string, token: string) {
     if (this.socket) {
       console.log("Socket đã connect rồi với userId:", userId);
       return;
     }
+    this.myId = userId;
     this.socket = io(SOCKET_URL, {
       transports: ["websocket"],
       auth: { token: `Bearer ${token}` },
@@ -38,8 +40,25 @@ class ChatService {
     this.socket?.off("new_message", callback);
   }
 
+  onMessageRead(callback: (data: any) => void) {
+    this.socket?.on("message_read", callback);
+  }
+  offMessageRead(callback: (data: any) => void) {
+    this.socket?.off("message_read", callback);
+  }
+
   sendMessageSocket(data: any) {
     this.socket?.emit("send_message", data);
+  }
+
+  sendSeenMessage(messageId: string, token: string) {
+    this.socket?.emit("seen_message", { messageId, token });
+  }
+
+  markConversationRead(userId: string, token: string) {
+    if (this.socket && this.myId) {
+      this.socket.emit("mark_read", { from: this.myId, to: userId });
+    }
   }
 
   // REST API
