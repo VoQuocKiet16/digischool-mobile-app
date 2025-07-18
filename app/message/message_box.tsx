@@ -124,7 +124,7 @@ export default function MessageBoxScreen() {
             <Ionicons
               name="happy-outline"
               size={24}
-              color="#25345D"
+              color="#29375C"
               style={{ marginHorizontal: 8 }}
             />
             <TextInput
@@ -135,7 +135,7 @@ export default function MessageBoxScreen() {
               onChangeText={setInput}
             />
             <TouchableOpacity style={styles.sendBtn}>
-              <Ionicons name="send" size={24} color="#25345D" />
+              <Ionicons name="send" size={24} color="#29375C" />
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   header: {
-    backgroundColor: "#25345D",
+    backgroundColor: "#29375C",
     paddingTop: 36,
     paddingBottom: 18,
     paddingHorizontal: 20,
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    color: "#25345D",
+    color: "#29375C",
     paddingVertical: 8,
     paddingHorizontal: 8,
     backgroundColor: "transparent",

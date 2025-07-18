@@ -51,6 +51,9 @@ export default function LoginScreen() {
           try {
             const userResponse = await getMe();
             if (userResponse.success && userResponse.data) {
+              if (userResponse.data._id) {
+                await AsyncStorage.setItem("userId", userResponse.data._id);
+              }
               if (userResponse.data.role) {
                 await AsyncStorage.setItem(
                   "role",
@@ -184,7 +187,7 @@ export default function LoginScreen() {
             <Icon
               name="email"
               size={22}
-              color="#25345D"
+              color="#29375C"
               style={styles.inputIcon}
             />
             <TextInput
@@ -201,7 +204,7 @@ export default function LoginScreen() {
                 onPress={() => setEmail("")}
                 style={{ position: "relative" }}
               >
-                <Icon name="close" size={25} color="#25345D" />
+                <Icon name="close" size={25} color="#29375C" />
               </TouchableOpacity>
             )}
           </View>
@@ -211,7 +214,7 @@ export default function LoginScreen() {
             <Icon
               name="lock"
               size={22}
-              color="#25345D"
+              color="#29375C"
               style={styles.inputIcon}
             />
             <TextInput
@@ -230,7 +233,7 @@ export default function LoginScreen() {
                 <Icon
                   name="close"
                   size={25}
-                  color="#25345D"
+                  color="#29375C"
                   style={{ marginRight: 10 }}
                 />
               </TouchableOpacity>
@@ -239,7 +242,7 @@ export default function LoginScreen() {
               <Icon
                 name={showPassword ? "visibility-off" : "visibility"}
                 size={22}
-                color="#25345D"
+                color="#29375C"
               />
             </TouchableOpacity>
           </View>
@@ -263,8 +266,8 @@ export default function LoginScreen() {
             style={[
               styles.loginButton,
               isValid
-                ? { backgroundColor: "#25345D" }
-                : { backgroundColor: "#25345D", opacity: 0.3 },
+                ? { backgroundColor: "#29375C" }
+                : { backgroundColor: "#29375C", opacity: 0.3 },
             ]}
             disabled={!isValid || loading}
             onPress={handleLogin}
@@ -287,21 +290,21 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: "bold",
-    color: "#25345D",
+    color: "#29375C",
     marginBottom: 8,
     marginTop: 16,
     fontFamily: "Baloo2-Bold",
   },
   subtitle: {
     fontSize: 18,
-    color: "#25345D",
+    color: "#29375C",
     marginBottom: 85,
     lineHeight: 22,
     fontFamily: "Baloo2-SemiBold",
   },
   label: {
     fontSize: 16,
-    color: "#25345D",
+    color: "#29375C",
     marginBottom: 6,
     marginTop: 12,
     fontWeight: "500",
@@ -311,7 +314,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1.5,
-    borderColor: "#25345D",
+    borderColor: "#29375C",
     borderRadius: 10,
     paddingHorizontal: 16,
     marginBottom: 8,
@@ -325,7 +328,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 18,
-    color: "#25345D",
+    color: "#29375C",
     fontFamily: "Baloo2-Regular",
   },
   forgotPassword: {
@@ -335,14 +338,14 @@ const styles = StyleSheet.create({
     fontFamily: "Baloo2-SemiBold",
   },
   forgotPasswordText: {
-    color: "#25345D",
+    color: "#29375C",
     fontWeight: "500",
     fontSize: 14,
     textDecorationLine: "underline",
     fontFamily: "Baloo2-SemiBold",
   },
   loginButton: {
-    backgroundColor: "#25345D",
+    backgroundColor: "#29375C",
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: "center",

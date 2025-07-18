@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -11,8 +10,8 @@ import {
   Text,
   TouchableOpacity,
   View,
-  useWindowDimensions,
 } from "react-native";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import {
   favoriteNews,
   getAllNews,
@@ -20,86 +19,9 @@ import {
   getNewsBySubject,
   unfavoriteNews,
 } from "../../services/news.service";
-
-const SUBJECTS = [
-  { key: "all", label: "Tất cả", icon: require("../../assets/images/all.png") },
-  {
-    key: "literature",
-    label: "Ngữ Văn",
-    icon: require("../../assets/images/literature.png"),
-    id: "68556dc8811ba4a1cbce8c46",
-  },
-  {
-    key: "math",
-    label: "Toán",
-    icon: require("../../assets/images/math.png"),
-    id: "68556dc9811ba4a1cbce8c49",
-  },
-  {
-    key: "foreign",
-    label: "Ngoại Ngữ",
-    icon: require("../../assets/images/foreign.png"),
-    id: "68556dc9811ba4a1cbce8c4c",
-  },
-  {
-    key: "physics",
-    label: "Vật Lý",
-    icon: require("../../assets/images/physics.png"),
-    id: "68556dc9811ba4a1cbce8c4f",
-  },
-  {
-    key: "chemistry",
-    label: "Hoá Học",
-    icon: require("../../assets/images/chemistry.png"),
-    id: "68556dc9811ba4a1cbce8c52",
-  },
-  {
-    key: "biology",
-    label: "Sinh Học",
-    icon: require("../../assets/images/biology.png"),
-    id: "68556dca811ba4a1cbce8c55",
-  },
-  {
-    key: "history",
-    label: "Lịch Sử",
-    icon: require("../../assets/images/history.png"),
-    id: "68556dca811ba4a1cbce8c58",
-  },
-  {
-    key: "geography",
-    label: "Địa Lý",
-    icon: require("../../assets/images/geography.png"),
-    id: "68556dca811ba4a1cbce8c5b",
-  },
-  {
-    key: "gdcd",
-    label: "GDCD",
-    icon: require("../../assets/images/gdcd.png"),
-    id: "68556dcb811ba4a1cbce8c5e",
-  },
-  {
-    key: "pe",
-    label: "Thể dục",
-    icon: require("../../assets/images/pe.png"),
-    id: "68556dcb811ba4a1cbce8c61",
-  },
-  {
-    key: "nationaldefense",
-    label: "GDQP",
-    icon: require("../../assets/images/nationaldefense.png"),
-    id: "68556dcb811ba4a1cbce8c64",
-  },
-  {
-    key: "informatics",
-    label: "Tin học",
-    icon: require("../../assets/images/informatics.png"),
-    id: "68556dcb811ba4a1cbce8c67",
-  },
-  // Thêm các môn khác nếu cần
-];
+import { getAllSubjects } from "../../services/subjects.service";
 
 export default function NewsFeedScreen() {
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const [tab, setTab] = useState<"news" | "favorite">("news");
   const [selectedSubject, setSelectedSubject] = useState("all");
   const [newsList, setNewsList] = useState<any[]>([]);
@@ -109,6 +31,13 @@ export default function NewsFeedScreen() {
   const router = useRouter();
   const [bookmarkLoading, setBookmarkLoading] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [subjects, setSubjects] = useState<any[]>([
+    {
+      key: "all",
+      label: "Tất cả",
+      icon: require("../../assets/images/all.png"),
+    },
+  ]);
 
   useEffect(() => {
     AsyncStorage.getItem("userId").then(setUserId);
@@ -125,6 +54,46 @@ export default function NewsFeedScreen() {
         }
       }
     });
+  }, []);
+
+  useEffect(() => {
+    // Lấy danh sách môn học từ API
+    const fetchSubjects = async () => {
+      const res = await getAllSubjects();
+      if (res.success && res.data?.subjects) {
+        // Map subjectName sang icon
+        const iconMap: Record<string, any> = {
+          "Ngữ Văn": require("../../assets/images/literature.png"),
+          Toán: require("../../assets/images/math.png"),
+          "Ngoại ngữ": require("../../assets/images/foreign.png"),
+          "Vật lý": require("../../assets/images/physics.png"),
+          "Hóa học": require("../../assets/images/chemistry.png"),
+          "Sinh học": require("../../assets/images/biology.png"),
+          "Lịch sử": require("../../assets/images/history.png"),
+          "Địa lý": require("../../assets/images/geography.png"),
+          GDCD: require("../../assets/images/gdcd.png"),
+          "Thể dục": require("../../assets/images/pe.png"),
+          GDQP: require("../../assets/images/nationaldefense.png"),
+          "Tin học": require("../../assets/images/informatics.png"),
+        };
+        const mapped = res.data.subjects.map((s) => ({
+          key: s._id,
+          label: s.subjectName,
+          icon:
+            iconMap[s.subjectName] || require("../../assets/images/all.png"),
+          id: s._id,
+        }));
+        setSubjects([
+          {
+            key: "all",
+            label: "Tất cả",
+            icon: require("../../assets/images/all.png"),
+          },
+          ...mapped,
+        ]);
+      }
+    };
+    fetchSubjects();
   }, []);
 
   // Khi chọn subject, gọi API filter
@@ -147,7 +116,9 @@ export default function NewsFeedScreen() {
           setError(res.message || "Lỗi không xác định");
         }
       } else {
-        const subjectObj = SUBJECTS.find((s) => s.key === selectedSubject);
+        const subjectObj = subjects.find(
+          (s) => s.key === selectedSubject || s.id === selectedSubject
+        );
         if (subjectObj?.id) {
           const res = await getNewsBySubject(subjectObj.id);
           if (res.success) {
@@ -162,31 +133,7 @@ export default function NewsFeedScreen() {
       setLoading(false);
     };
     fetchNews();
-  }, [selectedSubject, tab]);
-
-  // Responsive calculations
-  const isSmallScreen = screenWidth < 375;
-  const isMediumScreen = screenWidth >= 375 && screenWidth < 768;
-  const isLargeScreen = screenWidth >= 768;
-  const isTablet = screenWidth >= 768;
-
-  // Dynamic card dimensions
-  const cardWidth = isTablet
-    ? Math.min(400, screenWidth * 0.4)
-    : Math.min(320, screenWidth * 0.85);
-  const cardHeight = isTablet ? 420 : 360;
-  const cardMargin = isTablet ? 16 : 20;
-
-  // Dynamic font sizes
-  const titleFontSize = isSmallScreen ? 16 : isMediumScreen ? 18 : 20;
-  const tabFontSize = isSmallScreen ? 14 : 16;
-  const subjectLabelFontSize = isSmallScreen ? 11 : 13;
-  const infoFontSize = isSmallScreen ? 10 : 12;
-
-  // Dynamic spacing
-  const containerPadding = isTablet ? 24 : 16;
-  const tabSpacing = isSmallScreen ? 4 : 8;
-  const subjectSpacing = isSmallScreen ? 12 : 18;
+  }, [selectedSubject, tab, subjects]);
 
   const [showMenu, setShowMenu] = useState(false);
 
@@ -224,20 +171,28 @@ export default function NewsFeedScreen() {
     setBookmarkLoading(null);
   };
 
+  // Thêm hàm formatRelativeTime phía trên component
+  function formatRelativeTime(dateString: string) {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000); // giây
+    if (diff < 60) return "Vừa xong";
+    if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
+    if (diff < 2592000) return `${Math.floor(diff / 86400)} ngày trước`;
+    return date.toLocaleDateString("vi-VN");
+  }
+
   return (
-    <View style={[styles.container, { paddingHorizontal: containerPadding }]}>
+    <View style={styles.container}>
       {/* Tabs */}
-      <View style={[styles.tabRow, { gap: tabSpacing, alignItems: "center" }]}>
+      <View style={styles.tabRow}>
         <TouchableOpacity
           style={[styles.tabBtn, tab === "news" && styles.tabBtnActive]}
           onPress={() => setTab("news")}
         >
           <Text
-            style={[
-              styles.tabText,
-              tab === "news" && styles.tabTextActive,
-              { fontSize: tabFontSize },
-            ]}
+            style={[styles.tabText, tab === "news" && styles.tabTextActive]}
           >
             Tin tức
           </Text>
@@ -247,11 +202,7 @@ export default function NewsFeedScreen() {
           onPress={() => setTab("favorite")}
         >
           <Text
-            style={[
-              styles.tabText,
-              tab === "favorite" && styles.tabTextActive,
-              { fontSize: tabFontSize },
-            ]}
+            style={[styles.tabText, tab === "favorite" && styles.tabTextActive]}
           >
             Yêu thích
           </Text>
@@ -262,7 +213,7 @@ export default function NewsFeedScreen() {
               onPress={() => setShowMenu(!showMenu)}
               style={{ padding: 6 }}
             >
-              <Ionicons name="menu" size={28} color="#25345D" />
+              <MaterialIcons name="menu" size={28} color="#29375C" />
             </TouchableOpacity>
             {showMenu && (
               <View style={styles.menuPopup}>
@@ -273,6 +224,11 @@ export default function NewsFeedScreen() {
                     router.push("/news/add_news");
                   }}
                 >
+                  <MaterialIcons
+                    name="add-circle-outline"
+                    size={20}
+                    color="#fff"
+                  />
                   <Text style={styles.menuItemText}>Thêm tin tức</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -282,6 +238,7 @@ export default function NewsFeedScreen() {
                     router.push("/news/manage_news");
                   }}
                 >
+                  <MaterialIcons name="settings" size={20} color="#fff" />
                   <Text style={styles.menuItemText}>Quản lý tin tức</Text>
                 </TouchableOpacity>
               </View>
@@ -291,96 +248,159 @@ export default function NewsFeedScreen() {
       </View>
 
       {/* Subject filter */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.subjectScroll}
-        contentContainerStyle={{ paddingBottom: 0, marginBottom: 0 }}
-      >
-        {SUBJECTS.map((s, idx) => (
-          <TouchableOpacity
-            key={s.key}
-            style={[
-              styles.subjectItem,
-              {
-                marginRight: subjectSpacing,
-                minWidth: isSmallScreen ? 48 : 56,
-              },
-            ]}
-            onPress={() => setSelectedSubject(s.key)}
-            activeOpacity={0.7}
-          >
+      {loading ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.subjectScroll}
+          contentContainerStyle={{ paddingBottom: 0, marginBottom: 0 }}
+        >
+          {[1, 2, 3, 4, 5, 6, 7].map((_, idx) => (
             <View
-              style={[
-                styles.subjectIconWrap,
-                selectedSubject === s.key && styles.subjectIconActive,
-                {
-                  width: isSmallScreen ? 40 : 48,
-                  height: isSmallScreen ? 40 : 48,
-                  borderRadius: isSmallScreen ? 20 : 24,
-                },
-              ]}
+              key={idx}
+              style={{ alignItems: "center", marginRight: 18, minWidth: 56 }}
             >
-              <Image
-                source={s.icon}
-                style={[
-                  styles.subjectIcon,
-                  {
-                    width: isSmallScreen ? 26 : 32,
-                    height: isSmallScreen ? 26 : 32,
-                  },
-                ]}
-                resizeMode="contain"
+              <View
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  backgroundColor: "#E6E9F0",
+                  marginBottom: 2,
+                }}
+              />
+              <View
+                style={{
+                  width: 40,
+                  height: 12,
+                  borderRadius: 6,
+                  backgroundColor: "#D1D5DB",
+                  marginBottom: 2,
+                }}
               />
             </View>
-            <Text
-              style={[
-                styles.subjectLabel,
-                selectedSubject === s.key && styles.subjectLabelActive,
-                { fontSize: subjectLabelFontSize },
-              ]}
+          ))}
+        </ScrollView>
+      ) : (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.subjectScroll}
+          contentContainerStyle={{ paddingBottom: 0, marginBottom: 0 }}
+        >
+          {subjects.map((s: any) => (
+            <TouchableOpacity
+              key={s.key}
+              style={styles.subjectItem}
+              onPress={() => setSelectedSubject(s.key)}
+              activeOpacity={0.7}
             >
-              {s.label}
-            </Text>
-            {selectedSubject === s.key && (
               <View
                 style={[
-                  styles.subjectUnderline,
-                  { width: isSmallScreen ? 20 : 24 },
+                  styles.subjectIconWrap,
+                  selectedSubject === s.key && styles.subjectIconActive,
                 ]}
-              />
-            )}
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+              >
+                <Image
+                  source={s.icon}
+                  style={styles.subjectIcon}
+                  resizeMode="contain"
+                />
+              </View>
+              <Text
+                style={[
+                  styles.subjectLabel,
+                  selectedSubject === s.key && styles.subjectLabelActive,
+                ]}
+              >
+                {s.label}
+              </Text>
+              {selectedSubject === s.key && (
+                <View style={styles.subjectUnderline} />
+              )}
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
 
       {/* News list */}
       {loading ? (
-        <ActivityIndicator
-          size="large"
-          color="#25345D"
-          style={{ marginTop: 40 }}
-        />
+        <View style={{ flexDirection: "row", marginTop: 40 }}>
+          {[1, 2, 3].map((_, idx) => (
+            <View
+              key={idx}
+              style={{
+                width: 320,
+                height: 430,
+                backgroundColor: "#E6E9F0",
+                borderRadius: 28,
+                marginRight: 20,
+                marginBottom: 120,
+                padding: 24,
+                justifyContent: "flex-end",
+              }}
+            >
+              <View
+                style={{
+                  width: 120,
+                  height: 24,
+                  backgroundColor: "#D1D5DB",
+                  borderRadius: 8,
+                  marginBottom: 16,
+                }}
+              />
+              <View
+                style={{
+                  width: 80,
+                  height: 18,
+                  backgroundColor: "#D1D5DB",
+                  borderRadius: 8,
+                  marginBottom: 8,
+                }}
+              />
+              <View
+                style={{
+                  width: 60,
+                  height: 18,
+                  backgroundColor: "#D1D5DB",
+                  borderRadius: 8,
+                }}
+              />
+            </View>
+          ))}
+        </View>
       ) : error ? (
         <Text style={{ color: "red", marginTop: 40 }}>{error}</Text>
+      ) : !newsList || newsList.length === 0 ? (
+        <View style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text style={{ color: "#7D88A7", fontSize: 14, fontFamily: "Baloo2-Medium" }}>
+            Không có tin tức nào.
+          </Text>
+        </View>
       ) : (
         <FlatList
           data={newsList}
           keyExtractor={(item) => item._id || item.id}
-          horizontal={!isTablet}
-          numColumns={isTablet ? 2 : 1}
+          horizontal={true}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{
             paddingLeft: 0,
             paddingTop: 0,
-            paddingBottom: 80,
+            paddingBottom: 110,
             justifyContent: "center",
             alignItems: "center",
-            ...(isTablet && { paddingHorizontal: 16 }),
           }}
           snapToAlignment="center"
           decelerationRate="fast"
-          snapToInterval={cardWidth + cardMargin * 2}
           renderItem={({ item }) => {
             const isBookmarked =
               Array.isArray(item.favorites) && userId
@@ -392,21 +412,9 @@ export default function NewsFeedScreen() {
                 onPress={() =>
                   router.push(`/news/news_detail?id=${item._id || item.id}`)
                 }
-                style={{
-                  width: cardWidth,
-                  marginHorizontal: cardMargin,
-                  marginBottom: isTablet ? 16 : 0,
-                }}
+                style={styles.newsCardContainer}
               >
-                <View
-                  style={[
-                    styles.newsCard,
-                    {
-                      width: "100%",
-                      height: cardHeight,
-                    },
-                  ]}
-                >
+                <View style={styles.newsCard}>
                   <Image
                     source={{ uri: item.coverImage || item.image?.uri || "" }}
                     style={styles.newsImage}
@@ -423,7 +431,7 @@ export default function NewsFeedScreen() {
                     {bookmarkLoading === (item._id || item.id) ? (
                       <ActivityIndicator size={20} color="#fff" />
                     ) : (
-                      <Ionicons
+                      <MaterialIcons
                         name={isBookmarked ? "bookmark" : "bookmark-outline"}
                         size={22}
                         color="#fff"
@@ -431,64 +439,80 @@ export default function NewsFeedScreen() {
                     )}
                   </TouchableOpacity>
                   <View style={styles.newsContent}>
-                    <Text
-                      style={[styles.newsTitle, { fontSize: titleFontSize }]}
-                      numberOfLines={2}
-                    >
+                    <Text style={styles.newsTitle} numberOfLines={2}>
                       {item.title}
                     </Text>
-                    <View style={styles.newsInfoRow}>
-                      {item.subjectKey && (
-                        <Image
-                          source={
-                            SUBJECTS.find((s) => s.key === item.subjectKey)
-                              ?.icon
-                          }
-                          style={[
-                            styles.newsSubjectIcon,
-                            {
-                              width: isSmallScreen ? 16 : 18,
-                              height: isSmallScreen ? 16 : 18,
-                            },
-                          ]}
-                        />
-                      )}
-                      <Text
-                        style={[
-                          styles.newsInfoText,
-                          { fontSize: infoFontSize },
-                        ]}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        marginTop: 4,
+                      }}
+                    >
+                      {/* Bên trái */}
+                      <View
+                        style={{
+                          flexDirection: "column",
+                          alignItems: "flex-start",
+                          flex: 1,
+                        }}
                       >
-                        •{" "}
-                        {item.createdAt
-                          ? new Date(item.createdAt).toLocaleString("vi-VN")
-                          : ""}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.newsInfoText,
-                          { fontSize: infoFontSize },
-                        ]}
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            marginBottom: 20,
+                          }}
+                        >
+                          {item.subject && (
+                            <Image
+                              source={
+                                subjects.find(
+                                  (s) =>
+                                    s.key === item.subject ||
+                                    s.id === item.subject
+                                )?.icon ||
+                                require("../../assets/images/all.png")
+                              }
+                              style={styles.newsSubjectIcon}
+                            />
+                          )}
+                          <Text
+                            style={[styles.newsInfoText, { marginLeft: 10 }]}
+                          >
+                            {subjects.find(
+                              (s) =>
+                                s.key === item.subject || s.id === item.subject
+                            )?.label || "Không xác định"}
+                          </Text>
+                        </View>
+                        <Text style={styles.newsAuthor}>
+                          {item.createdBy?.name || ""}
+                        </Text>
+                      </View>
+                      {/* Bên phải */}
+                      <View
+                        style={{
+                          flexDirection: "column",
+                          alignItems: "flex-end",
+                          minWidth: 90,
+                        }}
                       >
-                        • {item.views || 0} người xem
-                      </Text>
-                    </View>
-                    <View style={styles.newsInfoRow}>
-                      <Text
-                        style={[styles.newsAuthor, { fontSize: infoFontSize }]}
-                      >
-                        {item.createdBy?.name || ""}
-                      </Text>
-                      {item.hashtag && (
                         <Text
                           style={[
-                            styles.newsHashtag,
-                            { fontSize: infoFontSize },
+                            styles.newsInfoText,
+                            { marginBottom: 10, marginTop: 10 },
                           ]}
                         >
-                          {item.hashtag}
+                          {item.createdAt
+                            ? formatRelativeTime(item.createdAt)
+                            : ""}
                         </Text>
-                      )}
+                        <Text style={styles.newsInfoText}>
+                          {item.views || 0} người xem
+                        </Text>
+                      </View>
                     </View>
                   </View>
                 </View>
@@ -502,37 +526,37 @@ export default function NewsFeedScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F6F8FB" },
+  container: { flex: 1, backgroundColor: "#F6F8FB", paddingHorizontal: 16 },
   tabRow: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 18,
+    marginTop: 24,
     marginBottom: 8,
     gap: 8,
   },
   tabBtn: {
     flex: 1,
     backgroundColor: "#E6E9F0",
-    borderRadius: 16,
-    paddingVertical: 8,
-    marginHorizontal: 8,
+    borderRadius: 30,
+    paddingVertical: 12,
+    marginHorizontal: 5,
     alignItems: "center",
   },
   tabBtnActive: {
-    backgroundColor: "#25345D",
+    backgroundColor: "#29375C",
   },
   tabText: {
-    color: "#25345D",
-    fontWeight: "bold",
-    fontSize: 16,
+    color: "#29375C",
+    fontFamily: "Baloo2-SemiBold",
+    fontSize: 18,
   },
   tabTextActive: {
     color: "#fff",
   },
   subjectScroll: {
+    marginTop: 12,
     paddingVertical: 8,
     paddingLeft: 8,
-    marginBottom: 8,
   },
   subjectItem: {
     alignItems: "center",
@@ -540,52 +564,58 @@ const styles = StyleSheet.create({
     minWidth: 56,
   },
   subjectIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#fff",
+    width: 65,
+    height: 65,
+    borderRadius: 50,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 2,
+    marginBottom: 5,
     borderWidth: 2,
     borderColor: "transparent",
   },
   subjectIconActive: {
-    borderColor: "#25345D",
+    borderColor: "#29375C",
     backgroundColor: "#E6E9F0",
   },
   subjectIcon: {
-    width: 32,
-    height: 32,
+    width: 48,
+    height: 48,
   },
   subjectLabel: {
     fontSize: 13,
-    color: "#25345D",
+    color: "#29375C",
     fontWeight: "500",
     marginBottom: 2,
   },
   subjectLabelActive: {
-    color: "#25345D",
+    color: "#29375C",
     fontWeight: "bold",
   },
   subjectUnderline: {
     width: 24,
     height: 3,
-    backgroundColor: "#25345D",
+    backgroundColor: "#29375C",
     borderRadius: 2,
     marginTop: 2,
+  },
+  newsCardContainer: {
+    width: 320,
+    height: 430,
+    marginRight: 20,
   },
   newsCard: {
     backgroundColor: "#fff",
     borderRadius: 28,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 2,
     shadowRadius: 8,
     elevation: 2,
     overflow: "hidden",
     position: "relative",
     alignSelf: "center",
+    width: "100%",
+    height: "100%",
   },
   newsImage: {
     width: "100%",
@@ -612,32 +642,33 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    padding: 18,
+    padding: 24,
   },
   newsTitle: {
     color: "#fff",
-    fontWeight: "bold",
-    fontSize: 20,
-    marginBottom: 16,
+    fontSize: 28,
+    marginBottom: 12,
     textShadowColor: "rgba(0,0,0,0.25)",
-    textShadowOffset: { width: 0, height: 1 },
+    textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
+    fontFamily: "Baloo2-Medium",
   },
   newsInfoRow: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: 2,
-    marginBottom: 2,
+    marginBottom: 20,
   },
   newsSubjectIcon: {
-    width: 18,
-    height: 18,
+    width: 32,
+    height: 32,
     marginRight: 4,
   },
   newsInfoText: {
     color: "#fff",
-    fontSize: 12,
+    fontSize: 16,
     marginRight: 8,
+    fontFamily: "Baloo2-Medium",
   },
   newsAuthor: {
     color: "#fff",
@@ -652,12 +683,13 @@ const styles = StyleSheet.create({
   },
   menuPopup: {
     position: "absolute",
-    top: 36,
-    right: 0,
-    backgroundColor: "#25345D",
+    top: 40,
+    right: 8,
+    backgroundColor: "#29375C",
     borderRadius: 10,
-    paddingVertical: 4,
-    width: 160,
+    padding: 8,
+    minWidth: 160,
+    marginTop: 0,
     zIndex: 100,
     shadowColor: "#000",
     shadowOpacity: 0.12,
@@ -665,13 +697,15 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   menuItem: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    padding: 12,
+    borderRadius: 6,
+    flexDirection: "row",
+    alignItems: "center",
   },
-
   menuItemText: {
     color: "#fff",
     fontSize: 15,
     fontWeight: "500",
+    marginLeft: 8,
   },
 });

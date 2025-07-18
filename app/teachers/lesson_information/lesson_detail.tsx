@@ -185,7 +185,7 @@ const LessonDetailScreen = () => {
       onBack={() => router.back()}
       rightIcon={
         <TouchableOpacity onPress={() => setMenuVisible(true)}>
-          <Ionicons name="menu" size={24} color="#25345D" />
+          <Ionicons name="menu" size={24} color="#29375C" />
         </TouchableOpacity>
       }
     >
@@ -321,7 +321,10 @@ const LessonDetailScreen = () => {
                   setMenuVisible(false);
                   router.push({
                     pathname: "/note/note",
-                    params: { lessonId: lessonId, lessonData: JSON.stringify(lessonData) },
+                    params: {
+                      lessonId: lessonId,
+                      lessonData: JSON.stringify(lessonData),
+                    },
                   });
                 }}
               >
@@ -388,7 +391,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   menuBox: {
-    backgroundColor: "#25345D",
+    backgroundColor: "#29375C",
     borderRadius: 10,
     padding: 8,
     minWidth: 120,

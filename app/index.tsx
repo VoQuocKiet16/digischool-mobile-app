@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import Header from "../components/Header";
+import { useNotificationContext } from "../contexts/NotificationContext";
 import ScheduleStudentsScreen from "./students/schedule/schedule";
 import ScheduleTeacherScreen from "./teachers/schedule/schedule";
 
@@ -9,6 +10,7 @@ export default function HomeScreen() {
   const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
+  const { hasUnreadNotification } = useNotificationContext();
 
   useEffect(() => {
     Promise.all([
@@ -34,7 +36,7 @@ export default function HomeScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#25345D" />
+        <ActivityIndicator size="large" color="#29375C" />
       </View>
     );
   }
@@ -43,6 +45,7 @@ export default function HomeScreen() {
     <Header
       title="Trang chủ"
       name={userName ? `${rolePrefix} ${userName}` : `${rolePrefix}...`}
+      hasUnreadNotification={hasUnreadNotification}
     />
   );
 
@@ -59,7 +62,7 @@ export default function HomeScreen() {
   if (roles.includes("manager")) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#25345D" />
+        <ActivityIndicator size="large" color="#29375C" />
       </View>
     );
   }

@@ -1,4 +1,4 @@
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   DarkTheme,
@@ -8,13 +8,20 @@ import {
 import { useFonts } from "expo-font";
 import { Slot, usePathname, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect } from "react";
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useRef } from "react";
+import {
+  ActivityIndicator,
+  Animated,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import "react-native-reanimated";
+import { NotificationProvider } from "../contexts/NotificationContext";
 import { UserProvider, useUserContext } from "../contexts/UserContext";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
@@ -37,15 +44,15 @@ function StudentTabs() {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size }) => {
           if (route.name === "Trang chủ")
-            return <Ionicons name="home" size={size} color={color} />;
+            return <MaterialIcons name="home" size={size} color={color} />;
           if (route.name === "Tin nhắn")
-            return <Ionicons name="chatbubble-ellipses" size={size} color={color} />;
+            return <MaterialIcons name="chat" size={size} color={color} />;
           if (route.name === "Tin tức")
-            return <MaterialCommunityIcons name="newspaper" size={size} color={color} />;
+            return <MaterialIcons name="article" size={size} color={color} />;
           return null;
         },
         tabBarActiveTintColor: "#2196F3",
-        tabBarInactiveTintColor: "#999"
+        tabBarInactiveTintColor: "#999",
       })}
     >
       <Tab.Screen name="Trang chủ" component={Index} />
@@ -61,19 +68,23 @@ function ManagerTabs() {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size }) => {
           if (route.name === "Tài khoản")
-            return <MaterialCommunityIcons name="account-group" size={size} color={color} />;
+            return <MaterialIcons name="group" size={size} color={color} />;
           if (route.name === "Tiến trình")
-            return <MaterialCommunityIcons name="timeline" size={size} color={color} />;
+            return <MaterialIcons name="timeline" size={size} color={color} />;
           if (route.name === "Điểm danh")
-            return <MaterialCommunityIcons name="check-circle" size={size} color={color} />;
+            return (
+              <MaterialIcons name="check-circle" size={size} color={color} />
+            );
           if (route.name === "TKB")
-            return <MaterialCommunityIcons name="calendar" size={size} color={color} />;
+            return (
+              <MaterialIcons name="calendar-today" size={size} color={color} />
+            );
           if (route.name === "Quản lý")
-            return <MaterialCommunityIcons name="school" size={size} color={color} />;
+            return <MaterialIcons name="school" size={size} color={color} />;
           return null;
         },
         tabBarActiveTintColor: "#2196F3",
-        tabBarInactiveTintColor: "#999"
+        tabBarInactiveTintColor: "#999",
       })}
     >
       <Tab.Screen name="Tài khoản" component={ManageAccount} />
@@ -106,16 +117,48 @@ function RootLayoutContent() {
 
   // Tab cấu hình
   const studentTabs = [
-    { name: "Trang chủ", route: "/", icon: <Ionicons name="home" size={24} color="#22304A" /> },
-    { name: "Tin nhắn", route: "/message", icon: <Ionicons name="chatbubble-ellipses" size={24} color="#22304A" /> },
-    { name: "Tin tức", route: "/news", icon: <MaterialIcons name="feed" size={24} color="#22304A" /> },
+    {
+      name: "Trang chủ",
+      route: "/",
+      icon: <MaterialIcons name="home" size={24} color="#22304A" />,
+    },
+    {
+      name: "Tin nhắn",
+      route: "/message",
+      icon: <MaterialIcons name="chat" size={24} color="#22304A" />,
+    },
+    {
+      name: "Tin tức",
+      route: "/news",
+      icon: <MaterialIcons name="article" size={24} color="#22304A" />,
+    },
   ];
   const managerTabs = [
-    { name: "Tài khoản", route: "/manage_account", icon: <MaterialIcons name="people" size={24} color="#22304A" /> },
-    { name: "Tiến trình", route: "/manage_process", icon: <MaterialIcons name="timeline" size={24} color="#22304A" /> },
-    { name: "Điểm danh", route: "/manage_rollcall", icon: <MaterialIcons name="check-circle" size={24} color="#22304A" /> },
-    { name: "TKB", route: "/manage_schedule", icon: <MaterialIcons name="calendar-today" size={24} color="#22304A" /> },
-    { name: "Quản lý", route: "/manage_school", icon: <MaterialIcons name="school" size={24} color="#22304A" /> },
+    {
+      name: "Tài khoản",
+      route: "/manage_account",
+      icon: <MaterialIcons name="group" size={24} color="#22304A" />,
+    },
+    {
+      name: "Tiến trình",
+      route: "/manage_process",
+      icon: <MaterialIcons name="timeline" size={24} color="#22304A" />,
+    },
+    {
+      name: "Điểm danh",
+      route: "/manage_rollcall",
+      icon: <MaterialIcons name="check-circle" size={24} color="#22304A" />,
+    },
+    {
+      name: "TKB",
+      route: "/manage_schedule",
+      icon: <MaterialIcons name="calendar-today" size={24} color="#22304A" />,
+    },
+    {
+      name: "Quản lý",
+      route: "/manage_school",
+      icon: <MaterialIcons name="school" size={24} color="#22304A" />,
+    },
   ];
 
   // Xác định role
@@ -132,13 +175,47 @@ function RootLayoutContent() {
   const tabs = role === "manager" ? managerTabs : studentTabs;
   // Xác định tab nào đang active
   const currentRoute = pathname;
-  const isAuthPage = pathname.startsWith("/auth") || pathname === "/login";
+  // Các route cần ẩn tabbar
+  const hiddenTabBarRoutes = [
+    "/auth",
+    "/login",
+    "/news/add_news",
+    "/news/edit_news",
+    "/message/message_box",
+    "/notification/notification_detail",
+    "/notification/notification_create",
+    "/note/note",
+    "/note/detail_note",
+    "/note/add_note",
+    "/teachers/leave_request/leave_request",
+    "/teachers/leave_request/leave_request_info",
+    "/students/leave_request/leave_request",
+    "/students/leave_request/leave_request_info",
+    "/news/news_detail",
+    "/news/manage_news",
+    "/news/add_news",
+    "/news/edit_news",
+  ];
+  // Kiểm tra có cần ẩn tabbar không
+  const isTabBarHidden = hiddenTabBarRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
   // Khi bấm tab
   const handleTabPress = (route: string) => {
     if (currentRoute !== route) {
       router.replace(route as any);
     }
   };
+
+  const tabBarAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.timing(tabBarAnim, {
+      toValue: isTabBarHidden ? 0 : 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [isTabBarHidden]);
 
   useEffect(() => {
     AsyncStorage.getItem("token").then((token) => {
@@ -159,7 +236,7 @@ function RootLayoutContent() {
   if (!loaded) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#25345D" />
+        <ActivityIndicator size="large" color="#29375C" />
       </View>
     );
   }
@@ -168,21 +245,53 @@ function RootLayoutContent() {
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <View style={{ flex: 1 }}>
         <Slot />
-        {role && !isAuthPage && (
-          <View style={styles.tabBar}>
-            {tabs.map(tab => (
+        {role && (
+          <Animated.View
+            style={[
+              styles.tabBar,
+              {
+                opacity: tabBarAnim,
+                transform: [
+                  {
+                    translateY: tabBarAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [100, 0],
+                    }),
+                  },
+                ],
+                position: "absolute",
+                left: 0,
+                right: 0,
+                bottom: 0,
+              },
+            ]}
+            pointerEvents={isTabBarHidden ? "none" : "auto"}
+          >
+            {tabs.map((tab) => (
               <TouchableOpacity
                 key={tab.route}
-                style={[styles.tabItem, currentRoute === tab.route && styles.tabItemActive]}
+                style={[
+                  styles.tabItem,
+                  currentRoute === tab.route && styles.tabItemActive,
+                ]}
                 onPress={() => handleTabPress(tab.route)}
               >
-                <View style={currentRoute === tab.route ? styles.iconShadow : undefined}>
-                  {React.cloneElement(tab.icon, { color: currentRoute === tab.route ? '#29375C' : '#C4C4C4' })}
+                <View>
+                  {React.cloneElement(tab.icon, {
+                    color: currentRoute === tab.route ? "#29375C" : "#C4C4C4",
+                  })}
                 </View>
-                <Text style={[styles.tabText, currentRoute === tab.route && styles.tabTextActive]}>{tab.name}</Text>
+                <Text
+                  style={[
+                    styles.tabText,
+                    currentRoute === tab.route && styles.tabTextActive,
+                  ]}
+                >
+                  {tab.name}
+                </Text>
               </TouchableOpacity>
             ))}
-          </View>
+          </Animated.View>
         )}
       </View>
       <StatusBar style="auto" />
@@ -193,7 +302,9 @@ function RootLayoutContent() {
 export default function RootLayout() {
   return (
     <UserProvider>
-      <RootLayoutContent />
+      <NotificationProvider>
+        <RootLayoutContent />
+      </NotificationProvider>
     </UserProvider>
   );
 }
@@ -207,7 +318,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "space-around",
-    paddingBottom: 20,
+    paddingBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   tabItem: {
     flex: 1,
@@ -219,19 +335,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   tabText: {
-    fontSize: 12,
+    fontSize: 14,
     color: "#C4C4C4",
     marginTop: 2,
+    fontFamily: "Baloo2-SemiBold",
   },
   tabTextActive: {
     color: "#29375C",
-    fontWeight: "bold",
-  },
-  iconShadow: {
-    shadowColor: '#29375C',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.60,
-    shadowRadius: 6,
-    elevation: 6, // Android
+    fontFamily: "Baloo2-Bold",
   },
 });

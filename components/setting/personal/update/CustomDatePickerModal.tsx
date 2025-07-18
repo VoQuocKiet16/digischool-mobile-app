@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   ScrollView,
@@ -105,7 +105,11 @@ export default function CustomDatePickerModal({
       animationType="fade"
       onRequestClose={onCancel}
     >
-      <TouchableOpacity style={styles.overlay} onPress={onCancel} activeOpacity={1}>
+      <TouchableOpacity
+        style={styles.overlay}
+        onPress={onCancel}
+        activeOpacity={1}
+      >
         <View style={styles.container}>
           <Text style={styles.title}>Chọn ngày sinh</Text>
           <View style={styles.pickerRow}>
@@ -211,7 +215,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#25345D",
+    color: "#29375C",
     marginBottom: 16,
     textAlign: "center",
   },
@@ -228,7 +232,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: "bold",
-    color: "#25345D",
+    color: "#29375C",
     marginBottom: 8,
   },
   dropdownBox: {
@@ -236,14 +240,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#f7f7f7",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#25345D",
+    borderColor: "#29375C",
     marginBottom: 8,
     paddingVertical: 10,
     alignItems: "center",
   },
   dropdownValue: {
     fontSize: 16,
-    color: "#25345D",
+    color: "#29375C",
     fontWeight: "bold",
   },
   dropdownList: {
@@ -253,7 +257,7 @@ const styles = StyleSheet.create({
     maxHeight: 120,
     backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: "#25345D",
+    borderColor: "#29375C",
     borderRadius: 8,
     zIndex: 10,
   },
@@ -266,17 +270,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#e5e7eb",
   },
   dropdownItemText: {
-    color: "#25345D",
+    color: "#29375C",
     fontSize: 16,
     fontWeight: "bold",
     textAlign: "center",
   },
   selectedDropdownItemText: {
-    color: "#25345D",
+    color: "#29375C",
     fontWeight: "bold",
   },
   confirmButton: {
-    backgroundColor: "#25345D",
+    backgroundColor: "#29375C",
     paddingVertical: 10,
     paddingHorizontal: 30,
     borderRadius: 8,

@@ -21,7 +21,9 @@ const RemindPicker: React.FC<RemindPickerProps> = ({
   PADDING_COUNT,
 }) => {
   const scrollRef = useRef<ScrollView>(null);
-  const [scrollingRemindTime, setScrollingRemindTime] = useState<string | null>(null);
+  const [scrollingRemindTime, setScrollingRemindTime] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     if (remind && scrollRef.current) {
@@ -50,47 +52,56 @@ const RemindPicker: React.FC<RemindPickerProps> = ({
   // Các style động phụ thuộc ITEM_HEIGHT, PADDING_COUNT
   const pickerContainerStyle = {
     height: ITEM_HEIGHT * (PADDING_COUNT * 2 + 1),
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
     marginTop: 8,
     marginBottom: 8,
-    position: 'relative' as const,
+    position: "relative" as const,
   };
   const pickerSelectedOverlayStyle = {
-    position: 'absolute' as const,
+    position: "absolute" as const,
     top: ITEM_HEIGHT * PADDING_COUNT,
     left: 0,
     right: 0,
     height: ITEM_HEIGHT,
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
     zIndex: 2,
   };
   const pickerSelectedItemStyle = {
-    backgroundColor: '#AEB6C1',
+    backgroundColor: "#AEB6C1",
     borderRadius: 16,
-    width: '98%' as const,
+    width: "98%" as const,
     height: ITEM_HEIGHT,
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
   };
   const remindOptionStyle = {
     height: ITEM_HEIGHT,
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
   };
 
   return (
     <View style={styles.remindBoxCustom}>
       <Text style={styles.remindFloatingLabel}>Nhắc nhở</Text>
-      <Switch
-        value={remind}
-        onValueChange={setRemind}
-        trackColor={{ false: "#ccc", true: "#25345D" }}
-        thumbColor={remind ? "#fff" : "#f4f3f4"}
-        ios_backgroundColor="#ccc"
-        style={styles.remindSwitch}
-      />
+      <View style={styles.remindRow}>
+      <Text style={styles.remindText}>
+        {remind
+          ? scrollingRemindTime !== null
+            ? scrollingRemindTime
+            : remindTime
+          : "Không nhắc nhỡ"}
+        </Text>
+        <Switch
+          value={remind}
+          onValueChange={setRemind}
+          trackColor={{ false: "#ccc", true: "#29375C" }}
+          thumbColor={remind ? "#fff" : "#f4f3f4"}
+          ios_backgroundColor="#ccc"
+          style={styles.remindSwitch}
+        />
+      </View>
       {/* Chỉ hiện phần chọn thời gian khi remind = true */}
       {remind && (
         <View style={pickerContainerStyle}>
@@ -98,7 +109,9 @@ const RemindPicker: React.FC<RemindPickerProps> = ({
           <View style={pickerSelectedOverlayStyle} pointerEvents="none">
             <View style={pickerSelectedItemStyle}>
               <Text style={styles.pickerSelectedText}>
-                {scrollingRemindTime !== null ? scrollingRemindTime : remindTime}
+                {scrollingRemindTime !== null
+                  ? scrollingRemindTime
+                  : remindTime}
               </Text>
             </View>
           </View>
@@ -140,45 +153,57 @@ const RemindPicker: React.FC<RemindPickerProps> = ({
 
 const styles = StyleSheet.create({
   remindBoxCustom: {
-    borderWidth: 1.5,
-    borderColor: "#25345D",
+    borderWidth: 1,
+    borderColor: "#29375C",
     borderRadius: 12,
-    backgroundColor: "#fff",
-    padding: 18,
-    marginBottom: 32,
+    backgroundColor: "#f7f7f7",
+    paddingTop: 15,
+    paddingBottom: 12,
+    paddingHorizontal: 25,
+    marginLeft: 15,
+    marginRight: 15,
+    marginBottom: 25,
     marginTop: 8,
     position: "relative",
-    minHeight: 160,
+    minHeight: 50, // Giảm chiều cao cho phù hợp
   },
   remindFloatingLabel: {
     position: "absolute",
-    top: -10,
-    left: 16,
-    backgroundColor: "#fff",
+    top: -16,
+    left: 18,
+    backgroundColor: "#f7f7f7",
     paddingHorizontal: 6,
-    fontSize: 15,
-    color: "#25345D",
-    fontWeight: "bold",
+    fontSize: 14,
+    color: "#29375C",
+    fontFamily: "Baloo2-SemiBold",
     zIndex: 2,
+  },
+  remindRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   remindSwitch: {
-    position: "absolute",
-    top: 8,
-    right: 12,
     zIndex: 2,
   },
+  remindText: {
+    color: "#29375C",
+    fontFamily: "Baloo2-Medium",
+    fontSize: 16,
+  },
   pickerSelectedText: {
-    color: '#25345D',
-    fontWeight: 'bold',
+    color: "#29375C",
+    fontFamily: "Baloo2-Medium",
     fontSize: 17,
   },
   remindOptionsList: {
-    width: '100%',
+    width: "100%",
   },
   remindOptionText: {
-    color: '#B6B6B6',
+    color: "#B6B6B6",
     fontSize: 17,
-    fontWeight: '400',
+    fontFamily: "Baloo2-Medium",
+    fontWeight: "400",
   },
 });
 

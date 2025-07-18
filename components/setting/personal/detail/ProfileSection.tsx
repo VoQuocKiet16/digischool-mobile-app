@@ -34,7 +34,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ userData }) => {
 const styles = StyleSheet.create({
   container: { alignItems: "center", padding: 20, paddingBottom: 0 },
   avatar: { width: 120, height: 120, borderRadius: 10, marginBottom: 10 },
-  role: { fontSize: 18, color: "#25345D", fontFamily: "Baloo2-Medium" },
+  role: { fontSize: 18, color: "#29375C", fontFamily: "Baloo2-Medium" },
 });
 
 export default ProfileSection;

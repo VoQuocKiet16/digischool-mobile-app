@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
   checkboxLabel: {
     marginLeft: 10,
     fontSize: 14,
-    color: "#25345D",
+    color: "#29375C",
     flex: 1,
     fontFamily: "Baloo2-Medium",
   },

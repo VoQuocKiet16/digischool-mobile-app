@@ -9,8 +9,8 @@ interface RefreshableScrollViewProps extends ScrollViewProps {
 
 const RefreshableScrollView: React.FC<RefreshableScrollViewProps> = ({
   onRefresh,
-  colors = ["#25345D"],
-  tintColor = "#25345D",
+  colors = ["#29375C"],
+  tintColor = "#29375C",
   children,
   ...scrollViewProps
 }) => {

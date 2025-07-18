@@ -88,8 +88,12 @@ export default function ListActivity() {
   const data = DATA[type as "student" | "teacher"];
 
   // Header tuỳ theo type
-  const headerTitle = type === "student" ? "Danh sách hoạt động" : "Danh sách hoạt động";
-  const headerSubtitle = type === "student" ? "Danh sách học sinh nghỉ phép, vi phạm" : "Danh sách yêu cầu dạy thay, đổi tiết, dạy bù";
+  const headerTitle =
+    type === "student" ? "Danh sách hoạt động" : "Danh sách hoạt động";
+  const headerSubtitle =
+    type === "student"
+      ? "Danh sách học sinh nghỉ phép, vi phạm"
+      : "Danh sách yêu cầu dạy thay, đổi tiết, dạy bù";
 
   return (
     <HeaderLayout
@@ -97,11 +101,19 @@ export default function ListActivity() {
       subtitle={headerSubtitle}
       onBack={() => router.back()}
     >
-      <ScrollView contentContainerStyle={{paddingBottom: 32}} style={{backgroundColor: '#f7f7f7'}}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 32 }}
+        style={{ backgroundColor: "#f7f7f7" }}
+      >
         {data.map((group, idx) => (
-          <View key={group.date} style={{marginBottom: 18}}>
+          <View key={group.date} style={{ marginBottom: 18 }}>
             <View style={styles.dateRow}>
-              <MaterialIcons name="access-time" size={18} color="#25345D" style={{marginRight: 6}} />
+              <MaterialIcons
+                name="access-time"
+                size={18}
+                color="#29375C"
+                style={{ marginRight: 6 }}
+              />
               <Text style={styles.dateText}>{group.date}</Text>
             </View>
             {group.items.map((item, i) => (
@@ -109,9 +121,9 @@ export default function ListActivity() {
                 style={styles.card}
                 key={i}
                 onTouchEnd={() => {
-                  if (type === 'student') {
+                  if (type === "student") {
                     router.push({
-                      pathname: '/manage/activity_detail',
+                      pathname: "/manage/activity_detail",
                       params: {
                         title: item.type,
                         reason: item.desc,
@@ -121,22 +133,22 @@ export default function ListActivity() {
                   } else {
                     const tItem = item as any;
                     router.push({
-                      pathname: '/manage/activity_detail',
+                      pathname: "/manage/activity_detail",
                       params: {
                         title: tItem.type,
-                        requester: tItem.requester || '',
-                        reason: tItem.reason || '',
-                        subject: tItem.subject || '',
-                        time: tItem.time || '',
-                        responder: tItem.responder || '',
-                        status: tItem.status || '',
+                        requester: tItem.requester || "",
+                        reason: tItem.reason || "",
+                        subject: tItem.subject || "",
+                        time: tItem.time || "",
+                        responder: tItem.responder || "",
+                        status: tItem.status || "",
                       },
                     });
                   }
                 }}
               >
                 <Image source={item.img} style={styles.avatar} />
-                <View style={{flex: 1, marginLeft: 10}}>
+                <View style={{ flex: 1, marginLeft: 10 }}>
                   <Text style={styles.cardTitle}>{item.type}</Text>
                   <Text style={styles.cardDesc}>
                     {item.desc.split(item.status)[0]}
@@ -144,7 +156,12 @@ export default function ListActivity() {
                     {item.desc.split(item.status)[1]}
                   </Text>
                 </View>
-                <MaterialIcons name="push-pin" size={22} color="#25345D" style={{marginLeft: 8, marginTop: -8}} />
+                <MaterialIcons
+                  name="push-pin"
+                  size={22}
+                  color="#29375C"
+                  style={{ marginLeft: 8, marginTop: -8 }}
+                />
               </View>
             ))}
           </View>
@@ -156,55 +173,55 @@ export default function ListActivity() {
 
 const styles = StyleSheet.create({
   dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 8,
     marginLeft: 4,
   },
   dateText: {
     fontSize: 16,
-    color: '#25345D',
-    fontWeight: '700',
-    fontFamily: 'Baloo2-Bold',
+    color: "#29375C",
+    fontWeight: "700",
+    fontFamily: "Baloo2-Bold",
   },
   card: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#D7DCE5',
+    flexDirection: "row",
+    alignItems: "flex-start",
+    backgroundColor: "#D7DCE5",
     borderRadius: 18,
     padding: 14,
     marginBottom: 14,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 2,
-    width: '92%',
-    alignSelf: 'center',
+    width: "92%",
+    alignSelf: "center",
   },
   avatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
     marginRight: 2,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   cardTitle: {
     fontSize: 18,
-    color: '#25345D',
-    fontWeight: '700',
-    fontFamily: 'Baloo2-Bold',
+    color: "#29375C",
+    fontWeight: "700",
+    fontFamily: "Baloo2-Bold",
     marginBottom: 2,
   },
   cardDesc: {
     fontSize: 14,
-    color: '#25345D',
-    fontFamily: 'Baloo2-Medium',
+    color: "#29375C",
+    fontFamily: "Baloo2-Medium",
     marginTop: 0,
-    flexWrap: 'wrap',
+    flexWrap: "wrap",
   },
   success: {
-    color: '#2E8B57',
-    fontWeight: '700',
-    fontFamily: 'Baloo2-Bold',
+    color: "#2E8B57",
+    fontWeight: "700",
+    fontFamily: "Baloo2-Bold",
   },
 });

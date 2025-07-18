@@ -14,7 +14,9 @@ const TeachingInfo: React.FC<TeachingInfoProps> = ({ userData }) => {
     if (!userData?.subjects || userData.subjects.length === 0) {
       return "Chưa cập nhật";
     }
-    return userData.subjects.map((subject: any) => subject.subjectName).join(", ");
+    return userData.subjects
+      .map((subject: any) => subject.subjectName)
+      .join(", ");
   };
 
   const getHomeroomClass = () => {
@@ -39,7 +41,7 @@ const TeachingInfo: React.FC<TeachingInfoProps> = ({ userData }) => {
           <Ionicons
             name={showInfo ? "chevron-down" : "chevron-forward"}
             size={24}
-            color="#25345D"
+            color="#29375C"
             style={styles.icon}
           />
         </TouchableOpacity>
@@ -84,12 +86,12 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 25,
-    color: "#25345D",
+    color: "#29375C",
     flex: 1,
     fontFamily: "Baloo2-Bold",
   },
   icon: {
-    color: "#25345D",
+    color: "#29375C",
     marginLeft: 6,
     backgroundColor: "#C4C4C4",
     borderRadius: 20,
@@ -100,7 +102,7 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   label: {
-    color: "#25345D",
+    color: "#29375C",
     fontSize: 18,
     fontFamily: "Baloo2-SemiBold",
   },

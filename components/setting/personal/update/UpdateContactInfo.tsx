@@ -25,7 +25,7 @@ export default function UpdateContactInfo() {
         <Ionicons
           name={showInfo ? "chevron-down" : "chevron-forward"}
           size={24}
-          color="#25345D"
+          color="#29375C"
           style={styles.icon}
         />
       </TouchableOpacity>
@@ -95,12 +95,12 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 25,
-    color: "#25345D",
+    color: "#29375C",
     flex: 1,
     fontFamily: "Baloo2-Bold",
   },
   icon: {
-    color: "#25345D",
+    color: "#29375C",
     marginLeft: 6,
     backgroundColor: "#C4C4C4",
     borderRadius: 20,
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   },
   outlineInputBox: {
     borderWidth: 1,
-    borderColor: "#25345D",
+    borderColor: "#29375C",
     borderRadius: 12,
     paddingVertical: 17,
     paddingHorizontal: 25,
@@ -126,13 +126,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#f7f7f7",
     paddingHorizontal: 4,
     fontSize: 14,
-    color: "#25345D",
+    color: "#29375C",
     fontFamily: "Baloo2-SemiBold",
     zIndex: 2,
   },
   inputTextOutline: {
     fontSize: 16,
-    color: "#25345D",
+    color: "#29375C",
     fontFamily: "Baloo2-SemiBold",
   },
 });

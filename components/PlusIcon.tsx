@@ -1,15 +1,28 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import React from 'react';
-import { GestureResponderEvent, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { MaterialIcons } from "@expo/vector-icons";
+import React from "react";
+import {
+  GestureResponderEvent,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 interface PlusIconProps {
   onPress?: (event: GestureResponderEvent) => void;
   text?: string;
 }
 
-const PlusIcon: React.FC<PlusIconProps> = ({ onPress, text = 'Thêm ghi chú' }) => {
+const PlusIcon: React.FC<PlusIconProps> = ({
+  onPress,
+  text = "Thêm ghi chú",
+}) => {
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={styles.container}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       <View style={styles.iconCircle}>
         <MaterialIcons name="add" size={24} color="#29375C" />
       </View>
@@ -20,22 +33,22 @@ const PlusIcon: React.FC<PlusIconProps> = ({ onPress, text = 'Thêm ghi chú' })
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   iconCircle: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#e9eaee',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#e9eaee",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 12,
   },
   text: {
-    color: '#29375C',
+    color: "#29375C",
     fontSize: 16,
-    fontFamily: 'Baloo2-Medium',
+    fontFamily: "Baloo2-Medium",
   },
 });
 

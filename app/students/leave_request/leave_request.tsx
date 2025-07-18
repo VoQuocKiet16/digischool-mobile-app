@@ -276,7 +276,7 @@ export default function LeaveRequestScreen() {
       subtitle="Chọn các tiết học bạn muốn xin phép nghỉ"
       onBack={() => router.back()}
     >
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+      <SafeAreaView style={{ flex: 1 }}>
         <View style={{ flex: 1 }}>
           <ScheduleHeader
             title={session}
@@ -527,6 +527,5 @@ const styles = StyleSheet.create({
   buttonContainer: {
     paddingHorizontal: 16,
     paddingBottom: 16,
-    backgroundColor: "#fff",
   },
 });

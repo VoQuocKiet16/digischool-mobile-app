@@ -186,7 +186,7 @@ export default function TutorialScreen() {
               onPress={goToPrev}
               disabled={isTransitioning}
             >
-              <Icon name="arrow-back" size={32} color="#25345D" />
+              <Icon name="arrow-back" size={32} color="#29375C" />
             </TouchableOpacity>
           )}
           <TouchableOpacity
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   dot: {
-    backgroundColor: "#25345D",
+    backgroundColor: "#29375C",
     width: 12,
     height: 12,
     borderRadius: 6,
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#25345D",
+    color: "#29375C",
     marginBottom: 12,
     textAlign: "center",
     fontFamily: "Baloo2-Bold",
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     borderWidth: 2,
-    borderColor: "#25345D",
+    borderColor: "#29375C",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 16,
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "#25345D",
+    backgroundColor: "#29375C",
     justifyContent: "center",
     alignItems: "center",
   },
