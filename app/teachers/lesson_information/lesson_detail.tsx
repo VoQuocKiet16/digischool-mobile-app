@@ -284,6 +284,8 @@ const LessonDetailScreen = () => {
                       lessonId: lessonId,
                       className: lessonData?.class?.className,
                       lessonFrom: JSON.stringify(lessonData),
+                      lessonDate: lessonData?.scheduledDate,
+                      lessonYear: lessonData?.academicYear?.name || "2024-2025",
                     },
                   });
                 }}
@@ -305,6 +307,8 @@ const LessonDetailScreen = () => {
                     params: {
                       lessonId: lessonId,
                       className: lessonData?.class?.className,
+                      lessonDate: lessonData?.scheduledDate,
+                      lessonYear: lessonData?.academicYear?.name || "2024-2025",
                     },
                   });
                 }}
