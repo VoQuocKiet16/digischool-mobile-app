@@ -36,7 +36,11 @@ export default function ManageNewsScreen() {
   }, []);
 
   return (
-    <HeaderLayout title="Danh sách tin đăng" subtitle="Tin đăng của giáo viên">
+    <HeaderLayout
+      title="Danh sách tin đăng"
+      subtitle="Tin đăng của giáo viên"
+      onBack={() => router.push("/news")}
+    >
       <View style={styles.container}>
         {loading ? (
           <ActivityIndicator
@@ -54,7 +58,14 @@ export default function ManageNewsScreen() {
             showsVerticalScrollIndicator={false}
             renderItem={({ item }) => (
               <TouchableOpacity
-                onPress={() => router.push(`/news/edit_news?id=${item._id}`)}
+                onPress={() =>
+                  router.push({
+                    pathname: "/news/edit_news",
+                    params: {
+                      id: item._id,
+                    },
+                  })
+                }
                 activeOpacity={0.8}
               >
                 <View style={styles.card}>

@@ -371,6 +371,21 @@ export default function NewsFeedScreen() {
         </View>
       ) : error ? (
         <Text style={{ color: "red", marginTop: 40 }}>{error}</Text>
+      ) : !newsList || newsList.length === 0 ? (
+        <View style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text style={{ color: "#7D88A7", fontSize: 14, fontFamily: "Baloo2-Medium" }}>
+            Không có tin tức nào.
+          </Text>
+        </View>
       ) : (
         <FlatList
           data={newsList}
