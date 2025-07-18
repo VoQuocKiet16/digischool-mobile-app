@@ -526,7 +526,7 @@ export default function NewsFeedScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F6F8FB", paddingHorizontal: 16 },
+  container: { flex: 1, paddingHorizontal: 16, backgroundColor: "#F7F7F7" },
   tabRow: {
     flexDirection: "row",
     justifyContent: "center",
