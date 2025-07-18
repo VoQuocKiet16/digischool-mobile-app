@@ -32,15 +32,13 @@ export default function MessageBoxScreen() {
 
   // Lấy lịch sử chat và kết nối socket
   useEffect(() => {
-    if (!userId || !token || !myId) {
-      return;
-    }
+    if (!userId || !token || !myId) return;
+
     setLoading(true);
     setError("");
     chatService
       .getMessagesWith(userId as string, token as string)
       .then((res) => {
-        // console.log("[getMessagesWith] response:", res);
         if (res.success) {
           setMessages(res.data.reverse());
         } else {
@@ -55,10 +53,9 @@ export default function MessageBoxScreen() {
         setLoading(false);
         console.log("[getMessagesWith] catch error:", err);
       });
-    // Kết nối socket
-    chatService.connect(myId as string, token as string);
+
     // Lắng nghe tin nhắn mới
-    chatService.onNewMessage((msg) => {
+    const handleNewMessage = (msg: any) => {
       if (
         (msg.sender === userId && msg.receiver === myId) ||
         (msg.sender === myId && msg.receiver === userId)
@@ -66,9 +63,10 @@ export default function MessageBoxScreen() {
         setMessages((prev) => [...prev, msg]);
         flatListRef.current?.scrollToEnd({ animated: true });
       }
-    });
+    };
+    chatService.onNewMessage(handleNewMessage);
     return () => {
-      chatService.disconnect();
+      chatService.offNewMessage(handleNewMessage);
     };
   }, [userId, token, myId]);
 

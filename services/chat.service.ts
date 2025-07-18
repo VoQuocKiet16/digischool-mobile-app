@@ -8,12 +8,16 @@ class ChatService {
   socket: Socket | null = null;
 
   connect(userId: string, token: string) {
-    if (this.socket) return;
+    if (this.socket) {
+      console.log("Socket đã connect rồi với userId:", userId);
+      return;
+    }
     this.socket = io(SOCKET_URL, {
       transports: ["websocket"],
       auth: { token: `Bearer ${token}` },
     });
     this.socket.emit("join", userId);
+    console.log("Socket vừa được connect với userId:", userId);
   }
 
   disconnect() {
@@ -22,7 +26,16 @@ class ChatService {
   }
 
   onNewMessage(callback: (msg: any) => void) {
-    this.socket?.on("new_message", callback);
+    if (!this.socket) {
+      console.log("Socket chưa connect, không thể lắng nghe new_message");
+      return;
+    }
+    console.log("Đăng ký lắng nghe new_message");
+    this.socket.on("new_message", callback);
+  }
+
+  offNewMessage(callback: (msg: any) => void) {
+    this.socket?.off("new_message", callback);
   }
 
   sendMessageSocket(data: any) {

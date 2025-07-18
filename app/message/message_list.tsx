@@ -26,6 +26,7 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [myId, setMyId] = useState<string | undefined>(undefined);
+  const [refreshFlag, setRefreshFlag] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -52,13 +53,54 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
       }
     };
     fetchConversations();
-  }, [token]);
+  }, [token, refreshFlag]);
+
+  useEffect(() => {
+    const handleNewMessage = (msg: any) => {
+      console.log("Tin nhắn mới nhận được:", msg);
+      setChatData((prevData) => {
+        console.log("Danh sách conversation trước khi cập nhật:", prevData);
+        // Xác định userId của đối phương
+        const otherUserId = msg.sender === myId ? msg.receiver : msg.sender;
+        const idx = prevData.findIndex(
+          (item) => item.userId === otherUserId || item.id === otherUserId
+        );
+        if (idx === -1) {
+          // Nếu chưa có, giữ nguyên (hoặc có thể fetch lại nếu muốn)
+          return prevData;
+        }
+        const updatedConversation = {
+          ...prevData[idx],
+          lastMessage: msg.content || msg.text || "[Tin nhắn mới]",
+          time: msg.time || new Date().toISOString(),
+          unread: (prevData[idx].unread || 0) + 1,
+        };
+        // Đưa lên đầu danh sách
+        const newData = [
+          updatedConversation,
+          ...prevData.slice(0, idx),
+          ...prevData.slice(idx + 1),
+        ];
+        return newData;
+      });
+    };
+    chatService.onNewMessage(handleNewMessage);
+    return () => {
+      chatService.offNewMessage(handleNewMessage);
+    };
+  }, [myId]);
 
   useEffect(() => {
     if (error) {
       Alert.alert("Lỗi", error);
     }
   }, [error]);
+
+  useEffect(() => {
+    if (myId && token) {
+      chatService.connect(myId, token);
+    }
+  }, [myId, token]);
 
   if (!myId) return <ActivityIndicator style={{ marginTop: 40 }} />;
 
@@ -139,12 +181,17 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
                 />
                 <View style={styles.chatContent}>
                   <Text style={styles.name}>{item.name}</Text>
-                  <Text style={styles.lastMessage} numberOfLines={1}>
-                    {item.lastMessage}
+                  <Text
+                    style={[
+                      styles.lastMessage,
+                      item.unread > 0 && { fontWeight: "bold", color: "#29375C" }
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {item.lastMessage || "Chưa có tin nhắn"}
                   </Text>
                 </View>
                 <View style={styles.rightInfo}>
-                  <Text style={styles.time}>{item.time}</Text>
                   {item.unread > 0 && (
                     <View style={styles.unreadBadge}>
                       <Text style={styles.unreadText}>{item.unread}</Text>
