@@ -13,11 +13,16 @@ class ChatService {
       console.log("Socket đã connect rồi với userId:", userId);
       return;
     }
-    this.myId = userId;
     this.socket = io(SOCKET_URL, {
       transports: ["websocket"],
       auth: { token: `Bearer ${token}` },
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
     });
+    this.socket.on("connect", () => console.log("Socket connected!"));
+    this.socket.on("disconnect", () => console.log("Socket disconnected!"));
+    this.socket.on("reconnect_attempt", () => console.log("Socket reconnecting..."));
     this.socket.emit("join", userId);
     console.log("Socket vừa được connect với userId:", userId);
   }
@@ -40,25 +45,8 @@ class ChatService {
     this.socket?.off("new_message", callback);
   }
 
-  onMessageRead(callback: (data: any) => void) {
-    this.socket?.on("message_read", callback);
-  }
-  offMessageRead(callback: (data: any) => void) {
-    this.socket?.off("message_read", callback);
-  }
-
   sendMessageSocket(data: any) {
     this.socket?.emit("send_message", data);
-  }
-
-  sendSeenMessage(messageId: string, token: string) {
-    this.socket?.emit("seen_message", { messageId, token });
-  }
-
-  markConversationRead(userId: string, token: string) {
-    if (this.socket && this.myId) {
-      this.socket.emit("mark_read", { from: this.myId, to: userId });
-    }
   }
 
   // REST API
@@ -121,6 +109,20 @@ class ChatService {
       return {
         success: false,
         message: error.response?.data?.message || "Upload file thất bại",
+      };
+    }
+  }
+
+  async searchUsers(keyword: string, token: string) {
+    try {
+      const res = await api.get(`/api/users?search=${encodeURIComponent(keyword)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return { success: true, data: res.data.data.users };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Tìm kiếm tài khoản thất bại",
       };
     }
   }

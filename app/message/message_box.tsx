@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -19,7 +20,7 @@ import chatService from "../../services/chat.service";
 
 export default function MessageBoxScreen() {
   // Nhận params từ router
-  const { userId, token, myId, name } = useLocalSearchParams();
+  const { userId, name } = useLocalSearchParams();
 
   const router = useRouter();
   const [messages, setMessages] = useState<any[]>([]);
@@ -29,6 +30,13 @@ export default function MessageBoxScreen() {
   const [sending, setSending] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const [selectedImage, setSelectedImage] = useState<any>(null);
+  const [myId, setMyId] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    AsyncStorage.getItem("userId").then(setMyId);
+    AsyncStorage.getItem("token").then(setToken);
+  }, []);
 
   // Lấy lịch sử chat và kết nối socket
   useEffect(() => {
@@ -39,13 +47,13 @@ export default function MessageBoxScreen() {
     chatService
       .getMessagesWith(userId as string, token as string)
       .then((res) => {
+        setLoading(false); // Đảm bảo luôn tắt loading
         if (res.success) {
-          setMessages(res.data.reverse());
+          setMessages(Array.isArray(res.data) ? res.data.reverse() : []);
         } else {
           setError(res.message || "Lỗi không xác định");
           setMessages([]);
         }
-        setLoading(false);
       })
       .catch((err) => {
         setError("Lỗi kết nối server");
@@ -56,13 +64,11 @@ export default function MessageBoxScreen() {
 
     // Lắng nghe tin nhắn mới
     const handleNewMessage = (msg: any) => {
-      if (
-        (msg.sender === userId && msg.receiver === myId) ||
-        (msg.sender === myId && msg.receiver === userId)
-      ) {
-        setMessages((prev) => [...prev, msg]);
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }
+      setMessages((prev) => {
+        if (prev.some((m) => m._id === msg._id || (m.content === msg.content && m.sender === msg.sender && m.createdAt === msg.createdAt))) return prev;
+        return [...prev, msg];
+      });
+      flatListRef.current?.scrollToEnd({ animated: true });
     };
     chatService.onNewMessage(handleNewMessage);
     return () => {
@@ -70,27 +76,9 @@ export default function MessageBoxScreen() {
     };
   }, [userId, token, myId]);
 
-  // Gửi mark_read khi vào phòng chat
-  useEffect(() => {
-    if (userId && myId && chatService.socket) {
-      chatService.socket.emit("mark_read", { from: myId, to: userId });
-    }
-  }, [userId, myId]);
-
-  // Khi nhận message_read, cập nhật toàn bộ tin nhắn từ đối phương thành 'read'
-  useEffect(() => {
-    const handleMessageRead = ({ from }: { from: string }) => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.sender === from ? { ...msg, status: "read" } : msg
-        )
-      );
-    };
-    chatService.onMessageRead(handleMessageRead);
-    return () => {
-      chatService.offMessageRead(handleMessageRead);
-    };
-  }, []);
+  // Xoá useEffect lắng nghe message_read
+  // Xoá useEffect gửi mark_read khi vào phòng chat
+  // Xoá mọi đoạn code cập nhật status: "read" hoặc "Chưa xem"/"Đã xem" trong renderMessage
 
   useEffect(() => {
     if (error) {
@@ -182,6 +170,7 @@ export default function MessageBoxScreen() {
       setSending(false);
       return;
     }
+    // KHÔNG setMessages ở đây nữa! Chỉ rely vào socket để render tin nhắn
     chatService.sendMessageSocket({
       sender: myId,
       receiver: userId,
@@ -248,19 +237,6 @@ export default function MessageBoxScreen() {
             </Text>
           )}
           <Text style={styles.time}>{item.time || ""}</Text>
-          {isMe && index === messages.length - 1 && (
-            <Text
-              style={{
-                fontSize: 11,
-                color: isMe ? "#fff" : "#29375C",
-                opacity: 0.7,
-                marginTop: 2,
-                alignSelf: "flex-end",
-              }}
-            >
-              {item.status === "read" ? "Đã xem" : "Chưa xem"}
-            </Text>
-          )}
         </View>
         {/* Avatar bên phải cho người gửi */}
         {isMe && (showAvatar ? (
@@ -278,6 +254,16 @@ export default function MessageBoxScreen() {
       </View>
     );
   };
+
+
+
+  if (!userId || !token || !myId) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" }}>
+        <ActivityIndicator size="large" color="#29375C" />
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -318,6 +304,11 @@ export default function MessageBoxScreen() {
               showsVerticalScrollIndicator={false}
               onContentSizeChange={() =>
                 flatListRef.current?.scrollToEnd({ animated: true })
+              }
+              ListEmptyComponent={
+                <Text style={{ textAlign: "center", color: "#A0A0A0", marginTop: 40 }}>
+                  Hãy bắt đầu cuộc trò chuyện!
+                </Text>
               }
             />
           )}

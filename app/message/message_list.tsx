@@ -33,40 +33,39 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
     AsyncStorage.getItem("userId").then((id) => setMyId(id ?? undefined));
   }, []);
 
-  useEffect(() => {
-    const fetchConversations = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const res = await chatService.getConversations(token);
-        if (res.success) {
-          setChatData(res.data);
-        } else {
-          setError(res.message || "Lỗi không xác định");
-          setChatData([]);
-        }
-      } catch (e) {
-        setError("Lỗi kết nối server");
+  // Tách fetchConversations ra ngoài để có thể gọi lại
+  const fetchConversations = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await chatService.getConversations(token);
+      if (res.success) {
+        setChatData(res.data);
+      } else {
+        setError(res.message || "Lỗi không xác định");
         setChatData([]);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (e) {
+      setError("Lỗi kết nối server");
+      setChatData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchConversations();
   }, [token, refreshFlag]);
 
   useEffect(() => {
     const handleNewMessage = (msg: any) => {
-      console.log("Tin nhắn mới nhận được:", msg);
       setChatData((prevData) => {
-        console.log("Danh sách conversation trước khi cập nhật:", prevData);
-        // Xác định userId của đối phương
         const otherUserId = msg.sender === myId ? msg.receiver : msg.sender;
         const idx = prevData.findIndex(
           (item) => item.userId === otherUserId || item.id === otherUserId
         );
         if (idx === -1) {
-          // Nếu chưa có, giữ nguyên (hoặc có thể fetch lại nếu muốn)
+          fetchConversations();
           return prevData;
         }
         const updatedConversation = {
@@ -75,7 +74,6 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
           time: msg.time || new Date().toISOString(),
           unread: (prevData[idx].unread || 0) + 1,
         };
-        // Đưa lên đầu danh sách
         const newData = [
           updatedConversation,
           ...prevData.slice(0, idx),
@@ -95,12 +93,6 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
       Alert.alert("Lỗi", error);
     }
   }, [error]);
-
-  useEffect(() => {
-    if (myId && token) {
-      chatService.connect(myId, token);
-    }
-  }, [myId, token]);
 
   if (!myId) return <ActivityIndicator style={{ marginTop: 40 }} />;
 
@@ -160,7 +152,6 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
               onPress={async () => {
                 if (item.unread > 0) {
                   // Gửi mark_read lên server khi user click vào conversation
-                  chatService.markConversationRead(item.userId || item.id, token);
                   setChatData((prevData) => {
                     const idx = prevData.findIndex(
                       (c) => c.userId === item.userId || c.id === item.id
