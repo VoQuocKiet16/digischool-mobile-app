@@ -40,7 +40,7 @@ export default function MessageScreen() {
           hasUnreadNotification={hasUnreadNotification}
         />
         {/* TODO: Thay bằng component chat cho giáo viên nếu có */}
-        <MessageListScreen userName={userName} roles={roles} />
+        <MessageListScreen />
       </View>
     );
   }
@@ -62,7 +62,7 @@ export default function MessageScreen() {
         name={userName ? `HS ${userName}` : "HS Nguyễn Văn A"}
         hasUnreadNotification={hasUnreadNotification}
       />
-      <MessageListScreen userName={userName} roles={roles} />
+      <MessageListScreen />
     </View>
   );
 }

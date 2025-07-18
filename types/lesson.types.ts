@@ -59,4 +59,12 @@ export interface LessonData {
     comments: string;
     evaluatedAt: string;
   }[];
+  academicYear?: {
+    _id: string;
+    name: string;
+    startDate: string;
+    endDate: string;
+    isActive: boolean;
+  };
+  scheduledDate?: string;
 }

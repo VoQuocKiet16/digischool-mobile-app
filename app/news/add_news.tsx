@@ -87,7 +87,7 @@ export default function AddNewsScreen() {
       setTitle("");
       setContent("");
       setCoverImage(null);
-      setTimeout(() => setShowSuccess(false), 1200);
+      setTimeout(() => setShowSuccess(false), 2000);
       router.replace("/news");
     } else {
       Alert.alert("Lỗi", "Đăng tin thất bại. Vui lòng thử lại.");

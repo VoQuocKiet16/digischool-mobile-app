@@ -1,146 +1,358 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import * as ImagePicker from "expo-image-picker";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-
-const messages = [
-  {
-    id: "1",
-    text: "Lorem Ipsum Dolor Sit Amet, Consectetur Adipisicing Elit, Sed Do Elusmod Tempor Incididunt Ut Labore Et Dolore.",
-    time: "10 AM",
-    isMe: false,
-    avatar: require("../../assets/images/avt_default.png"),
-  },
-  {
-    id: "2",
-    text: "Sed Do Elusmod Tempor Incididunt Ut Labore Et Magna Aliqua. Ut Enim Ad Minim Veniam, Quis Nostrud Exercitation Ullamco Laboris Nisi Ut Aliqui.",
-    time: "10 AM",
-    isMe: true,
-    avatar: require("../../assets/images/avatar2.png"),
-  },
-  {
-    id: "3",
-    text: "Lorem Ipsum Dolor Sit",
-    time: "10 AM",
-    isMe: false,
-    avatar: require("../../assets/images/avt_default.png"),
-  },
-  {
-    id: "4",
-    text: "Sed Do Elusmod Tempor Incididunt Ut Labore Et Magna Aliqua. Ut Enim Ad Minim Veniam.",
-    time: "10 AM",
-    isMe: true,
-    avatar: require("../../assets/images/avatar2.png"),
-  },
-  {
-    id: "5",
-    text: "Lorem Ipsum Dolor Sit Amet, Consectetur Adipiscing",
-    time: "10 AM",
-    isMe: false,
-    avatar: require("../../assets/images/avt_default.png"),
-  },
-  {
-    id: "6",
-    text: "Sed Do Elusmod Tempor Incididunt Ut Labore Et",
-    time: "10 AM",
-    isMe: true,
-    avatar: require("../../assets/images/avatar2.png"),
-  },
-  {
-    id: "7",
-    text: "Ok",
-    time: "10 AM",
-    isMe: false,
-    avatar: require("../../assets/images/avt_default.png"),
-  },
-];
+import chatService from "../../services/chat.service";
 
 export default function MessageBoxScreen() {
-  const [input, setInput] = useState("");
+  // Nhận params từ router
+  const { userId, token, myId, name } = useLocalSearchParams();
 
-  const renderMessage = ({ item }: { item: (typeof messages)[0] }) => (
-    <View
-      style={[
-        styles.messageRow,
-        item.isMe ? styles.messageRowMe : styles.messageRowOther,
-      ]}
-    >
-      {!item.isMe && <Image source={item.avatar} style={styles.avatar} />}
+  const router = useRouter();
+  const [messages, setMessages] = useState<any[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [sending, setSending] = useState(false);
+  const flatListRef = useRef<FlatList>(null);
+  const [selectedImage, setSelectedImage] = useState<any>(null);
+
+  // Lấy lịch sử chat và kết nối socket
+  useEffect(() => {
+    if (!userId || !token || !myId) {
+      return;
+    }
+    setLoading(true);
+    setError("");
+    chatService
+      .getMessagesWith(userId as string, token as string)
+      .then((res) => {
+        // console.log("[getMessagesWith] response:", res);
+        if (res.success) {
+          setMessages(res.data.reverse());
+        } else {
+          setError(res.message || "Lỗi không xác định");
+          setMessages([]);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError("Lỗi kết nối server");
+        setMessages([]);
+        setLoading(false);
+        console.log("[getMessagesWith] catch error:", err);
+      });
+    // Kết nối socket
+    chatService.connect(myId as string, token as string);
+    // Lắng nghe tin nhắn mới
+    chatService.onNewMessage((msg) => {
+      if (
+        (msg.sender === userId && msg.receiver === myId) ||
+        (msg.sender === myId && msg.receiver === userId)
+      ) {
+        setMessages((prev) => [...prev, msg]);
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }
+    });
+    return () => {
+      chatService.disconnect();
+    };
+  }, [userId, token, myId]);
+
+  useEffect(() => {
+    if (error) {
+      Alert.alert("Lỗi", error);
+    }
+  }, [error]);
+
+  const handlePickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const asset = result.assets[0];
+      setSelectedImage(asset);
+    }
+  };
+
+  const handleSend = async () => {
+    if (sending) return;
+    setSending(true);
+    // Nếu có ảnh, upload trước
+    if (selectedImage) {
+      const localUri = selectedImage.uri;
+      const filename = localUri.split("/").pop();
+      const match = /\.(\w+)$/.exec(filename ?? "");
+      // Xác định đúng mime type
+      let type = "image";
+      if (match) {
+        const ext = match[1].toLowerCase();
+        if (ext === "jpg" || ext === "jpeg") type = "image/jpeg";
+        else if (ext === "png") type = "image/png";
+        else if (ext === "heic") type = "image/heic";
+        else if (ext === "webp") type = "image/webp";
+        else type = `image/${ext}`;
+      }
+      const fileObj = {
+        uri: localUri,
+        name: filename,
+        type,
+      };
+      try {
+        const uploadRes = await chatService.uploadMedia(
+          fileObj,
+          token as string
+        );
+        if (uploadRes.success && uploadRes.data.url) {
+          await chatService.sendMessageAPI(
+            {
+              receiver: userId,
+              content: "",
+              mediaUrl: uploadRes.data.url,
+              type: "image",
+            },
+            token as string
+          );
+          chatService.sendMessageSocket({
+            sender: myId,
+            receiver: userId,
+            content: "",
+            mediaUrl: uploadRes.data.url,
+            type: "image",
+          });
+          setSelectedImage(null);
+          } else {
+          Alert.alert("Lỗi gửi ảnh", uploadRes.message || "Không gửi được ảnh");
+        }
+      } catch (err) {
+        console.log("[IMAGE UPLOAD ERROR]", err);
+        Alert.alert("Lỗi gửi ảnh", "Không gửi được ảnh");
+      }
+      setSending(false);
+      return;
+    }
+    // Nếu chỉ gửi text
+    if (!input.trim()) {
+      setSending(false);
+      return;
+    }
+    const data = {
+      receiver: userId,
+      content: input,
+      type: "text",
+    };
+    const res = await chatService.sendMessageAPI(data, token as string);
+    if (!res.success) {
+      Alert.alert("Lỗi gửi tin nhắn", res.message || "Gửi tin nhắn thất bại");
+      setSending(false);
+      return;
+    }
+    chatService.sendMessageSocket({
+      sender: myId,
+      receiver: userId,
+      content: input,
+      type: "text",
+    });
+    setInput("");
+    setSending(false);
+  };
+
+  // Xác định id tin nhắn mới nhất của mình
+  const myLastMessageId = (() => {
+    const myMsgs = messages.filter((m) => m.sender === myId);
+    return myMsgs.length > 0 ? myMsgs[myMsgs.length - 1]._id : null;
+  })();
+
+  const renderMessage = ({ item }: { item: any }) => {
+    const isMe = item.sender === myId;
+    const isMyLastMsg = isMe && item._id === myLastMessageId;
+    return (
       <View
         style={[
-          styles.bubble,
-          item.isMe ? styles.bubbleMe : styles.bubbleOther,
+          styles.messageRow,
+          isMe ? styles.messageRowMe : styles.messageRowOther,
         ]}
       >
-        <Text
-          style={[
-            styles.messageText,
-            item.isMe ? styles.textMe : styles.textOther,
-          ]}
+        {!isMe && (
+          <Image
+            source={
+              item.avatar
+                ? { uri: item.avatar }
+                : require("../../assets/images/avt_default.png")
+            }
+            style={styles.avatar}
+          />
+        )}
+        <View
+          style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleOther]}
         >
-          {item.text}
-        </Text>
-        <Text style={styles.time}>{item.time}</Text>
+          {item.mediaUrl && item.type === "image" ? (
+            <Image
+              source={{ uri: item.mediaUrl }}
+              style={{
+                width: 180,
+                height: 180,
+                borderRadius: 12,
+                marginBottom: 4,
+              }}
+            />
+          ) : (
+            <Text
+              style={[
+                styles.messageText,
+                isMe ? styles.textMe : styles.textOther,
+              ]}
+            >
+              {item.content}
+            </Text>
+          )}
+          <Text style={styles.time}>{item.time || ""}</Text>
+          {isMyLastMsg && (
+            <Text
+              style={{
+                fontSize: 11,
+                color: isMe ? "#fff" : "#29375C",
+                opacity: 0.7,
+                marginTop: 2,
+                alignSelf: "flex-end",
+              }}
+            >
+              {item.status === "read" ? "Đã xem" : "Chưa xem"}
+            </Text>
+          )}
+        </View>
+        {isMe && (
+          <Image
+            source={
+              item.avatar
+                ? { uri: item.avatar }
+                : require("../../assets/images/avt_default.png")
+            }
+            style={styles.avatar}
+          />
+        )}
       </View>
-      {item.isMe && <Image source={item.avatar} style={styles.avatar} />}
-    </View>
-  );
+    );
+  };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: "#fff" }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 36 : 0} // offset này có thể chỉnh cho phù hợp header
+    >
+      <View style={{ flex: 1 }}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Nguyễn Văn A</Text>
-          <Text style={styles.headerSubtitle}>Truy cập 3 tiếng trước</Text>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={{ marginRight: 12 }}
+          >
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.headerTitle}>{name || "Đoạn chat"}</Text>
+          </View>
         </View>
         {/* Danh sách tin nhắn */}
         <View style={styles.listWrapper}>
-          <FlatList
-            data={messages}
-            keyExtractor={(item) => item.id}
-            renderItem={renderMessage}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-            inverted
-          />
+          {loading ? (
+            <ActivityIndicator style={{ marginTop: 40 }} />
+          ) : error ? (
+            <Text style={{ color: "red", textAlign: "center", marginTop: 40 }}>
+              {error}
+            </Text>
+          ) : (
+            <FlatList
+              ref={flatListRef}
+              data={messages}
+              keyExtractor={(item) =>
+                item._id?.toString() ||
+                item.id?.toString() ||
+                Math.random().toString()
+              }
+              renderItem={renderMessage}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
+              onContentSizeChange={() =>
+                flatListRef.current?.scrollToEnd({ animated: true })
+              }
+            />
+          )}
         </View>
         {/* Input gửi tin nhắn */}
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          keyboardVerticalOffset={16}
-        >
-          <View style={styles.inputRow}>
+        <View style={styles.inputRow}>
+          <Ionicons
+            name="happy-outline"
+            size={24}
+            color="#29375C"
+            style={{ marginHorizontal: 8 }}
+          />
+          <TouchableOpacity
+            style={styles.sendBtn}
+            onPress={handlePickImage}
+            disabled={sending}
+          >
+            <Ionicons name="image" size={24} color="#29375C" />
+          </TouchableOpacity>
+          <TextInput
+            style={styles.input}
+            placeholder="Nhập tin nhắn tại đây..."
+            placeholderTextColor="#A0A0A0"
+            value={input}
+            onChangeText={setInput}
+            editable={!sending}
+          />
+          <TouchableOpacity
+            style={styles.sendBtn}
+            onPress={handleSend}
+            disabled={sending}
+          >
             <Ionicons
-              name="happy-outline"
+              name="send"
               size={24}
-              color="#29375C"
-              style={{ marginHorizontal: 8 }}
+              color={sending ? "#A0A0A0" : "#29375C"}
             />
-            <TextInput
-              style={styles.input}
-              placeholder="Nhập tin nhắn tại đây..."
-              placeholderTextColor="#A0A0A0"
-              value={input}
-              onChangeText={setInput}
+          </TouchableOpacity>
+        </View>
+        {selectedImage && (
+          <View
+            style={{
+              marginLeft: 16,
+              marginBottom: 8,
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+            <Image
+              source={{ uri: selectedImage.uri }}
+              style={{ width: 100, height: 100, borderRadius: 8 }}
             />
-            <TouchableOpacity style={styles.sendBtn}>
-              <Ionicons name="send" size={24} color="#29375C" />
+            <TouchableOpacity
+              onPress={() => setSelectedImage(null)}
+              style={{ marginLeft: 8 }}
+            >
+              <Ionicons name="close-circle" size={28} color="red" />
             </TouchableOpacity>
           </View>
-        </KeyboardAvoidingView>
+        )}
       </View>
-    </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -158,6 +370,8 @@ const styles = StyleSheet.create({
     paddingTop: 36,
     paddingBottom: 18,
     paddingHorizontal: 20,
+    flexDirection: "row",
+    alignItems: "center",
   },
   headerTitle: {
     color: "#fff",
