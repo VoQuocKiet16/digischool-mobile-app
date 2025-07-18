@@ -172,7 +172,7 @@ export default function ScheduleTeachersScreen() {
     label: string;
   }>(() => {
     const weeks = getWeekRangesByYear("2024-2025");
-    return weeks[1];
+    return weeks[2];
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

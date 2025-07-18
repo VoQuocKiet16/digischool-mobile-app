@@ -10,7 +10,7 @@ import {
   Text,
   View,
 } from "react-native";
-import RenderHtml from "react-native-render-html";
+import { WebView } from "react-native-webview";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import {
   favoriteNews,
@@ -27,6 +27,18 @@ export default function NewsDetailScreen() {
   const [favorite, setFavorite] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const screenWidth = Dimensions.get("window").width;
+
+  // Hàm formatRelativeTime giống news_feed.tsx
+  function formatRelativeTime(dateString: string) {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000); // giây
+    if (diff < 60) return "Vừa xong";
+    if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
+    if (diff < 2592000) return `${Math.floor(diff / 86400)} ngày trước`;
+    return date.toLocaleDateString("vi-VN");
+  }
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -79,7 +91,7 @@ export default function NewsDetailScreen() {
 
   return (
     <HeaderLayout
-      title="Bí kiếp chinh phục"
+      title="Chi tiết tin tức"
       onBack={() => router.back()}
       rightIcon={
         favoriteLoading ? (
@@ -95,47 +107,64 @@ export default function NewsDetailScreen() {
       onRightIconPress={handleToggleFavorite}
     >
       <ScrollView
-        contentContainerStyle={styles.contentWrap}
+        style={styles.contentWrap}
         showsVerticalScrollIndicator={false}
       >
-        <RenderHtml
-          contentWidth={screenWidth - 32}
-          source={{ html: news.content || "" }}
-          tagsStyles={{
-            body: {
-              color: "#29375C",
-              fontSize: 16,
-              fontFamily: "Baloo2-Medium",
-            },
-            p: { marginBottom: 8, lineHeight: 22 },
-            b: { fontWeight: "bold" },
-            ul: { marginBottom: 8 },
-            li: { marginBottom: 4 },
+        {/* Tiêu đề */}
+        <Text style={styles.title}>{news.title || ""}</Text>
+        {/* Nội dung */}
+        <WebView
+          originWhitelist={["*"]}
+          source={{
+            html: `
+              <style>
+                @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400..800&family=Manrope:wght@200..800&family=Space+Grotesk:wght@300..700&display=swap');
+              </style>
+              <style>
+                body {
+                  font-size: 50px;
+                  line-height: 1.5;
+                  font-family: "Baloo 2", sans-serif;
+                  font-weight: 450;
+                  color: #29375C;
+                }
+              </style>
+              ${news.content || "<p>Không có nội dung</p>"}
+            `,
           }}
+          style={{
+            width: "100%",
+            minHeight: 150,
+            maxHeight: 350,
+            backgroundColor: "transparent",
+          }}
+          scrollEnabled={false}
         />
         {/* Hashtag */}
         {news.hashtag && <Text style={styles.hashtag}>{news.hashtag}</Text>}
         {/* Tác giả và thời gian */}
-        <Text style={styles.author}>{news.createdBy?.name || ""}</Text>
-        <Text style={styles.time}>
-          {news.createdAt
-            ? new Date(news.createdAt).toLocaleString("vi-VN")
-            : ""}
-        </Text>
+        {news.createdBy?.name && (
+          <Text style={styles.author}>{news.createdBy?.name || ""}</Text>
+        )}
+        {news.createdAt && (
+          <Text style={styles.time}>{formatRelativeTime(news.createdAt)}</Text>
+        )}
       </ScrollView>
     </HeaderLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
   contentWrap: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 24,
+    flex: 1,
+    paddingHorizontal: 30,
+    paddingTop: 18,
+  },
+  title: {
+    fontSize: 28,
+    color: "#000",
+    marginBottom: 10,
+    fontFamily: "Baloo2-SemiBold",
   },
   hashtag: {
     color: "#3B6EF6",
@@ -143,17 +172,18 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 2,
     fontWeight: "500",
+    fontFamily: "Baloo2-Medium",
   },
   author: {
     color: "#29375C",
-    fontSize: 15,
-    marginTop: 8,
-    fontWeight: "bold",
+    fontSize: 18,
+    marginBottom: 6,
+    fontFamily: "Baloo2-Medium",
   },
   time: {
-    color: "#7D88A7",
-    fontSize: 14,
-    marginTop: 2,
+    color: "#A0A0A0",
+    fontSize: 15,
+    fontFamily: "Baloo2-Medium",
   },
   center: {
     flex: 1,

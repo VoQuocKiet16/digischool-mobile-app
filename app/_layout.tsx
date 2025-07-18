@@ -191,6 +191,10 @@ function RootLayoutContent() {
     "/teachers/leave_request/leave_request_info",
     "/students/leave_request/leave_request",
     "/students/leave_request/leave_request_info",
+    "/news/news_detail",
+    "/news/manage_news",
+    "/news/add_news",
+    "/news/edit_news",
   ];
   // Kiểm tra có cần ẩn tabbar không
   const isTabBarHidden = hiddenTabBarRoutes.some((route) =>

@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Keyboard, StyleSheet, View } from 'react-native';
-import { WebView } from 'react-native-webview';
+import React, { useEffect, useRef, useState } from "react";
+import { Keyboard, StyleSheet, View } from "react-native";
+import { WebView } from "react-native-webview";
 
 interface LexicalEditorWebViewProps {
   value?: string;
@@ -8,7 +8,10 @@ interface LexicalEditorWebViewProps {
   height?: number;
 }
 
-const LexicalEditorWebView = ({ value, onChange, height = 220 }: LexicalEditorWebViewProps) => {
+const LexicalEditorWebView = ({
+  value,
+  onChange,
+}: LexicalEditorWebViewProps) => {
   const webviewRef = useRef<WebView>(null);
   const lastValue = useRef<string | undefined>(undefined);
   const [webviewReady, setWebviewReady] = useState(false);
@@ -32,14 +35,14 @@ const LexicalEditorWebView = ({ value, onChange, height = 220 }: LexicalEditorWe
   }, [value, webviewReady]);
 
   return (
-    <View style={[styles.container, { height }]}>
+    <View style={[styles.container]}>
       <WebView
         ref={webviewRef}
-        originWhitelist={['*']}
-        source={require('../assets/lexical-editor.html')}
+        originWhitelist={["*"]}
+        source={require("../assets/lexical-editor.html")}
         onLoadEnd={handleWebViewLoad}
-        onMessage={event => {
-          if (event.nativeEvent.data === '__BLUR__') {
+        onMessage={(event) => {
+          if (event.nativeEvent.data === "__BLUR__") {
             Keyboard.dismiss();
           } else if (onChange) {
             onChange(event.nativeEvent.data);
@@ -54,8 +57,8 @@ const LexicalEditorWebView = ({ value, onChange, height = 220 }: LexicalEditorWe
 };
 
 const styles = StyleSheet.create({
-  container: { borderRadius: 12, overflow: 'hidden', backgroundColor: '#fff' },
-  webview: { flex: 1, backgroundColor: 'transparent' },
+  container: { flex: 1, overflow: "hidden" },
+  webview: { flex: 1, backgroundColor: "transparent" },
 });
 
-export default LexicalEditorWebView; 
+export default LexicalEditorWebView;
