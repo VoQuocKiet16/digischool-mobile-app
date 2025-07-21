@@ -1,42 +1,98 @@
 import api from "./api.config";
 
 export interface TestInfo {
+  testInfoId: string;
+  testType: string;
+  content: string;
+  reminder?: string;
+}
+
+export interface TestInfoDetail {
   _id: string;
   testType: string;
   content: string;
   reminder?: string;
-  lessonId: string;
+  lesson: {
+    _id: string;
+    lessonId: string;
+    scheduledDate: string;
+    topic?: string;
+  };
+  class: {
+    _id: string;
+    className: string;
+  };
+  subject: {
+    _id: string;
+    subjectName: string;
+    subjectCode: string;
+  };
+  teacher: {
+    _id: string;
+    name: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateTestInfoRequest {
-  testType: string;
+  testType: "kiemtra15" | "kiemtra1tiet";
   content: string;
   reminder?: string;
 }
 
 export interface UpdateTestInfoRequest {
-  testType: string;
-  content: string;
+  testType?: "kiemtra15" | "kiemtra1tiet";
+  content?: string;
   reminder?: string;
 }
 
 export interface CreateTestInfoResponse {
   success: boolean;
   message?: string;
-  data?: any;
+  data?: {
+    testInfoId: string;
+    lesson: {
+      lessonId: string;
+      scheduledDate: string;
+      topic?: string;
+    };
+    class: string;
+    subject: {
+      name: string;
+      code: string;
+    };
+    teacher: string;
+    testType: string;
+    content: string;
+    reminder?: string;
+    createdAt: string;
+  };
 }
 
 export interface UpdateTestInfoResponse {
   success: boolean;
   message?: string;
-  data?: any;
+  data?: {
+    testInfoId: string;
+    testType: string;
+    content: string;
+    reminder?: string;
+    updatedAt: string;
+  };
 }
 
 export interface DeleteTestInfoResponse {
   success: boolean;
   message?: string;
+  data?: {
+    deletedTestInfo: {
+      testInfoId: string;
+      testType: string;
+      class: string;
+      subject: string;
+    };
+  };
 }
 
 export const createTestInfo = async (
@@ -50,7 +106,7 @@ export const createTestInfo = async (
     );
     return {
       success: true,
-      data: response.data,
+      data: response.data.data,
     };
   } catch (error: any) {
     return {
@@ -69,7 +125,7 @@ export const updateTestInfo = async (
     const response = await api.put(`/api/test-infos/${testInfoId}`, data);
     return {
       success: true,
-      data: response.data,
+      data: response.data.data,
     };
   } catch (error: any) {
     return {
@@ -87,6 +143,7 @@ export const deleteTestInfo = async (
     const response = await api.delete(`/api/test-infos/${testInfoId}`);
     return {
       success: true,
+      data: response.data.data,
     };
   } catch (error: any) {
     return {

@@ -2,46 +2,58 @@ export interface LessonData {
   _id: string;
   lessonId: string;
   topic: string;
-  description: string;
+  description?: string;
   timeSlot: {
+    _id: string;
     startTime: string;
     endTime: string;
-    session: string;
     period: number;
+    type: string;
   };
   teacher: {
+    _id: string;
     name: string;
-    gender: string;
+    email: string;
+    gender?: string;
+  };
+  substituteTeacher?: {
+    _id: string;
+    name: string;
+    email: string;
   };
   subject?: {
-    name: string;
+    _id: string;
+    subjectName: string;
+    subjectCode: string;
   };
   class?: {
+    _id: string;
     className: string;
+    gradeLevel: number;
   };
-  fixedInfo?: {
-    description: string;
+  academicYear: {
+    _id: string;
+    name: string;
   };
+  scheduledDate: string;
+  status: string;
+  type?: string; // "fixed" | "regular"
+
+  // Thêm các trường mới từ backend
+  dayOfWeek?: string; // "Thứ 2", "Thứ 3", etc.
+  dayNumber?: number; // 1-7 (Thứ 2 = 1, CN = 7)
+
+  // Test info từ backend mới
   testInfo?: {
+    testInfoId: string;
     testType: string;
     content: string;
     reminder?: string;
   } | null;
-  evaluation?: {
-    rank: string;
-  } | null;
   teacherEvaluation?: {
     _id: string;
-    evaluation: {
-      rating: string;
-      comments: string;
-      details: any;
-    };
-    status: string;
-    createdAt: string;
-    updatedAt: string;
+    rating: string;
   } | null;
-  status: string;
   studentEvaluations?: {
     _id: string;
     student: {
@@ -59,12 +71,9 @@ export interface LessonData {
     comments: string;
     evaluatedAt: string;
   }[];
-  academicYear?: {
-    _id: string;
-    name: string;
-    startDate: string;
-    endDate: string;
-    isActive: boolean;
+
+  // Legacy fields for backward compatibility
+  fixedInfo?: {
+    description: string;
   };
-  scheduledDate?: string;
 }

@@ -36,11 +36,7 @@ interface ScheduleDayProps {
   lessonIds?: string[][];
   hideNullSlot?: boolean;
   isSwapLesson?: boolean;
-  dateRange?: {
-    start: string;
-    end: string;
-    label: string;
-  };
+  dateRange?: { start: string; end: string } | null;
 }
 
 const DAY_COL_WIDTH = 90;
@@ -58,13 +54,9 @@ function getSpecificDate(
   dayIndex: number
 ): Date {
   const startDate = new Date(dateRange.start);
-  const dayOfWeek = startDate.getDay();
-  const daysToAdd = dayIndex - (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
-
-  const specificDate = new Date(startDate);
-  specificDate.setDate(startDate.getDate() + daysToAdd);
-
-  return specificDate;
+  const date = new Date(startDate);
+  date.setDate(startDate.getDate() + dayIndex);
+  return date;
 }
 
 // Hàm format ngày thành chuỗi tiếng Việt
@@ -75,7 +67,6 @@ function formatVietnameseDate(date: Date): string {
     month: "long",
     day: "numeric",
   };
-
   return date.toLocaleDateString("vi-VN", options);
 }
 
@@ -101,22 +92,12 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
   const numCols = days.length + 1;
   const colWidth = width / numCols;
   const [menuVisible, setMenuVisible] = useState(false);
-  const [dateInfoModalVisible, setDateInfoModalVisible] = useState(false);
-  const [selectedDateInfo, setSelectedDateInfo] = useState("");
   const { userData } = useUserData();
   const router = useRouter();
+  const [dateInfoModalVisible, setDateInfoModalVisible] = useState(false);
+  const [selectedDateInfo, setSelectedDateInfo] = useState("");
 
   const toggleMenuVisibility = () => setMenuVisible(!menuVisible);
-
-  // Hàm hiển thị thông tin ngày
-  const showDateInfo = (dayIndex: number) => {
-    if (dateRange) {
-      const specificDate = getSpecificDate(dateRange, dayIndex);
-      const formattedDate = formatVietnameseDate(specificDate);
-      setSelectedDateInfo(formattedDate);
-      setDateInfoModalVisible(true);
-    }
-  };
 
   const handleLeaveRequest = () => {
     setMenuVisible(false);
@@ -163,7 +144,12 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
             ]}
             onPress={() => {
               setCurrentDay(idx);
-              showDateInfo(idx);
+              if (dateRange) {
+                const specificDate = getSpecificDate(dateRange, idx);
+                const formattedDate = formatVietnameseDate(specificDate);
+                setSelectedDateInfo(`${formattedDate}`);
+                setDateInfoModalVisible(true);
+              }
             }}
             activeOpacity={0.7}
           >
@@ -182,24 +168,6 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
         ))}
       </View>
 
-      {/* Modal thông tin ngày */}
-<Modal
-  visible={dateInfoModalVisible}
-  transparent
-  animationType="fade"
-  onRequestClose={() => setDateInfoModalVisible(false)}
-  statusBarTranslucent={true}
->
-  <TouchableWithoutFeedback onPress={() => setDateInfoModalVisible(false)}>
-    <View style={styles.dateInfoModalOverlay}>
-      <View style={styles.dateInfoModalContent}>
-        <Text style={styles.dateInfoTitle}>Thông tin ngày</Text>
-        <Text style={styles.dateInfoText}>{selectedDateInfo}</Text>
-      </View>
-    </View>
-  </TouchableWithoutFeedback>
-</Modal>
-
       {/* Modal menu utilityButton */}
       <Modal
         transparent={true}
@@ -212,7 +180,10 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
           <View style={{ flex: 1 }}>
             <View style={styles.menuContainer}>
               <TouchableOpacity
-                style={[styles.menuItem, { flexDirection: 'row', alignItems: 'center' }]}
+                style={[
+                  styles.menuItem,
+                  { flexDirection: "row", alignItems: "center" },
+                ]}
                 onPress={handleExportSchedule}
               >
                 <MaterialIcons name="file-download" size={20} color="#fff" />
@@ -221,7 +192,10 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.menuItem, { flexDirection: 'row', alignItems: 'center' }]}
+                style={[
+                  styles.menuItem,
+                  { flexDirection: "row", alignItems: "center" },
+                ]}
                 onPress={handleLeaveRequest}
               >
                 <MaterialIcons name="event-busy" size={20} color="#fff" />
@@ -229,6 +203,26 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
                   Xin phép nghỉ
                 </Text>
               </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      {/* Modal thông tin ngày */}
+      <Modal
+        visible={dateInfoModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDateInfoModalVisible(false)}
+        statusBarTranslucent={true}
+      >
+        <TouchableWithoutFeedback
+          onPress={() => setDateInfoModalVisible(false)}
+        >
+          <View style={styles.dateInfoModalOverlay}>
+            <View style={styles.dateInfoModalContent}>
+              <Text style={styles.dateInfoTitle}>Thông tin ngày</Text>
+              <Text style={styles.dateInfoText}>{selectedDateInfo}</Text>
             </View>
           </View>
         </TouchableWithoutFeedback>
@@ -408,39 +402,28 @@ const styles = StyleSheet.create({
   currentDaySlot: {
     backgroundColor: "#BACDDD",
   },
-  // Styles cho modal thông tin ngày
   dateInfoModalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   dateInfoModalContent: {
     backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 24,
-    margin: 20,
+    borderRadius: 10,
+    padding: 20,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    minWidth: 280,
   },
   dateInfoTitle: {
-    fontSize: 18,
-    fontFamily: "Baloo2-Bold",
     color: "#29375C",
-    marginBottom: 16,
-    textAlign: "center",
+    fontSize: 20,
+    fontFamily: "Baloo2-Bold",
+    marginBottom: 10,
   },
   dateInfoText: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: "Baloo2-Medium",
-    color: "#22304A",
-    textAlign: "center",
-    lineHeight: 24,
+    color: "#29375C",
   },
 });
 
