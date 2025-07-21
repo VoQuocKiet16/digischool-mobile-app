@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -11,36 +12,31 @@ import {
   View,
 } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
+import chatService from "../../services/chat.service";
 
-const EXISTING_ACCOUNTS = [
-  {
-    id: "1",
-    name: "Nguyen Thi Bich",
-    username: "hocsinh1",
-    avatar: require("../../assets/images/avt_default.png"),
-  },
-  {
-    id: "2",
-    name: "Nguyen Thi Bich",
-    username: "hocsinh1",
-    avatar: require("../../assets/images/avt_default.png"),
-  },
-  {
-    id: "3",
-    name: "Nguyen Thi Bich",
-    username: "hocsinh1",
-    avatar: require("../../assets/images/avt_default.png"),
-  },
-  {
-    id: "4",
-    name: "Nguyen Thi Bich",
-    username: "hocsinh1",
-    avatar: require("../../assets/images/avt_default.png"),
-  },
-];
 
 export default function AddContactScreen() {
   const [username, setUsername] = useState("");
+  const [searchResult, setSearchResult] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    AsyncStorage.getItem("token").then((t) => setToken(t));
+  }, []);
+
+  const handleSearch = async () => {
+    if (!username.trim() || !token) return;
+    setLoading(true);
+    const res = await chatService.searchUsers(username.trim(), token);
+    if (res.success) {
+      setSearchResult(res.data);
+    } else {
+      setSearchResult([]);
+      // Có thể hiện thông báo lỗi nếu muốn
+    }
+    setLoading(false);
+  };
 
   return (
     <HeaderLayout
@@ -59,29 +55,38 @@ export default function AddContactScreen() {
             value={username}
             onChangeText={setUsername}
           />
-          <TouchableOpacity style={styles.searchBtn}>
-            <Text style={styles.searchBtnText}>Tìm kiếm tài khoản</Text>
+          <TouchableOpacity style={styles.searchBtn} onPress={handleSearch} disabled={loading}>
+            <Text style={styles.searchBtnText}>{loading ? "Đang tìm..." : "Tìm kiếm tài khoản"}</Text>
           </TouchableOpacity>
         </View>
         {/* Danh sách tài khoản */}
         <View style={styles.listWrapper}>
           <Text style={styles.listTitle}>Tài khoản tồn tại</Text>
           <FlatList
-            data={EXISTING_ACCOUNTS}
+            data={searchResult}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <View style={styles.accountRow}>
-                <Image source={item.avatar} style={styles.avatar} />
+                <Image source={require("../../assets/images/avt_default.png")} style={styles.avatar} />
                 <View style={styles.infoBox}>
                   <Text style={styles.name}>{item.name}</Text>
-                  <Text style={styles.username}>{item.username}</Text>
+                  <Text style={styles.username}>{item.email}</Text>
                 </View>
-                <Ionicons
-                  name="chatbubble-ellipses-outline"
-                  size={28}
-                  color="#fff"
-                  style={styles.chatIcon}
-                />
+                <TouchableOpacity
+                  onPress={() => {
+                    router.push({
+                      pathname: "/message/message_box",
+                      params: { userId: item.id, name: item.name },
+                    });
+                  }}
+                >
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={28}
+                    color="#fff"
+                    style={styles.chatIcon}
+                  />
+                </TouchableOpacity>
               </View>
             )}
             contentContainerStyle={{ paddingBottom: 16 }}

@@ -6,14 +6,25 @@ const SOCKET_URL =
 
 class ChatService {
   socket: Socket | null = null;
+  myId: string | null = null;
 
   connect(userId: string, token: string) {
-    if (this.socket) return;
+    if (this.socket) {
+      console.log("Socket đã connect rồi với userId:", userId);
+      return;
+    }
     this.socket = io(SOCKET_URL, {
       transports: ["websocket"],
       auth: { token: `Bearer ${token}` },
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
     });
+    this.socket.on("connect", () => console.log("Socket connected!"));
+    this.socket.on("disconnect", () => console.log("Socket disconnected!"));
+    this.socket.on("reconnect_attempt", () => console.log("Socket reconnecting..."));
     this.socket.emit("join", userId);
+    console.log("Socket vừa được connect với userId:", userId);
   }
 
   disconnect() {
@@ -22,7 +33,16 @@ class ChatService {
   }
 
   onNewMessage(callback: (msg: any) => void) {
-    this.socket?.on("new_message", callback);
+    if (!this.socket) {
+      console.log("Socket chưa connect, không thể lắng nghe new_message");
+      return;
+    }
+    console.log("Đăng ký lắng nghe new_message");
+    this.socket.on("new_message", callback);
+  }
+
+  offNewMessage(callback: (msg: any) => void) {
+    this.socket?.off("new_message", callback);
   }
 
   sendMessageSocket(data: any) {
@@ -89,6 +109,20 @@ class ChatService {
       return {
         success: false,
         message: error.response?.data?.message || "Upload file thất bại",
+      };
+    }
+  }
+
+  async searchUsers(keyword: string, token: string) {
+    try {
+      const res = await api.get(`/api/users?search=${encodeURIComponent(keyword)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return { success: true, data: res.data.data.users };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Tìm kiếm tài khoản thất bại",
       };
     }
   }

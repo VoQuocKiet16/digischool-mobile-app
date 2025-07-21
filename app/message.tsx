@@ -3,24 +3,37 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import Header from "../components/Header";
 import { useNotificationContext } from "../contexts/NotificationContext";
+import chatService from "../services/chat.service";
 import MessageListScreen from "./message/message_list";
 
 export default function MessageScreen() {
   const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
+  const [myId, setMyId] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const { hasUnreadNotification } = useNotificationContext();
 
   useEffect(() => {
     Promise.all([
       AsyncStorage.getItem("role"),
       AsyncStorage.getItem("userName"),
-    ]).then(([roleStr, name]) => {
+      AsyncStorage.getItem("userId"),
+      AsyncStorage.getItem("token"),
+    ]).then(([roleStr, name, id, tkn]) => {
       if (roleStr) setRoles(JSON.parse(roleStr));
       if (name) setUserName(name);
+      if (id) setMyId(id);
+      if (tkn) setToken(tkn);
       setLoading(false);
     });
   }, []);
+
+  useEffect(() => {
+    if (myId && token) {
+      chatService.connect(myId, token);
+    }
+  }, [myId, token]);
 
   if (loading) {
     return (
