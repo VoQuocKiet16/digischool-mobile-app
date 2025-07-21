@@ -31,6 +31,7 @@ function getWeekRangesByYear(year: string) {
   const endDate = new Date(endYear, 4, 31);
   let current = new Date(startDate);
   const weeks = [];
+  let weekNumber = 1;
   while (current <= endDate) {
     const weekStart = new Date(current);
     const weekEnd = new Date(current);
@@ -59,8 +60,10 @@ function getWeekRangesByYear(year: string) {
         )
           .toString()
           .padStart(2, "0")}`,
+      weekNumber: weekNumber,
     });
     current.setDate(current.getDate() + 7);
+    weekNumber++;
   }
   return weeks;
 }
@@ -73,7 +76,7 @@ export default function MakeupSchedule() {
   const lessonYear = params.lessonYear as string | undefined;
   // State selected lưu theo tuần và session
   const [selected, setSelected] = useState<
-    { row: number; col: number; week: string; session: string }[]
+    { row: number; col: number; week: number; session: string }[]
   >([]);
   const [scheduleData, setScheduleData] = useState<(any | null)[][]>([]);
   const [loading, setLoading] = useState(false);
@@ -81,91 +84,19 @@ export default function MakeupSchedule() {
     "Buổi sáng"
   );
   const [year, setYear] = useState(lessonYear || "2024-2025");
-  const weekList = getWeekRangesByYear(year);
-
-  function findWeekByDate(dateStr: string | undefined, weeks: any[]) {
-    if (!dateStr) return undefined;
-    const date = new Date(dateStr);
-    return weeks.find(
-      (w) => new Date(w.start) <= date && date <= new Date(w.end)
-    );
-  }
-
-  const [dateRange, setDateRange] = useState<{ start: string; end: string; label: string } | null>(null);
-
-  useEffect(() => {
-    const found = findWeekByDate(lessonDate, weekList);
-    setDateRange(found || weekList[0]);
-  }, [year, lessonDate]);
-
+  const [weekNumber, setWeekNumber] = useState(1);
+  const [availableYears, setAvailableYears] = useState<string[]>([]);
+  const [availableWeeks, setAvailableWeeks] = useState<number[]>([]);
   const [showYearModal, setShowYearModal] = useState(false);
   const [showWeekModal, setShowWeekModal] = useState(false);
 
+  // Xóa các biến, state, logic liên quan đến dateRange, findWeekByDate, weekList
+  // Đảm bảo các biến này được khai báo đúng
   const morningPeriods = ["Tiết 1", "Tiết 2", "Tiết 3", "Tiết 4", "Tiết 5"];
   const afternoonPeriods = ["Tiết 6", "Tiết 7", "Tiết 8", "Tiết 9", "Tiết 10"];
   const DAYS = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
 
-  useEffect(() => {
-    const fetchSchedule = async () => {
-      setLoading(true);
-      try {
-        const data = await getStudentSchedule({
-          className: className || "",
-          academicYear: year,
-          startOfWeek: dateRange?.start || "",
-          endOfWeek: dateRange?.end || "",
-        });
-        // Map dữ liệu cho ScheduleDay giống học sinh
-        const schedule = Array.from({ length: 10 }, () =>
-          Array.from({ length: 7 }, () => ({
-            text: "",
-            type: "default",
-            lessonId: "",
-            _id: "",
-            status: "",
-            scheduledDate: "",
-            period: "",
-            teacherName: "",
-          }))
-        );
-        (data?.data?.schedule || []).forEach((dayData: any) => {
-          const dayOfWeek = dayData.dayOfWeek;
-          const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-          const date = dayData.date || "";
-          dayData.lessons?.forEach((lesson: any) => {
-            const periodIndex = (lesson.period || 1) - 1;
-            if (periodIndex >= 0 && periodIndex < 10) {
-              schedule[periodIndex][dayIndex] = {
-                text:
-                  lesson.type === "empty"
-                    ? "Trống"
-                    : lesson && lesson.subject
-                    ? lesson.subject.name
-                    : lesson && lesson.fixedInfo
-                    ? lesson.fixedInfo.description
-                    : "",
-                type: lesson ? lesson.type || "default" : "default",
-                lessonId: lesson?.lessonId || "",
-                _id: lesson?._id || "",
-                status: lesson?.status || "",
-                scheduledDate: date,
-                period: lesson?.period || periodIndex + 1,
-                teacherName: lesson?.teacher?.name || lesson?.teacherName || "",
-              };
-            }
-          });
-        });
-        setScheduleData(schedule);
-      } catch (e) {
-        setScheduleData([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (className) fetchSchedule();
-  }, [className, year, dateRange]);
-
-  // Tạo cellStatusData: chỉ cho phép chọn slot empty, slot đã dạy là taught, slot hiện tại luôn hiển thị
+  // Tạo cellStatusData: chỉ cho phép chọn slot empty, status scheduled
   const periodOffset = session === "Buổi sáng" ? 0 : 5;
   const cellStatusData = Array.from({ length: 5 }, (__, periodIdx) =>
     Array.from({ length: 7 }, (___, dayIdx) => {
@@ -173,7 +104,8 @@ export default function MakeupSchedule() {
       if (!slot) return "default";
       if (slot._id && slot._id === lessonId) return "current";
       if (slot.status === "completed") return "taught";
-      if (slot.type === "empty") return "exchangeable";
+      if (slot.type === "empty" && slot.status === "scheduled")
+        return "exchangeable";
       return "default";
     })
   );
@@ -269,7 +201,7 @@ export default function MakeupSchedule() {
     const row = periodIndex;
     const col = dayIndex;
     if (cellStatusData[row][col] !== "exchangeable") return;
-    const week = dateRange?.start || "";
+    const week = weekNumber;
     const sessionValue = session;
     const isExist = selected.some(
       (cell) =>
@@ -300,7 +232,18 @@ export default function MakeupSchedule() {
           if (s && s._id === lessonId) lessonFrom = s;
         }
       }
-      const lessonTo = slot;
+      const lessonTo = {
+        _id: slot._id,
+        period: slot.period,
+        subject: slot.subject,
+        text: slot.text,
+        fixedInfo: slot.fixedInfo,
+        scheduledDate: slot.scheduledDate,
+        teacherName: slot.teacherName,
+        session: slot.timeSlot?.session,
+        status: slot.status,
+        type: slot.type,
+      };
       router.replace({
         pathname: "/teachers/lesson_request/makeup_request",
         params: {
@@ -321,17 +264,15 @@ export default function MakeupSchedule() {
   const handleChangeYear = () => setShowYearModal(true);
   const handleSelectYear = (selected: string) => {
     setYear(selected);
-    const weeks = getWeekRangesByYear(selected);
-    setDateRange(weeks[0]);
+    setWeekNumber(1); // Reset week number to 1 when year changes
     setShowYearModal(false);
   };
-  const handleChangeDateRange = () => setShowWeekModal(true);
+  const handleChangeWeek = () => setShowWeekModal(true);
   const handleSelectWeek = (selected: {
-    start: string;
-    end: string;
+    weekNumber: number;
     label: string;
   }) => {
-    setDateRange(selected);
+    setWeekNumber(selected.weekNumber);
     setShowWeekModal(false);
   };
 
@@ -342,8 +283,82 @@ export default function MakeupSchedule() {
 
   // Lọc selected cho tuần và session hiện tại
   const selectedSlots = selected.filter(
-    (cell) => cell.week === dateRange?.start && cell.session === session
+    (cell) => cell.week === weekNumber && cell.session === session
   );
+
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      setLoading(true);
+      try {
+        const data = await getStudentSchedule({
+          className: className || "",
+          academicYear: year,
+          weekNumber: weekNumber,
+        });
+        // Map dữ liệu cho ScheduleDay giống học sinh
+        const schedule = Array.from({ length: 10 }, () =>
+          Array.from({ length: 7 }, () => ({
+            text: "",
+            type: "default",
+            lessonId: "",
+            _id: "",
+            status: "",
+            scheduledDate: "",
+            period: "",
+            teacherName: "",
+          }))
+        );
+        (
+          data?.data?.schedule ||
+          data?.data?.weeklySchedule?.lessons ||
+          []
+        ).forEach((lesson: any) => {
+          // KHÔNG bỏ qua lesson type === "empty" (slot trống phải được map)
+          const dayNumber = lesson.dayNumber || lesson.dayOfWeek || 1;
+          const dayIndex = dayNumber === 7 ? 6 : dayNumber - 1;
+          const periodIndex =
+            (lesson.period || lesson.timeSlot?.period || 1) - 1;
+          if (periodIndex >= 0 && periodIndex < 10) {
+            schedule[periodIndex][dayIndex] = {
+              text:
+                lesson.type === "empty"
+                  ? "Trống"
+                  : lesson.topic
+                  ? lesson.topic
+                  : lesson.subject?.subjectName || lesson.subject?.name || "",
+              type: lesson.type || "default",
+              lessonId: lesson.lessonId || lesson._id || "",
+              _id: lesson._id || lesson.lessonId || "",
+              status: lesson.status || "",
+              scheduledDate: lesson.scheduledDate || lesson.date || "",
+              period:
+                lesson.period || lesson.timeSlot?.period || periodIndex + 1,
+              teacherName: lesson.teacher?.name || lesson.teacherName || "",
+            };
+            (schedule[periodIndex][dayIndex] as any).subject = lesson.subject;
+            (schedule[periodIndex][dayIndex] as any).fixedInfo =
+              lesson.fixedInfo;
+            (schedule[periodIndex][dayIndex] as any).timeSlot = lesson.timeSlot;
+          }
+        });
+        setScheduleData(schedule);
+        // Lấy năm học và tuần từ response
+        const responseYear = data?.data?.academicYear;
+        const responseWeek = data?.data?.weeklySchedule?.weekNumber;
+        if (responseYear && !availableYears.includes(responseYear)) {
+          setAvailableYears((prev) => [...prev, responseYear]);
+        }
+        if (responseWeek && !availableWeeks.includes(responseWeek)) {
+          setAvailableWeeks((prev) => [...prev, responseWeek]);
+        }
+      } catch (e) {
+        setScheduleData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (className) fetchSchedule();
+  }, [className, year, weekNumber]);
 
   return (
     <HeaderLayout
@@ -354,11 +369,11 @@ export default function MakeupSchedule() {
       <View style={styles.container}>
         <ScheduleHeader
           title={session}
-          dateRange={dateRange?.label || ""}
+          dateRange={`Tuần ${weekNumber}`}
           year={year}
           onPressTitle={handleSessionToggle}
           onChangeYear={handleChangeYear}
-          onChangeDateRange={handleChangeDateRange}
+          onChangeDateRange={handleChangeWeek}
         />
         {loading ? (
           <ActivityIndicator
@@ -390,107 +405,54 @@ export default function MakeupSchedule() {
         {/* Modal chọn năm học */}
         <Modal visible={showYearModal} transparent animationType="fade">
           <TouchableOpacity
-            style={{
-              flex: 1,
-              backgroundColor: "rgba(0,0,0,0.2)",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
+            style={styles.modalOverlay}
             activeOpacity={1}
             onPressOut={() => setShowYearModal(false)}
           >
-            <View
-              style={{
-                backgroundColor: "#fff",
-                borderRadius: 12,
-                padding: 16,
-                minWidth: 160,
-                elevation: 5,
-              }}
-            >
-              {academicYears.map((y) => (
-                <TouchableOpacity
-                  key={y}
-                  style={{ paddingVertical: 12, paddingHorizontal: 8 }}
-                  onPress={() => handleSelectYear(y)}
-                >
-                  <Text
-                    style={{
-                      fontSize: 16,
-                      color: "#3A546D",
-                      textAlign: "center",
-                    }}
+            <View style={styles.modalContent}>
+              {availableYears.length > 0 ? (
+                availableYears.map((y) => (
+                  <TouchableOpacity
+                    key={y}
+                    style={styles.modalItem}
+                    onPress={() => handleSelectYear(y)}
                   >
-                    {y}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <Text style={styles.modalItemText}>{y}</Text>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <Text style={styles.modalItemText}>Không có dữ liệu</Text>
+              )}
             </View>
           </TouchableOpacity>
         </Modal>
         {/* Modal chọn tuần */}
         <Modal visible={showWeekModal} transparent animationType="fade">
           <TouchableOpacity
-            style={{
-              flex: 1,
-              backgroundColor: "rgba(0,0,0,0.2)",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
+            style={styles.modalOverlay}
             activeOpacity={1}
             onPressOut={() => setShowWeekModal(false)}
           >
-            <View
-              style={{
-                backgroundColor: "#fff",
-                borderRadius: 12,
-                padding: 16,
-                minWidth: 160,
-                elevation: 5,
-                maxHeight: 400,
-              }}
-            >
-              <FlatList
-                data={weekList}
-                keyExtractor={(item) => item.label}
-                renderItem={({ item }) => {
-                  const hasSelected = selected.some(
-                    (cell) => cell.week === item.start
-                  );
-                  return (
+            <View style={[styles.modalContent, { maxHeight: 400 }]}>
+              {availableWeeks.length > 0 ? (
+                <FlatList
+                  data={availableWeeks.map((week) => ({
+                    weekNumber: week,
+                    label: `Tuần ${week}`,
+                  }))}
+                  keyExtractor={(item) => item.weekNumber.toString()}
+                  renderItem={({ item }) => (
                     <TouchableOpacity
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        paddingVertical: 12,
-                        paddingHorizontal: 8,
-                      }}
+                      style={styles.modalItem}
                       onPress={() => handleSelectWeek(item)}
                     >
-                      <Text
-                        style={{
-                          fontSize: 16,
-                          color: "#3A546D",
-                          textAlign: "center",
-                        }}
-                      >
-                        {item.label}
-                      </Text>
-                      {hasSelected && (
-                        <View
-                          style={{
-                            width: 5,
-                            height: 5,
-                            borderRadius: 4,
-                            backgroundColor: "red",
-                            marginLeft: 8,
-                          }}
-                        />
-                      )}
+                      <Text style={styles.modalItemText}>{item.label}</Text>
                     </TouchableOpacity>
-                  );
-                }}
-              />
+                  )}
+                />
+              ) : (
+                <Text style={styles.modalItemText}>Không có dữ liệu</Text>
+              )}
             </View>
           </TouchableOpacity>
         </Modal>
@@ -604,5 +566,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 16,
     backgroundColor: "#fff",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    minWidth: 110,
+    maxWidth: 200,
+    minHeight: 80,
+    maxHeight: 200,
+    elevation: 5,
+  },
+  modalItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+  },
+  modalItemText: {
+    fontSize: 16,
+    color: "#3A546D",
+    textAlign: "center",
   },
 });
