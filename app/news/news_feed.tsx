@@ -183,6 +183,13 @@ export default function NewsFeedScreen() {
     return date.toLocaleDateString("vi-VN");
   }
 
+  // Khi render subjectScroll, filter bỏ các subject 'Chào cờ' và 'Sinh hoạt lớp'
+  const filteredSubjects = subjects.filter(
+    (s) =>
+      s.label !== "Chào cờ" &&
+      s.label !== "Sinh hoạt lớp"
+  );
+
   return (
     <View style={styles.container}>
       {/* Tabs */}
@@ -288,7 +295,7 @@ export default function NewsFeedScreen() {
           style={styles.subjectScroll}
           contentContainerStyle={{ paddingBottom: 0, marginBottom: 0 }}
         >
-          {subjects.map((s: any) => (
+          {filteredSubjects.map((s: any) => (
             <TouchableOpacity
               key={s.key}
               style={styles.subjectItem}
@@ -372,7 +379,8 @@ export default function NewsFeedScreen() {
       ) : error ? (
         <Text style={{ color: "red", marginTop: 40 }}>{error}</Text>
       ) : !newsList || newsList.length === 0 ? (
-        <View style={{
+        <View
+          style={{
             position: "absolute",
             top: 0,
             left: 0,
@@ -382,7 +390,13 @@ export default function NewsFeedScreen() {
             justifyContent: "center",
           }}
         >
-          <Text style={{ color: "#7D88A7", fontSize: 14, fontFamily: "Baloo2-Medium" }}>
+          <Text
+            style={{
+              color: "#7D88A7",
+              fontSize: 14,
+              fontFamily: "Baloo2-Medium",
+            }}
+          >
             Không có tin tức nào.
           </Text>
         </View>

@@ -10,7 +10,6 @@ class ChatService {
 
   connect(userId: string, token: string) {
     if (this.socket) {
-      console.log("Socket đã connect rồi với userId:", userId);
       return;
     }
     this.socket = io(SOCKET_URL, {
@@ -20,11 +19,10 @@ class ChatService {
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
     });
-    this.socket.on("connect", () => console.log("Socket connected!"));
-    this.socket.on("disconnect", () => console.log("Socket disconnected!"));
-    this.socket.on("reconnect_attempt", () => console.log("Socket reconnecting..."));
+    this.socket.on("connect", () => {});
+    this.socket.on("disconnect", () => {});
+    this.socket.on("reconnect_attempt", () => {});
     this.socket.emit("join", userId);
-    console.log("Socket vừa được connect với userId:", userId);
   }
 
   disconnect() {
@@ -34,10 +32,8 @@ class ChatService {
 
   onNewMessage(callback: (msg: any) => void) {
     if (!this.socket) {
-      console.log("Socket chưa connect, không thể lắng nghe new_message");
       return;
     }
-    console.log("Đăng ký lắng nghe new_message");
     this.socket.on("new_message", callback);
   }
 
