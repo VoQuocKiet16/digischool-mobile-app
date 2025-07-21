@@ -3,16 +3,14 @@ import api from "./api.config";
 export const getStudentSchedule = async ({
   className,
   academicYear,
-  startOfWeek,
-  endOfWeek,
+  weekNumber,
 }: {
   className: string;
   academicYear: string;
-  startOfWeek: string;
-  endOfWeek: string;
+  weekNumber: number;
 }) => {
   const res = await api.get(
-    `/api/schedules/class?className=${className}&academicYear=${academicYear}&startOfWeek=${startOfWeek}&endOfWeek=${endOfWeek}`
+    `/api/schedules/class/${className}/${academicYear}/${weekNumber}`
   );
   return res.data;
 };
@@ -20,22 +18,27 @@ export const getStudentSchedule = async ({
 export const getTeacherSchedule = async ({
   teacherId,
   academicYear,
-  startOfWeek,
-  endOfWeek,
+  weekNumber,
 }: {
   teacherId: string;
   academicYear: string;
-  startOfWeek: string;
-  endOfWeek: string;
+  weekNumber: number;
 }) => {
   const res = await api.get(
-    `/api/schedules/teacher?teacherId=${teacherId}&academicYear=${academicYear}&startOfWeek=${startOfWeek}&endOfWeek=${endOfWeek}`
+    `/api/schedules/teacher/${teacherId}/${academicYear}/${weekNumber}`
   );
   return res.data;
 };
 
 export const getLessonDetail = async (lessonId: string) => {
   const res = await api.get(`/api/schedules/lesson/${lessonId}`);
+  // Backend trả về { success: true, message: "...", data: lessonData }
+  // Frontend cần trả về lessonData trực tiếp
+  return res.data.data;
+};
+
+export const getLessonStudents = async (lessonId: string) => {
+  const res = await api.get(`/api/schedules/lesson/${lessonId}/students`);
   return res.data;
 };
 

@@ -19,7 +19,19 @@ import {
   updateTestInfo,
 } from "../../../services/test_info.service";
 
+// Chỉ hỗ trợ 2 loại kiểm tra
 const EXAM_TYPES = ["Kiểm tra 15'", "Kiểm tra 1 tiết"];
+
+// Mapping giữa UI và API values
+const TEST_TYPE_MAP = {
+  "Kiểm tra 15'": "kiemtra15",
+  "Kiểm tra 1 tiết": "kiemtra1tiet",
+};
+
+const REVERSE_TEST_TYPE_MAP = {
+  kiemtra15: "Kiểm tra 15'",
+  kiemtra1tiet: "Kiểm tra 1 tiết",
+};
 
 const AddExamReminder = () => {
   const [examType, setExamType] = useState("");
@@ -54,12 +66,10 @@ const AddExamReminder = () => {
   // Load existing data if in edit mode
   useEffect(() => {
     if (isEditMode && existingTestInfo && !dataLoaded) {
-      const testTypeMap: { [key: string]: string } = {
-        kiemtra15: "Kiểm tra 15'",
-        kiemtra1tiet: "Kiểm tra 1 tiết",
-      };
       setExamType(
-        testTypeMap[existingTestInfo.testType] || existingTestInfo.testType
+        REVERSE_TEST_TYPE_MAP[
+          existingTestInfo.testType as keyof typeof REVERSE_TEST_TYPE_MAP
+        ] || existingTestInfo.testType
       );
       setExamContent(existingTestInfo.content);
       setReminder(existingTestInfo.reminder || "");
@@ -105,13 +115,9 @@ const AddExamReminder = () => {
       setLoadingSuccess(false);
       setError("");
       try {
-        const testTypeMap = {
-          "Kiểm tra 15'": "kiemtra15",
-          "Kiểm tra 1 tiết": "kiemtra1tiet",
-        };
         const res = await createTestInfo(lessonId, {
-          testType:
-            testTypeMap[examType as keyof typeof testTypeMap] || "kiemtra15",
+          testType: (TEST_TYPE_MAP[examType as keyof typeof TEST_TYPE_MAP] ||
+            "kiemtra15") as "kiemtra15" | "kiemtra1tiet",
           content: examContent,
           reminder: reminder.trim() || undefined,
         });
@@ -137,19 +143,15 @@ const AddExamReminder = () => {
   };
 
   const handleUpdate = async () => {
-    if (isValid && existingTestInfo?._id) {
+    if (isValid && existingTestInfo?.testInfoId) {
       setIsUpdating(true);
       setShowLoading(true);
       setLoadingSuccess(false);
       setError("");
       try {
-        const testTypeMap = {
-          "Kiểm tra 15'": "kiemtra15",
-          "Kiểm tra 1 tiết": "kiemtra1tiet",
-        };
-        const res = await updateTestInfo(existingTestInfo._id, {
-          testType:
-            testTypeMap[examType as keyof typeof testTypeMap] || "kiemtra15",
+        const res = await updateTestInfo(existingTestInfo.testInfoId, {
+          testType: (TEST_TYPE_MAP[examType as keyof typeof TEST_TYPE_MAP] ||
+            "kiemtra15") as "kiemtra15" | "kiemtra1tiet",
           content: examContent,
           reminder: reminder.trim() || undefined,
         });
@@ -179,12 +181,12 @@ const AddExamReminder = () => {
   };
 
   const confirmDelete = async () => {
-    if (!existingTestInfo?._id) return;
+    if (!existingTestInfo?.testInfoId) return;
     setIsDeleting(true);
     setShowLoading(true);
     setError("");
     try {
-      const res = await deleteTestInfo(existingTestInfo._id);
+      const res = await deleteTestInfo(existingTestInfo.testInfoId);
       setShowDeleteModal(false);
       setShowLoading(false);
       setIsDeleting(false);
