@@ -82,6 +82,7 @@ const LessonEvaluateScreen = () => {
         err?.response?.data?.message ||
           "Gửi đánh giá thất bại. Vui lòng thử lại!"
       );
+      console.log("Lỗi đánh giá:", err?.response?.data);
       setShowLoading(false);
       setIsSubmitting(false);
     }

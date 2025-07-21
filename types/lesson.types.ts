@@ -54,23 +54,10 @@ export interface LessonData {
     _id: string;
     rating: string;
   } | null;
-  studentEvaluations?: {
+  studentEvaluation?: {
     _id: string;
-    student: {
-      _id: string;
-      name: string;
-      email: string;
-      studentId: string;
-    };
-    evaluation: {
-      teachingClarity: number;
-      teachingSupport: number;
-      teacherInteraction: number;
-      overallRating: number;
-    };
     comments: string;
-    evaluatedAt: string;
-  }[];
+  } | null;
 
   // Legacy fields for backward compatibility
   fixedInfo?: {

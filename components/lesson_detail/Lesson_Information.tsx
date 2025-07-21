@@ -430,7 +430,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
             {isCompleted &&
               role === "student" &&
               lessonData?.teacherEvaluation &&
-              (lessonData?.studentEvaluations ? (
+              (lessonData?.studentEvaluation ? (
                 <View style={styles.statusRowGreen}>
                   <View style={styles.statusIconWrapGreen}>
                     <MaterialIcons name="feedback" size={20} color="#fff" />
