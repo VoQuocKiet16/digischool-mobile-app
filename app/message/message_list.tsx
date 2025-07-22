@@ -196,7 +196,11 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
                     ]}
                     numberOfLines={1}
                   >
-                    {item.lastMessage || "Chưa có tin nhắn"}
+                    {item.lastMessage
+                      ? item.lastMessage
+                      : item.lastMessageType === "image"
+                        ? "Hình ảnh"
+                        : "Chưa có tin nhắn"}
                   </Text>
                 </View>
                 <View style={styles.rightInfo}>
