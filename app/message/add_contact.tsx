@@ -1,10 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  Animated,
   FlatList,
   Image,
+  Keyboard,
   StyleSheet,
   Text,
   TextInput,
@@ -20,13 +22,29 @@ export default function AddContactScreen() {
   const [searchResult, setSearchResult] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [token, setToken] = useState<string | null>(null);
+  const slideAnim = useRef(new Animated.Value(200)).current; // Giá trị khởi đầu ở dưới
+  const prevResultLength = useRef(0);
 
   React.useEffect(() => {
     AsyncStorage.getItem("token").then((t) => setToken(t));
   }, []);
 
+  useEffect(() => {
+    if (searchResult.length > 0 && prevResultLength.current === 0) {
+      // Khi có kết quả mới, animate lên
+      slideAnim.setValue(200);
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 350,
+        useNativeDriver: true,
+      }).start();
+    }
+    prevResultLength.current = searchResult.length;
+  }, [searchResult.length]);
+
   const handleSearch = async () => {
     if (!username.trim() || !token) return;
+    Keyboard.dismiss(); // Tắt bàn phím khi tìm kiếm
     setLoading(true);
     const res = await chatService.searchUsers(username.trim(), token);
     if (res.success) {
@@ -56,43 +74,45 @@ export default function AddContactScreen() {
             onChangeText={setUsername}
           />
           <TouchableOpacity style={styles.searchBtn} onPress={handleSearch} disabled={loading}>
-            <Text style={styles.searchBtnText}>{loading ? "Đang tìm..." : "Tìm kiếm tài khoản"}</Text>
+            <Text style={styles.searchBtnText}>{loading ? "Đang tìm..." : "Tìm kiếm"}</Text>
           </TouchableOpacity>
         </View>
         {/* Danh sách tài khoản */}
-        <View style={styles.listWrapper}>
-          <Text style={styles.listTitle}>Tài khoản tồn tại</Text>
-          <FlatList
-            data={searchResult}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View style={styles.accountRow}>
-                <Image source={require("../../assets/images/avt_default.png")} style={styles.avatar} />
-                <View style={styles.infoBox}>
-                  <Text style={styles.name}>{item.name}</Text>
-                  <Text style={styles.username}>{item.email}</Text>
+        {searchResult.length > 0 && (
+          <Animated.View style={[styles.listWrapper, { transform: [{ translateY: slideAnim }] }]}>
+            <Text style={styles.listTitle}>Tài khoản tồn tại</Text>
+            <FlatList
+              data={searchResult}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <View style={styles.accountRow}>
+                  <Image source={require("../../assets/images/avt_default.png")} style={styles.avatar} />
+                  <View style={styles.infoBox}>
+                    <Text style={styles.name}>{item.name}</Text>
+                    <Text style={styles.username}>{item.email}</Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => {
+                      router.push({
+                        pathname: "/message/message_box",
+                        params: { userId: item.id, name: item.name },
+                      });
+                    }}
+                  >
+                    <Ionicons
+                      name="chatbubble-ellipses-outline"
+                      size={28}
+                      color="#fff"
+                      style={styles.chatIcon}
+                    />
+                  </TouchableOpacity>
                 </View>
-                <TouchableOpacity
-                  onPress={() => {
-                    router.push({
-                      pathname: "/message/message_box",
-                      params: { userId: item.id, name: item.name },
-                    });
-                  }}
-                >
-                  <Ionicons
-                    name="chatbubble-ellipses-outline"
-                    size={28}
-                    color="#fff"
-                    style={styles.chatIcon}
-                  />
-                </TouchableOpacity>
-              </View>
-            )}
-            contentContainerStyle={{ paddingBottom: 16 }}
-            showsVerticalScrollIndicator={false}
-          />
-        </View>
+              )}
+              contentContainerStyle={{ paddingBottom: 16 }}
+              showsVerticalScrollIndicator={false}
+            />
+          </Animated.View>
+        )}
       </View>
     </HeaderLayout>
   );
@@ -104,6 +124,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F6F8FB",
     paddingHorizontal: 0,
     paddingTop: 0,
+    justifyContent: "space-between",
   },
   formBox: {
     backgroundColor: "#fff",
@@ -151,7 +172,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 48,
     borderTopRightRadius: 48,
     marginTop: 32,
-    flex: 1,
+    // flex: 1, // bỏ flex: 1 để không chiếm hết chiều cao
     paddingHorizontal: 0,
     paddingTop: 24,
   },
