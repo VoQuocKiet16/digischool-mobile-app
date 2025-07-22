@@ -178,9 +178,12 @@ export default function MessageBoxScreen() {
     return myMsgs.length > 0 ? myMsgs[myMsgs.length - 1]._id : null;
   })();
 
-  const renderMessage = ({ item }: { item: any }) => {
+  const renderMessage = ({ item, index }: { item: any, index: number }) => {
     const isMe = item.sender === myId;
     const isMyLastMsg = isMe && item._id === myLastMessageId;
+    // Kiểm tra tin nhắn trước đó
+    const prevMsg = index > 0 ? messages[index - 1] : null;
+    const showAvatar = !prevMsg || prevMsg.sender !== item.sender;
     return (
       <View
         style={[
@@ -189,14 +192,18 @@ export default function MessageBoxScreen() {
         ]}
       >
         {!isMe && (
-          <Image
-            source={
-              item.avatar
-                ? { uri: item.avatar }
-                : require("../../assets/images/avt_default.png")
-            }
-            style={styles.avatar}
-          />
+          showAvatar ? (
+            <Image
+              source={
+                item.avatar
+                  ? { uri: item.avatar }
+                  : require("../../assets/images/avt_default.png")
+              }
+              style={styles.avatar}
+            />
+          ) : (
+            <View style={styles.avatar} />
+          )
         )}
         <View
           style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleOther]}
@@ -237,14 +244,18 @@ export default function MessageBoxScreen() {
           )}
         </View>
         {isMe && (
-          <Image
-            source={
-              item.avatar
-                ? { uri: item.avatar }
-                : require("../../assets/images/avt_default.png")
-            }
-            style={styles.avatar}
-          />
+          showAvatar ? (
+            <Image
+              source={
+                item.avatar
+                  ? { uri: item.avatar }
+                  : require("../../assets/images/avt_default.png")
+              }
+              style={styles.avatar}
+            />
+          ) : (
+            <View style={styles.avatar} />
+          )
         )}
       </View>
     );
@@ -286,7 +297,7 @@ export default function MessageBoxScreen() {
                 item.id?.toString() ||
                 Math.random().toString()
               }
-              renderItem={renderMessage}
+              renderItem={(props) => renderMessage({ ...props, index: props.index })}
               contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator={false}
               onContentSizeChange={() =>
