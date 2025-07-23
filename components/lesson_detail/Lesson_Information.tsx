@@ -1,5 +1,11 @@
+import ConfirmDeleteModal from "@/components/notifications_modal/ConfirmDeleteModal";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import {
+  cancelMakeupRequest,
+  cancelSubstituteRequest,
+  cancelSwapRequest,
+} from "@/services/lesson_request.service";
 import { LessonData } from "@/types/lesson.types";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -25,6 +31,12 @@ interface Slot_InformationProps {
   onAddDescription?: () => void;
   shouldAddDescription?: boolean;
   onAddDescriptionComplete?: () => void;
+  pendingRequest?: {
+    type: "substitute" | "swap" | "makeup" | null;
+    statusText: string;
+  } | null;
+  onRefresh?: () => void;
+  refreshKey?: number;
 }
 
 const Slot_Information: React.FC<Slot_InformationProps> = ({
@@ -40,6 +52,9 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
   onAddDescription,
   shouldAddDescription,
   onAddDescriptionComplete,
+  pendingRequest,
+  onRefresh,
+  refreshKey,
 }) => {
   const [isEditingDesc, setIsEditingDesc] = useState(false);
   const [descValue, setDescValue] = useState(lessonData?.description || "");
@@ -49,6 +64,8 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
   const [isAddingDescription, setIsAddingDescription] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const textInputRef = useRef<TextInput>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Cập nhật showDescriptionCard và descValue khi lessonData thay đổi
   React.useEffect(() => {
@@ -471,6 +488,74 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
           </>
         )}
       </ThemedView>
+      {/* Card 5: Trạng thái yêu cầu tiết học nếu có */}
+      {pendingRequest && (
+        <ThemedView style={styles.card}>
+          <View style={styles.headerRow}>
+            <View style={styles.headerBar} />
+            <ThemedText type="subtitle" style={styles.headerText}>
+              Yêu cầu{" "}
+              {pendingRequest.type === "substitute"
+                ? "dạy thay"
+                : pendingRequest.type === "swap"
+                ? "đổi tiết"
+                : "dạy bù"}
+            </ThemedText>
+            <TouchableOpacity
+              style={[styles.closeBtn, { marginLeft: "auto", marginRight: 0 }]}
+              onPress={() => setShowDeleteModal(true)}
+            >
+              <View style={styles.closeCircle}>
+                <MaterialIcons name="close" size={22} color="#fff" />
+              </View>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.statusRowOrangeWrap}>
+            <View style={styles.statusRowOrangeLeft}>
+              <View style={[styles.statusIconWrapOrange, { marginRight: 5 }]}>
+                <MaterialIcons
+                  name="assignment-turned-in"
+                  size={20}
+                  color="#fff"
+                />
+              </View>
+              <ThemedText style={styles.statusTextOrange}>
+                {pendingRequest.statusText}
+              </ThemedText>
+            </View>
+          </View>
+          <ConfirmDeleteModal
+            visible={showDeleteModal}
+            onCancel={() => setShowDeleteModal(false)}
+            onConfirm={async () => {
+              setDeleting(true);
+              try {
+                if (pendingRequest.type === "substitute") {
+                  const id = lessonData?.substituteRequests?.[0]?._id;
+                  if (!id) return;
+                  await cancelSubstituteRequest(id);
+                } else if (pendingRequest.type === "swap") {
+                  const id = lessonData?.swapRequests?.[0]?._id;
+                  if (!id) return;
+                  await cancelSwapRequest(id);
+                } else if (pendingRequest.type === "makeup") {
+                  const id = lessonData?.makeupRequests?.[0]?._id;
+                  if (!id) return;
+                  await cancelMakeupRequest(id);
+                }
+                setShowDeleteModal(false);
+                if (onRefresh) onRefresh();
+              } catch (e) {
+                // handle error nếu cần
+              } finally {
+                setDeleting(false);
+              }
+            }}
+            title="Huỷ yêu cầu?"
+            message={`Bạn có chắc chắn muốn huỷ yêu cầu này?`}
+          />
+        </ThemedView>
+      )}
     </View>
   );
 };
@@ -674,6 +759,20 @@ const styles = StyleSheet.create({
     top: -4,
     zIndex: 2,
     transform: [{ rotate: "-40deg" }],
+  },
+  closeBtn: {
+    backgroundColor: "#FFA49F",
+    padding: 8,
+    borderRadius: 50,
+    marginLeft: 8,
+  },
+  closeCircle: {
+    backgroundColor: "#CF2020",
+    borderRadius: 16,
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 

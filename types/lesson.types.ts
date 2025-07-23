@@ -63,4 +63,106 @@ export interface LessonData {
   fixedInfo?: {
     description: string;
   };
+
+  // Định nghĩa các interface cho các loại request
+  substituteRequests?: SubstituteRequest[];
+  swapRequests?: SwapRequest[];
+  makeupRequests?: MakeupRequest[];
+}
+
+// Định nghĩa các interface cho các loại request
+export interface SubstituteRequest {
+  _id: string;
+  requestType: string;
+  requestingTeacher: {
+    _id: string;
+    name: string;
+    email: string;
+    fullName?: string;
+  };
+  lesson: string;
+  candidateTeachers: Array<{
+    teacher: {
+      _id: string;
+      name: string;
+      email: string;
+      fullName?: string;
+    };
+    status: string;
+  }>;
+  reason: string;
+  status: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  requestId: string;
+  __v: number;
+}
+
+export interface SwapRequest {
+  _id: string;
+  requestType: string;
+  requestingTeacher: {
+    _id: string;
+    name: string;
+    email: string;
+    fullName?: string;
+  };
+  replacementTeacher?: {
+    _id: string;
+    name: string;
+    email: string;
+    fullName?: string;
+  };
+  originalLesson?: {
+    lessonId: string;
+    scheduledDate: string;
+    topic: string;
+    status: string;
+    type: string;
+  };
+  replacementLesson?: {
+    lessonId: string;
+    scheduledDate: string;
+    topic: string;
+    status: string;
+    type: string;
+  };
+  status: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  requestId: string;
+  __v: number;
+}
+
+export interface MakeupRequest {
+  _id: string;
+  requestType: string;
+  requestingTeacher: {
+    _id: string;
+    name: string;
+    email: string;
+    fullName?: string;
+  };
+  originalLesson?: {
+    lessonId: string;
+    scheduledDate: string;
+    topic: string;
+    status: string;
+    type: string;
+  };
+  replacementLesson?: {
+    lessonId: string;
+    scheduledDate: string;
+    topic: string;
+    status: string;
+    type: string;
+  };
+  status: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  requestId: string;
+  __v: number;
 }
