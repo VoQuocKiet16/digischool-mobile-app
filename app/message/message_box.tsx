@@ -41,7 +41,6 @@ export default function MessageBoxScreen() {
     chatService
       .getMessagesWith(userId as string, token as string)
       .then((res) => {
-        // console.log("[getMessagesWith] response:", res);
         if (res.success) {
           setMessages(res.data.reverse());
         } else {
@@ -60,12 +59,27 @@ export default function MessageBoxScreen() {
     chatService.connect(myId as string, token as string);
     // Lắng nghe tin nhắn mới
     chatService.onNewMessage((msg) => {
-      if (
-        (msg.sender === userId && msg.receiver === myId) ||
-        (msg.sender === myId && msg.receiver === userId)
-      ) {
-        setMessages((prev) => [...prev, msg]);
-        flatListRef.current?.scrollToEnd({ animated: true });
+      setMessages((prev) => {
+        // Nếu có tin nhắn tạm thời (id undefined, content trùng, sender trùng), replace bằng msg từ server
+        const idx = prev.findIndex(
+          (m) =>
+            !m._id &&
+            m.content === msg.content &&
+            m.sender === msg.sender &&
+            m.receiver === msg.receiver &&
+            (!m.mediaUrl || m.mediaUrl === msg.mediaUrl)
+        );
+        if (idx !== -1) {
+          const newArr = [...prev];
+          newArr[idx] = { ...msg };
+          return newArr;
+        }
+        return [...prev, msg];
+      });
+      flatListRef.current?.scrollToEnd({ animated: true });
+      // Nếu là tin nhắn gửi cho mình và chưa read thì gửi markAsRead giống web
+      if (msg.receiver === myId && msg.status !== "read") {
+        chatService.markAsRead(String(myId), String(userId));
       }
     });
     return () => {
@@ -78,6 +92,36 @@ export default function MessageBoxScreen() {
       Alert.alert("Lỗi", error);
     }
   }, [error]);
+
+  useEffect(() => {
+    const handleRead = (data: any) => {
+      setMessages((prev) => {
+        let updated = prev.map((msg) =>
+          data.messageId && msg._id === data.messageId
+            ? { ...msg, status: "read" }
+            : data.from && msg.sender === myId && msg.receiver === data.from
+              ? { ...msg, status: "read" }
+              : msg
+        );
+        // Nếu không có messageId nào khớp, thử cập nhật status cho tin nhắn cuối cùng do mình gửi
+        if (data.messageId && !prev.some(msg => msg._id === data.messageId)) {
+          const myMsgs = updated.filter(m => m.sender === myId);
+          if (myMsgs.length > 0) {
+            const lastMsgId = myMsgs[myMsgs.length - 1]._id;
+            updated = updated.map(msg =>
+              msg._id === lastMsgId ? { ...msg, status: "read" } : msg
+            );
+            console.log('[CLIENT][PATCH] Không tìm thấy messageId, đã cập nhật status cho tin nhắn cuối cùng:', lastMsgId);
+          }
+        }
+        return updated;
+      });
+    };
+    chatService.onMessageRead(handleRead);
+    return () => {
+      chatService.offMessageRead(handleRead);
+    };
+  }, [myId]);
 
   const handlePickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -176,13 +220,14 @@ export default function MessageBoxScreen() {
   // Xác định id tin nhắn mới nhất của mình
   const myLastMessageId = (() => {
     const myMsgs = messages.filter((m) => m.sender === myId);
-    return myMsgs.length > 0 ? myMsgs[myMsgs.length - 1]._id : null;
+    const lastId = myMsgs.length > 0 ? myMsgs[myMsgs.length - 1]._id : null;
+    return lastId;
   })();
 
   const renderMessage = ({ item, index }: { item: any, index: number }) => {
     const isMe = item.sender === myId;
     const isMyLastMsg = isMe && item._id === myLastMessageId;
-    // Kiểm tra tin nhắn trước đó
+    // Khôi phục lại hai dòng này để tránh lỗi linter
     const prevMsg = index > 0 ? messages[index - 1] : null;
     const showAvatar = !prevMsg || prevMsg.sender !== item.sender;
     return (
