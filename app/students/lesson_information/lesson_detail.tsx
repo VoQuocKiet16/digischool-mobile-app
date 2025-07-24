@@ -170,7 +170,7 @@ const LessonDetailScreen = () => {
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingBottom: 32,
+    paddingBottom: 100,
   },
   loadingContainer: {
     flex: 1,

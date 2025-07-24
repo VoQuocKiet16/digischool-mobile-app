@@ -242,6 +242,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F7F7F7",
+    paddingHorizontal: 16,
   },
   searchRow: {
     flexDirection: "row",
@@ -268,7 +269,7 @@ const styles = StyleSheet.create({
     color: "#29375C",
     backgroundColor: "transparent",
     paddingVertical: 0,
-    fontFamily: "Baloo2-Bold",
+    fontFamily: "Baloo2-Medium",
   },
   addChatBtn: {
     width: 55,

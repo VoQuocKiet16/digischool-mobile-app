@@ -133,7 +133,7 @@ export default function SubstituteRequest() {
             {showDropdown && (
               <View style={styles.modalContent}>
                 {teachers.length === 0 ? (
-                  <Text>Không có giáo viên phù hợp</Text>
+                  <Text style={{ color: "#29375C", fontSize: 16, fontFamily: "Baloo2-Medium", marginTop: 10 }}>Không có giáo viên phù hợp</Text>
                 ) : (
                   teachers.map((t, idx) => (
                     <TouchableOpacity

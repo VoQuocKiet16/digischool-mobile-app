@@ -36,6 +36,10 @@ const LessonDetailScreen = () => {
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
   const [refreshKey, setRefreshKey] = useState(0);
   const [shouldAddDescription, setShouldAddDescription] = useState(false);
+  const [pendingRequest, setPendingRequest] = useState<{
+    type: "substitute" | "swap" | "makeup" | null;
+    statusText: string;
+  } | null>(null);
   const isFocused = useIsFocused();
 
   useEffect(() => {
@@ -60,6 +64,35 @@ const LessonDetailScreen = () => {
     }
   }, [isFocused, lessonId]);
 
+  useEffect(() => {
+    if (lessonData) {
+      if (
+        lessonData.substituteRequests?.some((r: any) => r.status === "pending")
+      ) {
+        setPendingRequest({
+          type: "substitute",
+          statusText: "Đang chờ giáo viên phê duyệt",
+        });
+      } else if (
+        lessonData.swapRequests?.some((r: any) => r.status === "pending")
+      ) {
+        setPendingRequest({
+          type: "swap",
+          statusText: "Đang chờ giáo viên phê duyệt",
+        });
+      } else if (
+        lessonData.makeupRequests?.some((r: any) => r.status === "pending")
+      ) {
+        setPendingRequest({
+          type: "makeup",
+          statusText: "Đang chờ quản lý phê duyệt",
+        });
+      } else {
+        setPendingRequest(null);
+      }
+    }
+  }, [lessonData]);
+
   const fetchLessonDetail = async () => {
     setLoading(true);
     setError("");
@@ -78,6 +111,11 @@ const LessonDetailScreen = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRefresh = () => {
+    fetchLessonDetail();
+    setRefreshKey((k) => k + 1);
   };
 
   const handleUpdateDescription = async (description: string) => {
@@ -204,6 +242,9 @@ const LessonDetailScreen = () => {
           onDeleteDescription={handleDeleteDescription}
           shouldAddDescription={shouldAddDescription}
           onAddDescriptionComplete={() => setShouldAddDescription(false)}
+          pendingRequest={pendingRequest}
+          onRefresh={handleRefresh}
+          refreshKey={refreshKey}
         />
         <View style={{ marginHorizontal: 30, marginTop: 0, marginBottom: 12 }}>
           {!lessonData?.description && lessonData?.status !== "completed" && (
@@ -256,15 +297,21 @@ const LessonDetailScreen = () => {
               <TouchableOpacity
                 style={[
                   styles.menuItem,
-                  { flexDirection: "row", alignItems: "center" },
+                  {
+                    flexDirection: "row",
+                    alignItems: "center",
+                    opacity: pendingRequest ? 0.5 : 1,
+                  },
                 ]}
                 onPress={() => {
+                  if (pendingRequest) return;
                   setMenuVisible(false);
                   router.push({
                     pathname: "/teachers/lesson_request/substitute_request",
                     params: { lessonId: lessonId },
                   });
                 }}
+                disabled={!!pendingRequest}
               >
                 <MaterialIcons name="swap-horiz" size={20} color="#fff" />
                 <Text style={[styles.menuText, { marginLeft: 8 }]}>
@@ -274,9 +321,14 @@ const LessonDetailScreen = () => {
               <TouchableOpacity
                 style={[
                   styles.menuItem,
-                  { flexDirection: "row", alignItems: "center" },
+                  {
+                    flexDirection: "row",
+                    alignItems: "center",
+                    opacity: pendingRequest ? 0.5 : 1,
+                  },
                 ]}
                 onPress={() => {
+                  if (pendingRequest) return;
                   setMenuVisible(false);
                   router.push({
                     pathname: "/teachers/lesson_request/swap_schedule",
@@ -289,6 +341,7 @@ const LessonDetailScreen = () => {
                     },
                   });
                 }}
+                disabled={!!pendingRequest}
               >
                 <MaterialIcons name="compare-arrows" size={20} color="#fff" />
                 <Text style={[styles.menuText, { marginLeft: 8 }]}>
@@ -298,9 +351,14 @@ const LessonDetailScreen = () => {
               <TouchableOpacity
                 style={[
                   styles.menuItem,
-                  { flexDirection: "row", alignItems: "center" },
+                  {
+                    flexDirection: "row",
+                    alignItems: "center",
+                    opacity: pendingRequest ? 0.5 : 1,
+                  },
                 ]}
                 onPress={() => {
+                  if (pendingRequest) return;
                   setMenuVisible(false);
                   router.push({
                     pathname: "/teachers/lesson_request/makeup_schedule",
@@ -312,6 +370,7 @@ const LessonDetailScreen = () => {
                     },
                   });
                 }}
+                disabled={!!pendingRequest}
               >
                 <MaterialIcons name="event-available" size={20} color="#fff" />
                 <Text style={[styles.menuText, { marginLeft: 8 }]}>Dạy bù</Text>
@@ -347,7 +406,7 @@ const LessonDetailScreen = () => {
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingBottom: 32,
+    paddingBottom: 90,
   },
   loadingContainer: {
     flex: 1,

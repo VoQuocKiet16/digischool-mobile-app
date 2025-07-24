@@ -63,3 +63,27 @@ export const createMakeupLessonRequest = async ({
   });
   return res.data;
 };
+
+// Cancel substitute request
+export const cancelSubstituteRequest = async (requestId: string) => {
+  const res = await api.post(
+    `/api/schedules/lesson-request/substitute/${requestId}/cancel`
+  );
+  return res.data;
+};
+
+// Cancel swap request
+export const cancelSwapRequest = async (requestId: string) => {
+  const res = await api.post(
+    `/api/schedules/lesson-request/swap/${requestId}/cancel`
+  );
+  return res.data;
+};
+
+// Cancel makeup request
+export const cancelMakeupRequest = async (requestId: string) => {
+  const res = await api.post(
+    `/api/schedules/lesson-request/makeup/${requestId}/cancel`
+  );
+  return res.data;
+};
