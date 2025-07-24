@@ -68,11 +68,16 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
           fetchConversations();
           return prevData;
         }
+        // Chỉ tăng unread nếu mình là người nhận
+        let newUnread = prevData[idx].unread || 0;
+        if (msg.receiver === myId) {
+          newUnread = newUnread + 1;
+        }
         const updatedConversation = {
           ...prevData[idx],
           lastMessage: msg.content || msg.text || "[Tin nhắn mới]",
           time: msg.time || new Date().toISOString(),
-          unread: (prevData[idx].unread || 0) + 1,
+          unread: newUnread,
         };
         const newData = [
           updatedConversation,
@@ -98,7 +103,6 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
 
   return (
     <View style={styles.container}>
-      {/* Thanh tìm kiếm */}
       <View style={styles.searchRow}>
         <View style={styles.searchBox}>
           <Ionicons
@@ -109,7 +113,7 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
           />
           <TextInput
             style={styles.searchInput}
-            placeholder="Tìm kiếm người dùng"
+            placeholder="Tìm kiếm người dùng...."
             placeholderTextColor="#A0A0A0"
             value={search}
             onChangeText={setSearch}
@@ -132,7 +136,6 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
           />
         </TouchableOpacity>
       </View>
-      {/* Danh sách chat */}
       {loading ? (
         <ActivityIndicator style={{ marginTop: 40 }} />
       ) : error ? (
@@ -147,72 +150,86 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
             item.id?.toString() ||
             Math.random().toString()
           }
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              onPress={async () => {
-                if (item.unread > 0) {
-                  // Gửi mark_read lên server khi user click vào conversation
-                  setChatData((prevData) => {
-                    const idx = prevData.findIndex(
-                      (c) => c.userId === item.userId || c.id === item.id
-                    );
-                    if (idx === -1) return prevData;
-                    const updated = { ...prevData[idx], unread: 0 };
-                    const newData = [
-                      updated,
-                      ...prevData.slice(0, idx),
-                      ...prevData.slice(idx + 1),
-                    ];
-                    return newData;
-                  });
-                }
-                router.push({
-                  pathname: "/message/message_box",
-                  params: {
-                    userId: item.userId || item.id,
-                    token,
-                    myId,
-                    name: item.name,
-                  },
-                });
-              }}
-              activeOpacity={0.8}
-            >
-              <View style={styles.chatItem}>
-                <Image
-                  source={
-                    item.avatar
-                      ? { uri: item.avatar }
-                      : require("../../assets/images/avt_default.png")
+          renderItem={({ item }) => {
+            // Xác định ai là người gửi tin nhắn cuối cùng
+            let isSentByMe = false;
+            let lastMsg = item.lastMessage;
+            if (item.lastMessageSender && myId && item.lastMessageSender === myId) {
+              isSentByMe = true;
+            }
+            // Nếu không có trường lastMessageSender, fallback kiểm tra lastMessageFromId
+            if (!item.lastMessageSender && item.lastMessageFromId && myId && item.lastMessageFromId === myId) {
+              isSentByMe = true;
+            }
+            // Nếu là mình gửi thì thêm 'Bạn: '
+            if (isSentByMe && lastMsg) {
+              lastMsg = `Bạn: ${lastMsg}`;
+            }
+            return (
+              <TouchableOpacity
+                onPress={async () => {
+                  if (item.unread > 0) {
+                    setChatData((prevData) => {
+                      const idx = prevData.findIndex(
+                        (c) => c.userId === item.userId || c.id === item.id
+                      );
+                      if (idx === -1) return prevData;
+                      const updated = { ...prevData[idx], unread: 0 };
+                      const newData = [
+                        updated,
+                        ...prevData.slice(0, idx),
+                        ...prevData.slice(idx + 1),
+                      ];
+                      return newData;
+                    });
                   }
-                  style={styles.avatar}
-                />
-                <View style={styles.chatContent}>
-                  <Text style={styles.name}>{item.name}</Text>
-                  <Text
-                    style={[
-                      styles.lastMessage,
-                      item.unread > 0 && { fontWeight: "bold", color: "#29375C" }
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {item.lastMessage
-                      ? item.lastMessage
-                      : item.lastMessageType === "image"
-                        ? "Hình ảnh"
-                        : "Chưa có tin nhắn"}
-                  </Text>
-                </View>
-                <View style={styles.rightInfo}>
+                  router.push({
+                    pathname: "/message/message_box",
+                    params: {
+                      userId: item.userId || item.id,
+                      token,
+                      myId,
+                      name: item.name,
+                    },
+                  });
+                }}
+                activeOpacity={0.8}
+              >
+                <View style={styles.chatItemCustom}>
+                  <Image
+                    source={
+                      item.avatar
+                        ? { uri: item.avatar }
+                        : require("../../assets/images/avt_default.png")
+                    }
+                    style={styles.avatarCustom}
+                  />
+                  <View style={styles.chatContentCustom}>
+                    <Text style={styles.nameCustom}>{item.name}</Text>
+                    <Text
+                      style={[
+                        styles.lastMessageCustom,
+                        item.unread > 0 && { fontWeight: "bold", color: "#29375C" }
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {lastMsg
+                        ? lastMsg
+                        : item.lastMessageType === "image"
+                          ? "Hình ảnh"
+                          : "Chưa có tin nhắn"}
+                    </Text>
+                  </View>
+                  {/* Hiển thị badge số chưa đọc nếu có */}
                   {item.unread > 0 && (
                     <View style={styles.unreadBadge}>
                       <Text style={styles.unreadText}>{item.unread}</Text>
                     </View>
                   )}
                 </View>
-              </View>
-            </TouchableOpacity>
-          )}
+              </TouchableOpacity>
+            );
+          }}
           contentContainerStyle={{ paddingBottom: 16 }}
           showsVerticalScrollIndicator={false}
         />
@@ -224,7 +241,7 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#F7F7F7",
   },
   searchRow: {
     flexDirection: "row",
@@ -239,27 +256,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#F7F7F7",
     borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: "#E6EEF2",
-    height: 44,
+    borderWidth: 1,
+    borderColor: "#29375C",
+    height: 55,
     marginRight: 10,
+    marginTop: 20,
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 14,
     color: "#29375C",
     backgroundColor: "transparent",
     paddingVertical: 0,
+    fontFamily: "Baloo2-Bold",
   },
   addChatBtn: {
-    width: 44,
-    height: 44,
+    width: 55,
+    height: 55,
     borderRadius: 12,
     backgroundColor: "#F7F7F7",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1.5,
-    borderColor: "#E6EEF2",
+    borderWidth: 1,
+    borderColor: "#29375C",
+    marginTop: 20,
   },
   chatItem: {
     flexDirection: "row",
@@ -319,5 +339,37 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontSize: 14,
+  },
+  chatItemCustom: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F7F7F7",
+    marginHorizontal: 0,
+    marginBottom: 0,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderBottomWidth: 3,
+    borderBottomColor: "#FFFFFF",
+  },
+  avatarCustom: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 12,
+  },
+  chatContentCustom: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  nameCustom: {
+    fontWeight: "bold",
+    fontSize: 16,
+    color: "#29375C",
+    marginBottom: 2,
+  },
+  lastMessageCustom: {
+    fontSize: 13,
+    color: "#A0A0A0",
+    marginBottom: 0,
   },
 });
