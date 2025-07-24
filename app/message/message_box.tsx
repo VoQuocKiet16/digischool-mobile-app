@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -40,7 +41,6 @@ export default function MessageBoxScreen() {
     chatService
       .getMessagesWith(userId as string, token as string)
       .then((res) => {
-        // console.log("[getMessagesWith] response:", res);
         if (res.success) {
           setMessages(res.data.reverse());
         } else {
@@ -59,12 +59,27 @@ export default function MessageBoxScreen() {
     chatService.connect(myId as string, token as string);
     // Lắng nghe tin nhắn mới
     chatService.onNewMessage((msg) => {
-      if (
-        (msg.sender === userId && msg.receiver === myId) ||
-        (msg.sender === myId && msg.receiver === userId)
-      ) {
-        setMessages((prev) => [...prev, msg]);
-        flatListRef.current?.scrollToEnd({ animated: true });
+      setMessages((prev) => {
+        // Nếu có tin nhắn tạm thời (id undefined, content trùng, sender trùng), replace bằng msg từ server
+        const idx = prev.findIndex(
+          (m) =>
+            !m._id &&
+            m.content === msg.content &&
+            m.sender === msg.sender &&
+            m.receiver === msg.receiver &&
+            (!m.mediaUrl || m.mediaUrl === msg.mediaUrl)
+        );
+        if (idx !== -1) {
+          const newArr = [...prev];
+          newArr[idx] = { ...msg };
+          return newArr;
+        }
+        return [...prev, msg];
+      });
+      flatListRef.current?.scrollToEnd({ animated: true });
+      // Nếu là tin nhắn gửi cho mình và chưa read thì gửi markAsRead giống web
+      if (msg.receiver === myId && msg.status !== "read") {
+        chatService.markAsRead(String(myId), String(userId));
       }
     });
     return () => {
@@ -77,6 +92,36 @@ export default function MessageBoxScreen() {
       Alert.alert("Lỗi", error);
     }
   }, [error]);
+
+  useEffect(() => {
+    const handleRead = (data: any) => {
+      setMessages((prev) => {
+        let updated = prev.map((msg) =>
+          data.messageId && msg._id === data.messageId
+            ? { ...msg, status: "read" }
+            : data.from && msg.sender === myId && msg.receiver === data.from
+              ? { ...msg, status: "read" }
+              : msg
+        );
+        // Nếu không có messageId nào khớp, thử cập nhật status cho tin nhắn cuối cùng do mình gửi
+        if (data.messageId && !prev.some(msg => msg._id === data.messageId)) {
+          const myMsgs = updated.filter(m => m.sender === myId);
+          if (myMsgs.length > 0) {
+            const lastMsgId = myMsgs[myMsgs.length - 1]._id;
+            updated = updated.map(msg =>
+              msg._id === lastMsgId ? { ...msg, status: "read" } : msg
+            );
+            console.log('[CLIENT][PATCH] Không tìm thấy messageId, đã cập nhật status cho tin nhắn cuối cùng:', lastMsgId);
+          }
+        }
+        return updated;
+      });
+    };
+    chatService.onMessageRead(handleRead);
+    return () => {
+      chatService.offMessageRead(handleRead);
+    };
+  }, [myId]);
 
   const handlePickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -175,13 +220,14 @@ export default function MessageBoxScreen() {
   // Xác định id tin nhắn mới nhất của mình
   const myLastMessageId = (() => {
     const myMsgs = messages.filter((m) => m.sender === myId);
-    return myMsgs.length > 0 ? myMsgs[myMsgs.length - 1]._id : null;
+    const lastId = myMsgs.length > 0 ? myMsgs[myMsgs.length - 1]._id : null;
+    return lastId;
   })();
 
   const renderMessage = ({ item, index }: { item: any, index: number }) => {
     const isMe = item.sender === myId;
     const isMyLastMsg = isMe && item._id === myLastMessageId;
-    // Kiểm tra tin nhắn trước đó
+    // Khôi phục lại hai dòng này để tránh lỗi linter
     const prevMsg = index > 0 ? messages[index - 1] : null;
     const showAvatar = !prevMsg || prevMsg.sender !== item.sender;
     return (
@@ -191,71 +237,88 @@ export default function MessageBoxScreen() {
           isMe ? styles.messageRowMe : styles.messageRowOther,
         ]}
       >
-        {!isMe && (
-          showAvatar ? (
-            <Image
-              source={
-                item.avatar
-                  ? { uri: item.avatar }
-                  : require("../../assets/images/avt_default.png")
-              }
-              style={styles.avatar}
-            />
-          ) : (
-            <View style={styles.avatar} />
-          )
-        )}
-        <View
-          style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleOther]}
-        >
-          {item.mediaUrl && item.type === "image" ? (
-            <Image
-              source={{ uri: item.mediaUrl }}
-              style={{
-                width: 180,
-                height: 180,
-                borderRadius: 12,
-                marginBottom: 4,
-              }}
-            />
-          ) : (
-            <Text
-              style={[
-                styles.messageText,
-                isMe ? styles.textMe : styles.textOther,
-              ]}
-            >
-              {item.content}
-            </Text>
-          )}
-          <Text style={styles.time}>{item.time || ""}</Text>
-          {isMyLastMsg && (
-            <Text
-              style={{
-                fontSize: 11,
-                color: isMe ? "#fff" : "#29375C",
-                opacity: 0.7,
-                marginTop: 2,
-                alignSelf: "flex-end",
-              }}
-            >
-              {item.status === "read" ? "Đã xem" : "Chưa xem"}
-            </Text>
-          )}
-        </View>
         {isMe && (
-          showAvatar ? (
-            <Image
-              source={
-                item.avatar
-                  ? { uri: item.avatar }
-                  : require("../../assets/images/avt_default.png")
-              }
-              style={styles.avatar}
-            />
-          ) : (
-            <View style={styles.avatar} />
-          )
+          <>
+            <LinearGradient
+              colors={["#29375C", "#6D8FEF"]}
+              start={{ x: 0, y: 1 }}
+              end={{ x: 1, y: 1 }}
+              style={[styles.bubble, styles.bubbleMe]}
+            >
+              {item.mediaUrl && item.type === "image" ? (
+                <Image
+                  source={{ uri: item.mediaUrl }}
+                  style={{
+                    width: 180,
+                    height: 180,
+                    borderRadius: 12,
+                    marginBottom: 4,
+                  }}
+                />
+              ) : (
+                <Text style={[styles.messageText, { color: '#fff' }]}>{item.content}</Text>
+              )}
+              <Text style={[styles.time, { color: '#fff', alignSelf: 'flex-end' }]}>{item.time || ""}</Text>
+              {isMyLastMsg && (
+                <Text
+                  style={{
+                    fontSize: 11,
+                    color: "#fff",
+                    opacity: 0.7,
+                    marginTop: 2,
+                    alignSelf: "flex-end",
+                  }}
+                >
+                  {item.status === "read" ? "Đã xem" : "Chưa xem"}
+                </Text>
+              )}
+            </LinearGradient>
+            {showAvatar ? (
+              <Image
+                source={
+                  item.avatar
+                    ? { uri: item.avatar }
+                    : require("../../assets/images/avt_default.png")
+                }
+                style={styles.avatar}
+              />
+            ) : (
+              <View style={styles.avatar} />
+            )}
+          </>
+        )}
+        {/* Tin nhắn của người nhận giữ nguyên */}
+        {!isMe && (
+          <>
+            {showAvatar ? (
+              <Image
+                source={
+                  item.avatar
+                    ? { uri: item.avatar }
+                    : require("../../assets/images/avt_default.png")
+                }
+                style={styles.avatar}
+              />
+            ) : (
+              <View style={styles.avatar} />
+            )}
+            <View style={[styles.bubble, styles.bubbleOther]}>
+              {item.mediaUrl && item.type === "image" ? (
+                <Image
+                  source={{ uri: item.mediaUrl }}
+                  style={{
+                    width: 180,
+                    height: 180,
+                    borderRadius: 12,
+                    marginBottom: 4,
+                  }}
+                />
+              ) : (
+                <Text style={[styles.messageText, styles.textOther]}>{item.content}</Text>
+              )}
+              <Text style={styles.time}>{item.time || ""}</Text>
+            </View>
+          </>
         )}
       </View>
     );
@@ -267,7 +330,7 @@ export default function MessageBoxScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 36 : 0} // offset này có thể chỉnh cho phù hợp header
     >
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, backgroundColor: "#29375C" }}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
@@ -281,7 +344,7 @@ export default function MessageBoxScreen() {
           </View>
         </View>
         {/* Danh sách tin nhắn */}
-        <View style={styles.listWrapper}>
+        <View style={[styles.listWrapper, { marginTop: 10 }]}>
           {loading ? (
             <ActivityIndicator style={{ marginTop: 40 }} />
           ) : error ? (
@@ -307,39 +370,41 @@ export default function MessageBoxScreen() {
           )}
         </View>
         {/* Input gửi tin nhắn */}
-        <View style={styles.inputRow}>
-          <Ionicons
-            name="happy-outline"
-            size={24}
-            color="#29375C"
-            style={{ marginHorizontal: 8 }}
-          />
-          <TouchableOpacity
-            style={styles.sendBtn}
-            onPress={handlePickImage}
-            disabled={sending}
-          >
-            <Ionicons name="image" size={24} color="#29375C" />
-          </TouchableOpacity>
-          <TextInput
-            style={styles.input}
-            placeholder="Nhập tin nhắn tại đây..."
-            placeholderTextColor="#A0A0A0"
-            value={input}
-            onChangeText={setInput}
-            editable={!sending}
-          />
-          <TouchableOpacity
-            style={styles.sendBtn}
-            onPress={handleSend}
-            disabled={sending}
-          >
+        <View style={{ backgroundColor: "#fff", borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}>
+          <View style={styles.inputRow}>
             <Ionicons
-              name="send"
+              name="happy-outline"
               size={24}
-              color={sending ? "#A0A0A0" : "#29375C"}
+              color="#29375C"
+              style={{ marginHorizontal: 8 }}
             />
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.sendBtn}
+              onPress={handlePickImage}
+              disabled={sending}
+            >
+              <Ionicons name="image" size={24} color="#29375C" />
+            </TouchableOpacity>
+            <TextInput
+              style={styles.input}
+              placeholder="Nhập tin nhắn tại đây..."
+              placeholderTextColor="#A0A0A0"
+              value={input}
+              onChangeText={setInput}
+              editable={!sending}
+            />
+            <TouchableOpacity
+              style={styles.sendBtn}
+              onPress={handleSend}
+              disabled={sending}
+            >
+              <Ionicons
+                name="send"
+                size={24}
+                color={sending ? "#A0A0A0" : "#29375C"}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
         {selectedImage && (
           <View
@@ -389,6 +454,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 2,
+    fontFamily: "Baloo2-Bold",
   },
   headerSubtitle: {
     color: "#fff",
@@ -404,8 +470,8 @@ const styles = StyleSheet.create({
   },
   listWrapper: {
     backgroundColor: "#fff",
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
+    borderTopLeftRadius: 60,
+    borderTopRightRadius: 60,
     flex: 1,
     overflow: "hidden",
   },
@@ -434,16 +500,16 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
   },
   bubbleMe: {
-    backgroundColor: "#3B4B7B",
     borderBottomRightRadius: 4,
   },
   bubbleOther: {
-    backgroundColor: "#6D8FEF",
+    backgroundColor: "#29375C",
     borderBottomLeftRadius: 4,
   },
   messageText: {
     fontSize: 15,
     marginBottom: 4,
+    fontFamily: "Baloo2-Bold",
   },
   textMe: {
     color: "#fff",
@@ -465,11 +531,11 @@ const styles = StyleSheet.create({
     margin: 12,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowColor: "#29375C",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.80,
+    shadowRadius: 16,
+    elevation: 8,
   },
   input: {
     flex: 1,
