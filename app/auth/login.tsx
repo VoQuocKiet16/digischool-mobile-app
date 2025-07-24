@@ -285,14 +285,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 32,
-    paddingTop: 32,
+    marginTop: 100,
   },
   title: {
     fontSize: 32,
     fontWeight: "bold",
     color: "#29375C",
     marginBottom: 8,
-    marginTop: 16,
     fontFamily: "Baloo2-Bold",
   },
   subtitle: {
@@ -307,6 +306,7 @@ const styles = StyleSheet.create({
     color: "#29375C",
     marginBottom: 6,
     marginTop: 12,
+    marginLeft: 5,
     fontWeight: "500",
     fontFamily: "Baloo2-SemiBold",
   },
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1.5,
     borderColor: "#29375C",
-    borderRadius: 10,
+    borderRadius: 18,
     paddingHorizontal: 16,
     marginBottom: 8,
     backgroundColor: "#fff",
