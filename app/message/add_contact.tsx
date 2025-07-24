@@ -9,10 +9,10 @@ import {
   Keyboard,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { TextInput } from "react-native-paper";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import chatService from "../../services/chat.service";
 
@@ -64,16 +64,27 @@ export default function AddContactScreen() {
     >
       <View style={styles.container}>
         {/* Form tìm kiếm */}
-        <View style={styles.formBox}>
-          <Text style={styles.label}>Tên người dùng</Text>
+        <View style={{ marginHorizontal: 20, marginTop: 18 }}>
           <TextInput
-            style={styles.input}
+            label="Tên người dùng"
+            mode="outlined"
             placeholder="hocsinh1"
             placeholderTextColor="#A0A0A0"
             value={username}
             onChangeText={setUsername}
+            style={{ backgroundColor: "#F6F8FB" }}
+            disabled={loading}
+            outlineColor="#29375C"
+            activeOutlineColor="#29375C"
           />
-          <TouchableOpacity style={styles.searchBtn} onPress={handleSearch} disabled={loading}>
+          <TouchableOpacity
+            style={[
+              styles.searchBtn,
+              (!username.trim() || loading) && { backgroundColor: "#B3B8C7" }
+            ]}
+            onPress={handleSearch}
+            disabled={loading || !username.trim()}
+          >
             <Text style={styles.searchBtnText}>{loading ? "Đang tìm..." : "Tìm kiếm"}</Text>
           </TouchableOpacity>
         </View>
@@ -160,7 +171,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: "center",
-    marginTop: 4,
+    marginTop: 20,
   },
   searchBtnText: {
     color: "#fff",
@@ -172,7 +183,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 48,
     borderTopRightRadius: 48,
     marginTop: 32,
-    // flex: 1, // bỏ flex: 1 để không chiếm hết chiều cao
     paddingHorizontal: 0,
     paddingTop: 24,
   },

@@ -16,3 +16,17 @@ export const createLeaveRequest = async ({
   });
   return res.data;
 };
+
+export const createTeacherLeaveRequest = async ({
+  lessonIds,
+  reason,
+}: {
+  lessonIds: string[];
+  reason: string;
+}) => {
+  const res = await api.post("/api/teacher-leave-requests/create", {
+    lessonIds,
+    reason,
+  });
+  return res.data;
+};

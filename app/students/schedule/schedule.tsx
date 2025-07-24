@@ -299,6 +299,7 @@ export default function ScheduleStudentsScreen() {
                   : lessonIds.slice(5, 10)
               }
               dateRange={dateRange}
+              showUtilityButton={true}
             />
           </View>
         </RefreshableScrollView>

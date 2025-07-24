@@ -37,6 +37,7 @@ interface ScheduleDayProps {
   hideNullSlot?: boolean;
   isSwapLesson?: boolean;
   dateRange?: { start: string; end: string } | null;
+  showUtilityButton?: boolean; // Thêm prop này, mặc định false
 }
 
 const DAY_COL_WIDTH = 90;
@@ -84,6 +85,7 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
   hideNullSlot = false,
   isSwapLesson = false,
   dateRange,
+  showUtilityButton = false, // default false
 }) => {
   const [currentDay, setCurrentDay] = useState(getTodayIndex());
   const currentDayIndex =
@@ -124,13 +126,15 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
             { width: colWidth, justifyContent: "center", alignItems: "center" },
           ]}
         >
-          <TouchableOpacity
-            style={styles.utilityButton}
-            onPress={toggleMenuVisibility}
-            activeOpacity={0.7}
-          >
-            <MaterialIcons name="arrow-drop-down" size={16} color="#fff" />
-          </TouchableOpacity>
+          {showUtilityButton && (
+            <TouchableOpacity
+              style={styles.utilityButton}
+              onPress={toggleMenuVisibility}
+              activeOpacity={0.7}
+            >
+              <MaterialIcons name="arrow-drop-down" size={16} color="#fff" />
+            </TouchableOpacity>
+          )}
         </View>
         {/* Dải phân cách */}
         <View style={{ width: 0.1, height: 22, backgroundColor: "#f7f7f7" }} />

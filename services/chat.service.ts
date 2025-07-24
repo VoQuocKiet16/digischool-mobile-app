@@ -45,6 +45,18 @@ class ChatService {
     this.socket?.emit("send_message", data);
   }
 
+  markAsRead(from: string, to: string) {
+    this.socket?.emit("mark_read", { from, to });
+  }
+
+  onMessageRead(callback: (msg: any) => void) {
+    this.socket?.on("message_read", callback);
+  }
+  offMessageRead(callback: (msg: any) => void) {
+    this.socket?.off("message_read", callback);
+  }
+
+
   // REST API
   async getConversations(token: string) {
     try {
@@ -123,5 +135,7 @@ class ChatService {
     }
   }
 }
+
+
 
 export default new ChatService();
