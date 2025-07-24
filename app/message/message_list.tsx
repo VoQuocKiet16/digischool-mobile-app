@@ -26,33 +26,67 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [myId, setMyId] = useState<string | undefined>(undefined);
+  const [refreshFlag, setRefreshFlag] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
     AsyncStorage.getItem("userId").then((id) => setMyId(id ?? undefined));
   }, []);
 
-  useEffect(() => {
-    const fetchConversations = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const res = await chatService.getConversations(token);
-        if (res.success) {
-          setChatData(res.data);
-        } else {
-          setError(res.message || "Lỗi không xác định");
-          setChatData([]);
-        }
-      } catch (e) {
-        setError("Lỗi kết nối server");
+  // Tách fetchConversations ra ngoài để có thể gọi lại
+  const fetchConversations = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await chatService.getConversations(token);
+      if (res.success) {
+        setChatData(res.data);
+      } else {
+        setError(res.message || "Lỗi không xác định");
         setChatData([]);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (e) {
+      setError("Lỗi kết nối server");
+      setChatData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchConversations();
-  }, [token]);
+  }, [token, refreshFlag]);
+
+  useEffect(() => {
+    const handleNewMessage = (msg: any) => {
+      setChatData((prevData) => {
+        const otherUserId = msg.sender === myId ? msg.receiver : msg.sender;
+        const idx = prevData.findIndex(
+          (item) => item.userId === otherUserId || item.id === otherUserId
+        );
+        if (idx === -1) {
+          fetchConversations();
+          return prevData;
+        }
+        const updatedConversation = {
+          ...prevData[idx],
+          lastMessage: msg.content || msg.text || "[Tin nhắn mới]",
+          time: msg.time || new Date().toISOString(),
+          unread: (prevData[idx].unread || 0) + 1,
+        };
+        const newData = [
+          updatedConversation,
+          ...prevData.slice(0, idx),
+          ...prevData.slice(idx + 1),
+        ];
+        return newData;
+      });
+    };
+    chatService.onNewMessage(handleNewMessage);
+    return () => {
+      chatService.offNewMessage(handleNewMessage);
+    };
+  }, [myId]);
 
   useEffect(() => {
     if (error) {
@@ -75,7 +109,7 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
           />
           <TextInput
             style={styles.searchInput}
-            placeholder="Find users..."
+            placeholder="Tìm kiếm người dùng"
             placeholderTextColor="#A0A0A0"
             value={search}
             onChangeText={setSearch}
@@ -102,32 +136,74 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
       {loading ? (
         <ActivityIndicator style={{ marginTop: 40 }} />
       ) : error ? (
-        <Text style={{ color: "red", textAlign: "center", marginTop: 40 }}>{error}</Text>
+        <Text style={{ color: "red", textAlign: "center", marginTop: 40 }}>
+          {error}
+        </Text>
       ) : (
         <FlatList
           data={chatData}
-          keyExtractor={(item) => item.userId?.toString() || item.id?.toString() || Math.random().toString()}
+          keyExtractor={(item) =>
+            item.userId?.toString() ||
+            item.id?.toString() ||
+            Math.random().toString()
+          }
           renderItem={({ item }) => (
             <TouchableOpacity
-              onPress={() => router.push({
-                pathname: "/message/message_box",
-                params: { userId: item.userId || item.id, token, myId, name: item.name },
-              })}
+              onPress={async () => {
+                if (item.unread > 0) {
+                  // Gửi mark_read lên server khi user click vào conversation
+                  setChatData((prevData) => {
+                    const idx = prevData.findIndex(
+                      (c) => c.userId === item.userId || c.id === item.id
+                    );
+                    if (idx === -1) return prevData;
+                    const updated = { ...prevData[idx], unread: 0 };
+                    const newData = [
+                      updated,
+                      ...prevData.slice(0, idx),
+                      ...prevData.slice(idx + 1),
+                    ];
+                    return newData;
+                  });
+                }
+                router.push({
+                  pathname: "/message/message_box",
+                  params: {
+                    userId: item.userId || item.id,
+                    token,
+                    myId,
+                    name: item.name,
+                  },
+                });
+              }}
               activeOpacity={0.8}
             >
               <View style={styles.chatItem}>
                 <Image
-                  source={item.avatar ? { uri: item.avatar } : require('../../assets/images/avt_default.png')}
+                  source={
+                    item.avatar
+                      ? { uri: item.avatar }
+                      : require("../../assets/images/avt_default.png")
+                  }
                   style={styles.avatar}
                 />
                 <View style={styles.chatContent}>
                   <Text style={styles.name}>{item.name}</Text>
-                  <Text style={styles.lastMessage} numberOfLines={1}>
-                    {item.lastMessage}
+                  <Text
+                    style={[
+                      styles.lastMessage,
+                      item.unread > 0 && { fontWeight: "bold", color: "#29375C" }
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {item.lastMessage
+                      ? item.lastMessage
+                      : item.lastMessageType === "image"
+                        ? "Hình ảnh"
+                        : "Chưa có tin nhắn"}
                   </Text>
                 </View>
                 <View style={styles.rightInfo}>
-                  <Text style={styles.time}>{item.time}</Text>
                   {item.unread > 0 && (
                     <View style={styles.unreadBadge}>
                       <Text style={styles.unreadText}>{item.unread}</Text>

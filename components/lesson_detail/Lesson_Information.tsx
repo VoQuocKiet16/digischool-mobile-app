@@ -156,16 +156,15 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
   const getSubtitle = () => {
     if (!lessonData) return "Đang tải thông tin tiết học...";
 
-    const session =
-      lessonData.timeSlot?.session === "morning" ? "Sáng" : "Chiều";
-    const period = `Tiết ${lessonData.timeSlot?.period || 1}`;
+    // Xác định buổi sáng/chiều dựa vào period
+    const period = lessonData.timeSlot?.period || 1;
+    const session = period <= 5 ? "Sáng" : "Chiều";
+    const periodText = `Tiết ${period}`;
     const subject =
-      lessonData.subject?.name ||
-      lessonData.fixedInfo?.description ||
-      "Chưa rõ";
+      lessonData.subject?.subjectName || lessonData.topic || "Chưa rõ";
     const className = lessonData.class?.className || "Chưa rõ";
 
-    return `${session} • ${period} • ${subject} • ${className}`;
+    return `${session} • ${periodText} • ${subject} • ${className}`;
   };
 
   return (
@@ -384,7 +383,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
                   <MaterialIcons name="feedback" size={20} color="#fff" />
                 </View>
                 <ThemedText style={styles.statusTextWhite}>
-                  Đánh giá: {lessonData.teacherEvaluation.evaluation.rating}
+                  Đánh giá: {lessonData.teacherEvaluation.rating}
                 </ThemedText>
               </View>
             ) : role === "teacher" ? (
@@ -431,7 +430,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
             {isCompleted &&
               role === "student" &&
               lessonData?.teacherEvaluation &&
-              (lessonData?.studentEvaluations ? (
+              (lessonData?.studentEvaluation ? (
                 <View style={styles.statusRowGreen}>
                   <View style={styles.statusIconWrapGreen}>
                     <MaterialIcons name="feedback" size={20} color="#fff" />

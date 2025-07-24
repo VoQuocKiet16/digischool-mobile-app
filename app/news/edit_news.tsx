@@ -46,7 +46,7 @@ export default function EditNewsScreen() {
       return;
     }
     if (!id) return;
-    setInitLoading(true);
+      setInitLoading(true);
     getNewsDetail(id as string).then((res) => {
       if (res.success && res.data) {
         setTitle(res.data.title || "");
@@ -83,10 +83,10 @@ export default function EditNewsScreen() {
     if (!isValid || loading) return;
     setLoading(true);
     const res = await updateNews(id as string, {
-      title: title.trim(),
-      content: content.trim(),
+        title: title.trim(),
+        content: content.trim(),
       coverImage: coverImage || undefined,
-    });
+      });
     setShowSuccess(res.success);
     setLoading(false);
     if (res.success) {
@@ -142,16 +142,16 @@ export default function EditNewsScreen() {
         </View>
       ) : (
         <View style={styles.containerNews}>
-          {/* Ảnh bìa */}
-          <TouchableOpacity
-            style={styles.coverBox}
+        {/* Ảnh bìa */}
+        <TouchableOpacity
+          style={styles.coverBox}
             activeOpacity={1}
-            onPress={pickImage}
-          >
-            {coverImage ? (
-              <Image source={{ uri: coverImage }} style={styles.coverImage} />
-            ) : (
-              <View style={styles.coverContent}>
+          onPress={pickImage}
+        >
+          {coverImage ? (
+            <Image source={{ uri: coverImage }} style={styles.coverImage} />
+          ) : (
+            <View style={styles.coverContent}>
                 <MaterialIcons
                   name="add-photo-alternate"
                   size={32}
@@ -160,34 +160,34 @@ export default function EditNewsScreen() {
                 <Text style={styles.coverText}>
                   Thêm ảnh bìa <Text style={styles.required}>*</Text>
                 </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-          {/* Tiêu đề */}
+            </View>
+          )}
+        </TouchableOpacity>
+        {/* Tiêu đề */}
           <View style={styles.fieldWrap}>
             <View style={styles.outlineInputBox}>
               <Text style={styles.floatingLabel}>
-                Tiêu đề <Text style={styles.required}>*</Text>
-              </Text>
-              <TextInput
+            Tiêu đề <Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
                 style={styles.inputTextOutline}
                 placeholder="Nhập tiêu đề tin tức"
                 placeholderTextColor="#9CA3AF"
-                value={title}
-                onChangeText={setTitle}
-              />
-            </View>
+            value={title}
+            onChangeText={setTitle}
+          />
+        </View>
           </View>
           {/* Nút thêm/chỉnh sửa nội dung dạng input đẹp */}
-          <View
-            style={{
-              flexDirection: "row",
+        <View
+          style={{
+            flexDirection: "row",
               alignItems: "center",
               width: "100%",
-            }}
-          >
-            <TouchableOpacity
-              style={[
+          }}
+        >
+          <TouchableOpacity
+            style={[
                 styles.contentInputBox,
                 {
                   flex: 1,
@@ -399,28 +399,28 @@ export default function EditNewsScreen() {
                 style={[styles.deleteBtnText, loading && { color: "#29375C" }]}
               >
                 Xóa bỏ
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
                 styles.saveBtn,
                 (!isValid || loading) && styles.saveBtnDisabled,
-              ]}
+            ]}
               disabled={!isValid || loading}
               onPress={handleUpdate}
-            >
+          >
               <Text style={styles.saveBtnText}>
                 {loading ? "Đang lưu..." : "Lưu"}
               </Text>
-            </TouchableOpacity>
-          </View>
-          {/* Loading & Success Modal */}
-          <LoadingModal
-            visible={loading || showSuccess}
-            text={showSuccess ? "Thao tác thành công!" : "Đang xử lý..."}
-            success={showSuccess}
-          />
+          </TouchableOpacity>
         </View>
+        {/* Loading & Success Modal */}
+        <LoadingModal
+          visible={loading || showSuccess}
+          text={showSuccess ? "Thao tác thành công!" : "Đang xử lý..."}
+          success={showSuccess}
+        />
+      </View>
       )}
     </HeaderLayout>
   );

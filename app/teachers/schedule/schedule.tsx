@@ -43,65 +43,23 @@ const defaultDays = [
 const morningPeriods = ["Tiết 1", "Tiết 2", "Tiết 3", "Tiết 4", "Tiết 5"];
 const afternoonPeriods = ["Tiết 6", "Tiết 7", "Tiết 8", "Tiết 9", "Tiết 10"];
 
-const academicYears = ["2024-2025", "2025-2026"];
-
-function getFirstMonday(date: Date) {
-  // Trả về ngày thứ 2 đầu tiên sau hoặc bằng ngày truyền vào
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = day === 1 ? 0 : (8 - day) % 7; // Nếu đã là thứ 2 thì không cộng, còn lại thì cộng số ngày tới thứ 2
-  d.setDate(d.getDate() + diff);
-  return d;
+function getWeekNumber(date: Date): number {
+  const startOfYear = new Date(date.getFullYear(), 0, 1);
+  const days = Math.floor(
+    (date.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000)
+  );
+  return Math.ceil((days + startOfYear.getDay() + 1) / 7);
 }
 
-function getWeekRangesByYear(year: string) {
-  // Năm học bắt đầu từ 01/08 năm đầu đến 31/05 năm sau
-  const [startYear, endYear] = year.split("-").map(Number);
-  const startDate = new Date(startYear, 7, 1); // 01/08/yyyy
-  const endDate = new Date(endYear, 4, 31); // 31/05/yyyy
-  let current = getFirstMonday(startDate);
-  const weeks = [];
-
-  while (current <= endDate) {
-    const weekStart = new Date(current);
-    const weekEnd = new Date(current);
-    weekEnd.setDate(weekStart.getDate() + 6);
-    if (weekEnd > endDate) weekEnd.setTime(endDate.getTime());
-
-    // Sử dụng local date để tránh vấn đề múi giờ
-    const startDateStr = `${weekStart.getFullYear()}-${(
-      weekStart.getMonth() + 1
-    )
-      .toString()
-      .padStart(2, "0")}-${weekStart.getDate().toString().padStart(2, "0")}`;
-    const endDateStr = `${weekEnd.getFullYear()}-${(weekEnd.getMonth() + 1)
-      .toString()
-      .padStart(2, "0")}-${weekEnd.getDate().toString().padStart(2, "0")}`;
-
-    weeks.push({
-      start: startDateStr,
-      end: endDateStr,
-      label:
-        `${weekStart.getDate().toString().padStart(2, "0")}/${(
-          weekStart.getMonth() + 1
-        )
-          .toString()
-          .padStart(2, "0")}` +
-        " - " +
-        `${weekEnd.getDate().toString().padStart(2, "0")}/${(
-          weekEnd.getMonth() + 1
-        )
-          .toString()
-          .padStart(2, "0")}`,
-    });
-    current.setDate(current.getDate() + 7);
-  }
-  return weeks;
+function getCurrentWeekNumber(): number {
+  return getWeekNumber(new Date());
 }
 
 function mapApiToTeacherScheduleData(apiData: any): {
   schedule: Activity[][];
   lessonIds: string[][];
+  academicYear?: string;
+  weekNumber?: number;
 } {
   // 10 periods x 7 days
   const schedule: Activity[][] = Array.from({ length: 10 }, () =>
@@ -112,47 +70,45 @@ function mapApiToTeacherScheduleData(apiData: any): {
   );
 
   // Lấy dữ liệu từ response của API giáo viên
-  const scheduleData = apiData?.data?.schedule || [];
+  const lessons = apiData?.data?.lessons || [];
+  const academicYear = apiData?.data?.academicYear;
+  const weekNumber = apiData?.data?.weekNumber;
 
-  scheduleData.forEach((dayData: any) => {
-    const dayOfWeek = dayData.dayOfWeek;
-    const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Chủ nhật = 0, chuyển thành index 6
+  lessons.forEach((lesson: any) => {
+    const dayNumber = lesson.dayNumber || 1; // 1-7 (Thứ 2 = 1, CN = 7)
+    const dayIndex = dayNumber === 7 ? 6 : dayNumber - 1; // Chuyển về index 0-6
 
-    dayData.periods?.forEach((period: any) => {
-      const periodIndex = (period.period || 1) - 1;
-      if (periodIndex >= 0 && periodIndex < 10) {
-        let text = "";
+    // Lấy period từ timeSlot
+    const periodIndex = (lesson.timeSlot?.period || 1) - 1;
 
-        // Chỉ hiển thị các tiết có subject (tiết dạy thực tế)
-        if (period.subject) {
-          // Xử lý tiết học thông thường
-          text = `${period.class?.className || ""} - ${
-            period.subject.name || ""
-          }`;
-        } else if (period.type === "fixed" && period.fixedInfo) {
-          // Xử lý tiết cố định như chào cờ, sinh hoạt lớp
-          text = `${period.class?.className || ""} - ${
-            period.fixedInfo.description || ""
-          }`;
-        }
-        // Không hiển thị các tiết trống hoặc tiết không có subject
+    if (periodIndex >= 0 && periodIndex < 10) {
+      let text = "";
 
-        if (text) {
-          schedule[periodIndex][dayIndex] = {
-            text,
-            type: "default",
-          };
+      if (lesson.topic) {
+        // Xử lý tiết cố định như chào cờ, sinh hoạt lớp
+        text = `${lesson.class?.className || ""} - ${lesson.topic}`;
+      } else if (lesson.subject?.subjectName) {
+        // Xử lý tiết học thông thường
+        text = `${lesson.class?.className || ""} - ${
+          lesson.subject.subjectName
+        }`;
+      }
 
-          // Lưu lessonId nếu có
-          if (period._id) {
-            lessonIds[periodIndex][dayIndex] = period._id;
-          }
+      if (text) {
+        schedule[periodIndex][dayIndex] = {
+          text,
+          type: "default",
+        };
+
+        // Lưu lessonId nếu có
+        if (lesson._id) {
+          lessonIds[periodIndex][dayIndex] = lesson._id;
         }
       }
-    });
+    }
   });
 
-  return { schedule, lessonIds };
+  return { schedule, lessonIds, academicYear, weekNumber };
 }
 
 export default function ScheduleTeachersScreen() {
@@ -165,15 +121,8 @@ export default function ScheduleTeachersScreen() {
   const [lessonIds, setLessonIds] = useState<string[][]>(
     Array.from({ length: 10 }, () => Array.from({ length: 7 }, () => ""))
   );
-  const [year, setYear] = useState("2024-2025");
-  const [dateRange, setDateRange] = useState<{
-    start: string;
-    end: string;
-    label: string;
-  }>(() => {
-    const weeks = getWeekRangesByYear("2024-2025");
-    return weeks[2];
-  });
+  const [year, setYear] = useState("2025-2026"); // Mặc định năm học hiện tại
+  const [weekNumber, setWeekNumber] = useState(1); // Mặc định tuần 1
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showYearModal, setShowYearModal] = useState(false);
@@ -184,8 +133,15 @@ export default function ScheduleTeachersScreen() {
     return dayOfWeek === 0 ? 6 : dayOfWeek - 1;
   });
 
+  // State để lưu danh sách năm học và tuần có sẵn
+  const [availableYears, setAvailableYears] = useState<string[]>([]);
+  const [availableWeeks, setAvailableWeeks] = useState<number[]>([]);
+  const [dateRange, setDateRange] = useState<{
+    start: string;
+    end: string;
+  } | null>(null);
+
   const days = defaultDays;
-  const weekList = getWeekRangesByYear(year);
 
   const fetchSchedule = async () => {
     setLoading(true);
@@ -194,13 +150,32 @@ export default function ScheduleTeachersScreen() {
       const data = await getTeacherSchedule({
         teacherId: (await AsyncStorage.getItem("userTeacherId")) || "",
         academicYear: year,
-        startOfWeek: dateRange.start,
-        endOfWeek: dateRange.end,
+        weekNumber,
       });
-      const { schedule, lessonIds: newLessonIds } =
-        mapApiToTeacherScheduleData(data);
+
+      const {
+        schedule,
+        lessonIds: newLessonIds,
+        academicYear: responseYear,
+        weekNumber: responseWeek,
+      } = mapApiToTeacherScheduleData(data);
+
       setScheduleData(schedule);
       setLessonIds(newLessonIds);
+
+      // Lấy startDate và endDate từ response
+      const startDate = data?.data?.startDate;
+      const endDate = data?.data?.endDate;
+      if (startDate && endDate)
+        setDateRange({ start: startDate, end: endDate });
+
+      // Cập nhật năm học và tuần từ response nếu có
+      if (responseYear && !availableYears.includes(responseYear)) {
+        setAvailableYears((prev) => [...prev, responseYear]);
+      }
+      if (responseWeek && !availableWeeks.includes(responseWeek)) {
+        setAvailableWeeks((prev) => [...prev, responseWeek]);
+      }
     } catch (err) {
       setError("Lỗi tải thời khóa biểu");
       setScheduleData(initialScheduleData);
@@ -211,7 +186,7 @@ export default function ScheduleTeachersScreen() {
 
   useEffect(() => {
     fetchSchedule();
-  }, [year, dateRange]);
+  }, [year, weekNumber]);
 
   const handleAddActivity = (
     dayIndex: number,
@@ -251,20 +226,17 @@ export default function ScheduleTeachersScreen() {
   const handleChangeYear = () => setShowYearModal(true);
   const handleSelectYear = (selected: string) => {
     setYear(selected);
-    // Đổi năm thì đổi luôn về tuần đầu tiên của năm đó
-    const weeks = getWeekRangesByYear(selected);
-    setDateRange(weeks[0]);
+    setWeekNumber(1); // Đổi năm thì về tuần đầu tiên
     setShowYearModal(false);
   };
 
   // Modal chọn tuần
-  const handleChangeDateRange = () => setShowWeekModal(true);
+  const handleChangeWeek = () => setShowWeekModal(true);
   const handleSelectWeek = (selected: {
-    start: string;
-    end: string;
+    weekNumber: number;
     label: string;
   }) => {
-    setDateRange(selected);
+    setWeekNumber(selected.weekNumber);
     setShowWeekModal(false);
   };
 
@@ -279,13 +251,12 @@ export default function ScheduleTeachersScreen() {
     <View style={styles.container}>
       <ScheduleHeader
         title={session}
-        dateRange={dateRange.label}
+        dateRange={`Tuần ${weekNumber}`}
         year={year}
         onPressTitle={handleSessionToggle}
         onChangeYear={handleChangeYear}
-        onChangeDateRange={handleChangeDateRange}
+        onChangeDateRange={handleChangeWeek}
       />
-      {/* <DaySelector days={days} onCurrentDayChange={setCurrentDayIndex} /> */}
       {loading ? (
         <ActivityIndicator
           size="large"
@@ -330,15 +301,19 @@ export default function ScheduleTeachersScreen() {
           onPressOut={() => setShowYearModal(false)}
         >
           <View style={styles.modalContent}>
-            {academicYears.map((y) => (
-              <TouchableOpacity
-                key={y}
-                style={styles.modalItem}
-                onPress={() => handleSelectYear(y)}
-              >
-                <Text style={styles.modalItemText}>{y}</Text>
-              </TouchableOpacity>
-            ))}
+            {availableYears.length > 0 ? (
+              availableYears.map((y) => (
+                <TouchableOpacity
+                  key={y}
+                  style={styles.modalItem}
+                  onPress={() => handleSelectYear(y)}
+                >
+                  <Text style={styles.modalItemText}>{y}</Text>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text style={styles.modalItemText}>Không có dữ liệu</Text>
+            )}
           </View>
         </TouchableOpacity>
       </Modal>
@@ -350,18 +325,25 @@ export default function ScheduleTeachersScreen() {
           onPressOut={() => setShowWeekModal(false)}
         >
           <View style={[styles.modalContent, { maxHeight: 400 }]}>
-            <FlatList
-              data={weekList}
-              keyExtractor={(item) => item.label}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.modalItem}
-                  onPress={() => handleSelectWeek(item)}
-                >
-                  <Text style={styles.modalItemText}>{item.label}</Text>
-                </TouchableOpacity>
-              )}
-            />
+            {availableWeeks.length > 0 ? (
+              <FlatList
+                data={availableWeeks.map((week) => ({
+                  weekNumber: week,
+                  label: `Tuần ${week}`,
+                }))}
+                keyExtractor={(item) => item.weekNumber.toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.modalItem}
+                    onPress={() => handleSelectWeek(item)}
+                  >
+                    <Text style={styles.modalItemText}>{item.label}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+            ) : (
+              <Text style={styles.modalItemText}>Không có dữ liệu</Text>
+            )}
           </View>
         </TouchableOpacity>
       </Modal>
@@ -381,7 +363,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
-    minWidth: 200,
+    minWidth: 110,
+    maxWidth: 200,
+    minHeight: 80,
+    maxHeight: 200,
     elevation: 5,
   },
   modalItem: {

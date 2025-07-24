@@ -29,7 +29,7 @@ export default function SwapRequest() {
     if (!lesson) return "";
     const period = lesson.period || lesson.timeSlot?.period || "";
     const subject =
-      lesson.subject?.name ||
+      lesson.subject?.subjectName ||
       lesson.text ||
       lesson.fixedInfo?.description ||
       "";
@@ -58,6 +58,7 @@ export default function SwapRequest() {
     } catch (e: any) {
       setShowLoading(false);
       setLoadingSuccess(false);
+      console.log("Lỗi tạo yêu cầu đổi tiết:", e, e?.response?.data);
       alert(
         e?.response?.data?.message || "Đã có lỗi xảy ra, vui lòng thử lại!"
       );

@@ -1,46 +1,60 @@
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  Animated,
   FlatList,
   Image,
+  Keyboard,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { TextInput } from "react-native-paper";
 import HeaderLayout from "../../components/layout/HeaderLayout";
+import chatService from "../../services/chat.service";
 
-const EXISTING_ACCOUNTS = [
-  {
-    id: "1",
-    name: "Nguyen Thi Bich",
-    username: "hocsinh1",
-    avatar: require("../../assets/images/avt_default.png"),
-  },
-  {
-    id: "2",
-    name: "Nguyen Thi Bich",
-    username: "hocsinh1",
-    avatar: require("../../assets/images/avt_default.png"),
-  },
-  {
-    id: "3",
-    name: "Nguyen Thi Bich",
-    username: "hocsinh1",
-    avatar: require("../../assets/images/avt_default.png"),
-  },
-  {
-    id: "4",
-    name: "Nguyen Thi Bich",
-    username: "hocsinh1",
-    avatar: require("../../assets/images/avt_default.png"),
-  },
-];
 
 export default function AddContactScreen() {
   const [username, setUsername] = useState("");
+  const [searchResult, setSearchResult] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
+  const slideAnim = useRef(new Animated.Value(200)).current; // Giá trị khởi đầu ở dưới
+  const prevResultLength = useRef(0);
+
+  React.useEffect(() => {
+    AsyncStorage.getItem("token").then((t) => setToken(t));
+  }, []);
+
+  useEffect(() => {
+    if (searchResult.length > 0 && prevResultLength.current === 0) {
+      // Khi có kết quả mới, animate lên
+      slideAnim.setValue(200);
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 350,
+        useNativeDriver: true,
+      }).start();
+    }
+    prevResultLength.current = searchResult.length;
+  }, [searchResult.length]);
+
+  const handleSearch = async () => {
+    if (!username.trim() || !token) return;
+    Keyboard.dismiss(); // Tắt bàn phím khi tìm kiếm
+    setLoading(true);
+    const res = await chatService.searchUsers(username.trim(), token);
+    if (res.success) {
+      setSearchResult(res.data);
+    } else {
+      setSearchResult([]);
+      // Có thể hiện thông báo lỗi nếu muốn
+    }
+    setLoading(false);
+  };
 
   return (
     <HeaderLayout
@@ -50,44 +64,66 @@ export default function AddContactScreen() {
     >
       <View style={styles.container}>
         {/* Form tìm kiếm */}
-        <View style={styles.formBox}>
-          <Text style={styles.label}>Tên người dùng</Text>
+        <View style={{ marginHorizontal: 20, marginTop: 18 }}>
           <TextInput
-            style={styles.input}
+            label="Tên người dùng"
+            mode="outlined"
             placeholder="hocsinh1"
             placeholderTextColor="#A0A0A0"
             value={username}
             onChangeText={setUsername}
+            style={{ backgroundColor: "#F6F8FB" }}
+            disabled={loading}
+            outlineColor="#29375C"
+            activeOutlineColor="#29375C"
           />
-          <TouchableOpacity style={styles.searchBtn}>
-            <Text style={styles.searchBtnText}>Tìm kiếm tài khoản</Text>
+          <TouchableOpacity
+            style={[
+              styles.searchBtn,
+              (!username.trim() || loading) && { backgroundColor: "#B3B8C7" }
+            ]}
+            onPress={handleSearch}
+            disabled={loading || !username.trim()}
+          >
+            <Text style={styles.searchBtnText}>{loading ? "Đang tìm..." : "Tìm kiếm"}</Text>
           </TouchableOpacity>
         </View>
         {/* Danh sách tài khoản */}
-        <View style={styles.listWrapper}>
-          <Text style={styles.listTitle}>Tài khoản tồn tại</Text>
-          <FlatList
-            data={EXISTING_ACCOUNTS}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View style={styles.accountRow}>
-                <Image source={item.avatar} style={styles.avatar} />
-                <View style={styles.infoBox}>
-                  <Text style={styles.name}>{item.name}</Text>
-                  <Text style={styles.username}>{item.username}</Text>
+        {searchResult.length > 0 && (
+          <Animated.View style={[styles.listWrapper, { transform: [{ translateY: slideAnim }] }]}>
+            <Text style={styles.listTitle}>Tài khoản tồn tại</Text>
+            <FlatList
+              data={searchResult}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <View style={styles.accountRow}>
+                  <Image source={require("../../assets/images/avt_default.png")} style={styles.avatar} />
+                  <View style={styles.infoBox}>
+                    <Text style={styles.name}>{item.name}</Text>
+                    <Text style={styles.username}>{item.email}</Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => {
+                      router.push({
+                        pathname: "/message/message_box",
+                        params: { userId: item.id, name: item.name },
+                      });
+                    }}
+                  >
+                    <Ionicons
+                      name="chatbubble-ellipses-outline"
+                      size={28}
+                      color="#fff"
+                      style={styles.chatIcon}
+                    />
+                  </TouchableOpacity>
                 </View>
-                <Ionicons
-                  name="chatbubble-ellipses-outline"
-                  size={28}
-                  color="#fff"
-                  style={styles.chatIcon}
-                />
-              </View>
-            )}
-            contentContainerStyle={{ paddingBottom: 16 }}
-            showsVerticalScrollIndicator={false}
-          />
-        </View>
+              )}
+              contentContainerStyle={{ paddingBottom: 16 }}
+              showsVerticalScrollIndicator={false}
+            />
+          </Animated.View>
+        )}
       </View>
     </HeaderLayout>
   );
@@ -99,6 +135,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F6F8FB",
     paddingHorizontal: 0,
     paddingTop: 0,
+    justifyContent: "space-between",
   },
   formBox: {
     backgroundColor: "#fff",
@@ -134,7 +171,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: "center",
-    marginTop: 4,
+    marginTop: 20,
   },
   searchBtnText: {
     color: "#fff",
@@ -146,7 +183,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 48,
     borderTopRightRadius: 48,
     marginTop: 32,
-    flex: 1,
     paddingHorizontal: 0,
     paddingTop: 24,
   },
