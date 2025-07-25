@@ -52,7 +52,6 @@ const LessonDetailScreen = () => {
       }
     } catch (err) {
       setError("Lỗi tải thông tin tiết học");
-      console.error("Error fetching lesson detail:", err);
     } finally {
       setLoading(false);
     }

@@ -75,7 +75,6 @@ export default function AddActivity() {
         setShowSuccess(true);
         // }
       } catch (error) {
-        console.error("Error adding activity:", error);
       }
     }
   };

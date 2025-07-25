@@ -159,7 +159,6 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
       }
       setIsEditingDesc(false);
     } catch (error) {
-      console.error("Error saving description:", error);
       Alert.alert("Lỗi", "Không thể cập nhật mô tả");
     } finally {
       setIsSaving(false);

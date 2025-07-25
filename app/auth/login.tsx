@@ -147,7 +147,6 @@ export default function LoginScreen() {
               setUserData(userResponse.data);
             }
           } catch (error) {
-            console.log("Error fetching user data after login:", error);
             if (res.data?.user?.role) {
               await AsyncStorage.setItem(
                 "role",

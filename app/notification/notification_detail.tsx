@@ -75,18 +75,15 @@ export default function NotificationDetailScreen() {
     try {
       const token = await AsyncStorage.getItem("token");
       if (!token) throw new Error("Không tìm thấy token");
-      console.log("[APPROVE] requestType:", relatedObjectRequestType, "requestId:", relatedObjectId, "token:", token);
       const res = await approveOrRejectRequest(
         relatedObjectRequestType as string,
         relatedObjectId as string,
         "approve",
         token
       );
-      console.log("[APPROVE] response:", res);
       alert("Chấp nhận thành công!");
       router.back();
     } catch (err: any) {
-      console.log("[APPROVE] error:", err, err?.response?.data);
       alert("Có lỗi xảy ra khi chấp nhận: " + (err?.message || err));
     }
     setLoading(false);
@@ -101,18 +98,15 @@ export default function NotificationDetailScreen() {
     try {
       const token = await AsyncStorage.getItem("token");
       if (!token) throw new Error("Không tìm thấy token");
-      console.log("[REJECT] requestType:", relatedObjectRequestType, "requestId:", relatedObjectId, "token:", token);
       const res = await approveOrRejectRequest(
         relatedObjectRequestType as string,
         relatedObjectId as string,
         "reject",
         token
       );
-      console.log("[REJECT] response:", res);
       alert("Từ chối thành công!");
       router.back();
     } catch (err: any) {
-      console.log("[REJECT] error:", err, err?.response?.data);
       alert("Có lỗi xảy ra khi từ chối: " + (err?.message || err));
     }
     setLoading(false);

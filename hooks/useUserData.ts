@@ -50,7 +50,6 @@ export const useUserData = () => {
         await fetchUserData();
       }
     } catch (err) {
-      console.log("Error loading user data from storage:", err);
       // Nếu có lỗi khi đọc từ AsyncStorage, gọi API
       await fetchUserData();
     } finally {
@@ -94,7 +93,6 @@ export const useUserData = () => {
         setError("Không thể tải thông tin người dùng");
       }
     } catch (err: any) {
-      console.log("Error fetching user data:", err);
       setError(err?.message || "Không thể tải thông tin người dùng");
     } finally {
       setLoading(false);
@@ -146,7 +144,6 @@ export const useUserData = () => {
         );
       }
     } catch (error) {
-      console.log("Error updating AsyncStorage:", error);
     }
   };
 
@@ -166,7 +163,6 @@ export const useUserData = () => {
     }, [loadUserDataFromStorage])
   );
 
-  // console.log("userData:", userData);
 
   return {
     userData,

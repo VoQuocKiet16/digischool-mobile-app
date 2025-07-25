@@ -65,7 +65,6 @@ const Student_Test: React.FC<Student_TestProps> = ({
       );
       setStudents(response.students);
     } catch (error) {
-      console.error("Error loading students:", error);
       Alert.alert("Lỗi", "Không thể tải danh sách học sinh");
     } finally {
       setLoading(false);

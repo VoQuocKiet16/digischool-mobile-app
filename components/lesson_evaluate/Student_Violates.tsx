@@ -69,7 +69,6 @@ const Student_Violates: React.FC<Student_ViolatesProps> = ({
       );
       setStudents(response.students);
     } catch (error) {
-      console.error("Error loading students:", error);
       Alert.alert("Lỗi", "Không thể tải danh sách học sinh");
     } finally {
       setLoading(false);
