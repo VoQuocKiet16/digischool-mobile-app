@@ -306,6 +306,8 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
                     onSlotPressLegacy: () =>
                       onSelectSlot(dayIndex, periodIndex),
                   })}
+                  type={slotData.type}
+                  slotData={slotData}
                 />
               </View>
             );

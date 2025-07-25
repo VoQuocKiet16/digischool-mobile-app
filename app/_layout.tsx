@@ -126,6 +126,8 @@ function RootLayoutContent() {
     "/teachers/lesson_information/lesson_evaluate",
     "/students/lesson_information/lesson_evaluate",
     "/message/add_contact",
+    "/activity/add_activity",
+    "/activity/detail_activity",
   ];
   // Kiểm tra có cần ẩn tabbar không
   const isTabBarHidden = hiddenTabBarRoutes.some((route) =>

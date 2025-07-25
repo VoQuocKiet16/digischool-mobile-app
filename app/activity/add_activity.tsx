@@ -1,9 +1,6 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useRef, useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useState } from "react";
 import {
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -11,8 +8,9 @@ import {
   View,
 } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
-import SuccessModal from "../../components/notifications_modal/SuccessModal";
+import LoadingModal from "../../components/LoadingModal";
 import RemindPicker from "../../components/RemindPicker";
+import { createActivity } from "../../services/activity.service";
 
 const REMIND_OPTIONS = [
   "Trước 10 phút",
@@ -21,70 +19,70 @@ const REMIND_OPTIONS = [
   "Trước 40 phút",
   "Trước 50 phút",
 ];
+const ITEM_HEIGHT = 36;
+const PADDING_COUNT = 2;
 
-const ITEM_HEIGHT = 40;
-const PADDING_COUNT = 1;
+// Danh sách tiết học mẫu (có thể lấy từ backend hoặc constants)
+const TIME_SLOTS = [
+  { period: 1, startTime: "07:00", endTime: "07:45" },
+  { period: 2, startTime: "07:50", endTime: "08:35" },
+  { period: 3, startTime: "08:40", endTime: "09:25" },
+  { period: 4, startTime: "09:45", endTime: "10:30" },
+  { period: 5, startTime: "10:35", endTime: "11:20" },
+  { period: 6, startTime: "12:30", endTime: "13:15" },
+  { period: 7, startTime: "13:20", endTime: "14:05" },
+  { period: 8, startTime: "14:10", endTime: "14:55" },
+  { period: 9, startTime: "15:00", endTime: "15:45" },
+  { period: 10, startTime: "15:50", endTime: "16:35" },
+];
 
-export default function AddActivity() {
+function getActivitySubtitle({
+  date,
+  period,
+}: {
+  date?: string;
+  period?: number;
+}) {
+  if (!date || !period) return "";
+  const d = new Date(date);
+  const weekday = [
+    "Chủ nhật",
+    "Thứ 2",
+    "Thứ 3",
+    "Thứ 4",
+    "Thứ 5",
+    "Thứ 6",
+    "Thứ 7",
+  ];
+  const dayStr = weekday[d.getDay()];
+  const session = period <= 5 ? "Sáng" : "Chiều";
+  const periodStr = `Tiết ${period}`;
+  const slot = TIME_SLOTS.find((ts) => ts.period === period);
+  const timeStr = slot ? `${slot.startTime} - ${slot.endTime}` : "";
+  return `${session} • ${dayStr} • ${periodStr}${
+    timeStr ? ` • ${timeStr}` : ""
+  }`;
+}
+
+const AddActivityScreen = () => {
   const [title, setTitle] = useState("");
   const [detail, setDetail] = useState("");
   const [remind, setRemind] = useState(true);
   const [remindTime, setRemindTime] = useState(REMIND_OPTIONS[2]);
+  const [showLoading, setShowLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const scrollRef = useRef<ScrollView>(null);
-  const router = useRouter();
-  const { periodIndex } = useLocalSearchParams();
-
-  React.useEffect(() => {
-    if (remind && scrollRef.current) {
-      const idx = REMIND_OPTIONS.indexOf(remindTime);
-      if (idx !== -1) {
-        scrollRef.current.scrollTo({ y: idx * ITEM_HEIGHT, animated: true });
-      }
-    }
-  }, [remindTime, remind]);
-
-  const handleSnapToItem = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const offsetY = e.nativeEvent.contentOffset.y;
-    let idx = Math.round(offsetY / ITEM_HEIGHT);
-    idx = Math.max(0, Math.min(REMIND_OPTIONS.length - 1, idx));
-    setRemindTime(REMIND_OPTIONS[idx]);
-  };
-
+  const { periodIndex, date } = useLocalSearchParams();
+  const [loading, setLoading] = useState(false);
   const isValid = title.trim() && detail.trim();
-
-  const handleAdd = async () => {
-    if (isValid && periodIndex) {
-      try {
-        // TODO: Gọi API để thêm hoạt động
-        // const response = await fetch('API_URL', {
-        //   method: 'POST',
-        //   headers: {
-        //     'Content-Type': 'application/json',
-        //   },
-        //   body: JSON.stringify({
-        //     title,
-        //     detail,
-        //     periodIndex: Number(periodIndex),
-        //     remind,
-        //     remindTime: remind ? remindTime : null
-        //   }),
-        // });
-
-        // if (response.ok) {
-        setShowSuccess(true);
-        // }
-      } catch (error) {
-      }
-    }
-  };
+  const dateParam = Array.isArray(date) ? date[0] : date;
+  const period = periodIndex ? Number(periodIndex) + 1 : undefined;
+  const subtitle = getActivitySubtitle({ date: dateParam, period });
 
   return (
     <HeaderLayout
-      title="Thêm hoạt động"
-      subtitle="Tạo thông tin hoạt động"
+      title="Thêm hoạt động mới"
+      subtitle={subtitle}
       onBack={() => router.back()}
-      style={{ fontSize: 20, fontWeight: "bold" }}
     >
       <View style={styles.container}>
         {/* Tiêu đề hoạt động */}
@@ -97,8 +95,8 @@ export default function AddActivity() {
               style={styles.inputTextOutline}
               value={title}
               onChangeText={setTitle}
-              placeholder=" "
-              placeholderTextColor="#B6B6B6"
+              placeholder="Nhập tiêu đề hoạt động"
+              placeholderTextColor="#9CA3AF"
             />
           </View>
         </View>
@@ -109,11 +107,15 @@ export default function AddActivity() {
               Chi tiết <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
-              style={styles.inputTextOutline}
+              style={[
+                styles.inputTextOutline,
+                { minHeight: 48, marginBottom: 20 },
+              ]}
               value={detail}
               onChangeText={setDetail}
-              placeholder=" "
-              placeholderTextColor="#B6B6B6"
+              placeholder="Nhập nội dung hoạt động"
+              placeholderTextColor="#9CA3AF"
+              multiline={true}
             />
           </View>
         </View>
@@ -129,86 +131,122 @@ export default function AddActivity() {
         />
         {/* Nút Thêm */}
         <TouchableOpacity
-          style={[styles.addBtn, !isValid && styles.addBtnDisabled]}
-          disabled={!isValid}
-          onPress={handleAdd}
-        >
-          <Text style={styles.addBtnText}>Thêm</Text>
-        </TouchableOpacity>
-        <SuccessModal
-          visible={showSuccess}
-          onClose={() => {
-            setShowSuccess(false);
-            router.back();
+          style={[
+            styles.saveBtn,
+            (!isValid || loading) && styles.saveBtnDisabled,
+          ]}
+          disabled={!isValid || loading}
+          onPress={async () => {
+            if (!periodIndex || !date) return;
+            setLoading(true);
+            setShowLoading(true);
+            const reqBody: any = {
+              title,
+              content: detail,
+              period: Number(periodIndex) + 1,
+              date,
+            };
+            if (remind) {
+              reqBody.remindMinutes = Number(remindTime.match(/\d+/)?.[0]);
+            }
+            const res = await createActivity(reqBody);
+            setLoading(false);
+            if (res.success) {
+              setShowSuccess(true);
+              setTimeout(() => {
+                setShowLoading(false);
+                setShowSuccess(false);
+                router.back();
+              }, 1200);
+            } else {
+              setShowLoading(false);
+              alert(res.message || "Tạo hoạt động thất bại");
+            }
           }}
-          title="Thành công"
-          message={
-            "Thêm hoạt động cá nhân thành công.\nQuay lại trang trước đó?"
+        >
+          <Text
+            style={[
+              styles.saveBtnText,
+              (!isValid || loading) && { color: "#A0A0A0" },
+            ]}
+          >
+            Thêm
+          </Text>
+        </TouchableOpacity>
+        <LoadingModal
+          visible={showLoading}
+          text={
+            showSuccess
+              ? "Thêm hoạt động thành công!"
+              : "Đang thêm hoạt động..."
           }
-          buttonText="Xác nhận"
+          success={showSuccess}
         />
       </View>
     </HeaderLayout>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#fff",
     flex: 1,
     padding: 20,
-    // paddingTop: 30, // Đã có HeaderLayout nên bỏ paddingTop
   },
   fieldWrap: {
     marginBottom: 16,
   },
   outlineInputBox: {
-    borderWidth: 1.2,
-    borderColor: "#B6C5E1",
-    borderRadius: 8,
-    paddingTop: 18,
+    borderWidth: 1,
+    borderColor: "#29375C",
+    borderRadius: 12,
+    backgroundColor: "#f7f7f7",
+    marginBottom: 25,
+    paddingTop: 15,
     paddingBottom: 12,
-    paddingHorizontal: 12,
-    backgroundColor: "#fff",
-    marginTop: 8,
+    paddingHorizontal: 25,
+    marginLeft: 15,
+    marginRight: 15,
     position: "relative",
   },
   floatingLabel: {
     position: "absolute",
-    top: -10,
+    top: -16,
     left: 18,
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 4,
-    fontSize: 15,
+    backgroundColor: "#f7f7f7",
+    paddingHorizontal: 6,
     color: "#29375C",
-    fontWeight: "bold",
+    fontFamily: "Baloo2-SemiBold",
+    fontSize: 14,
     zIndex: 2,
   },
   inputTextOutline: {
-    fontSize: 15,
     color: "#29375C",
-    fontWeight: "bold",
-    paddingVertical: 0,
+    fontSize: 16,
+    fontFamily: "Baloo2-Medium",
   },
   required: {
     color: "#E53935",
-    fontSize: 16,
+    fontSize: 18,
+    marginLeft: 2,
+    marginTop: -2,
   },
-  addBtn: {
+  saveBtn: {
     backgroundColor: "#29375C",
-    borderRadius: 12,
+    borderRadius: 20,
     paddingVertical: 14,
     alignItems: "center",
-    marginTop: 16,
-    opacity: 1,
+    alignSelf: "center",
+    marginTop: 8,
+    width: "90%",
   },
-  addBtnDisabled: {
-    backgroundColor: "#B6B6B6",
-    opacity: 0.5,
+  saveBtnDisabled: {
+    backgroundColor: "#D1D5DB",
   },
-  addBtnText: {
+  saveBtnText: {
     color: "#fff",
-    fontWeight: "bold",
+    fontFamily: "Baloo2-SemiBold",
     fontSize: 18,
   },
 });
+
+export default AddActivityScreen;

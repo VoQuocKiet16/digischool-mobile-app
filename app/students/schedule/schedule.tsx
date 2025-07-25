@@ -17,8 +17,12 @@ import { getStudentSchedule } from "../../../services/schedule.service";
 
 export interface Activity {
   text: string;
-  type: "default" | "user-added";
-  hasNotification?: boolean;
+  type: "default" | "user-added" | "user-activity";
+  content?: string;
+  time?: number;
+  remindAt?: string;
+  date?: string;
+  [key: string]: any;
 }
 
 const defaultActivity = (text: string, hasNotification = false): Activity => ({
@@ -77,30 +81,44 @@ function mapApiToScheduleData(apiData: any): {
   lessons.forEach((lesson: any) => {
     const dayNumber = lesson.dayNumber || 1; // 1-7 (Thứ 2 = 1, CN = 7)
     const dayIndex = dayNumber === 7 ? 6 : dayNumber - 1; // Chuyển về index 0-6
-
     // Lấy period từ timeSlot
     const periodIndex = (lesson.timeSlot?.period || 1) - 1;
-
     if (periodIndex >= 0 && periodIndex < 10) {
       let text = "";
-
       if (lesson.topic) {
-        // Xử lý tiết cố định như chào cờ, sinh hoạt lớp
         text = lesson.topic;
       } else if (lesson.subject?.subjectName) {
-        // Xử lý tiết học thông thường
         text = lesson.subject.subjectName;
       }
-
       schedule[periodIndex][dayIndex] = {
         text,
         type: "default",
       };
-
-      // Lưu lessonId nếu có
       if (lesson._id) {
         lessonIds[periodIndex][dayIndex] = lesson._id;
       }
+    }
+  });
+
+  // Map các hoạt động cá nhân vào slot
+  const activities = apiData?.data?.studentPersonalActivities || [];
+  activities.forEach((activity: any) => {
+    const date = new Date(activity.date);
+    const startDate = new Date(apiData?.data?.weeklySchedule?.startDate);
+    const dayIndex = Math.floor(
+      (date.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)
+    );
+    const periodIndex = (activity.period || 1) - 1;
+    if (periodIndex >= 0 && periodIndex < 10 && dayIndex >= 0 && dayIndex < 7) {
+      schedule[periodIndex][dayIndex] = {
+        text: activity.title,
+        type: "user-activity",
+        content: activity.content,
+        time: activity.time,
+        remindAt: activity.remindAt,
+        date: activity.date,
+        id: activity._id,
+      };
     }
   });
 
@@ -203,9 +221,17 @@ export default function ScheduleStudentsScreen() {
     periodIndex: number,
     activityText: string
   ) => {
+    // Tính ngày cụ thể từ dateRange và dayIndex
+    let date = "";
+    if (dateRange) {
+      const startDate = new Date(dateRange.start);
+      const slotDate = new Date(startDate);
+      slotDate.setDate(startDate.getDate() + dayIndex);
+      date = slotDate.toISOString();
+    }
     router.push({
       pathname: "/activity/add_activity",
-      params: { periodIndex },
+      params: { periodIndex, date },
     });
   };
 
