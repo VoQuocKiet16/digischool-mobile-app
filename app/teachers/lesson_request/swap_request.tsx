@@ -58,7 +58,6 @@ export default function SwapRequest() {
     } catch (e: any) {
       setShowLoading(false);
       setLoadingSuccess(false);
-      console.log("Lỗi tạo yêu cầu đổi tiết:", e, e?.response?.data);
       alert(
         e?.response?.data?.message || "Đã có lỗi xảy ra, vui lòng thử lại!"
       );

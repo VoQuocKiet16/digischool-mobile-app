@@ -73,7 +73,6 @@ const AddActivityScreen = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const { periodIndex, date } = useLocalSearchParams();
   const [loading, setLoading] = useState(false);
-
   const isValid = title.trim() && detail.trim();
   const dateParam = Array.isArray(date) ? date[0] : date;
   const period = periodIndex ? Number(periodIndex) + 1 : undefined;

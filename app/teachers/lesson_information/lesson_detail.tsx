@@ -107,7 +107,6 @@ const LessonDetailScreen = () => {
       }
     } catch (err) {
       setError("Lỗi tải thông tin tiết học");
-      console.error("Error fetching lesson detail:", err);
     } finally {
       setLoading(false);
     }
@@ -129,7 +128,6 @@ const LessonDetailScreen = () => {
         });
       }
     } catch (error) {
-      console.error("Error updating description:", error);
       throw error;
     }
   };
@@ -145,7 +143,6 @@ const LessonDetailScreen = () => {
         });
       }
     } catch (error) {
-      console.error("Error deleting description:", error);
       throw error;
     }
   };
@@ -165,7 +162,6 @@ const LessonDetailScreen = () => {
       setIsCompleted(true);
       setShowModal(false);
     } catch (error: any) {
-      console.error("Error completing lesson:", error);
       Alert.alert(
         "Lỗi",
         `Không thể hoàn thành tiết học: ${

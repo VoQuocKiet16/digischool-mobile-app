@@ -87,7 +87,6 @@ const LessonEvaluateTeacherScreen = () => {
           router.back();
         }, 1000);
       } catch (error: any) {
-        console.error("Error creating evaluation:", error);
         setError(
           error.response?.data?.message || "Tạo đánh giá tiết học thất bại!"
         );

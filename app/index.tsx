@@ -22,7 +22,6 @@ export default function HomeScreen() {
           const parsedRoles = JSON.parse(roleStr);
           setRoles(parsedRoles);
         } catch (error) {
-          console.log("Error parsing role:", error);
           setRoles([]);
         }
       } else {

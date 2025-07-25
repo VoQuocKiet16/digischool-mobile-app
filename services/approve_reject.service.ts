@@ -17,27 +17,15 @@ export const approveOrRejectRequest = async (
     case "makeup_request":
       url = `/api/schedules/lesson-request/makeup/${requestId}/${action}`;
       break;
+    case "teacher_leave_request":
+      url = `/api/teacher-leave-requests/${requestId}/${action}`;
+      break;
+    case "student_leave_request":
+      url = `/api/student-leave-requests/${requestId}/${action}`;
+      break;
     default:
       throw new Error("Loại yêu cầu không hợp lệ");
   }
   return api.post(url, {}, { headers: { Authorization: `Bearer ${token}` } });
 };
 
-// Có thể mở rộng thêm các hàm riêng biệt nếu muốn rõ ràng hơn:
-export const approveSubstituteRequest = (requestId: string, token: string) =>
-  api.post(`/api/schedules/lesson-request/substitute/${requestId}/approve`, {}, { headers: { Authorization: `Bearer ${token}` } });
-
-export const rejectSubstituteRequest = (requestId: string, token: string) =>
-  api.post(`/api/schedules/lesson-request/substitute/${requestId}/reject`, {}, { headers: { Authorization: `Bearer ${token}` } });
-
-export const approveSwapRequest = (requestId: string, token: string) =>
-  api.post(`/api/schedules/lesson-request/swap/${requestId}/approve`, {}, { headers: { Authorization: `Bearer ${token}` } });
-
-export const rejectSwapRequest = (requestId: string, token: string) =>
-  api.post(`/api/schedules/lesson-request/swap/${requestId}/reject`, {}, { headers: { Authorization: `Bearer ${token}` } });
-
-export const approveMakeupRequest = (requestId: string, token: string) =>
-  api.post(`/api/schedules/lesson-request/makeup/${requestId}/approve`, {}, { headers: { Authorization: `Bearer ${token}` } });
-
-export const rejectMakeupRequest = (requestId: string, token: string) =>
-  api.post(`/api/schedules/lesson-request/makeup/${requestId}/reject`, {}, { headers: { Authorization: `Bearer ${token}` } });

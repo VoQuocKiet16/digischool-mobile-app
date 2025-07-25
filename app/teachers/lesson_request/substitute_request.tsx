@@ -55,11 +55,6 @@ export default function SubstituteRequest() {
       setShowLoading(true);
       setLoadingSuccess(false);
       try {
-        console.log("Dữ liệu gửi đi:", {
-          lessonId: lessonIdStr,
-          candidateTeachers: [selectedTeacherId],
-          reason,
-        });
         await createSubstituteRequest({
           lessonId: lessonIdStr,
           candidateTeacherIds: [selectedTeacherId],
@@ -75,7 +70,6 @@ export default function SubstituteRequest() {
       } catch (e) {
         setShowLoading(false);
         setIsUpdating(false);
-        console.error("Lỗi gửi yêu cầu dạy thay:", e);
       }
     }
   };

@@ -21,7 +21,6 @@ const RefreshableScrollView: React.FC<RefreshableScrollViewProps> = ({
     try {
       await onRefresh();
     } catch (error) {
-      console.log("Refresh error:", error);
     } finally {
       setRefreshing(false);
     }
