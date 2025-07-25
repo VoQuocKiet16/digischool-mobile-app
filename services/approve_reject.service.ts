@@ -28,4 +28,3 @@ export const approveOrRejectRequest = async (
   }
   return api.post(url, {}, { headers: { Authorization: `Bearer ${token}` } });
 };
-

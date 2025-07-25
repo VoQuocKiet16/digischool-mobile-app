@@ -173,6 +173,7 @@ export default function NotificationListScreen() {
         createdAt: item.createdAt,
         relatedObject_id: item.relatedObject?.id || "",
         relatedObject_requestType: item.relatedObject?.requestType || "",
+        relatedObject_status: item.relatedObject?.status || "",
       },
     });
   };

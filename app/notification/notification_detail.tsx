@@ -42,8 +42,14 @@ export default function NotificationDetailScreen() {
     } catch {}
   }
 
-  const relatedObjectId = params.relatedObject_id;
-  const relatedObjectRequestType = params.relatedObject_requestType;
+  const relatedObjectId = relatedObject?.id || params.relatedObject_id;
+  const relatedObjectRequestType = relatedObject?.requestType || params.relatedObject_requestType;
+  const relatedObjectStatus = relatedObject?.status || params.relatedObject_status;
+
+  console.log("[DEBUG] requestType:", relatedObjectRequestType, "status:", relatedObjectStatus);
+
+  const [loading, setLoading] = React.useState(false);
+  const slideAnim = React.useRef(new Animated.Value(100)).current; // Initial position off-screen
 
   const showActionBar = [
     "substitute_request",
@@ -51,10 +57,9 @@ export default function NotificationDetailScreen() {
     "makeup_request",
     "teacher_leave_request",
     "student_leave_request",
-  ].includes(relatedObjectRequestType as string);
-
-  const slideAnim = React.useRef(new Animated.Value(100)).current; // Initial position off-screen
-  const [loading, setLoading] = React.useState(false);
+  ].includes(relatedObjectRequestType as string)
+    && relatedObjectStatus !== "approved"
+    && relatedObjectStatus !== "rejected";
 
   React.useEffect(() => {
     if (showActionBar) {
