@@ -13,6 +13,7 @@ export interface Notification {
   relatedObject?: {
     id: string;
     requestType: string;
+    status: string;
   };
   isReadBy?: string[];
   createdAt: string;
