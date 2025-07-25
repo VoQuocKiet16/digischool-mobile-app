@@ -91,7 +91,6 @@ export default function MessageBoxScreen() {
         setError("Lỗi kết nối server");
         setMessages([]);
         setLoading(false);
-        console.log("[getMessagesWith] catch error:", err);
       });
     // Kết nối socket
     chatService.connect(myId as string, token as string);
@@ -149,7 +148,6 @@ export default function MessageBoxScreen() {
             updated = updated.map(msg =>
               msg._id === lastMsgId ? { ...msg, status: "read" } : msg
             );
-            // console.log('[CLIENT][PATCH] Không tìm thấy messageId, đã cập nhật status cho tin nhắn cuối cùng:', lastMsgId);
           }
         }
         return updated;
@@ -224,7 +222,6 @@ export default function MessageBoxScreen() {
           Alert.alert("Lỗi gửi ảnh", uploadRes.message || "Không gửi được ảnh");
         }
       } catch (err) {
-        console.log("[IMAGE UPLOAD ERROR]", err);
         Alert.alert("Lỗi gửi ảnh", "Không gửi được ảnh");
       }
       setSending(false);

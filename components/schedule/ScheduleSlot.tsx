@@ -25,6 +25,8 @@ interface ScheduleSlotProps {
   onSlotPressLegacy?: (dayIndex: number, periodIndex: number) => void;
   cellStatus?: "taught" | "current" | "exchangeable" | "default";
   lessonId?: string;
+  type?: string;
+  slotData?: any;
 }
 
 const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
@@ -40,6 +42,8 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
   cellStatus,
   onSlotPressLegacy,
   lessonId,
+  type,
+  slotData,
 }) => {
   const router = useRouter();
 
@@ -49,7 +53,25 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
     if (isEmpty && onAddActivity) {
       onAddActivity(dayIndex, periodIndex, text);
     } else if (!isEmpty && onSlotPress) {
-      onSlotPress(dayIndex, periodIndex, text, lessonId);
+      // Nếu là slot hoạt động cá nhân
+      if (type === "user-activity") {
+        // Truyền đủ params sang detail_activity
+        router.push({
+          pathname: "/activity/detail_activity",
+          params: {
+            id: slotData?.id, // truyền đúng id của activity
+            title: text,
+            content: slotData?.content || activityText,
+            time:
+              typeof slotData?.time === "number" ? slotData.time : undefined,
+            remindAt: slotData?.remindAt,
+            date: slotData?.date,
+            period: periodIndex + 1,
+          },
+        });
+      } else {
+        onSlotPress(dayIndex, periodIndex, text, lessonId);
+      }
     } else if (onSlotPressLegacy && !isEmpty) {
       onSlotPressLegacy(dayIndex, periodIndex);
     } else if (isEmpty) {
@@ -60,61 +82,17 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
     }
   };
 
-  if (cellStatus) {
-    if (cellStatus === "taught") {
-      return (
-        <View style={styles.container}>
-          <View style={styles.taughtSlot}>
-            <Text style={styles.taughtSlotText}>Đã dạy</Text>
-          </View>
-        </View>
-      );
-    }
-    let slotStyle = styles.filledSlot;
-    let slotText = text;
-    let textStyle = styles.filledSlotText;
-    let disabled = false;
-    if (cellStatus === "current") {
-      slotStyle = styles.currentSlot;
-      textStyle = styles.currentSlotText;
-      disabled = true;
-    } else if (cellStatus === "exchangeable") {
-      slotStyle = isSelected ? styles.selectedSlot : styles.exchangeableSlot;
-      textStyle = isSelected
-        ? styles.selectedSlotText
-        : styles.exchangeableSlotText;
-      slotText = isSelected ? "Đã chọn" : text;
-      disabled = false;
-    }
-    return (
-      <View style={styles.container}>
-        <TouchableOpacity
-          style={slotStyle}
-          onPress={handleAdd}
-          activeOpacity={disabled ? 1 : 0.7}
-          disabled={disabled}
-        >
-          <Text style={textStyle} numberOfLines={2} ellipsizeMode="tail">
-            {slotText}
-          </Text>
-        </TouchableOpacity>
-        {hasNotification && (
-          <View style={styles.notificationPin}>
-            <FontAwesome
-              name="exclamation"
-              size={12}
-              color="#fff"
-              style={styles.notificationText}
-            />
-          </View>
-        )}
-      </View>
-    );
-  }
-
   let slotStyle = styles.filledSlot;
   let slotText = text;
   let textStyle = styles.filledSlotText;
+  let showNotification = hasNotification;
+
+  // Slot hoạt động cá nhân
+  if (type === "user-activity") {
+    slotStyle = styles.userActivitySlot;
+    textStyle = styles.userActivitySlotText;
+  }
+
   if (isEmpty) {
     slotStyle = styles.emptySlot as any;
     textStyle = styles.emptySlotText;
@@ -136,17 +114,17 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
         <Text style={textStyle} numberOfLines={2} ellipsizeMode="tail">
           {slotText}
         </Text>
+        {showNotification && (
+          <View style={styles.notificationPin}>
+            <FontAwesome
+              name="exclamation"
+              size={12}
+              color="#fff"
+              style={styles.notificationText}
+            />
+          </View>
+        )}
       </TouchableOpacity>
-      {hasNotification && (
-        <View style={styles.notificationPin}>
-          <FontAwesome
-            name="exclamation"
-            size={12}
-            color="#fff"
-            style={styles.notificationText}
-          />
-        </View>
-      )}
     </View>
   );
 };
@@ -341,6 +319,32 @@ const styles = StyleSheet.create({
   notificationText: {
     color: "#fff",
     fontSize: 9,
+    fontFamily: "Baloo2-SemiBold",
+  },
+  userActivitySlot: {
+    backgroundColor: "#229A89",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#229A89",
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    width: "90%",
+    height: 77,
+    minHeight: 77,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+    elevation: 3,
+  },
+  userActivitySlotText: {
+    color: "#fff",
+    fontSize: 9,
+    textAlign: "center",
+    includeFontPadding: false,
+    textAlignVertical: "center",
     fontFamily: "Baloo2-SemiBold",
   },
 });

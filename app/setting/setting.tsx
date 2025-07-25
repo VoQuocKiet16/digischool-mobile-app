@@ -21,7 +21,6 @@ const Setting: React.FC = () => {
       await AsyncStorage.clear();
       router.replace("/auth/login");
     } catch (err) {
-      console.log("Logout error in setting:", err);
     }
   };
 
