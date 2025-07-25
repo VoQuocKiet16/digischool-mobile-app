@@ -98,41 +98,19 @@ function RootLayoutContent() {
   const tabs = role === "manager" ? managerTabs : studentTabs;
   // Xác định tab nào đang active
   const currentRoute = pathname;
-  // Các route cần ẩn tabbar
-  const hiddenTabBarRoutes = [
-    "/auth",
-    "/login",
-    "/news/add_news",
-    "/news/edit_news",
-    "/message/message_box",
-    "/notification/notification_detail",
-    "/notification/notification_create",
-    "/note/note",
-    "/note/detail_note",
-    "/note/add_note",
-    "/teachers/leave_request/leave_request",
-    "/teachers/leave_request/leave_request_info",
-    "/students/leave_request/leave_request",
-    "/students/leave_request/leave_request_info",
-    "/news/news_detail",
-    "/news/manage_news",
-    "/news/add_news",
-    "/news/edit_news",
-    "/teachers/lesson_request/substitute_request",
-    "/teachers/lesson_request/swap_schedule",
-    "/teachers/lesson_request/swap_request",
-    "/teachers/lesson_request/makeup_schedule",
-    "/teachers/lesson_request/makeup_request",
-    "/teachers/lesson_information/lesson_evaluate",
-    "/students/lesson_information/lesson_evaluate",
-    "/message/add_contact",
-    "/activity/add_activity",
-    "/activity/detail_activity",
+  // Các route cần HIỆN tabbar
+  const shownTabBarRoutes = [
+    "/manage_account",
+    "/",
+    "/manage_process",
+    "/manage_rollcall",
+    "/manage_schedule",
+    "/manage_school",
+    "/message",
+    "/news",
   ];
-  // Kiểm tra có cần ẩn tabbar không
-  const isTabBarHidden = hiddenTabBarRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
+  // Chỉ hiện tabbar ở đúng các route này
+  const isTabBarHidden = !shownTabBarRoutes.some((route) => pathname === route);
   // Khi bấm tab
   const handleTabPress = (route: string) => {
     if (currentRoute !== route) {

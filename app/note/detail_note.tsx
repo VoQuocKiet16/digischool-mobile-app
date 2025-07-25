@@ -1,10 +1,15 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
@@ -130,109 +135,122 @@ const DetailNoteScreen = () => {
       subtitle={getLessonSubtitle(lessonData)}
       onBack={() => router.back()}
     >
-      <View style={styles.container}>
-        {/* Tiêu đề ghi chú */}
-        <View style={styles.fieldWrap}>
-          <View style={styles.outlineInputBox}>
-            <Text style={styles.floatingLabel}>
-              Tiêu đề ghi chú <Text style={styles.required}>*</Text>
-            </Text>
-            <TextInput
-              style={styles.inputTextOutline}
-              value={title}
-              onChangeText={setTitle}
-              placeholder="Nhập tiêu đề ghi chú"
-              placeholderTextColor="#9CA3AF"
-            />
-          </View>
-        </View>
-        {/* Ghi chú */}
-        <View style={styles.fieldWrap}>
-          <View style={styles.outlineInputBox}>
-            <Text style={styles.floatingLabel}>
-              Ghi chú <Text style={styles.required}>*</Text>
-            </Text>
-            <TextInput
-              style={[
-                styles.inputTextOutline,
-                { minHeight: 48, marginBottom: 20 },
-              ]}
-              value={note}
-              onChangeText={setNote}
-              placeholder="Nhập nội dung ghi chú"
-              placeholderTextColor="#9CA3AF"
-              multiline={true}
-              blurOnSubmit={true}
-            />
-          </View>
-        </View>
-        {/* Nhắc nhở */}
-        <RemindPicker
-          remind={remind}
-          setRemind={setRemind}
-          remindTime={remindTime}
-          setRemindTime={setRemindTime}
-          REMIND_OPTIONS={REMIND_OPTIONS}
-          ITEM_HEIGHT={ITEM_HEIGHT}
-          PADDING_COUNT={PADDING_COUNT}
-        />
-        {error ? (
-          <Text
-            style={{
-              color: "red",
-              textAlign: "center",
-              marginBottom: 8,
-              fontFamily: "Baloo2-Medium",
-            }}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        // keyboardVerticalOffset={80}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
           >
-            {error}
-          </Text>
-        ) : null}
-        {/* Nút Xoá và Lưu */}
-        <View style={styles.buttonRow}>
-          <TouchableOpacity
-            style={[styles.deleteBtn, isDeleting && styles.deleteBtnDisabled]}
-            disabled={isDeleting}
-            onPress={handleDelete}
-          >
-            <Text
-              style={[styles.deleteBtnText, isDeleting && { color: "#29375C" }]}
-            >
-              {isDeleting ? "Đang xóa..." : "Xóa bỏ"}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.saveBtn,
-              (!isValid || isUpdating) && styles.saveBtnDisabled,
-            ]}
-            disabled={!isValid || isUpdating}
-            onPress={handleUpdate}
-          >
-            <Text style={styles.saveBtnText}>
-              {isUpdating ? "Đang lưu..." : "Lưu"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-        <LoadingModal
-          visible={showLoading}
-          text={
-            loadingSuccess
-              ? "Cập nhật thành công"
-              : isDeleting
-              ? "Đang xóa ghi chú..."
-              : "Đang cập nhật ghi chú..."
-          }
-          success={loadingSuccess}
-        />
-        <ConfirmDeleteModal
-          visible={showDeleteModal}
-          onCancel={() => setShowDeleteModal(false)}
-          onConfirm={confirmDelete}
-          title="Xác nhận xóa?"
-          message={`Xóa bỏ sẽ không thể hoàn lại được!\nBạn chắc chắn muốn xóa bỏ?`}
-        />
-      </View>
+            <View style={styles.container}>
+              {/* Tiêu đề ghi chú */}
+              <View style={styles.fieldWrap}>
+                <View style={styles.outlineInputBox}>
+                  <Text style={styles.floatingLabel}>
+                    Tiêu đề ghi chú <Text style={styles.required}>*</Text>
+                  </Text>
+                  <TextInput
+                    style={styles.inputTextOutline}
+                    value={title}
+                    onChangeText={setTitle}
+                    placeholder="Nhập tiêu đề ghi chú"
+                    placeholderTextColor="#9CA3AF"
+                  />
+                </View>
+              </View>
+              {/* Ghi chú */}
+              <View style={styles.fieldWrap}>
+                <View style={styles.outlineInputBox}>
+                  <Text style={styles.floatingLabel}>
+                    Ghi chú <Text style={styles.required}>*</Text>
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.inputTextOutline,
+                      { minHeight: 48, marginBottom: 20 },
+                    ]}
+                    value={note}
+                    onChangeText={setNote}
+                    placeholder="Nhập nội dung ghi chú"
+                    placeholderTextColor="#9CA3AF"
+                    multiline={true}
+                    blurOnSubmit={true}
+                  />
+                </View>
+              </View>
+              {/* Nhắc nhở */}
+              <RemindPicker
+                remind={remind}
+                setRemind={setRemind}
+                remindTime={remindTime}
+                setRemindTime={setRemindTime}
+                REMIND_OPTIONS={REMIND_OPTIONS}
+                ITEM_HEIGHT={ITEM_HEIGHT}
+                PADDING_COUNT={PADDING_COUNT}
+              />
+              {error ? (
+                <Text
+                  style={{
+                    color: "red",
+                    textAlign: "center",
+                    marginBottom: 8,
+                    fontFamily: "Baloo2-Medium",
+                  }}
+                >
+                  {error}
+                </Text>
+              ) : null}
+              {/* Nút Xoá và Lưu */}
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[styles.deleteBtn, isDeleting && styles.deleteBtnDisabled]}
+                  disabled={isDeleting}
+                  onPress={handleDelete}
+                >
+                  <Text
+                    style={[styles.deleteBtnText, isDeleting && { color: "#29375C" }]}
+                  >
+                    {isDeleting ? "Đang xóa..." : "Xóa bỏ"}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.saveBtn,
+                    (!isValid || isUpdating) && styles.saveBtnDisabled,
+                  ]}
+                  disabled={!isValid || isUpdating}
+                  onPress={handleUpdate}
+                >
+                  <Text style={styles.saveBtnText}>
+                    {isUpdating ? "Đang lưu..." : "Lưu"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <LoadingModal
+                visible={showLoading}
+                text={
+                  loadingSuccess
+                    ? "Cập nhật thành công"
+                    : isDeleting
+                    ? "Đang xóa ghi chú..."
+                    : "Đang cập nhật ghi chú..."
+                }
+                success={loadingSuccess}
+              />
+              <ConfirmDeleteModal
+                visible={showDeleteModal}
+                onCancel={() => setShowDeleteModal(false)}
+                onConfirm={confirmDelete}
+                title="Xác nhận xóa?"
+                message={`Xóa bỏ sẽ không thể hoàn lại được!\nBạn chắc chắn muốn xóa bỏ?`}
+              />
+            </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </HeaderLayout>
   );
 };

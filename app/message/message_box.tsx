@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -46,7 +47,7 @@ function formatDateLabel(dateString: string) {
 
 export default function MessageBoxScreen() {
   // Nhận params từ router
-  const { userId, token, myId, name } = useLocalSearchParams();
+  const { userId, token: paramToken, myId: paramMyId, name } = useLocalSearchParams();
 
   const router = useRouter();
   const [messages, setMessages] = useState<any[]>([]);
@@ -57,6 +58,35 @@ export default function MessageBoxScreen() {
   const flatListRef = useRef<FlatList>(null);
   const [selectedImage, setSelectedImage] = useState<any>(null);
   const [imageLoading, setImageLoading] = useState(false);
+  const [token, setToken] = useState<string | null>(paramToken as string || null);
+  const [myId, setMyId] = useState<string | null>(paramMyId as string || null);
+  const [isReady, setIsReady] = useState(false);
+  const [myName, setMyName] = useState<string>('bạn');
+
+  // Lấy token và myId từ AsyncStorage nếu chưa có
+  useEffect(() => {
+    let done = false;
+    const getData = async () => {
+      if (!token) {
+        const t = await AsyncStorage.getItem("token");
+        if (t) setToken(t);
+      }
+      if (!myId) {
+        const id = await AsyncStorage.getItem("userId");
+        if (id) setMyId(id);
+      }
+      setIsReady(true);
+    };
+    getData();
+    return () => { done = true; };
+  }, []);
+
+  // Lấy tên người gửi từ AsyncStorage
+  useEffect(() => {
+    AsyncStorage.getItem('name').then(name => {
+      if (name) setMyName(name);
+    });
+  }, []);
 
   // Reset imageLoading khi selectedImage thay đổi
   useEffect(() => {
@@ -71,7 +101,14 @@ export default function MessageBoxScreen() {
 
   // Lấy lịch sử chat và kết nối socket
   useEffect(() => {
-    if (!userId || !token || !myId) {
+    if (!isReady) return; // Chờ lấy xong token/myId
+    if (
+      typeof userId !== 'string' || !userId.trim() ||
+      typeof token !== 'string' || !token.trim() ||
+      typeof myId !== 'string' || !myId.trim()
+    ) {
+      setLoading(false);
+      setError("Thiếu thông tin người dùng hoặc token");
       return;
     }
     setLoading(true);
@@ -80,7 +117,8 @@ export default function MessageBoxScreen() {
       .getMessagesWith(userId as string, token as string)
       .then((res) => {
         if (res.success) {
-          setMessages(res.data.reverse());
+          // Lọc bỏ tin nhắn rỗng (không có content và mediaUrl)
+          const filtered = (res.data || []).filter((msg: any) => !!msg.content || !!msg.mediaUrl);
         } else {
           setError(res.message || "Lỗi không xác định");
           setMessages([]);
@@ -122,7 +160,7 @@ export default function MessageBoxScreen() {
     return () => {
       chatService.disconnect();
     };
-  }, [userId, token, myId]);
+  }, [isReady, userId, token, myId]);
 
   useEffect(() => {
     if (error) {
@@ -401,6 +439,32 @@ export default function MessageBoxScreen() {
               <Text style={{ color: "red", textAlign: "center", marginTop: 40 }}>
                 {error}
               </Text>
+            ) : messages.length === 0 ? (
+              <View style={{ alignItems: 'center', marginTop: 60, paddingHorizontal: 24 }}>
+                <View style={{
+                  backgroundColor: '#fff',
+                  borderRadius: 20,
+                  paddingVertical: 28,
+                  paddingHorizontal: 20,
+                  alignItems: 'center',
+                  shadowColor: '#000',
+                  shadowOpacity: 0.06,
+                  shadowRadius: 8,
+                  elevation: 2,
+                  width: 320,
+                  maxWidth: '100%',
+                }}>
+                  <Text style={{ color: '#29375C', fontSize: 18, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', fontFamily: 'Baloo2-Bold' }}>
+                    Xin chào bạn !
+                  </Text>
+                  <Text style={{ color: '#29375C', fontSize: 15, marginBottom: 18, textAlign: 'center', lineHeight: 22 }}>
+                    Hãy gửi tin nhắn để bắt đầu cuộc trò chuyện với {name || 'người nhận'} nhé.
+                  </Text>
+                  <Text style={{ color: '#888', fontSize: 13, textAlign: 'center', maxWidth: 260 }}>
+                    Khi bạn gửi tin nhắn, {name || 'người nhận'} sẽ nhìn thấy tin nhắn của bạn.
+                  </Text>
+                </View>
+              </View>
             ) : (
               <FlatList
                 ref={flatListRef}

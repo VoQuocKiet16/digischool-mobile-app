@@ -46,8 +46,6 @@ export default function NotificationDetailScreen() {
   const relatedObjectRequestType = relatedObject?.requestType || params.relatedObject_requestType;
   const relatedObjectStatus = relatedObject?.status || params.relatedObject_status;
 
-  console.log("[DEBUG] requestType:", relatedObjectRequestType, "status:", relatedObjectStatus);
-
   const [loading, setLoading] = React.useState(false);
   const slideAnim = React.useRef(new Animated.Value(100)).current; // Initial position off-screen
 

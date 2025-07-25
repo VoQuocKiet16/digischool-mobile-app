@@ -230,7 +230,7 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
               </TouchableOpacity>
             );
           }}
-          contentContainerStyle={{ paddingBottom: 16 }}
+          contentContainerStyle={{ paddingBottom: 80 }}
           showsVerticalScrollIndicator={false}
         />
       )}

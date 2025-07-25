@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Dimensions,
   FlatList,
   Image,
   ScrollView,
@@ -20,6 +21,8 @@ import {
   unfavoriteNews,
 } from "../../services/news.service";
 import { getAllSubjects } from "../../services/subjects.service";
+
+const { width, height } = Dimensions.get('window');
 
 export default function NewsFeedScreen() {
   const [tab, setTab] = useState<"news" | "favorite">("news");
@@ -63,7 +66,7 @@ export default function NewsFeedScreen() {
       if (res.success && res.data?.subjects) {
         // Map subjectName sang icon
         const iconMap: Record<string, any> = {
-          "Ngữ Văn": require("../../assets/images/literature.png"),
+          "Ngữ văn": require("../../assets/images/literature.png"),
           Toán: require("../../assets/images/math.png"),
           "Ngoại ngữ": require("../../assets/images/foreign.png"),
           "Vật lý": require("../../assets/images/physics.png"),
@@ -568,22 +571,23 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   subjectScroll: {
-    marginTop: 12,
-    paddingVertical: 8,
-    paddingLeft: 8,
+    marginTop: height * 0.010, // responsive theo chiều cao
+    marginBottom: height * 0.005, // responsive theo chiều cao
+    // paddingVertical: height * 0.001, // responsive theo chiều cao
+    paddingLeft: width * 0.02, // responsive theo chiều rộng
   },
   subjectItem: {
     alignItems: "center",
-    marginRight: 18,
-    minWidth: 56,
+    marginRight: width * 0.045, // responsive
+    minWidth: width * 0.14, // responsive
   },
   subjectIconWrap: {
-    width: 65,
-    height: 65,
-    borderRadius: 50,
+    width: width * 0.17,
+    height: width * 0.17,
+    borderRadius: width * 0.13,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 5,
+    marginBottom: height * 0.006,
     borderWidth: 2,
     borderColor: "transparent",
   },
@@ -592,30 +596,31 @@ const styles = StyleSheet.create({
     backgroundColor: "#E6E9F0",
   },
   subjectIcon: {
-    width: 48,
-    height: 48,
+    width: width * 0.12,
+    height: width * 0.12,
   },
   subjectLabel: {
-    fontSize: 13,
+    fontSize: width * 0.033,
     color: "#29375C",
     fontWeight: "500",
-    marginBottom: 2,
+    marginBottom: height * 0.002,
   },
   subjectLabelActive: {
     color: "#29375C",
     fontWeight: "bold",
   },
   subjectUnderline: {
-    width: 24,
-    height: 3,
+    width: width * 0.06,
+    height: height * 0.004,
     backgroundColor: "#29375C",
     borderRadius: 2,
-    marginTop: 2,
+    marginTop: height * 0.002,
   },
   newsCardContainer: {
-    width: 320,
-    height: 430,
+    width: width * 0.85, // 85% chiều rộng màn hình
+    height: height * 0.50, // 55% chiều cao màn hình
     marginRight: 20,
+    marginTop: 8,
   },
   newsCard: {
     backgroundColor: "#fff",
