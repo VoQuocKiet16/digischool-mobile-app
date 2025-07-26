@@ -119,6 +119,13 @@ export default function MessageBoxScreen() {
         if (res.success) {
           // Lọc bỏ tin nhắn rỗng (không có content và mediaUrl)
           const filtered = (res.data || []).filter((msg: any) => !!msg.content || !!msg.mediaUrl);
+          // Sắp xếp theo thời gian tăng dần (cũ nhất lên đầu)
+          const sorted = filtered.sort((a: any, b: any) => {
+            const timeA = new Date(a.createdAt || a.time || 0).getTime();
+            const timeB = new Date(b.createdAt || b.time || 0).getTime();
+            return timeA - timeB;
+          });
+          setMessages(sorted);
         } else {
           setError(res.message || "Lỗi không xác định");
           setMessages([]);

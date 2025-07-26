@@ -27,7 +27,7 @@ const Setting: React.FC = () => {
   const getRoleDisplay = (roles: string[]) => {
     if (roles.includes("student")) return "Học sinh";
     if (roles.includes("teacher")) return "Giáo viên";
-    if (roles.includes("admin")) return "Quản trị viên";
+    if (roles.includes("manager")) return "Quản trị viên";
     return "Người dùng";
   };
 
@@ -45,7 +45,7 @@ const Setting: React.FC = () => {
           .join(", ");
       }
       return "Chưa có thông tin bộ môn";
-    } else if (roles.includes("admin")) {
+    } else if (roles.includes("manager")) {
       return "Quản trị hệ thống";
     }
 
@@ -67,9 +67,7 @@ const Setting: React.FC = () => {
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>
               {userData?.name
-                ? userData.name.length > 15
-                  ? `${userData.name.substring(0, 15)}...`
-                  : userData.name
+                ? userData.name
                 : "Đang tải..."}
             </Text>
             <Text style={styles.role}>

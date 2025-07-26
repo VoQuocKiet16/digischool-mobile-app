@@ -10,12 +10,11 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Modal,
   StyleSheet,
   Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  View,
+  View
 } from "react-native";
 import {
   completeLesson,
@@ -218,9 +217,11 @@ const LessonDetailScreen = () => {
       subtitle={getLessonSubtitle(lessonData)}
       onBack={() => router.back()}
       rightIcon={
-        <TouchableOpacity onPress={() => setMenuVisible(true)}>
-          <Ionicons name="menu" size={24} color="#29375C" />
-        </TouchableOpacity>
+        <TouchableWithoutFeedback onPress={() => setMenuVisible(!menuVisible)}>
+          <TouchableOpacity onPress={() => setMenuVisible(!menuVisible)}>
+            <Ionicons name="menu" size={32} color="#29375C" />
+          </TouchableOpacity>
+        </TouchableWithoutFeedback>
       }
     >
       <RefreshableScrollView
@@ -281,121 +282,119 @@ const LessonDetailScreen = () => {
         iconColor="#fff"
         iconBgColor="#29375C"
       />
-      <Modal
-        visible={menuVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setMenuVisible(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setMenuVisible(false)}>
-          <View style={styles.overlay}>
-            <View style={styles.menuBox}>
-              <TouchableOpacity
-                style={[
-                  styles.menuItem,
-                  {
-                    flexDirection: "row",
-                    alignItems: "center",
-                    opacity: pendingRequest ? 0.5 : 1,
+     {menuVisible && (
+        <View style={styles.overlay}>
+          <TouchableOpacity 
+            // style={{ flex: 1 }} 
+            onPress={() => setMenuVisible(false)}
+            activeOpacity={1}
+          />
+          <View style={styles.menuBox}>
+            <TouchableOpacity
+              style={[
+                styles.menuItem,
+                {
+                  flexDirection: "row",
+                  alignItems: "center",
+                  opacity: pendingRequest ? 0.5 : 1,
+                },
+              ]}
+              onPress={() => {
+                if (pendingRequest) return;
+                setMenuVisible(false);
+                router.push({
+                  pathname: "/teachers/lesson_request/substitute_request",
+                  params: { lessonId: lessonId },
+                });
+              }}
+              disabled={!!pendingRequest}
+            >
+              <MaterialIcons name="swap-horiz" size={20} color="#fff" />
+              <Text style={[styles.menuText, { marginLeft: 8 }]}>
+                Dạy thay
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.menuItem,
+                {
+                  flexDirection: "row",
+                  alignItems: "center",
+                  opacity: pendingRequest ? 0.5 : 1,
+                },
+              ]}
+              onPress={() => {
+                if (pendingRequest) return;
+                setMenuVisible(false);
+                router.push({
+                  pathname: "/teachers/lesson_request/swap_schedule",
+                  params: {
+                    lessonId: lessonId,
+                    className: lessonData?.class?.className,
+                    lessonFrom: JSON.stringify(lessonData),
+                    lessonDate: lessonData?.scheduledDate,
+                    lessonYear: lessonData?.academicYear?.name || "2025-2026",
                   },
-                ]}
-                onPress={() => {
-                  if (pendingRequest) return;
-                  setMenuVisible(false);
-                  router.push({
-                    pathname: "/teachers/lesson_request/substitute_request",
-                    params: { lessonId: lessonId },
-                  });
-                }}
-                disabled={!!pendingRequest}
-              >
-                <MaterialIcons name="swap-horiz" size={20} color="#fff" />
-                <Text style={[styles.menuText, { marginLeft: 8 }]}>
-                  Dạy thay
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.menuItem,
-                  {
-                    flexDirection: "row",
-                    alignItems: "center",
-                    opacity: pendingRequest ? 0.5 : 1,
+                });
+              }}
+              disabled={!!pendingRequest}
+            >
+              <MaterialIcons name="compare-arrows" size={20} color="#fff" />
+              <Text style={[styles.menuText, { marginLeft: 8 }]}>
+                Đổi tiết
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.menuItem,
+                {
+                  flexDirection: "row",
+                  alignItems: "center",
+                  opacity: pendingRequest ? 0.5 : 1,
+                },
+              ]}
+              onPress={() => {
+                if (pendingRequest) return;
+                setMenuVisible(false);
+                router.push({
+                  pathname: "/teachers/lesson_request/makeup_schedule",
+                  params: {
+                    lessonId: lessonId,
+                    className: lessonData?.class?.className,
+                    lessonDate: lessonData?.scheduledDate,
+                    lessonYear: lessonData?.academicYear?.name || "2025-2026",
                   },
-                ]}
-                onPress={() => {
-                  if (pendingRequest) return;
-                  setMenuVisible(false);
-                  router.push({
-                    pathname: "/teachers/lesson_request/swap_schedule",
-                    params: {
-                      lessonId: lessonId,
-                      className: lessonData?.class?.className,
-                      lessonFrom: JSON.stringify(lessonData),
-                      lessonDate: lessonData?.scheduledDate,
-                      lessonYear: lessonData?.academicYear?.name || "2025-2026",
-                    },
-                  });
-                }}
-                disabled={!!pendingRequest}
-              >
-                <MaterialIcons name="compare-arrows" size={20} color="#fff" />
-                <Text style={[styles.menuText, { marginLeft: 8 }]}>
-                  Đổi tiết
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.menuItem,
-                  {
-                    flexDirection: "row",
-                    alignItems: "center",
-                    opacity: pendingRequest ? 0.5 : 1,
+                });
+              }}
+              disabled={!!pendingRequest}
+            >
+              <MaterialIcons name="event-available" size={20} color="#fff" />
+              <Text style={[styles.menuText, { marginLeft: 8 }]}>Dạy bù</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.menuItem,
+                { flexDirection: "row", alignItems: "center" },
+              ]}
+              onPress={() => {
+                setMenuVisible(false);
+                router.push({
+                  pathname: "/note/note",
+                  params: {
+                    lessonId: lessonId,
+                    lessonData: JSON.stringify(lessonData),
                   },
-                ]}
-                onPress={() => {
-                  if (pendingRequest) return;
-                  setMenuVisible(false);
-                  router.push({
-                    pathname: "/teachers/lesson_request/makeup_schedule",
-                    params: {
-                      lessonId: lessonId,
-                      className: lessonData?.class?.className,
-                      lessonDate: lessonData?.scheduledDate,
-                      lessonYear: lessonData?.academicYear?.name || "2025-2026",
-                    },
-                  });
-                }}
-                disabled={!!pendingRequest}
-              >
-                <MaterialIcons name="event-available" size={20} color="#fff" />
-                <Text style={[styles.menuText, { marginLeft: 8 }]}>Dạy bù</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.menuItem,
-                  { flexDirection: "row", alignItems: "center" },
-                ]}
-                onPress={() => {
-                  setMenuVisible(false);
-                  router.push({
-                    pathname: "/note/note",
-                    params: {
-                      lessonId: lessonId,
-                      lessonData: JSON.stringify(lessonData),
-                    },
-                  });
-                }}
-              >
-                <MaterialIcons name="note" size={20} color="#fff" />
-                <Text style={[styles.menuText, { marginLeft: 8 }]}>
-                  Ghi chú
-                </Text>
-              </TouchableOpacity>
-            </View>
+                });
+              }}
+            >
+              <MaterialIcons name="note" size={20} color="#fff" />
+              <Text style={[styles.menuText, { marginLeft: 8 }]}>
+                Ghi chú
+              </Text>
+            </TouchableOpacity>
           </View>
-        </TouchableWithoutFeedback>
-      </Modal>
+        </View>
+      )}
     </HeaderLayout>
   );
 };
@@ -440,14 +439,16 @@ const styles = StyleSheet.create({
   },
   overlay: {
     position: "absolute",
-    top: 120,
+    top: 0,
     left: 0,
-    right: 20,
+    right: 0,
     bottom: 0,
     flex: 1,
     backgroundColor: "transparent",
     justifyContent: "flex-start",
     alignItems: "flex-end",
+    paddingTop: 80,
+    paddingRight: 15,
   },
   menuBox: {
     backgroundColor: "#29375C",
@@ -455,6 +456,15 @@ const styles = StyleSheet.create({
     padding: 8,
     minWidth: 120,
     marginTop: 0,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    zIndex: 1000,
+    position: "absolute",
+    top: 80,
+    right: 15,
   },
   menuItem: {
     paddingVertical: 8,
