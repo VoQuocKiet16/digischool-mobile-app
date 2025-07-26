@@ -58,6 +58,11 @@ function RootLayoutContent() {
   ];
   const managerTabs = [
     {
+      name: "Quản lý",
+      route: "/manage_school",
+      icon: <MaterialIcons name="school" size={24} color="#22304A" />,
+    },
+    {
       name: "Tài khoản",
       route: "/manage_account",
       icon: <MaterialIcons name="group" size={24} color="#22304A" />,
@@ -77,11 +82,7 @@ function RootLayoutContent() {
       route: "/manage_schedule",
       icon: <MaterialIcons name="calendar-today" size={24} color="#22304A" />,
     },
-    {
-      name: "Quản lý",
-      route: "/manage_school",
-      icon: <MaterialIcons name="school" size={24} color="#22304A" />,
-    },
+    
   ];
 
   // Xác định role

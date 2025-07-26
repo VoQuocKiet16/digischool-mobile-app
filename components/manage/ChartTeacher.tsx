@@ -21,14 +21,24 @@ export default function ChartTeacher() {
   const barWidth = 24;
   const barGap = 18;
   const chartHeight = 120;
-  const days = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+  const days = ["T2", "T3", "T4", "T5", "T6", "T7"];
 
   function getBarStack(bar: any) {
     let y0 = 0;
     return [
       { h: bar.daythay, color: barColors[0], y: y0, label: bar.daythay },
-      { h: bar.doitt, color: barColors[1], y: (y0 += bar.daythay), label: bar.doitt },
-      { h: bar.daybu, color: barColors[2], y: (y0 += bar.doitt), label: bar.daybu },
+      {
+        h: bar.doitt,
+        color: barColors[1],
+        y: (y0 += bar.daythay),
+        label: bar.doitt,
+      },
+      {
+        h: bar.daybu,
+        color: barColors[2],
+        y: (y0 += bar.doitt),
+        label: bar.daybu,
+      },
     ];
   }
 
@@ -37,38 +47,59 @@ export default function ChartTeacher() {
       {/* Card 1: Biểu đồ hoạt động */}
       <View style={styles.card}>
         <View style={styles.headerRow}>
-          <TouchableOpacity onPress={() => router.push("/manage/list_activity?type=teacher")}> 
-            <Text style={styles.cardTitle}>Biểu đồ hoạt động</Text>
+          <TouchableOpacity
+            onPress={() => router.push("/manage/list_activity?type=teacher")}
+          >
+            <Text style={styles.cardTitle}>
+              <Text style={[styles.linkText, { textDecorationLine: "underline" }]}>Biểu đồ hoạt động</Text>
+            </Text>
           </TouchableOpacity>
-          <MaterialIcons name="subdirectory-arrow-left" size={20} color="#3B4363" />
         </View>
         <View style={styles.chartWrap}>
           {/* Trục Y + line ngang */}
-          <View style={{justifyContent: 'space-between', alignItems: 'flex-end', marginRight: 6, height: chartHeight}}>
-            {[8,6,4,2,0].map((v, idx) => (
-              <View key={v} style={{flexDirection: 'row', alignItems: 'center'}}>
+          <View
+            style={{
+              justifyContent: "space-between",
+              alignItems: "flex-end",
+              marginRight: 6,
+              height: chartHeight,
+            }}
+          >
+            {[8, 6, 4, 2, 0].map((v, idx) => (
+              <View
+                key={v}
+                style={{ flexDirection: "row", alignItems: "center" }}
+              >
                 <Text style={styles.axisY}>{v}</Text>
-                <View style={{height: 1, backgroundColor: '#BFC6D1', width: 170, marginLeft: 4, opacity: idx===4?0:1}} />
+                <View
+                  style={{
+                    height: 1,
+                    backgroundColor: "#BFC6D1",
+                    width: 170,
+                    marginLeft: 4,
+                    opacity: idx === 4 ? 0 : 1,
+                  }}
+                />
               </View>
             ))}
           </View>
           {/* Chart */}
-          <View style={{position: 'absolute', left: 44, top: 0}}>
-            <Svg width={barWidth*6 + barGap*5} height={chartHeight}>
+          <View style={{ position: "absolute", left: 44, top: 0 }}>
+            <Svg width={barWidth * 6 + barGap * 5} height={chartHeight}>
               {chartData.map((bar, i) => {
                 let stack = getBarStack(bar);
                 let yOffset = 0;
                 return (
                   <G key={i}>
                     {stack.map((seg, j) => {
-                      const h = seg.h * chartHeight / maxY;
+                      const h = (seg.h * chartHeight) / maxY;
                       const y = chartHeight - yOffset - h;
                       yOffset += h;
                       if (seg.h === 0) return null;
                       return (
                         <G key={j}>
                           <Rect
-                            x={i*(barWidth+barGap)}
+                            x={i * (barWidth + barGap)}
                             y={y}
                             width={barWidth}
                             height={h}
@@ -77,14 +108,16 @@ export default function ChartTeacher() {
                           />
                           {/* Số trên bar, căn giữa ô */}
                           <SvgText
-                            x={i*(barWidth+barGap) + barWidth/2}
-                            y={y + h/2 + 6}
+                            x={i * (barWidth + barGap) + barWidth / 2}
+                            y={y + h / 2 + 6}
                             fontSize={16}
                             fontWeight="bold"
                             fill="#fff"
                             textAnchor="middle"
                             alignmentBaseline="middle"
-                          >{seg.label}</SvgText>
+                          >
+                            {seg.label}
+                          </SvgText>
                         </G>
                       );
                     })}
@@ -93,9 +126,18 @@ export default function ChartTeacher() {
               })}
             </Svg>
             {/* Nhãn trục X */}
-            <View style={{flexDirection: 'row', justifyContent: 'space-between', width: barWidth*6 + barGap*5, marginTop: 2}}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                width: barWidth * 6 + barGap * 5,
+                marginTop: 2,
+              }}
+            >
               {days.map((d, i) => (
-                <Text key={i} style={styles.axisX}>{d}</Text>
+                <Text key={i} style={styles.axisX}>
+                  {d}
+                </Text>
               ))}
             </View>
           </View>
@@ -104,127 +146,137 @@ export default function ChartTeacher() {
         <View style={styles.legendRow}>
           {barLabels.map((label, i) => (
             <View key={label} style={styles.legendItem}>
-              <View style={[styles.legendColor, {backgroundColor: barColors[i]}]} />
+              <View
+                style={[styles.legendColor, { backgroundColor: barColors[i] }]}
+              />
               <Text style={styles.legend}>{label}</Text>
             </View>
           ))}
         </View>
       </View>
       {/* Card 2: Vắng có phép */}
-      <View style={styles.card2}>
-        <TouchableOpacity activeOpacity={0.8} onPress={() => router.push("/manage/attended?type=teacher")} style={{flex: 1}}>
-          <View style={styles.headerRow}>
-            <Text style={styles.cardTitle2}>Vắng có phép</Text>
-            <MaterialIcons name="subdirectory-arrow-left" size={20} color="#3B4363" />
-          </View>
-          <View style={styles.centerBox}>
-            <Text style={styles.bigNumber}>3</Text>
+      <View style={styles.card}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => router.push("/manage/attended?type=teacher")}
+          style={{ flex: 1 }}
+        >
+          <Text style={styles.cardTitle}>
+            <Text style={[styles.linkText, { textDecorationLine: "underline" }]}>Vắng có phép</Text>
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "flex-end",
+              marginTop: 2,
+              justifyContent: "center",
+            }}
+          >
+            <Text style={styles.bigNumber2}>3</Text>
             <Text style={styles.unitText}>người</Text>
           </View>
         </TouchableOpacity>
       </View>
       {/* Card 3: Vắng không phép */}
-      <TouchableOpacity activeOpacity={0.8} onPress={() => router.push("/manage/absence?type=teacher")} style={styles.card2}>
-        <View style={styles.headerRow}>
-          <Text style={styles.cardTitle2}>Vắng không phép</Text>
-          <MaterialIcons name="subdirectory-arrow-left" size={20} color="#3B4363" />
-        </View>
-        <View style={styles.centerBox}>
-          <Text style={styles.bigNumber}>3</Text>
-          <Text style={styles.unitText}>người</Text>
-        </View>
-      </TouchableOpacity>
+      <View style={styles.card}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => router.push("/manage/absence?type=teacher")}
+          style={{ flex: 1 }}
+        >
+          <Text style={styles.cardTitle}>
+            <Text style={[styles.linkText, { textDecorationLine: "underline" }]}>Vắng không phép</Text>
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "flex-end",
+              marginTop: 2,
+              justifyContent: "center",
+            }}
+          >
+            <Text style={styles.bigNumber2}>3</Text>
+            <Text style={styles.unitText}>người</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    width: '100%',
+    flexDirection: "column",
+    alignItems: "center",
+    width: "100%",
     marginTop: 8,
-    marginHorizontal: 0,
+    paddingBottom: 100,
+    paddingHorizontal: 12,
   },
   card: {
-    backgroundColor: '#D7DCE5',
-    borderRadius: 22,
-    padding: 18,
-    width: '92%',
+    backgroundColor: "#D7DCE5",
+    borderRadius: 26,
+    padding: 22,
+    width: "92%",
     minHeight: 120,
     marginBottom: 18,
-    alignSelf: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  card2: {
-    backgroundColor: '#D7DCE5',
-    borderRadius: 22,
-    padding: 18,
-    width: '92%',
-    minHeight: 90,
-    marginBottom: 18,
-    alignSelf: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
+    alignSelf: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 2,
   },
   headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 2,
   },
   cardTitle: {
-    fontSize: 18,
-    color: '#1A2343',
-    fontWeight: '500',
-    textDecorationLine: 'underline',
+    fontSize: 20,
+    marginBottom: 2,
   },
-  cardTitle2: {
-    fontSize: 16,
-    color: '#1A2343',
-    fontWeight: '500',
-    textDecorationLine: 'underline',
+  linkText: {
+    color: "#29375C",
+    fontFamily: "Baloo2-Regular",
   },
   chartWrap: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     borderRadius: 16,
     paddingVertical: 8,
     paddingLeft: 0,
     marginTop: 8,
     marginBottom: 0,
     minHeight: 150,
-    position: 'relative',
+    position: "relative",
   },
   axisY: {
     fontSize: 12,
-    color: '#3B4363',
+    color: "#29375C",
+    fontFamily: "Baloo2-Regular",
     marginBottom: 0,
     width: 32,
-    textAlign: 'right',
+    textAlign: "right",
   },
   axisX: {
-    fontSize: 12,
-    color: '#3B4363',
-    width: 36,
-    textAlign: 'center',
-    marginHorizontal: 1,
+    fontSize: 14,
+    color: "#29375C",
+    fontFamily: "Baloo2-Regular",
+    width: 28,
+    textAlign: "center",
   },
   legendRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 10,
     marginLeft: 8,
   },
   legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginRight: 24,
   },
   legendColor: {
@@ -235,23 +287,32 @@ const styles = StyleSheet.create({
   },
   legend: {
     fontSize: 13,
-    color: '#3B4363',
+    color: "#29375C",
+    fontFamily: "Baloo2-Regular",
     marginLeft: 2,
   },
   centerBox: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 8,
   },
   bigNumber: {
     fontSize: 44,
-    color: '#1A2343',
-    fontWeight: 'bold',
+    color: "#1A2343",
+    fontWeight: "bold",
     letterSpacing: 1,
     marginBottom: -2,
   },
   unitText: {
-    fontSize: 16,
-    color: '#1A2343',
-    marginTop: -2,
+    fontSize: 18,
+    color: "#29375C",
+    fontFamily: "Baloo2-Regular",
+    marginLeft: 6,
+    marginBottom: 6,
+  },
+  bigNumber2: {
+    fontSize: 55,
+    color: "#29375C",
+    fontFamily: "Baloo2-Bold",
+    letterSpacing: 1,
   },
 });
