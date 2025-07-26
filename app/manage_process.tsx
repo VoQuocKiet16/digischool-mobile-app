@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import Svg, { Line, Text as SvgText } from 'react-native-svg';
 import Header from '../components/Header';
+import { fonts } from "../utils/responsive";
 
 const BLOCKS = ["Khối 10", "Khối 11", "Khối 12"];
 const SEMESTERS = ["Học kỳ I", "Học kỳ II"];
@@ -223,7 +224,7 @@ export default function ManageProcess() {
                   fontSize="12"
                   fontWeight="bold"
                   fill="#444"
-                  fontFamily="Baloo2-Bold"
+                  // fontFamily=fonts.bold
                 >Môn</SvgText>
                 <SvgText
                   x={36}
@@ -231,7 +232,7 @@ export default function ManageProcess() {
                   fontSize="12"
                   fontWeight="bold"
                   fill="#444"
-                  fontFamily="Baloo2-Bold"
+                  // fontFamily=fonts.bold
                 >Lớp</SvgText>
               </Svg>
             </View>
@@ -301,13 +302,13 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "bold",
     color: "#22304A",
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
   },
   studentName: {
     fontSize: 14,
     color: "#22304A",
     marginTop: 2,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   headerRight: {
     flexDirection: "row",
@@ -340,7 +341,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "bold",
     color: "#22304A",
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
     marginHorizontal: 18,
   },
   arrowBtn: {
@@ -366,7 +367,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 12,
     fontWeight: "bold",
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
     letterSpacing: 0.2,
   },
   dropdownOverlay: {

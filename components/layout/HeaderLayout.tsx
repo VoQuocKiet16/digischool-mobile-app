@@ -1,22 +1,23 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useFonts } from "expo-font";
 import React from "react";
 import {
   SafeAreaView,
   StyleSheet,
   Text,
-  TextStyle,
   TouchableOpacity,
   View,
 } from "react-native";
+import { fonts, responsiveValues } from "../../utils/responsive";
 
 interface HeaderLayoutProps {
   title: string;
+  subtitle?: string;
   onBack?: () => void;
   rightIcon?: React.ReactNode;
   onRightIconPress?: () => void;
-  children?: React.ReactNode;
-  style?: TextStyle;
-  subtitle?: string;
+  children: React.ReactNode;
+  style?: any;
 }
 
 const HeaderLayout: React.FC<HeaderLayoutProps> = ({
@@ -28,15 +29,32 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({
   children,
   style,
 }) => {
+  const [loaded] = useFonts({
+    "Baloo2-Bold": require("../../assets/fonts/Baloo2-Bold.ttf"),
+    "Baloo2-Medium": require("../../assets/fonts/Baloo2-Medium.ttf"),
+    // Có thể thêm các font khác nếu cần
+  });
+
+  if (!loaded) return null;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <TouchableOpacity
           onPress={onBack}
           style={styles.backBtn}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          hitSlop={{ 
+            top: responsiveValues.padding.sm, 
+            bottom: responsiveValues.padding.sm, 
+            left: responsiveValues.padding.sm, 
+            right: responsiveValues.padding.sm 
+          }}
         >
-          <Ionicons name="chevron-back" size={24} color="#29375C" />
+          <Ionicons 
+            name="chevron-back" 
+            size={responsiveValues.iconSize.lg} 
+            color="#29375C" 
+          />
         </TouchableOpacity>
         <View style={styles.titleContainer}>
           <Text style={[styles.title, style]} numberOfLines={1}>
@@ -52,12 +70,17 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({
           <TouchableOpacity
             onPress={onRightIconPress}
             style={styles.rightBtn}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            hitSlop={{ 
+              top: responsiveValues.padding.sm, 
+              bottom: responsiveValues.padding.sm, 
+              left: responsiveValues.padding.sm, 
+              right: responsiveValues.padding.sm 
+            }}
           >
             {rightIcon}
           </TouchableOpacity>
         ) : (
-          <View style={{ width: 24 }} />
+          <View style={{ width: responsiveValues.iconSize.lg }} />
         )}
       </View>
       <View style={{ height: 1, backgroundColor: "#FFFFFF", width: "100%" }} />
@@ -74,24 +97,25 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: 16,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
+    paddingTop: responsiveValues.padding.md,
+    paddingBottom: responsiveValues.padding.md,
+    paddingHorizontal: responsiveValues.padding.md,
     backgroundColor: "#f7f7f7",
+    marginTop: responsiveValues.padding.md,
   },
   backBtn: {
-    width: 32,
-    height: 32,
+    width: responsiveValues.iconSize.xl,
+    height: responsiveValues.iconSize.xl,
     justifyContent: "center",
     alignItems: "center",
   },
   rightBtn: {
-    width: 32,
-    height: 32,
+    width: responsiveValues.iconSize.xl,
+    height: responsiveValues.iconSize.xl,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "transparent",
-    borderRadius: 16,
+    borderRadius: responsiveValues.borderRadius.xl,
   },
   titleContainer: {
     flex: 1,
@@ -99,25 +123,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "center",
-    minHeight: 44,
+    minHeight: responsiveValues.iconSize.xl,
   },
   title: {
     textAlign: "center",
-    fontSize: 28,
-    fontWeight: "bold",
+    fontSize: responsiveValues.fontSize.xxxl,
     color: "#29375C",
-    marginBottom: 2,
+    marginBottom: responsiveValues.padding.xs,
     maxWidth: "100%",
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
   },
   subtitle: {
     textAlign: "center",
-    fontSize: 14,
+    fontSize: responsiveValues.fontSize.sm,
     color: "#29375C",
-    fontWeight: "500",
     marginTop: 0,
     maxWidth: "100%",
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
 });
 

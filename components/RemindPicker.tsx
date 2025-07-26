@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, Switch, Text, View } from "react-native";
+import { fonts } from "../utils/responsive";
 
 interface RemindPickerProps {
   remind: boolean;
@@ -175,7 +176,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     fontSize: 14,
     color: "#29375C",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     zIndex: 2,
   },
   remindRow: {
@@ -188,12 +189,12 @@ const styles = StyleSheet.create({
   },
   remindText: {
     color: "#29375C",
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     fontSize: 16,
   },
   pickerSelectedText: {
     color: "#29375C",
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     fontSize: 17,
   },
   remindOptionsList: {
@@ -202,7 +203,7 @@ const styles = StyleSheet.create({
   remindOptionText: {
     color: "#B6B6B6",
     fontSize: 17,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     fontWeight: "400",
   },
 });

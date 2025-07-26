@@ -20,6 +20,7 @@ import {
   View,
 } from "react-native";
 import chatService from "../../services/chat.service";
+import { fonts, responsive, responsiveValues } from "../../utils/responsive";
 
 // Hàm format giờ:phút
 function formatHourMinute(dateString: string) {
@@ -439,7 +440,7 @@ export default function MessageBoxScreen() {
       >
         <View style={{ flex: 1, backgroundColor: "#29375C" }}>
           {/* Danh sách tin nhắn */}
-          <View style={[styles.listWrapper, { marginTop: 10, flex: 1 }]}>
+          <View style={[styles.listWrapper, { flex: 1 }]}>
             {loading ? (
               <ActivityIndicator style={{ marginTop: 40 }} />
             ) : error ? (
@@ -461,7 +462,7 @@ export default function MessageBoxScreen() {
                   width: 320,
                   maxWidth: '100%',
                 }}>
-                  <Text style={{ color: '#29375C', fontSize: 18, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', fontFamily: 'Baloo2-Bold' }}>
+                  <Text style={{ color: '#29375C', fontSize: 18, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', fontFamily: fonts.bold }}>
                     Xin chào bạn !
                   </Text>
                   <Text style={{ color: '#29375C', fontSize: 15, marginBottom: 18, textAlign: 'center', lineHeight: 22 }}>
@@ -615,42 +616,42 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: "#29375C",
-    paddingTop: 36,
-    paddingBottom: 18,
-    paddingHorizontal: 20,
+    paddingTop: responsive.height(4),
+    paddingBottom: responsive.height(2),
+    paddingHorizontal: responsiveValues.padding.lg,
     flexDirection: "row",
     alignItems: "center",
   },
   headerTitle: {
     color: "#fff",
-    fontSize: 20,
+    fontSize: responsiveValues.fontSize.xl,
     fontWeight: "bold",
-    marginBottom: 2,
-    fontFamily: "Baloo2-Bold",
+    marginBottom: responsiveValues.padding.xs,
+    fontFamily: fonts.bold,
   },
   headerSubtitle: {
     color: "#fff",
-    fontSize: 14,
+    fontSize: responsiveValues.fontSize.sm,
     opacity: 0.7,
   },
   listContent: {
-    paddingHorizontal: 12,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingHorizontal: responsiveValues.padding.md,
+    paddingTop: responsiveValues.padding.md,
+    paddingBottom: responsiveValues.padding.sm,
     flexGrow: 1,
     justifyContent: "flex-end",
   },
   listWrapper: {
     backgroundColor: "#fff",
-    borderTopLeftRadius: 60,
-    borderTopRightRadius: 60,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     flex: 1,
     overflow: "hidden",
   },
   messageRow: {
     flexDirection: "row",
     alignItems: "flex-end",
-    marginBottom: 12,
+    marginBottom: responsiveValues.padding.md,
   },
   messageRowMe: {
     justifyContent: "flex-end",
@@ -659,29 +660,29 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
   },
   avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    marginHorizontal: 6,
+    width: responsiveValues.iconSize.lg,
+    height: responsiveValues.iconSize.lg,
+    borderRadius: responsiveValues.borderRadius.xl,
+    marginHorizontal: responsiveValues.padding.xs,
   },
   bubble: {
     maxWidth: "70%",
-    borderRadius: 16,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    marginHorizontal: 2,
+    borderRadius: responsiveValues.borderRadius.md,
+    paddingVertical: responsiveValues.padding.sm,
+    paddingHorizontal: responsiveValues.padding.md,
+    marginHorizontal: responsiveValues.padding.xs,
   },
   bubbleMe: {
-    borderBottomRightRadius: 4,
+    borderBottomRightRadius: responsiveValues.borderRadius.sm,
   },
   bubbleOther: {
     backgroundColor: "#29375C",
-    borderBottomLeftRadius: 4,
+    borderBottomLeftRadius: responsiveValues.borderRadius.sm,
   },
   messageText: {
-    fontSize: 15,
-    marginBottom: 4,
-    fontFamily: "Baloo2-Bold",
+    fontSize: responsiveValues.fontSize.md,
+    marginBottom: responsiveValues.padding.xs,
+    fontFamily: fonts.bold,
   },
   textMe: {
     color: "#fff",
@@ -690,25 +691,25 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   time: {
-    fontSize: 11,
+    fontSize: responsiveValues.fontSize.xs,
     color: "#fff",
     opacity: 0.7,
     alignSelf: "flex-end",
   },
   timeBelow: {
-    fontSize: 11,
+    fontSize: responsiveValues.fontSize.xs,
     color: '#A0A0A0',
-    marginTop: 2,
+    marginTop: responsiveValues.padding.xs,
     alignSelf: 'flex-end',
   },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#fff",
-    borderRadius: 24,
-    margin: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    borderRadius: responsiveValues.borderRadius.xl,
+    margin: responsiveValues.padding.md,
+    paddingHorizontal: responsiveValues.padding.sm,
+    paddingVertical: responsiveValues.padding.xs,
     shadowColor: "#29375C",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.80,
@@ -717,27 +718,27 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: responsiveValues.fontSize.md,
     color: "#29375C",
-    paddingVertical: 8,
-    paddingHorizontal: 8,
+    paddingVertical: responsiveValues.padding.sm,
+    paddingHorizontal: responsiveValues.padding.sm,
     backgroundColor: "transparent",
   },
   sendBtn: {
-    padding: 6,
-    borderRadius: 20,
+    padding: responsiveValues.padding.xs,
+    borderRadius: responsiveValues.borderRadius.lg,
   },
   statusBelow: {
     backgroundColor: "#BFC6D1",
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    borderRadius: responsiveValues.borderRadius.sm,
+    paddingHorizontal: responsiveValues.padding.sm,
+    paddingVertical: responsiveValues.padding.xs,
     alignSelf: "flex-end",
-    marginTop: 2,
-    marginBottom: 4,
+    marginTop: responsiveValues.padding.xs,
+    marginBottom: responsiveValues.padding.xs,
   },
   statusText: {
     color: "#fff",
-    fontSize: 10,
+    fontSize: responsiveValues.fontSize.xs,
   },
 });

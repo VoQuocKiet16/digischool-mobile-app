@@ -8,6 +8,7 @@ import ChartSchoolWeek from "../components/manage/ChartSchoolWeek";
 import ChartStudentTopday from "../components/manage/ChartStudentTopday";
 import ChartStudentWeek from "../components/manage/ChartStudentWeek";
 import ChartTeacher from "../components/manage/ChartTeacher";
+import { fonts } from "../utils/responsive";
 
 const FILTERS = ["Toàn trường", "Giáo viên", "Học sinh"];
 const SUB_FILTERS = ["Hôm nay", "Tuần này"];
@@ -120,7 +121,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '700',
     color: '#22304A',
-    fontFamily: 'Baloo2-Bold',
+    fontFamily: fonts.bold,
     marginHorizontal: 12,
     letterSpacing: 0.5,
   },
@@ -142,7 +143,7 @@ const styles = StyleSheet.create({
   filterText: {
     fontSize: 18,
     color: '#22304A',
-    fontFamily: 'Baloo2-SemiBold',
+    fontFamily: fonts.semiBold,
   },
   filterTextActive: {
     color: '#215562',
@@ -162,7 +163,7 @@ const styles = StyleSheet.create({
   subFilterText: {
     fontSize: 16,
     color: '#22304A',
-    fontFamily: 'Baloo2-Medium',
+    fontFamily: fonts.medium,
   },
   subFilterTextActive: {
     color: '#215562',
@@ -183,6 +184,6 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: 16,
     color: '#22304A',
-    fontFamily: 'Baloo2-Medium',
+    fontFamily: fonts.medium,
   },
 });

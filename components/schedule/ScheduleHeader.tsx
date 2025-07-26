@@ -1,6 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 interface ScheduleHeaderProps {
   title: string;
@@ -86,7 +87,7 @@ const styles = StyleSheet.create({
     fontSize: 30,
     color: "#29375C",
     textAlign: "center",
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
   },
   arrowButtonLeft: {
     position: "absolute",
@@ -114,7 +115,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     marginLeft: 5,
     fontSize: 14,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   pickerArrow: {
     color: "#fff",

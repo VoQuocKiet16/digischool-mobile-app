@@ -17,7 +17,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
+import { fonts } from "../../../utils/responsive";
+  
 const RANKS = ["A+", "A", "B+", "B"];
 
 const LessonEvaluateTeacherScreen = () => {
@@ -275,7 +276,7 @@ const LessonEvaluateTeacherScreen = () => {
                 flex: 1,
                 flexWrap: "wrap",
                 lineHeight: 24,
-                fontFamily: "Baloo2-Medium",
+                fontFamily: fonts.medium,
               }}
             >
               Tôi hoàn toàn chịu trách nhiệm với nội dung nhận xét của mình.
@@ -292,7 +293,7 @@ const LessonEvaluateTeacherScreen = () => {
                 color: "red",
                 textAlign: "center",
                 marginBottom: 8,
-                fontFamily: "Baloo2-Medium",
+                fontFamily: fonts.medium,
               }}
             >
               {error}
@@ -393,14 +394,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#f7f7f7",
     paddingHorizontal: 6,
     color: "#29375C",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 14,
     zIndex: 2,
   },
   confirmInput: {
     color: "#29375C",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   required: {
     color: "#E53935",
@@ -424,7 +425,7 @@ const styles = StyleSheet.create({
   dropdownPlaceholder: {
     color: "#9CA3AF",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   modalContent: {
     backgroundColor: "#f7f7f7",
@@ -454,7 +455,7 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     color: "#fff",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 18,
   },
 });

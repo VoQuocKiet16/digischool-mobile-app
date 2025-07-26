@@ -18,6 +18,7 @@ import {
   TestInfo,
   updateTestInfo,
 } from "../../../services/test_info.service";
+import { fonts } from "../../../utils/responsive";
 
 // Chỉ hỗ trợ 2 loại kiểm tra
 const EXAM_TYPES = ["Kiểm tra 15'", "Kiểm tra 1 tiết"];
@@ -320,7 +321,7 @@ const AddExamReminder = () => {
               color: "red",
               textAlign: "center",
               marginBottom: 8,
-              fontFamily: "Baloo2-Medium",
+              fontFamily: fonts.medium,
             }}
           >
             {error}
@@ -432,14 +433,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#f7f7f7",
     paddingHorizontal: 6,
     color: "#29375C",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 14,
     zIndex: 2,
   },
   inputTextOutline: {
     color: "#29375C",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   required: {
     color: "#E53935",
@@ -457,12 +458,12 @@ const styles = StyleSheet.create({
   dropdownText: {
     color: "#29375C",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   dropdownPlaceholder: {
     color: "#9CA3AF",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   modalContent: {
     backgroundColor: "#f7f7f7",
@@ -476,7 +477,7 @@ const styles = StyleSheet.create({
   modalItemText: {
     fontSize: 16,
     color: "#29375C",
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   saveBtn: {
     backgroundColor: "#29375C",
@@ -492,7 +493,7 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     color: "#fff",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 18,
   },
   buttonRow: {
@@ -514,7 +515,7 @@ const styles = StyleSheet.create({
   },
   deleteBtnText: {
     color: "#CF2020",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 18,
   },
   updateBtn: {
@@ -530,7 +531,7 @@ const styles = StyleSheet.create({
   },
   updateBtnText: {
     color: "#fff",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 18,
   },
 });

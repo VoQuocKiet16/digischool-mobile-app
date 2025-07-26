@@ -7,6 +7,7 @@ import {
   cancelSwapRequest,
 } from "@/services/lesson_request.service";
 import { LessonData } from "@/types/lesson.types";
+import { fonts } from "@/utils/responsive";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useRef, useState } from "react";
@@ -593,14 +594,14 @@ const styles = StyleSheet.create({
   headerText: {
     color: "#26324D",
     fontSize: 25,
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   doneText: {
     color: "#F9A825",
     fontSize: 16,
     fontWeight: "600",
     textDecorationLine: "underline",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   editIcon: {
     marginLeft: 8,
@@ -613,7 +614,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     fontSize: 15,
     color: "#25345C",
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     textAlignVertical: "top",
   },
   infoRow: {
@@ -627,7 +628,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     color: "#25345C",
     fontSize: 15,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   descText: {
     color: "#25345C",
@@ -635,7 +636,7 @@ const styles = StyleSheet.create({
     marginLeft: 14,
     marginTop: 2,
     lineHeight: 22,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   // Style cho card đánh giá tiết học
   statusRowGreen: {
@@ -666,7 +667,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     marginTop: 5,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   statusRowBlueWrap: {
     flexDirection: "row",
@@ -703,7 +704,7 @@ const styles = StyleSheet.create({
     color: "#2CA6B0",
     fontSize: 18,
     marginTop: 5,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   statusArrowWrap: {
     marginLeft: 8,
@@ -744,7 +745,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     marginTop: 5,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   savingText: {
     color: "#D3D3D3",

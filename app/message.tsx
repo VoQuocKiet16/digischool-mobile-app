@@ -1,9 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import Header from "../components/Header";
 import { useNotificationContext } from "../contexts/NotificationContext";
 import chatService from "../services/chat.service";
+import { responsiveValues } from "../utils/responsive";
 import MessageListScreen from "./message/message_list";
 
 export default function MessageScreen() {
@@ -80,9 +81,10 @@ export default function MessageScreen() {
   );
 }
 
-const styles = {
+const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#f7f7f7",
+    paddingHorizontal: responsiveValues.padding.md,
   },
-};
+});

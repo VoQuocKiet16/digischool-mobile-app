@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { fonts } from "../utils/responsive";
 
 interface PlusIconProps {
   onPress?: (event: GestureResponderEvent) => void;
@@ -48,7 +49,7 @@ const styles = StyleSheet.create({
   text: {
     color: "#29375C",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
 });
 

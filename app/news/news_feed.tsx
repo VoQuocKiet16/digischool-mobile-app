@@ -21,6 +21,7 @@ import {
   unfavoriteNews,
 } from "../../services/news.service";
 import { getAllSubjects } from "../../services/subjects.service";
+import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 const { width, height } = Dimensions.get('window');
 
@@ -397,7 +398,7 @@ export default function NewsFeedScreen() {
             style={{
               color: "#7D88A7",
               fontSize: 14,
-              fontFamily: "Baloo2-Medium",
+              fontFamily: fonts.medium,
             }}
           >
             Không có tin tức nào.
@@ -564,7 +565,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     color: "#29375C",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 18,
   },
   tabTextActive: {
@@ -670,7 +671,7 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0,0,0,0.25)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   newsInfoRow: {
     flexDirection: "row",
@@ -687,7 +688,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     marginRight: 8,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   newsAuthor: {
     color: "#fff",

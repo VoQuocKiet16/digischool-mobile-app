@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
+import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 const DATA = {
   student: [
@@ -142,7 +143,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#29375C",
     fontWeight: "700",
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
   },
   card: {
     flexDirection: "row",
@@ -169,19 +170,19 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#29375C",
     fontWeight: "700",
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
     marginBottom: 2,
   },
   cardDesc: {
     fontSize: 14,
     color: "#29375C",
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     marginTop: 0,
     flexWrap: "wrap",
   },
   success: {
     color: "#2E8B57",
     fontWeight: "700",
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
   },
 });

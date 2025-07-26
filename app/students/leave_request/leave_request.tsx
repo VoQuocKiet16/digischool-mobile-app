@@ -17,6 +17,7 @@ import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getStudentSchedule } from "../../../services/schedule.service";
 import { Activity } from "../schedule/schedule";
+import { fonts } from "../../../utils/responsive";
 
 const days = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
 const morningPeriods = ["Tiết 1", "Tiết 2", "Tiết 3", "Tiết 4", "Tiết 5"];
@@ -450,8 +451,8 @@ const styles = StyleSheet.create({
   },
   slotEmpty: { backgroundColor: "transparent" },
   slotSelected: { backgroundColor: "#FFA726" },
-  slotText: { color: "#fff", fontFamily: "Baloo2-SemiBold", fontSize: 13 },
-  slotTextSelected: { color: "#fff", fontFamily: "Baloo2-SemiBold" },
+  slotText: { color: "#fff", fontFamily: fonts.semiBold, fontSize: 13 },
+  slotTextSelected: { color: "#fff", fontFamily: fonts.semiBold },
   legendRow: {
     flexDirection: "row",
     justifyContent: "center",
@@ -484,12 +485,12 @@ const styles = StyleSheet.create({
   buttonDisabled: { backgroundColor: "#D1D5DB" },
   buttonText: {
     color: "#fff",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 18,
   },
   buttonTextDisabled: {
     color: "#9CA3AF",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 18,
   },
   buttonContainer: {

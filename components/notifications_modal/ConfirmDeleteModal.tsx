@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 interface ConfirmDeleteModalProps {
   visible: boolean;
@@ -93,7 +94,7 @@ const styles = StyleSheet.create({
     color: "#D32F2F",
     marginBottom: 12,
     textAlign: "center",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   message: {
     fontSize: 15,
@@ -101,7 +102,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 30,
     lineHeight: 22,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   buttonRow: {
     flexDirection: "row",
@@ -123,7 +124,7 @@ const styles = StyleSheet.create({
     color: "#37474F",
     fontSize: 16,
     fontWeight: "bold",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   deleteBtn: {
     flex: 1,
@@ -139,7 +140,7 @@ const styles = StyleSheet.create({
     color: "#CF2020",
     fontSize: 16,
     fontWeight: "bold",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   closeIcon: {
     position: "absolute",

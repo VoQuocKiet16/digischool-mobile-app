@@ -3,6 +3,7 @@ import Lesson_Information from "@/components/lesson_detail/Lesson_Information";
 import ConfirmTeachedModal from "@/components/notifications_modal/ConfirmTeachedModal";
 import PlusIcon from "@/components/PlusIcon";
 import RefreshableScrollView from "@/components/RefreshableScrollView";
+import { fonts, responsive, responsiveValues } from "@/utils/responsive";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 import { router, useLocalSearchParams } from "expo-router";
@@ -219,7 +220,7 @@ const LessonDetailScreen = () => {
       rightIcon={
         <TouchableWithoutFeedback onPress={() => setMenuVisible(!menuVisible)}>
           <TouchableOpacity onPress={() => setMenuVisible(!menuVisible)}>
-            <Ionicons name="menu" size={32} color="#29375C" />
+            <Ionicons name="menu" size={responsiveValues.iconSize.xxl} color="#29375C" />
           </TouchableOpacity>
         </TouchableWithoutFeedback>
       }
@@ -401,7 +402,7 @@ const LessonDetailScreen = () => {
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingBottom: 90,
+    paddingBottom: responsive.height(11),
   },
   loadingContainer: {
     flex: 1,
@@ -409,32 +410,32 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    marginTop: 16,
-    fontSize: 16,
+    marginTop: responsiveValues.padding.md,
+    fontSize: responsiveValues.fontSize.md,
     color: "#666",
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: responsiveValues.padding.lg,
   },
   errorText: {
-    fontSize: 16,
+    fontSize: responsiveValues.fontSize.md,
     color: "#F04438",
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: responsiveValues.padding.lg,
   },
   retryButton: {
     backgroundColor: "#3A546D",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingHorizontal: responsiveValues.padding.lg,
+    paddingVertical: responsiveValues.padding.sm,
+    borderRadius: responsiveValues.borderRadius.md,
   },
   retryButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: responsiveValues.fontSize.md,
     fontWeight: "500",
   },
   overlay: {
@@ -447,14 +448,14 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     justifyContent: "flex-start",
     alignItems: "flex-end",
-    paddingTop: 80,
-    paddingRight: 15,
+    paddingTop: responsive.height(9),
+    paddingRight: responsiveValues.padding.sm,
   },
   menuBox: {
     backgroundColor: "#29375C",
-    borderRadius: 10,
-    padding: 8,
-    minWidth: 120,
+    borderRadius: responsiveValues.borderRadius.md,
+    padding: responsiveValues.padding.sm,
+    minWidth: responsive.width(30),
     marginTop: 0,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -463,18 +464,18 @@ const styles = StyleSheet.create({
     elevation: 5,
     zIndex: 1000,
     position: "absolute",
-    top: 80,
-    right: 15,
+    top: responsive.height(9),
+    right: responsiveValues.padding.sm,
   },
   menuItem: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    marginTop: 5,
+    paddingVertical: responsiveValues.padding.sm,
+    paddingHorizontal: responsiveValues.padding.md,
+    borderRadius: responsiveValues.borderRadius.md,
+    marginTop: responsiveValues.padding.xs,
   },
   menuText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: responsiveValues.fontSize.md,
     fontWeight: "500",
     opacity: 0.7,
   },

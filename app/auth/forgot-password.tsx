@@ -12,6 +12,7 @@ import LoadingModal from "../../components/LoadingModal";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import SuccessModal from "../../components/notifications_modal/SuccessModal";
 import { forgotPassword } from "../../services/auth.service";
+import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -136,7 +137,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     marginTop: 12,
     fontWeight: "500",
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   inputContainer: {
     flexDirection: "row",
@@ -156,12 +157,12 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 18,
     color: "#29375C",
-    fontFamily: "Baloo2-Regular",
+    fontFamily: fonts.regular,
   },
   errorText: {
     color: "red",
     marginBottom: 4,
-    fontFamily: "Baloo2-Regular",
+    fontFamily: fonts.regular,
     fontSize: 13,
     marginLeft: 2,
   },
@@ -172,7 +173,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 32,
     textAlign: "center",
-    fontFamily: "Baloo2-Regular",
+    fontFamily: fonts.regular,
   },
   sendButton: {
     backgroundColor: "#29375C",
@@ -185,6 +186,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "500",
     fontSize: 18,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
 });

@@ -18,6 +18,7 @@ import HeaderLayout from "../../components/layout/HeaderLayout";
 import LoadingModal from "../../components/LoadingModal";
 import PlusIcon from "../../components/PlusIcon";
 import { createNews } from "../../services/news.service";
+import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 export default function AddNewsScreen() {
   const [title, setTitle] = useState("");
@@ -190,7 +191,7 @@ export default function AddNewsScreen() {
                 <Text
                   style={{
                     color: "#fff",
-                    fontFamily: "Baloo2-Medium",
+                    fontFamily: fonts.medium,
                     fontSize: 14,
                   }}
                 >
@@ -239,7 +240,7 @@ export default function AddNewsScreen() {
                 <Text
                   style={{
                     color: "#29375C",
-                    fontFamily: "Baloo2-SemiBold",
+                    fontFamily: fonts.semiBold,
                     fontSize: 16,
                   }}
                 >
@@ -318,14 +319,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#f7f7f7",
     paddingHorizontal: 6,
     color: "#29375C",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 14,
     zIndex: 2,
   },
   inputTextOutline: {
     color: "#29375C",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   requiredNews: {
     color: "#E53935",
@@ -347,7 +348,7 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     color: "#fff",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 18,
   },
   // Giữ lại các style cũ cho coverBox, coverContent, coverText, coverImage nếu cần
@@ -389,7 +390,7 @@ const styles = StyleSheet.create({
   },
   editContentBtnText: {
     color: "#29375C",
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     fontSize: 16,
     textAlign: "center",
   },
@@ -405,14 +406,14 @@ const styles = StyleSheet.create({
   },
   contentPreviewLabel: {
     color: "#29375C",
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     fontSize: 14,
     marginBottom: 5,
   },
   contentPreviewText: {
     color: "#29375C",
     fontSize: 14,
-    fontFamily: "Baloo2-Regular",
+    fontFamily: fonts.regular,
     lineHeight: 20,
   },
   contentInputBox: {
@@ -431,7 +432,7 @@ const styles = StyleSheet.create({
   },
   contentInputText: {
     color: "#29375C",
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     fontSize: 16,
   },
 });

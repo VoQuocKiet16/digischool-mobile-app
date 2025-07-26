@@ -1,6 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect, useRef } from "react";
 import { ActivityIndicator, Animated, Modal, Text, View } from "react-native";
+import { fonts } from "../utils/responsive";
 
 export default function LoadingModal({
   visible,
@@ -65,7 +66,7 @@ export default function LoadingModal({
           <Text
             style={{
               marginTop: 16,
-              fontFamily: "Baloo2-Medium",
+              fontFamily: fonts.medium,
               fontSize: 16,
               color: "#29375C",
             }}

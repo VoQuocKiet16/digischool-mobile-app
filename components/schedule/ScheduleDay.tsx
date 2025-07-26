@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { Activity } from "../../app/students/schedule/schedule";
 import { useUserData } from "../../hooks/useUserData";
+import { fonts } from "../../utils/responsive";
 import ScheduleSlot from "./ScheduleSlot";
 
 interface ScheduleDayProps {
@@ -355,7 +356,7 @@ const styles = StyleSheet.create({
   dayHeaderText: {
     color: "#22304A",
     fontSize: 12,
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
     textAlign: "center",
   },
   selectedDayButton: {
@@ -387,13 +388,13 @@ const styles = StyleSheet.create({
   menuItemText: {
     color: "#fff",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   periodText: {
     color: "#29375C",
     fontSize: 15,
     textAlign: "center",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   slotWrapper: {
     height: 100,
@@ -423,14 +424,19 @@ const styles = StyleSheet.create({
   dateInfoTitle: {
     color: "#29375C",
     fontSize: 20,
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
     marginBottom: 10,
   },
   dateInfoText: {
     fontSize: 18,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     color: "#29375C",
   },
 });
 
 export default ScheduleDay;
+
+
+
+
+

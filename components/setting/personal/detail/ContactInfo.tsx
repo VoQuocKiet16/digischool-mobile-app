@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { UserData } from "../../../../types/user.types";
+import { fonts } from "../../../../utils/responsive";
 
 interface ContactInfoProps {
   userData: UserData | null;
@@ -34,7 +35,7 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ userData }) => {
           </View>
           <View style={styles.item}>
             <Text style={styles.label}>Email</Text>
-            <Text style={styles.value}>
+            <Text style={styles.value} numberOfLines={1} ellipsizeMode="tail">
               {userData?.email || "Chưa cập nhật"}
             </Text>
             <View style={styles.underline} />
@@ -71,7 +72,7 @@ const styles = StyleSheet.create({
     fontSize: 25,
     color: "#29375C",
     flex: 1,
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
   },
   icon: {
     color: "#29375C",
@@ -87,7 +88,7 @@ const styles = StyleSheet.create({
   label: {
     color: "#29375C",
     fontSize: 18,
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   value: {
     color: "#A3A7AC",
@@ -95,7 +96,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 0,
     top: 5,
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
+    maxWidth: 200,
   },
   underline: {
     height: 3,

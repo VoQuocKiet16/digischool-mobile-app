@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
+import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 export default function ActivityDetail() {
   const router = useRouter();
@@ -70,30 +71,30 @@ const styles = StyleSheet.create({
     color: '#1A2343',
     fontWeight: 'bold',
     marginBottom: 8,
-    fontFamily: 'Baloo2-Bold',
+    fontFamily: fonts.bold,
   },
   label: {
     fontSize: 15,
     color: '#222',
     marginBottom: 8,
     textDecorationLine: 'underline',
-    fontFamily: 'Baloo2-Medium',
+    fontFamily: fonts.medium,
   },
   bold: {
     fontWeight: 'bold',
     color: '#111',
-    fontFamily: 'Baloo2-Bold',
+    fontFamily: fonts.bold,
     textDecorationLine: 'none',
   },
   link: {
     color: '#111',
     textDecorationLine: 'none',
-    fontFamily: 'Baloo2-Medium',
+    fontFamily: fonts.medium,
   },
   success: {
     color: '#2E8B57',
     fontWeight: 'bold',
-    fontFamily: 'Baloo2-Bold',
+    fontFamily: fonts.bold,
     textDecorationLine: 'none',
   },
 });

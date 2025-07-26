@@ -16,6 +16,7 @@ import HeaderLayout from "../../components/layout/HeaderLayout";
 import LoadingModal from "../../components/LoadingModal";
 import RemindPicker from "../../components/RemindPicker";
 import { createActivity } from "../../services/activity.service";
+import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 const REMIND_OPTIONS = [
   "Trước 10 phút",
@@ -233,14 +234,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#f7f7f7",
     paddingHorizontal: 6,
     color: "#29375C",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 14,
     zIndex: 2,
   },
   inputTextOutline: {
     color: "#29375C",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   required: {
     color: "#E53935",
@@ -262,7 +263,7 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     color: "#fff",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 18,
   },
 });

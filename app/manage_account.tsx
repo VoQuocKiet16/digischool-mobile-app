@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from "react";
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Header from "../components/Header";
+import { fonts } from "../utils/responsive";
 
 const FILTERS = ["Học sinh", "Giáo viên"];
 const BLOCKS = ["Khối 10", "Khối 11", "Khối 12"];
@@ -207,7 +208,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: '#22304A',
-    fontFamily: 'Baloo2-Bold',
+    fontFamily: fonts.bold,
     marginHorizontal: 10,
   },
   searchRow: {

@@ -22,6 +22,7 @@ import { NotificationProvider } from "../contexts/NotificationContext";
 import { UserProvider, useUserContext } from "../contexts/UserContext";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { fonts, responsiveValues } from "../utils/responsive";
 
 
 function RootLayoutContent() {
@@ -223,36 +224,34 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   tabBar: {
     flexDirection: "row",
-    height: 90,
-    borderTopWidth: 1,
-    borderTopColor: "#eee",
     backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "space-around",
-    paddingBottom: 10,
+    paddingTop: 8,
+    paddingBottom: 20,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#E6E9F0",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 8,
   },
   tabItem: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 6,
+    paddingVertical: 8,
   },
   tabItemActive: {
-    backgroundColor: "#FFFFFF",
+    // Active state styling
   },
   tabText: {
-    fontSize: 14,
-    color: "#C4C4C4",
-    marginTop: 2,
-    fontFamily: "Baloo2-SemiBold",
+    fontSize: responsiveValues.fontSize.sm,
+    marginTop: 4,
+    fontFamily: fonts.semiBold,
   },
   tabTextActive: {
     color: "#29375C",
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
   },
 });

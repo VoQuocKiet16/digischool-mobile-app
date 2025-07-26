@@ -3,10 +3,11 @@ import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { TextInput } from "react-native-paper";
+import { fonts } from "../../../../utils/responsive";
 
 export default function UpdateContactInfo() {
   const [phone, setPhone] = useState("0123456789");
@@ -97,7 +98,7 @@ const styles = StyleSheet.create({
     fontSize: 25,
     color: "#29375C",
     flex: 1,
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
   },
   icon: {
     color: "#29375C",
@@ -127,12 +128,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     fontSize: 14,
     color: "#29375C",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     zIndex: 2,
   },
   inputTextOutline: {
     fontSize: 16,
     color: "#29375C",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
 });
