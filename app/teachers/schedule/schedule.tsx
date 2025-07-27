@@ -85,13 +85,7 @@ function mapApiToTeacherScheduleData(apiData: any): {
     const periodIndex = (lesson.timeSlot?.period || 1) - 1;
     if (periodIndex >= 0 && periodIndex < 10) {
       let text = "";
-      if (lesson.topic) {
-        text = `${lesson.class?.className || ""} - ${lesson.topic}`;
-      } else if (lesson.subject?.subjectName) {
-        text = `${lesson.class?.className || ""} - ${
-          lesson.subject.subjectName
-        }`;
-      }
+      text = `${lesson.class?.className || ""} - ${lesson.topic}`;
       if (text) {
         schedule[periodIndex][dayIndex] = {
           text,

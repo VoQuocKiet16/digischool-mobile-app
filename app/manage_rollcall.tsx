@@ -25,7 +25,7 @@ const SUBJECTS = [
   "GDCD",
   "Ngoại ngữ",
   "Thể dục",
-  "Giáo dục quốc phòng và an ninh",
+  "GDQP",
   "Tin học",
   "Công nghệ",
 ];
@@ -49,17 +49,13 @@ export default function ManageRollcall() {
     { name: 'Nguyen Van C', class: '10A3', period: 1, time: '10:30', status: 'Trễ', date: '23/06/2025', subject: 'Ngữ Văn' },
     { name: 'Nguyen Van D', class: '10A4', period: 4, time: '11:30', status: 'Chưa điểm danh', date: '22/06/2025', subject: 'Toán' },
   ]);
-  const [filteredRollcalls, setFilteredRollcalls] = useState(allRollcalls);
 
-  const handleApply = () => {
-    setFilteredRollcalls(
-      allRollcalls.filter(item =>
-        item.date === day &&
-        (status === 'Tất cả' || item.status === status) &&
-        (subject === 'Tất cả' || item.subject === subject)
-      )
-    );
-  };
+  // Filter tự động khi thay đổi
+  const filteredRollcalls = allRollcalls.filter(item =>
+    item.date === day &&
+    (status === 'Tất cả' || item.status === status) &&
+    (subject === 'Tất cả' || item.subject === subject)
+  );
 
   // Overlay tắt dropdown
   const showAnyDropdown = showDay || showStatus || showSubject;
@@ -78,15 +74,16 @@ export default function ManageRollcall() {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+    <View style={{ flex: 1, backgroundColor: "#f7f7f7" }}>
       <Header title="Điểm danh" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} />
+      
       {/* Filter hàng ngang */}
       <View style={styles.filterRowWrap}>
         {/* Filter ngày */}
         <View style={{position:'relative'}}>
           <TouchableOpacity style={styles.filterBtn} activeOpacity={0.8} onPress={() => {setShowDay(v=>!v); setShowStatus(false); setShowSubject(false);}}>
             <Text style={styles.filterBtnText}>{day}</Text>
-            <MaterialIcons name="arrow-drop-down" size={18} color="#22304A" style={{marginLeft: 2}} />
+            <MaterialIcons name="arrow-drop-down" size={18} color="#29375C" style={{marginLeft: 2}} />
           </TouchableOpacity>
           {showDay && (
             <View style={[styles.dropdownList, {maxHeight: 180}]}> 
@@ -104,7 +101,7 @@ export default function ManageRollcall() {
         <View style={{position:'relative'}}>
           <TouchableOpacity style={styles.filterBtn} activeOpacity={0.8} onPress={() => {setShowStatus(v=>!v); setShowDay(false); setShowSubject(false);}}>
             <Text style={styles.filterBtnText}>{status}</Text>
-            <MaterialIcons name="arrow-drop-down" size={18} color="#22304A" style={{marginLeft: 2}} />
+            <MaterialIcons name="arrow-drop-down" size={18} color="#29375C" style={{marginLeft: 2}} />
           </TouchableOpacity>
           {showStatus && (
             <View style={styles.dropdownList}>
@@ -120,7 +117,7 @@ export default function ManageRollcall() {
         <View style={{position:'relative'}}>
           <TouchableOpacity style={styles.filterBtn} activeOpacity={0.8} onPress={() => {setShowSubject(v=>!v); setShowDay(false); setShowStatus(false);}}>
             <Text style={styles.filterBtnText}>{subject}</Text>
-            <MaterialIcons name="arrow-drop-down" size={18} color="#22304A" style={{marginLeft: 2}} />
+            <MaterialIcons name="arrow-drop-down" size={18} color="#29375C" style={{marginLeft: 2}} />
           </TouchableOpacity>
           {showSubject && (
             <View style={[styles.dropdownList, {maxHeight: 220}]}> 
@@ -134,15 +131,13 @@ export default function ManageRollcall() {
             </View>
           )}
         </View>
-        {/* Nút áp dụng */}
-        <TouchableOpacity style={styles.applyBtn} activeOpacity={0.85} onPress={handleApply}>
-          <Text style={styles.applyBtnText}>Áp dụng</Text>
-        </TouchableOpacity>
       </View>
+      
       {/* Overlay tắt dropdown */}
       {showAnyDropdown && (
         <Pressable style={styles.dropdownOverlay} onPress={() => {setShowDay(false); setShowStatus(false); setShowSubject(false);}} />
       )}
+      
       {/* Danh sách điểm danh */}
       <ScrollView style={styles.rollcallListWrap} contentContainerStyle={{paddingBottom: 24}} showsVerticalScrollIndicator={false}>
         {/* Header bộ môn */}
@@ -151,46 +146,57 @@ export default function ManageRollcall() {
             {subject === 'Tất cả' ? 'Tất cả bộ môn' : `Bộ môn ${subject}`}
           </Text>
         </View>
-        {filteredRollcalls.map((item, idx) => (
-          <View style={styles.rollcallCard} key={idx}>
-            <View style={styles.rollcallRow}>
-              <View style={styles.rollcallAvatarBox}>
-                <View style={styles.rollcallAvatarIcon}>
-                  <MaterialIcons name="account-circle" size={32} color="#22304A" />
-                </View>
-              </View>
-              <View style={{flex:1, justifyContent:'center'}}>
-                <Text style={styles.rollcallName}>[GV] {item.name}</Text>
-                <Text style={styles.rollcallClass}>Lớp: {item.class} | Tiết {item.period}</Text>
-                <View style={{flexDirection:'row', alignItems:'center', marginTop:2}}>
-                  <MaterialIcons name="access-time" size={16} color="#22304A" style={{marginRight:2}} />
-                  <Text style={styles.rollcallTime}>{item.time}'</Text>
-                </View>
-              </View>
-              {/* Trạng thái */}
-              {item.status === 'Đã điểm danh' && (
-                <View style={styles.rollcallStatusDone}>
-                  <MaterialIcons name="check-circle" size={20} color="#fff" style={{marginRight:4}} />
-                  <Text style={styles.rollcallStatusText}>Đã điểm danh</Text>
-                </View>
-              )}
-              {item.status === 'Trễ' && (
-                <View style={styles.rollcallStatusLate}>
-                  <MaterialIcons name="warning" size={20} color="#F9A825" style={{marginRight:4}} />
-                  <Text style={styles.rollcallStatusTextLate}>Trễ</Text>
-                </View>
-              )}
-              {item.status === 'Chưa điểm danh' && (
-                <View style={styles.rollcallStatusNotyet}>
-                  <View style={styles.rollcallStatusNotyetIcon}>
-                    <MaterialIcons name="close" size={18} color="#fff" />
+        
+        {filteredRollcalls.length > 0 ? (
+          filteredRollcalls.map((item, idx) => (
+            <View style={styles.rollcallCard} key={idx}>
+              <View style={styles.rollcallRow}>
+                <View style={styles.rollcallAvatarBox}>
+                  <View style={styles.rollcallAvatarIcon}>
+                    <MaterialIcons name="account-circle" size={32} color="#29375C" />
                   </View>
-                  <Text style={styles.rollcallStatusTextNotyet}>Chưa điểm danh</Text>
                 </View>
-              )}
+                <View style={{flex:1, justifyContent:'center'}}>
+                  <Text style={styles.rollcallName}>[GV] {item.name}</Text>
+                  <Text style={styles.rollcallClass}>Lớp: {item.class} | Tiết {item.period}</Text>
+                  <View style={{flexDirection:'row', alignItems:'center', marginTop:2}}>
+                    <MaterialIcons name="access-time" size={16} color="#29375C" style={{marginRight:2}} />
+                    <Text style={styles.rollcallTime}>{item.time}'</Text>
+                  </View>
+                </View>
+                {/* Trạng thái */}
+                {item.status === 'Đã điểm danh' && (
+                  <View style={styles.rollcallStatusDone}>
+                    <MaterialIcons name="check-circle" size={20} color="#fff" style={{marginRight:4}} />
+                    <Text style={styles.rollcallStatusText}>Đã điểm danh</Text>
+                  </View>
+                )}
+                {item.status === 'Trễ' && (
+                  <View style={styles.rollcallStatusLate}>
+                    <MaterialIcons name="warning" size={20} color="#fff" style={{marginRight:4}} />
+                    <Text style={styles.rollcallStatusTextLate}>Trễ</Text>
+                  </View>
+                )}
+                {item.status === 'Chưa điểm danh' && (
+                  <View style={styles.rollcallStatusNotyet}>
+                    <View style={styles.rollcallStatusNotyetIcon}>
+                      <MaterialIcons name="close" size={18} color="#fff" />
+                    </View>
+                    <Text style={styles.rollcallStatusTextNotyet}>Chưa điểm danh</Text>
+                  </View>
+                )}
+              </View>
             </View>
+          ))
+        ) : (
+          <View style={styles.emptyStateContainer}>
+            <MaterialIcons name="search-off" size={48} color="#29375C" style={{marginBottom: 12}} />
+            <Text style={styles.emptyStateTitle}>Không tìm thấy dữ liệu</Text>
+            <Text style={styles.emptyStateSubtitle}>
+              Không có điểm danh nào phù hợp với bộ lọc hiện tại
+            </Text>
           </View>
-        ))}
+        )}
       </ScrollView>
     </View>
   );
@@ -201,38 +207,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
+    marginTop: 18,
     marginBottom: 8,
-    gap: 10,
+    gap: 15,
   },
   filterBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E9EBF0',
+    backgroundColor: '#D7DCE5',
     borderRadius: 8,
-    paddingHorizontal: 2,
+    paddingHorizontal: 12,
     paddingVertical: 6,
     minWidth: 40,
     marginHorizontal: 0,
     zIndex: 10,
   },
   filterBtnText: {
-    color: '#22304A',
+    color: '#29375C',
     fontSize: 12,
-    fontWeight: '500',
-  },
-  applyBtn: {
-    backgroundColor: '#22304A',
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 8,
-    marginLeft: 2,
-  },
-  applyBtnText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-    letterSpacing: 0.2,
+    fontFamily: "Baloo2-Medium",
   },
   dropdownOverlay: {
     position: 'absolute',
@@ -266,36 +259,33 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   dropdownItemText: {
-    color: '#22304A',
+    color: '#29375C',
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: "Baloo2-Medium",
   },
   rollcallListWrap: {
     marginTop: 8,
     marginHorizontal: 0,
   },
   rollcallHeaderSubject: {
-    backgroundColor: '#BFC6D1',
+    backgroundColor: '#D7DCE5',
     paddingVertical: 8,
     paddingHorizontal: 16,
   },
   rollcallHeaderSubjectText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: '#29375C',
+    fontFamily: "Baloo2-SemiBold",
     fontSize: 16,
+    letterSpacing: 0.2,
   },
   rollcallCard: {
-    backgroundColor: '#DFE3EA',
-    // borderRadius: 12,
-    marginTop: 18,
+    backgroundColor: '#f7f7f7',
     marginBottom: 0,
     marginHorizontal: 0,
     padding: 16,
     flexDirection: 'column',
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#fff',
   },
   rollcallRow: {
     flexDirection: 'row',
@@ -308,25 +298,26 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#E9EBF0',
     alignItems: 'center',
     justifyContent: 'center',
   },
   rollcallName: {
-    fontWeight: 'bold',
-    color: '#22304A',
+    fontFamily: "Baloo2-SemiBold",
+    color: '#29375C',
     fontSize: 15,
     marginBottom: 2,
   },
   rollcallClass: {
-    color: '#22304A',
+    color: '#29375C',
     fontSize: 13,
     marginBottom: 0,
+    fontFamily: "Baloo2-Medium",
   },
   rollcallTime: {
-    color: '#22304A',
+    color: '#29375C',
     fontSize: 13,
     marginLeft: 2,
+    fontFamily: "Baloo2-Medium",
   },
   rollcallStatusDone: {
     backgroundColor: '#7ED957',
@@ -339,23 +330,21 @@ const styles = StyleSheet.create({
   },
   rollcallStatusText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontFamily: "Baloo2-SemiBold",
     fontSize: 14,
   },
   rollcallStatusLate: {
-    backgroundColor: '#FFF6E0',
+    backgroundColor: '#F9B233',
     borderRadius: 18,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
     paddingVertical: 6,
     marginLeft: 10,
-    borderWidth: 1.5,
-    borderColor: '#F9A825',
   },
   rollcallStatusTextLate: {
-    color: '#F9A825',
-    fontWeight: 'bold',
+    color: '#fff',
+    fontFamily: "Baloo2-SemiBold",
     fontSize: 14,
   },
   rollcallStatusNotyet: {
@@ -371,14 +360,31 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: '#D32F2F',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 6,
   },
   rollcallStatusTextNotyet: {
-    color: '#D32F2F',
-    fontWeight: 'bold',
+    color: '#fff',
+    fontFamily: "Baloo2-SemiBold",
     fontSize: 14,
+  },
+  emptyStateContainer: {
+    alignItems: 'center',
+    paddingTop: 100,
+    backgroundColor: '#f7f7f7',
+  },
+  emptyStateTitle: {
+    color: '#29375C',
+    fontFamily: "Baloo2-SemiBold",
+    fontSize: 18,
+    marginBottom: 8,
+  },
+  emptyStateSubtitle: {
+    color: '#29375C',
+    fontSize: 14,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+    fontFamily: "Baloo2-Medium",
   },
 });

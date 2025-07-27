@@ -19,7 +19,7 @@ export default function ChartSchoolWeek() {
   const barWidth = 24;
   const barGap = 16;
   const chartHeight = 120;
-  const days = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
+  const days = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 
   function getBarStack(bar: any) {
     let y0 = 0;
@@ -34,31 +34,51 @@ export default function ChartSchoolWeek() {
     <View style={styles.wrap}>
       {/* Card 1: Biểu đồ sĩ số */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Biểu đồ sĩ số</Text>
+        <Text style={styles.cardTitle}>
+          <Text style={styles.linkText}>Biểu đồ sĩ số</Text>
+        </Text>
         <View style={styles.chartWrap}>
           {/* Trục Y + line ngang */}
-          <View style={{justifyContent: 'space-between', alignItems: 'flex-end', marginRight: 6, height: chartHeight}}>
-            {[1200,900,600,300,0].map((v, idx) => (
-              <View key={v} style={{flexDirection: 'row', alignItems: 'center'}}>
+          <View
+            style={{
+              justifyContent: "space-between",
+              alignItems: "flex-end",
+              marginRight: 6,
+              height: chartHeight,
+            }}
+          >
+            {[1200, 900, 600, 300, 0].map((v, idx) => (
+              <View
+                key={v}
+                style={{ flexDirection: "row", alignItems: "center" }}
+              >
                 <Text style={styles.axisY}>{v}</Text>
-                <View style={{height: 1, backgroundColor: '#BFC6D1', width: 270, marginLeft: 4, opacity: idx===4?0:1}} />
+                <View
+                  style={{
+                    height: 1,
+                    backgroundColor: "#BFC6D1",
+                    width: 270,
+                    marginLeft: 4,
+                    opacity: idx === 4 ? 0 : 1,
+                  }}
+                />
               </View>
             ))}
           </View>
           {/* Chart */}
-          <View style={{position: 'absolute', left: 44, top: 0}}>
-            <Svg width={barWidth*7 + barGap*6} height={chartHeight}>
+          <View style={{ position: "absolute", left: 44, top: 0 }}>
+            <Svg width={barWidth * 7 + barGap * 6} height={chartHeight}>
               {chartData.map((bar, i) => {
                 let stack = getBarStack(bar);
                 let yOffset = 0;
                 return stack.map((seg, j) => {
-                  const h = seg.h * chartHeight / maxY;
+                  const h = (seg.h * chartHeight) / maxY;
                   const y = chartHeight - yOffset - h;
                   yOffset += h;
                   return (
                     <Rect
-                      key={i+"-"+j}
-                      x={i*(barWidth+barGap)}
+                      key={i + "-" + j}
+                      x={i * (barWidth + barGap)}
                       y={y}
                       width={barWidth}
                       height={h}
@@ -70,9 +90,18 @@ export default function ChartSchoolWeek() {
               })}
             </Svg>
             {/* Nhãn trục X */}
-            <View style={{flexDirection: 'row', justifyContent: 'space-between', width: barWidth*7 + barGap*6, marginTop: 2}}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                width: barWidth * 7 + barGap * 6,
+                marginTop: 2,
+              }}
+            >
               {days.map((d, i) => (
-                <Text key={i} style={styles.axisX}>{d}</Text>
+                <Text key={i} style={styles.axisX}>
+                  {d}
+                </Text>
               ))}
             </View>
           </View>
@@ -81,20 +110,24 @@ export default function ChartSchoolWeek() {
         <View style={styles.legendRow}>
           {barLabels.map((label, i) => (
             <View key={label} style={styles.legendItem}>
-              <View style={[styles.legendColor, {backgroundColor: barColors[i]}]} />
+              <View
+                style={[styles.legendColor, { backgroundColor: barColors[i] }]}
+              />
               <Text style={styles.legend}>{label}</Text>
             </View>
           ))}
         </View>
       </View>
+      <View style={{ marginBottom: 18, alignSelf: "flex-start", marginLeft: 20 }}>
+        <Text style={{ fontSize: 24, color: "#29375C", fontFamily: "Baloo2-SemiBold" }}>Trong tuần này</Text>
+      </View>
       {/* Card 2: Tỉ lệ học sinh hoàn thành */}
-      <Text style={styles.sectionTitle}>Trong tuần này</Text>
-      <View style={styles.percentCard}>
+      <View style={[styles.card, { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
         <Text style={styles.percentLabel}>Tỉ lệ học sinh hoàn thành</Text>
         <Text style={styles.percentValue}>80%</Text>
       </View>
       {/* Card 3: Tỉ lệ giáo viên hoàn thành */}
-      <View style={styles.percentCard}>
+      <View style={[styles.card, { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
         <Text style={styles.percentLabel}>Tỉ lệ giáo viên hoàn thành</Text>
         <Text style={styles.percentValue}>80%</Text>
       </View>
@@ -104,67 +137,69 @@ export default function ChartSchoolWeek() {
 
 const styles = StyleSheet.create({
   wrap: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    width: '100%',
+    flexDirection: "column",
+    alignItems: "center",
+    width: "100%",
     marginTop: 8,
-    marginHorizontal: 0,
+    paddingBottom: 100,
+    paddingHorizontal: 12,
   },
   card: {
-    backgroundColor: '#D7DCE5',
+    backgroundColor: "#D7DCE5",
     borderRadius: 26,
     padding: 22,
-    width: '92%',
-    minHeight: 120,
+    width: "92%",
+    minHeight: 100,
     marginBottom: 18,
-    alignSelf: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
+    alignSelf: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 2,
   },
   cardTitle: {
     fontSize: 20,
-    color: '#4B5B8C',
-    fontWeight: '600',
     marginBottom: 2,
   },
+  linkText: {
+    color: "#29375C",
+    fontFamily: "Baloo2-Regular",
+  },
   chartWrap: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    // backgroundColor: '#E6EAF2',
+    flexDirection: "row",
+    alignItems: "flex-start",
     borderRadius: 16,
     paddingVertical: 8,
     paddingLeft: 0,
     marginTop: 8,
     marginBottom: 0,
     minHeight: 150,
-    position: 'relative',
+    position: "relative",
   },
   axisY: {
     fontSize: 12,
-    color: '#4B5B8C',
+    color: "#29375C",
+    fontFamily: "Baloo2-Regular",
     marginBottom: 0,
-    width: 32,
-    textAlign: 'right',
   },
   axisX: {
-    fontSize: 12,
-    color: '#4B5B8C',
-    width: 36,
-    textAlign: 'center',
-    marginHorizontal: 1,
+    fontSize: 14,
+    color: "#29375C",
+    fontFamily: "Baloo2-Regular",
+    width: 28,
+    textAlign: "center",
   },
   legendRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 10,
     marginLeft: 8,
   },
   legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginRight: 24,
   },
   legendColor: {
@@ -175,38 +210,19 @@ const styles = StyleSheet.create({
   },
   legend: {
     fontSize: 13,
-    color: '#4B5B8C',
+    color: "#29375C",
+    fontFamily: "Baloo2-Regular",
     marginLeft: 2,
   },
-  sectionTitle: {
-    fontSize: 22,
-    color: '#1A2343',
-    fontWeight: 'bold',
-    marginTop: 8,
-    marginBottom: 10,
-    width: '92%',
-  },
-  percentCard: {
-    backgroundColor: '#D7DCE5',
-    borderRadius: 22,
-    padding: 18,
-    width: '92%',
-    minHeight: 60,
-    marginBottom: 14,
-    alignSelf: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
   percentLabel: {
-    fontSize: 17,
-    color: '#4B5B8C',
-    fontWeight: '500',
+    fontSize: 18,
+    color: "#29375C",
+    fontFamily: "Baloo2-Medium",
   },
   percentValue: {
-    fontSize: 38,
-    color: '#F9A825',
-    fontWeight: 'bold',
+    fontSize: 40,
+    color: "#F9A825",
+    fontFamily: "Baloo2-Bold",
     letterSpacing: 1,
   },
 });

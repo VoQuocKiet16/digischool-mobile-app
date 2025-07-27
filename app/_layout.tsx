@@ -59,6 +59,11 @@ function RootLayoutContent() {
   ];
   const managerTabs = [
     {
+      name: "Quản lý",
+      route: "/manage_school",
+      icon: <MaterialIcons name="school" size={24} color="#22304A" />,
+    },
+    {
       name: "Tài khoản",
       route: "/manage_account",
       icon: <MaterialIcons name="group" size={24} color="#22304A" />,
@@ -78,11 +83,7 @@ function RootLayoutContent() {
       route: "/manage_schedule",
       icon: <MaterialIcons name="calendar-today" size={24} color="#22304A" />,
     },
-    {
-      name: "Quản lý",
-      route: "/manage_school",
-      icon: <MaterialIcons name="school" size={24} color="#22304A" />,
-    },
+    
   ];
 
   // Xác định role
@@ -109,6 +110,38 @@ function RootLayoutContent() {
     "/manage_school",
     "/message",
     "/news",
+  ]
+  // Các route cần ẩn tabbar
+  const hiddenTabBarRoutes = [
+    "/auth",
+    "/login",
+    "/news/add_news",
+    "/news/edit_news",
+    "/message/message_box",
+    "/notification/notification_detail",
+    "/notification/notification_create",
+    "/note/note",
+    "/note/detail_note",
+    "/note/add_note",
+    "/teachers/leave_request/leave_request",
+    "/teachers/leave_request/leave_request_info",
+    "/students/leave_request/leave_request",
+    "/students/leave_request/leave_request_info",
+    "/news/news_detail",
+    "/news/manage_news",
+    "/news/add_news",
+    "/news/edit_news",
+    "/teachers/lesson_request/substitute_request",
+    "/teachers/lesson_request/swap_schedule",
+    "/teachers/lesson_request/swap_request",
+    "/teachers/lesson_request/makeup_schedule",
+    "/teachers/lesson_request/makeup_request",
+    "/teachers/lesson_information/lesson_evaluate",
+    "/students/lesson_information/lesson_evaluate",
+    "/message/add_contact",
+    "/activity/add_activity",
+    "/activity/detail_activity",
+    "/manage/detail_account",
   ];
   // Chỉ hiện tabbar ở đúng các route này
   const isTabBarHidden = !shownTabBarRoutes.some((route) => pathname === route);

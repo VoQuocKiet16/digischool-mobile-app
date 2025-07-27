@@ -24,9 +24,9 @@ export default function ActivityDetail() {
       title="Chi tiết hoạt động"
       onBack={() => router.back()}
     >
-      <ScrollView contentContainerStyle={{padding: 18, backgroundColor: '#fff', flexGrow: 1}}>
+      <ScrollView style={styles.contentWrap}>
         <Text style={styles.title}>{data.title}</Text>
-        <View style={{marginTop: 18}}>
+        <View style={styles.contentSection}>
           {data.requester ? (
             <>
               <Text style={styles.label}>
@@ -50,7 +50,7 @@ export default function ActivityDetail() {
             </>
           )}
         </View>
-        <View style={{marginTop: 18}}>
+        <View style={styles.contentSection}>
           {data.responder && (
             <Text style={styles.label}>
               Giáo viên phản hồi: <Text style={styles.bold}>{data.responder}</Text>
@@ -66,35 +66,36 @@ export default function ActivityDetail() {
 }
 
 const styles = StyleSheet.create({
+  contentWrap: {
+    flex: 1,
+    paddingHorizontal: 30,
+    paddingTop: 18,
+  },
   title: {
-    fontSize: 22,
-    color: '#1A2343',
-    fontWeight: 'bold',
-    marginBottom: 8,
-    fontFamily: fonts.bold,
+    fontSize: 28,
+    color: "#000",
+    marginBottom: 10,
+    fontFamily: "Baloo2-SemiBold",
+  },
+  contentSection: {
+    marginTop: 18,
   },
   label: {
-    fontSize: 15,
-    color: '#222',
-    marginBottom: 8,
-    textDecorationLine: 'underline',
-    fontFamily: fonts.medium,
+    fontSize: 18,
+    color: "#000",
+    marginBottom: 6,
+    fontFamily: "Baloo2-Regular",
   },
   bold: {
-    fontWeight: 'bold',
-    color: '#111',
-    fontFamily: fonts.bold,
-    textDecorationLine: 'none',
+    fontFamily: "Baloo2-SemiBold",
+    color: "#000",
   },
   link: {
-    color: '#111',
-    textDecorationLine: 'none',
-    fontFamily: fonts.medium,
+    color: "#000",
+    fontFamily: "Baloo2-Regular",
   },
   success: {
-    color: '#2E8B57',
-    fontWeight: 'bold',
-    fontFamily: fonts.bold,
-    textDecorationLine: 'none',
+    color: "#2E8B57",
+    fontFamily: "Baloo2-Regular",
   },
 });
