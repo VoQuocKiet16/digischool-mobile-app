@@ -1,5 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   Pressable,
@@ -30,7 +31,7 @@ const TABLE_DATA = [
     { subject: 'GDCD', data: [2,2,2,2,2] },
     { subject: 'Ngoại ngữ', data: [3,3,3,3,3] },
     { subject: 'Thể dục', data: [2,2,2,2,2] },
-    { subject: 'Giáo dục quốc phòng và an ninh', data: [2,2,2,2,2] },
+    { subject: 'GDQP', data: [2,2,2,2,2] },
     { subject: 'Tin học', data: [2,2,2,2,2] },
     { subject: 'Công nghệ', data: [2,2,2,2,2] },
   ],
@@ -46,7 +47,7 @@ const TABLE_DATA = [
     { subject: 'GDCD', data: [2,2,2,2,2] },
     { subject: 'Ngoại ngữ', data: [2,2,2,2,2] },
     { subject: 'Thể dục', data: [2,2,2,2,2] },
-    { subject: 'Giáo dục quốc phòng và an ninh', data: [2,2,2,2,2] },
+    { subject: 'GDQP', data: [2,2,2,2,2] },
     { subject: 'Tin học', data: [2,2,2,2,2] },
     { subject: 'Công nghệ', data: [2,2,2,2,2] },
   ],
@@ -62,7 +63,7 @@ const TABLE_DATA = [
     { subject: 'GDCD', data: [2,2,2,2,2] },
     { subject: 'Ngoại ngữ', data: [2,2,2,2,2] },
     { subject: 'Thể dục', data: [2,2,2,2,2] },
-    { subject: 'Giáo dục quốc phòng và an ninh', data: [2,2,2,2,2] },
+    { subject: 'GDQP', data: [2,2,2,2,2] },
     { subject: 'Tin học', data: [2,2,2,2,2] },
     { subject: 'Công nghệ', data: [2,2,2,2,2] },
   ],
@@ -80,6 +81,13 @@ export default function ManageProcess() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [highlightRow, setHighlightRow] = useState<number|null>(null);
   const [highlightCol, setHighlightCol] = useState<number|null>(null);
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    AsyncStorage.getItem("userName").then(name => {
+      if (name) setUserName(name);
+    });
+  }, []);
 
   const handleSelect = (sIdx: number, wIdx: number) => {
     setSemester(sIdx);
@@ -88,43 +96,48 @@ export default function ManageProcess() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff" }}>
+    <View style={{ flex: 1, backgroundColor: "#f7f7f7" }}>
       {/* Header */}
-      <Header title="Tiến trình" name="QL Nguyễn Văn A" />
+      <Header title="Tiến trình" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} />
+      
       {/* Filter lớn */}
-      <View style={styles.filterBlockWrap}>
-        <TouchableOpacity
-          onPress={() => setBlock((block + BLOCKS.length - 1) % BLOCKS.length)}
-          style={styles.arrowBtn}
-        >
-          <MaterialIcons name="chevron-left" size={24} color="#22304A" />
-        </TouchableOpacity>
-        <Text style={styles.blockTitle}>{BLOCKS[block]}</Text>
-        <TouchableOpacity
-          onPress={() => setBlock((block + 1) % BLOCKS.length)}
-          style={styles.arrowBtn}
-        >
-          <MaterialIcons name="chevron-right" size={24} color="#22304A" />
-        </TouchableOpacity>
+      <View style={styles.container}>
+        <View style={styles.row}>
+          <TouchableOpacity
+            onPress={() => setBlock((block + BLOCKS.length - 1) % BLOCKS.length)}
+            style={styles.arrowBtn}
+          >
+            <MaterialIcons name="chevron-left" size={24} color="#29375C" />
+          </TouchableOpacity>
+          <Text style={styles.title}>{BLOCKS[block]}</Text>
+          <TouchableOpacity
+            onPress={() => setBlock((block + 1) % BLOCKS.length)}
+            style={styles.arrowBtn}
+          >
+            <MaterialIcons name="chevron-right" size={24} color="#29375C" />
+          </TouchableOpacity>
+        </View>
+        
+        {/* Filter nhỏ */}
+        <View style={styles.filterSmallWrap}>
+          <TouchableOpacity
+            style={styles.filterComboBtn}
+            onPress={() => setShowDropdown(true)}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.filterComboText}>
+              {SEMESTERS[semester]} - {WEEKS[week]}
+            </Text>
+            <MaterialIcons
+              name="arrow-drop-down"
+              size={24}
+              color="#fff"
+              style={{ marginLeft: 8 }}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
-      {/* Filter nhỏ */}
-      <View style={styles.filterSmallWrap}>
-        <TouchableOpacity
-          style={styles.filterComboBtn}
-          onPress={() => setShowDropdown(true)}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.filterComboText}>
-            {SEMESTERS[semester]} - {WEEKS[week]}
-          </Text>
-          <MaterialIcons
-            name="arrow-drop-down"
-            size={24}
-            color="#fff"
-            style={{ marginLeft: 8 }}
-          />
-        </TouchableOpacity>
-      </View>
+      
       {/* Dropdown chọn học kỳ/tuần */}
       <Modal
         visible={showDropdown}
@@ -194,6 +207,7 @@ export default function ManageProcess() {
           </View>
         </Pressable>
       </Modal>
+      
       {/* Chú thích màu */}
       <View style={styles.legendRowTable}>
         <View style={styles.legendItemTable}>
@@ -209,6 +223,7 @@ export default function ManageProcess() {
           <Text style={styles.legendTextTable}>Dư tiết</Text>
         </View>
       </View>
+      
       {/* Bảng thống kê tiết dạy */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{width: '100%'}}> 
         <ScrollView style={styles.tableWrap} contentContainerStyle={{paddingBottom: 24}} showsVerticalScrollIndicator={false}>
@@ -278,73 +293,24 @@ export default function ManageProcess() {
 }
 
 const styles = StyleSheet.create({
-  headerWrap: {
+  container: {
+    backgroundColor: "#f7f7f7",
+    alignItems: "center",
+    marginTop: 10,
+  },
+  row: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 18,
-    paddingTop: 18,
-    paddingBottom: 10,
-    backgroundColor: "#fff",
-  },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  logo: {
-    width: 44,
-    height: 44,
-    resizeMode: "contain",
-    marginRight: 10,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#22304A",
-    fontFamily: "Baloo2-Bold",
-  },
-  studentName: {
-    fontSize: 14,
-    color: "#22304A",
-    marginTop: 2,
-    fontFamily: "Baloo2-Medium",
-  },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  bellWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#e6eef2",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 10,
-    position: "relative",
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#fff",
-  },
-  filterBlockWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  blockTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#22304A",
-    fontFamily: "Baloo2-Bold",
-    marginHorizontal: 18,
   },
   arrowBtn: {
-    padding: 6,
+    padding: 12,
+  },
+  title: {
+    fontSize: 40,
+    color: "#29375C",
+    fontFamily: "Baloo2-Bold",
+    marginHorizontal: 12,
+    letterSpacing: 2,
   },
   filterSmallWrap: {
     flexDirection: "row",
@@ -355,7 +321,7 @@ const styles = StyleSheet.create({
   filterComboBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#22304A",
+    backgroundColor: "#29375C",
     borderRadius: 24,
     paddingHorizontal: 12,
     paddingVertical: 4,
@@ -390,37 +356,38 @@ const styles = StyleSheet.create({
   },
   dropdownTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#22304A",
+    color: "#29375C",
+    fontFamily: "Baloo2-Bold",
     marginBottom: 10,
     alignSelf: "center",
   },
   dropdownColTitle: {
     fontSize: 15,
-    color: "#22304A",
-    fontWeight: "bold",
+    color: "#29375C",
+    fontFamily: "Baloo2-SemiBold",
     marginBottom: 6,
   },
   dropdownItem: {
     paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 12,
+    borderRadius: 3,
     marginBottom: 4,
   },
   dropdownItemActive: {
-    backgroundColor: "#22304A",
+    backgroundColor: "#D7DCE5",
   },
   dropdownItemText: {
-    color: "#22304A",
+    color: "#29375C",
     fontSize: 16,
-    fontWeight: "500",
+    fontFamily: "Baloo2-Medium",
   },
   dropdownItemTextActive: {
-    color: "#fff",
-    fontWeight: "bold",
+    color: "#29375C",
+    fontFamily: "Baloo2-SemiBold",
   },
   tableWrap: {
     marginTop: 18,
+    marginBottom: 100,
     width: 480,
     backgroundColor: '#F7F7F7',
     overflow: 'hidden',
@@ -453,7 +420,7 @@ const styles = StyleSheet.create({
   tableHeaderText: {
     fontSize: 16,
     color: '#444',
-    fontWeight: 'bold',
+    fontFamily: "Baloo2-Bold",
   },
   tableSubjectCell: {
     width: 60,
@@ -468,8 +435,7 @@ const styles = StyleSheet.create({
   tableSubjectText: {
     fontSize: 10,
     color: '#444',
-    fontWeight: 'bold',
-    // alignContent:'center'
+    fontFamily: "Baloo2-Bold",
   },
   tableCell: {
     flex: 1,
@@ -482,7 +448,7 @@ const styles = StyleSheet.create({
   },
   tableCellText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: "Baloo2-Bold",
   },
   tableRowHighlight: {
     backgroundColor: '#E3F2FD',
@@ -517,5 +483,6 @@ const styles = StyleSheet.create({
   legendTextTable: {
     fontSize: 13,
     color: '#444',
+    fontFamily: "Baloo2-Medium",
   },
 });

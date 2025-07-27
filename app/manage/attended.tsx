@@ -92,7 +92,7 @@ export default function Attended() {
     >
       <ScrollView
         contentContainerStyle={{ paddingBottom: 32 }}
-        style={{ backgroundColor: "#f7f7f7" }}
+        style={styles.container}
       >
         {data.map((group, idx) => (
           <View key={group.date} style={{ marginBottom: 18 }}>
@@ -120,7 +120,7 @@ export default function Attended() {
                   name="push-pin"
                   size={22}
                   color="#29375C"
-                  style={{ marginLeft: 8, marginTop: -8 }}
+                  style={{ marginLeft: 8, marginTop: -8, transform: [{ rotate: "40deg" }] }}
                 />
               </View>
             ))}
@@ -132,56 +132,57 @@ export default function Attended() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    backgroundColor: "#f7f7f7",
+    paddingHorizontal: 25,
+    paddingTop: 16,
+  },
   dateRow: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 8,
-    marginLeft: 4,
   },
   dateText: {
     fontSize: 16,
     color: "#29375C",
-    fontWeight: "700",
-    fontFamily: "Baloo2-Bold",
+    fontFamily: "Baloo2-SemiBold",
   },
   card: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     backgroundColor: "#D7DCE5",
     borderRadius: 18,
     padding: 14,
     marginBottom: 14,
     shadowColor: "#000",
-    shadowOpacity: 0.04,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 2,
     width: "92%",
     alignSelf: "center",
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 55,
+    height: 55,
+    borderRadius: 27.5,
     marginRight: 2,
-    backgroundColor: "#fff",
   },
   cardTitle: {
     fontSize: 18,
     color: "#29375C",
-    fontWeight: "700",
-    fontFamily: "Baloo2-Bold",
+    fontFamily: "Baloo2-SemiBold",
     marginBottom: 2,
   },
   cardDesc: {
     fontSize: 14,
-    color: "#29375C",
+    color: "#666",
     fontFamily: "Baloo2-Medium",
-    marginTop: 0,
+    marginTop: 2,
     flexWrap: "wrap",
   },
   success: {
     color: "#2E8B57",
-    fontWeight: "700",
-    fontFamily: "Baloo2-Bold",
+    fontFamily: "Baloo2-SemiBold",
   },
 });

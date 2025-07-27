@@ -129,6 +129,7 @@ function RootLayoutContent() {
     "/message/add_contact",
     "/activity/add_activity",
     "/activity/detail_activity",
+    "/manage/detail_account",
   ];
   // Kiểm tra có cần ẩn tabbar không
   const isTabBarHidden = hiddenTabBarRoutes.some((route) =>
