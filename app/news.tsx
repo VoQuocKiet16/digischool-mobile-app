@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import Header from "../components/Header";
 import { useNotificationContext } from "../contexts/NotificationContext";
+import { responsiveValues } from "../utils/responsive";
 import NewsFeedScreen from "./news/news_feed";
 
 export default function NewsScreen() {
@@ -70,6 +71,7 @@ export default function NewsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#f7f7f7",
+    paddingHorizontal: responsiveValues.padding.md,
   },
 });

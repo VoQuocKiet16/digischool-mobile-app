@@ -14,6 +14,7 @@ import ChartSchoolWeek from "../components/manage/ChartSchoolWeek";
 import ChartStudentTopday from "../components/manage/ChartStudentTopday";
 import ChartStudentWeek from "../components/manage/ChartStudentWeek";
 import ChartTeacher from "../components/manage/ChartTeacher";
+import { fonts } from "../utils/responsive";
 
 const FILTERS = ["Toàn trường", "Giáo viên", "Học sinh"];
 const SUB_FILTERS = ["Hôm nay", "Tuần này"];

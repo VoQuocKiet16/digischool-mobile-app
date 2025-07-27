@@ -14,6 +14,7 @@ import {
 import PlusIcon from "../PlusIcon";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
+import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 interface Student_TestProps {
   lessonId: string;
@@ -287,13 +288,13 @@ const styles = StyleSheet.create({
   headerText: {
     color: "#25345C",
     fontSize: 24,
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     marginBottom: 2,
   },
   headerSubtext: {
     color: "#666666",
     fontSize: 14,
-    fontFamily: "Baloo2-Regular",
+    fontFamily: fonts.regular,
   },
   closeBtn: {
     backgroundColor: "#FFA49F",
@@ -341,12 +342,12 @@ const styles = StyleSheet.create({
   studentName: {
     color: "#fff",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     flex: 1,
   },
   placeholderText: {
     color: "rgba(255,255,255,0.7)",
-    fontFamily: "Baloo2-Regular",
+    fontFamily: fonts.regular,
   },
   scoreContainer: {
     flexDirection: "row",
@@ -360,13 +361,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#fff",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     marginRight: 4,
   },
   scoreLabel: {
     color: "rgba(255,255,255,0.7)",
     fontSize: 14,
-    fontFamily: "Baloo2-Regular",
+    fontFamily: fonts.regular,
   },
   removeBtn: {
     padding: 8,
@@ -395,7 +396,7 @@ const styles = StyleSheet.create({
   dropdownItemText: {
     fontSize: 16,
     color: "#fff",
-    fontFamily: "Baloo2-Regular",
+    fontFamily: fonts.regular,
   },
   addButton: {
     flexDirection: "row",
@@ -406,7 +407,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: "#29375C",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     marginLeft: 8,
     textDecorationLine: "underline",
   },

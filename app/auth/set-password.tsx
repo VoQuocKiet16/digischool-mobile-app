@@ -12,6 +12,7 @@ import LoadingModal from "../../components/LoadingModal";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import SuccessModal from "../../components/notifications_modal/SuccessModal";
 import { setPasswordNewUser } from "../../services/auth.service";
+import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 export default function SetPasswordScreen() {
   const router = useRouter();
@@ -163,7 +164,7 @@ export default function SetPasswordScreen() {
                 style={{
                   fontSize: 13,
                   color: item.valid ? "#2ecc40" : "#7a869a",
-                  fontFamily: "Baloo2-Regular",
+                  fontFamily: fonts.regular,
                   marginBottom: 1,
                 }}
               >
@@ -255,7 +256,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     marginTop: 12,
     fontWeight: "500",
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   inputContainer: {
     flexDirection: "row",
@@ -275,12 +276,12 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 18,
     color: "#29375C",
-    fontFamily: "Baloo2-Regular",
+    fontFamily: fonts.regular,
   },
   errorText: {
     color: "red",
     marginBottom: 4,
-    fontFamily: "Baloo2-Regular",
+    fontFamily: fonts.regular,
     fontSize: 13,
     marginLeft: 2,
   },
@@ -314,7 +315,7 @@ const styles = StyleSheet.create({
   checkboxLabel: {
     fontSize: 15,
     color: "#29375C",
-    fontFamily: "Baloo2-Regular",
+    fontFamily: fonts.regular,
   },
   saveButton: {
     backgroundColor: "#29375C",
@@ -327,7 +328,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "500",
     fontSize: 18,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   matchText: {
     position: "absolute",
@@ -336,7 +337,7 @@ const styles = StyleSheet.create({
     transform: [{ translateY: -10 }],
     color: "#2ecc40",
     fontSize: 13,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     fontWeight: "500",
   },
   notMatchText: {
@@ -346,7 +347,7 @@ const styles = StyleSheet.create({
     transform: [{ translateY: -10 }],
     color: "red",
     fontSize: 13,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     fontWeight: "500",
   },
 });

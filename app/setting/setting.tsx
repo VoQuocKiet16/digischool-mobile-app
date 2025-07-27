@@ -8,6 +8,7 @@ import ConfirmLogoutModal from "../../components/notifications_modal/ConfirmLogo
 import RefreshableScrollView from "../../components/RefreshableScrollView";
 import { useUserData } from "../../hooks/useUserData";
 import { logout } from "../../services/auth.service";
+import { fonts } from "../../utils/responsive";
 
 const Setting: React.FC = () => {
   const router = useRouter();
@@ -27,7 +28,7 @@ const Setting: React.FC = () => {
   const getRoleDisplay = (roles: string[]) => {
     if (roles.includes("student")) return "Học sinh";
     if (roles.includes("teacher")) return "Giáo viên";
-    if (roles.includes("admin")) return "Quản trị viên";
+    if (roles.includes("manager")) return "Quản trị viên";
     return "Người dùng";
   };
 
@@ -45,7 +46,7 @@ const Setting: React.FC = () => {
           .join(", ");
       }
       return "Chưa có thông tin bộ môn";
-    } else if (roles.includes("admin")) {
+    } else if (roles.includes("manager")) {
       return "Quản trị hệ thống";
     }
 
@@ -67,9 +68,7 @@ const Setting: React.FC = () => {
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>
               {userData?.name
-                ? userData.name.length > 15
-                  ? `${userData.name.substring(0, 15)}...`
-                  : userData.name
+                ? userData.name
                 : "Đang tải..."}
             </Text>
             <Text style={styles.role}>
@@ -185,13 +184,13 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "bold",
     color: "#29375C",
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
   },
   role: {
     fontSize: 18,
     color: "#29375C",
     marginTop: 2,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   logoutBtn: {
     backgroundColor: "#FFA6A6",
@@ -205,7 +204,7 @@ const styles = StyleSheet.create({
     color: "#B71C1C",
     fontWeight: "bold",
     fontSize: 18,
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
   },
   menuWrap: {
     borderRadius: 16,
@@ -238,7 +237,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#29375C",
     fontWeight: "bold",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   menuArrow: {
     marginLeft: 8,

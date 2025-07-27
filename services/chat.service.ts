@@ -65,7 +65,6 @@ class ChatService {
       });
       return { success: true, data: res.data };
     } catch (error: any) {
-      console.error("[getConversations] error:", error, error?.response?.data);
       return {
         success: false,
         message:

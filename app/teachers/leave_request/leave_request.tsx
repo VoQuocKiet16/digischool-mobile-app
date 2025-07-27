@@ -16,6 +16,7 @@ import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getTeacherSchedule } from "../../../services/schedule.service";
 import { Activity } from "../schedule/schedule";
+import { fonts } from "../../../utils/responsive";
 
 const defaultActivity = (text: string, hasNotification = false): Activity => ({
   text,
@@ -510,12 +511,12 @@ const styles = StyleSheet.create({
   buttonDisabled: { backgroundColor: "#D1D5DB" },
   buttonText: {
     color: "#f7f7f7",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 18,
   },
   buttonTextDisabled: {
     color: "#9CA3AF",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 18,
   },
   buttonContainer: {

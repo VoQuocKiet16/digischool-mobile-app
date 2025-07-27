@@ -1,10 +1,15 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
@@ -12,6 +17,7 @@ import LoadingModal from "../../components/LoadingModal";
 import RemindPicker from "../../components/RemindPicker";
 import { createNote } from "../../services/note_lesson.service";
 import { getLessonSubtitle } from "../../utils/lessonSubtitle";
+import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 const REMIND_OPTIONS = [
   "Trước 10 phút",
@@ -45,106 +51,119 @@ const AddNoteScreen = () => {
       subtitle={getLessonSubtitle(lessonData)}
       onBack={() => router.back()}
     >
-      <View style={styles.container}>
-        {/* Tiêu đề ghi chú */}
-        <View style={styles.fieldWrap}>
-          <View style={styles.outlineInputBox}>
-            <Text style={styles.floatingLabel}>
-              Tiêu đề ghi chú <Text style={styles.required}>*</Text>
-            </Text>
-            <TextInput
-              style={styles.inputTextOutline}
-              value={title}
-              onChangeText={setTitle}
-              placeholder="Nhập tiêu đề ghi chú"
-              placeholderTextColor="#9CA3AF"
-            />
-          </View>
-        </View>
-
-        {/* Ghi chú */}
-        <View style={styles.fieldWrap}>
-          <View style={styles.outlineInputBox}>
-            <Text style={styles.floatingLabel}>
-              Ghi chú <Text style={styles.required}>*</Text>
-            </Text>
-            <TextInput
-              style={[
-                styles.inputTextOutline,
-                { minHeight: 48, marginBottom: 20 },
-              ]}
-              value={note}
-              onChangeText={setNote}
-              placeholder="Nhập nội dung ghi chú"
-              placeholderTextColor="#9CA3AF"
-              multiline={true}
-            />
-          </View>
-        </View>
-
-        {/* Nhắc nhở */}
-        <RemindPicker
-          remind={remind}
-          setRemind={setRemind}
-          remindTime={remindTime}
-          setRemindTime={setRemindTime}
-          REMIND_OPTIONS={REMIND_OPTIONS}
-          ITEM_HEIGHT={ITEM_HEIGHT}
-          PADDING_COUNT={PADDING_COUNT}
-        />
-
-        {/* Nút Thêm */}
-        <TouchableOpacity
-          style={[
-            styles.saveBtn,
-            (!isValid || loading) && styles.saveBtnDisabled,
-          ]}
-          disabled={!isValid || loading}
-          onPress={async () => {
-            if (!lessonId) return;
-            setLoading(true);
-            setShowLoading(true);
-            // Chỉ truyền remindMinutes nếu remind=true
-            const reqBody: any = {
-              title,
-              content: note,
-              lesson: lessonId,
-            };
-            if (remind) {
-              reqBody.remindMinutes = Number(remindTime.match(/\d+/)?.[0]);
-            }
-            const res = await createNote(reqBody);
-            setLoading(false);
-            if (res.success) {
-              setShowSuccess(true);
-              setTimeout(() => {
-                setShowLoading(false);
-                setShowSuccess(false);
-                router.back();
-              }, 1200);
-            } else {
-              setShowLoading(false);
-              alert(res.message || "Tạo ghi chú thất bại");
-            }
-          }}
-        >
-          <Text
-            style={[
-              styles.saveBtnText,
-              (!isValid || loading) && { color: "#A0A0A0" },
-            ]}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        // keyboardVerticalOffset={80}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
           >
-            Thêm
-          </Text>
-        </TouchableOpacity>
-        <LoadingModal
-          visible={showLoading}
-          text={
-            showSuccess ? "Thêm ghi chú thành công!" : "Đang thêm ghi chú..."
-          }
-          success={showSuccess}
-        />
-      </View>
+            <View style={styles.container}>
+              {/* Tiêu đề ghi chú */}
+              <View style={styles.fieldWrap}>
+                <View style={styles.outlineInputBox}>
+                  <Text style={styles.floatingLabel}>
+                    Tiêu đề ghi chú <Text style={styles.required}>*</Text>
+                  </Text>
+                  <TextInput
+                    style={styles.inputTextOutline}
+                    value={title}
+                    onChangeText={setTitle}
+                    placeholder="Nhập tiêu đề ghi chú"
+                    placeholderTextColor="#9CA3AF"
+                  />
+                </View>
+              </View>
+
+              {/* Ghi chú */}
+              <View style={styles.fieldWrap}>
+                <View style={styles.outlineInputBox}>
+                  <Text style={styles.floatingLabel}>
+                    Ghi chú <Text style={styles.required}>*</Text>
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.inputTextOutline,
+                      { minHeight: 48, marginBottom: 20 },
+                    ]}
+                    value={note}
+                    onChangeText={setNote}
+                    placeholder="Nhập nội dung ghi chú"
+                    placeholderTextColor="#9CA3AF"
+                    multiline={true}
+                  />
+                </View>
+              </View>
+
+              {/* Nhắc nhở */}
+              <RemindPicker
+                remind={remind}
+                setRemind={setRemind}
+                remindTime={remindTime}
+                setRemindTime={setRemindTime}
+                REMIND_OPTIONS={REMIND_OPTIONS}
+                ITEM_HEIGHT={ITEM_HEIGHT}
+                PADDING_COUNT={PADDING_COUNT}
+              />
+
+              {/* Nút Thêm */}
+              <TouchableOpacity
+                style={[
+                  styles.saveBtn,
+                  (!isValid || loading) && styles.saveBtnDisabled,
+                ]}
+                disabled={!isValid || loading}
+                onPress={async () => {
+                  if (!lessonId) return;
+                  setLoading(true);
+                  setShowLoading(true);
+                  // Chỉ truyền remindMinutes nếu remind=true
+                  const reqBody: any = {
+                    title,
+                    content: note,
+                    lesson: lessonId,
+                  };
+                  if (remind) {
+                    reqBody.remindMinutes = Number(remindTime.match(/\d+/)?.[0]);
+                  }
+                  const res = await createNote(reqBody);
+                  setLoading(false);
+                  if (res.success) {
+                    setShowSuccess(true);
+                    setTimeout(() => {
+                      setShowLoading(false);
+                      setShowSuccess(false);
+                      router.back();
+                    }, 1200);
+                  } else {
+                    setShowLoading(false);
+                    alert(res.message || "Tạo ghi chú thất bại");
+                  }
+                }}
+              >
+                <Text
+                  style={[
+                    styles.saveBtnText,
+                    (!isValid || loading) && { color: "#A0A0A0" },
+                  ]}
+                >
+                  Thêm
+                </Text>
+              </TouchableOpacity>
+              <LoadingModal
+                visible={showLoading}
+                text={
+                  showSuccess ? "Thêm ghi chú thành công!" : "Đang thêm ghi chú..."
+                }
+                success={showSuccess}
+              />
+            </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </HeaderLayout>
   );
 };
@@ -177,14 +196,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#f7f7f7",
     paddingHorizontal: 6,
     color: "#29375C",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 14,
     zIndex: 2,
   },
   inputTextOutline: {
     color: "#29375C",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   required: {
     color: "#E53935",
@@ -206,7 +225,7 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     color: "#fff",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 18,
   },
 });

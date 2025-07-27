@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
+import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 export default function ActivityDetail() {
   const router = useRouter();

@@ -8,6 +8,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 const { width } = Dimensions.get("window");
 
@@ -249,14 +250,14 @@ const styles = StyleSheet.create({
     color: "#29375C",
     marginBottom: 12,
     textAlign: "center",
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
   },
   description: {
     fontSize: 15,
     color: "#7a869a",
     textAlign: "center",
     marginBottom: 90,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   button: {
     backgroundColor: "#2d3a4b",

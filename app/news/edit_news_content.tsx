@@ -4,6 +4,7 @@ import { Alert, StyleSheet, Text, View } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import LexicalEditorWebView from "../../components/LexicalEditorWebView";
 import { getNewsDetail } from "../../services/news.service";
+import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 export default function EditNewsContentScreen() {
   const router = useRouter();
@@ -44,7 +45,7 @@ export default function EditNewsContentScreen() {
           style={{
             color: "#29375C",
             fontSize: 14,
-            fontFamily: "Baloo2-SemiBold",
+            fontFamily: fonts.semiBold,
             textDecorationLine: "underline",
           }}
         >

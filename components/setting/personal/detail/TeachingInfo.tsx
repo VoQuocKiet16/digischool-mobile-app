@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { UserData } from "../../../../types/user.types";
+import { fonts } from "../../../../utils/responsive";
 
 interface TeachingInfoProps {
   userData: UserData | null;
@@ -88,7 +89,7 @@ const styles = StyleSheet.create({
     fontSize: 25,
     color: "#29375C",
     flex: 1,
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
   },
   icon: {
     color: "#29375C",
@@ -104,7 +105,7 @@ const styles = StyleSheet.create({
   label: {
     color: "#29375C",
     fontSize: 18,
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   value: {
     color: "#A3A7AC",
@@ -112,7 +113,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 0,
     top: 5,
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     maxWidth: "60%",
     textAlign: "right",
   },

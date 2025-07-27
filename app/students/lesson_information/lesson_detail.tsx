@@ -16,6 +16,7 @@ import {
 import { getLessonDetail } from "../../../services/schedule.service";
 import { LessonData } from "../../../types/lesson.types";
 import { getLessonSubtitle } from "../../../utils/lessonSubtitle";
+import { fonts, responsiveValues } from "../../../utils/responsive";
 
 const LessonDetailScreen = () => {
   const [menuVisible, setMenuVisible] = useState(false);
@@ -120,7 +121,7 @@ const LessonDetailScreen = () => {
       onBack={() => router.back()}
       rightIcon={
         <TouchableOpacity onPress={() => setMenuVisible(true)}>
-          <MaterialIcons name="menu" size={24} color="#29375C" />
+            <MaterialIcons name="menu" size={responsiveValues.iconSize.xl} color="#29375C" />
         </TouchableOpacity>
       }
     >
@@ -226,7 +227,7 @@ const styles = StyleSheet.create({
   menuText: {
     color: "#fff",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
 });
 

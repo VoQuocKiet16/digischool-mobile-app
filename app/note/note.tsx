@@ -13,6 +13,7 @@ import HeaderLayout from "../../components/layout/HeaderLayout";
 import PlusIcon from "../../components/PlusIcon";
 import { getNotesByLesson } from "../../services/note_lesson.service";
 import { getLessonSubtitle } from "../../utils/lessonSubtitle";
+import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 const numColumns = 2;
 const screenWidth = Dimensions.get("window").width;
@@ -189,12 +190,12 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 20,
     color: "#29375C",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   cardContent: {
     fontSize: 14,
     color: "#616A81",
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     marginBottom: 16,
   },
   cardFooter: {
@@ -206,7 +207,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#29375C",
     marginLeft: 6,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   addNoteWrapper: {
     marginTop: 24,
@@ -216,7 +217,7 @@ const styles = StyleSheet.create({
   noNotesText: {
     textAlign: "center",
     marginTop: 20,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     fontSize: 14,
     color: "#A0A0A0",
   },

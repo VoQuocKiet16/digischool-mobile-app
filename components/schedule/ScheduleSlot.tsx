@@ -2,6 +2,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 interface ScheduleSlotProps {
   text: string;
@@ -189,7 +190,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     includeFontPadding: false,
     textAlignVertical: "center",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   emptySlotText: {
     color: "#A0A0A0",
@@ -197,7 +198,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     includeFontPadding: false,
     textAlignVertical: "center",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   taughtSlot: {
     backgroundColor: "#f7f7f7",
@@ -224,7 +225,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     includeFontPadding: false,
     textAlignVertical: "center",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   currentSlot: {
     backgroundColor: "#E5E7EB",
@@ -250,7 +251,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     includeFontPadding: false,
     textAlignVertical: "center",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   exchangeableSlot: {
     backgroundColor: "#f7f7f7",
@@ -277,7 +278,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     includeFontPadding: false,
     textAlignVertical: "center",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   selectedSlot: {
     backgroundColor: "#F9B233",
@@ -301,7 +302,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     includeFontPadding: false,
     textAlignVertical: "center",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   notificationPin: {
     position: "absolute",
@@ -319,7 +320,7 @@ const styles = StyleSheet.create({
   notificationText: {
     color: "#fff",
     fontSize: 9,
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   userActivitySlot: {
     backgroundColor: "#229A89",
@@ -345,7 +346,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     includeFontPadding: false,
     textAlignVertical: "center",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
 });
 

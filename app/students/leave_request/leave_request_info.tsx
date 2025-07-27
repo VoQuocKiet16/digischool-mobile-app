@@ -13,6 +13,7 @@ import {
 import HeaderLayout from "../../../components/layout/HeaderLayout";
 import LoadingModal from "../../../components/LoadingModal";
 import { createLeaveRequest } from "../../../services/leave_request.service";
+import { fonts } from "../../../utils/responsive";
 
 export default function LeaveRequestInfoScreen() {
   const router = useRouter();
@@ -150,7 +151,7 @@ export default function LeaveRequestInfoScreen() {
                   style={{
                     fontSize: 14,
                     color: phoneCriteria.length ? "#2ecc40" : "#7a869a",
-                    fontFamily: "Baloo2-Regular",
+                    fontFamily: fonts.regular,
                     marginBottom: 5,
                   }}
                 >
@@ -160,7 +161,7 @@ export default function LeaveRequestInfoScreen() {
                   style={{
                     fontSize: 14,
                     color: phoneCriteria.start0 ? "#2ecc40" : "#7a869a",
-                    fontFamily: "Baloo2-Regular",
+                    fontFamily: fonts.regular,
                   }}
                 >
                   Bắt đầu bằng số 0
@@ -312,12 +313,12 @@ const styles = StyleSheet.create({
   buttonDisabled: { backgroundColor: "#D1D5DB" },
   buttonText: {
     color: "#fff",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 18,
   },
   buttonTextDisabled: {
     color: "#9CA3AF",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 18,
   },
   card: {
@@ -347,7 +348,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 25,
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     color: "#29375C",
     flexShrink: 0,
   },
@@ -369,7 +370,7 @@ const styles = StyleSheet.create({
   },
   dayText: {
     color: "#29375C",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 16,
   },
   lessonTagCard: {
@@ -385,7 +386,7 @@ const styles = StyleSheet.create({
     color: "#29375C",
     fontSize: 16,
     textAlign: "center",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   confirmInputBox: {
     borderWidth: 1,
@@ -407,14 +408,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#f7f7f7",
     paddingHorizontal: 6,
     color: "#29375C",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 14,
     zIndex: 2,
   },
   confirmInput: {
     color: "#29375C",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   required: {
     color: "#E53935",

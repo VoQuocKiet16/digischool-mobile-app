@@ -14,6 +14,7 @@ import HeaderLayout from "../../../components/layout/HeaderLayout";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getStudentSchedule } from "../../../services/schedule.service";
+import { fonts } from "../../../utils/responsive";
 
 const academicYears = ["2024-2025", "2025-2026"];
 
@@ -554,12 +555,12 @@ const styles = StyleSheet.create({
   buttonDisabled: { backgroundColor: "#D1D5DB" },
   buttonText: {
     color: "#fff",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 18,
   },
   buttonTextDisabled: {
     color: "#9CA3AF",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 18,
   },
   buttonContainer: {

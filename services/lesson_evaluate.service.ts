@@ -72,7 +72,7 @@ export const lessonEvaluateService = {
       );
       return response.data.data;
     } catch (error) {
-      console.error("Error fetching students:", error);
+
       throw error;
     }
   },
@@ -89,7 +89,7 @@ export const lessonEvaluateService = {
       );
       return response.data;
     } catch (error) {
-      console.error("Error creating evaluation:", error);
+ 
       throw error;
     }
   },
@@ -113,7 +113,6 @@ export const lessonEvaluateService = {
       );
       return response.data;
     } catch (error) {
-      console.error("Error creating student evaluation:", error);
       throw error;
     }
   },

@@ -19,6 +19,7 @@ import {
   markNotificationAsRead,
   Notification,
 } from "../../services/notification.service";
+import { fonts } from "../../utils/responsive";
 
 const TABS = [
   { key: "user", label: "Người dùng" },
@@ -263,7 +264,7 @@ export default function NotificationListScreen() {
           style={{
             textAlign: "center",
             marginTop: 20,
-            fontFamily: "Baloo2-Medium",
+            fontFamily: fonts.medium,
             fontSize: 14,
             color: "#A0A0A0",
           }}
@@ -276,7 +277,7 @@ export default function NotificationListScreen() {
             textAlign: "center",
             color: "red",
             marginTop: 20,
-            fontFamily: "Baloo2-Medium",
+            fontFamily: fonts.medium,
             fontSize: 14,
           }}
         >
@@ -287,7 +288,7 @@ export default function NotificationListScreen() {
           style={{
             textAlign: "center",
             marginTop: 20,
-            fontFamily: "Baloo2-Medium",
+            fontFamily: fonts.medium,
             fontSize: 14,
             color: "#A0A0A0",
           }}
@@ -328,7 +329,7 @@ export default function NotificationListScreen() {
                         style={[
                           styles.notiText,
                           isUnread && {
-                            fontFamily: "Baloo2-SemiBold",
+                            fontFamily: fonts.semiBold,
                             color: "#000",
                           },
                         ]}
@@ -373,12 +374,12 @@ const styles = StyleSheet.create({
   tabText: {
     color: "#A0A0A0",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   tabTextActive: {
     color: "#29375C",
     fontSize: 18,
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   searchRow: {
     flexDirection: "row",
@@ -400,7 +401,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#29375C",
     marginLeft: 8,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   bellBtn: {
     width: 40,
@@ -438,19 +439,19 @@ const styles = StyleSheet.create({
     color: "#000",
     fontSize: 18,
     flex: 1,
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   notiTime: {
     color: "#A0A0A0",
     fontSize: 14,
     marginLeft: 8,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   notiText: {
     color: "#707274",
     fontSize: 14,
     marginTop: 2,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     flex: 1,
   },
   markIcon: {
@@ -462,7 +463,7 @@ const styles = StyleSheet.create({
   unreadBadge: {
     color: "#F9B233",
     fontSize: 14,
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   unreadBadgeWrap: {
     backgroundColor: "#F9B233",
@@ -477,7 +478,7 @@ const styles = StyleSheet.create({
   unreadBadgeText: {
     color: "#fff",
     fontSize: 12,
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
     textAlign: "center",
   },
   markAllBtn: {
@@ -490,7 +491,7 @@ const styles = StyleSheet.create({
   },
   markAllBtnText: {
     fontSize: 14,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     color: "#29375C",
     marginRight: 8,
     textDecorationLine: "underline",
