@@ -9,12 +9,13 @@ import {
   Keyboard,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { TextInput } from "react-native-paper";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import chatService from "../../services/chat.service";
+import { fonts } from "../../utils/responsive";
 
 
 export default function AddContactScreen() {
@@ -65,18 +66,21 @@ export default function AddContactScreen() {
       <View style={styles.container}>
         {/* Form tìm kiếm */}
         <View style={{ marginHorizontal: 20, marginTop: 18 }}>
-          <TextInput
-            label="Tên người dùng"
-            mode="outlined"
-            placeholder="hocsinh1"
-            placeholderTextColor="#A0A0A0"
-            value={username}
-            onChangeText={setUsername}
-            style={{ backgroundColor: "#F6F8FB" }}
-            disabled={loading}
-            outlineColor="#29375C"
-            activeOutlineColor="#29375C"
-          />
+          <View style={styles.fieldWrap}>
+            <View style={styles.outlineInputBox}>
+              <Text style={styles.floatingLabel}>
+                Tên người dùng <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                style={styles.inputTextOutline}
+                value={username}
+                onChangeText={setUsername}
+                placeholder="hocsinh1"
+                placeholderTextColor="#9CA3AF"
+                editable={!loading}
+              />
+            </View>
+          </View>
           <TouchableOpacity
             style={[
               styles.searchBtn,
@@ -169,9 +173,11 @@ const styles = StyleSheet.create({
   searchBtn: {
     backgroundColor: "#29375C",
     borderRadius: 12,
-    paddingVertical: 14,
+    paddingVertical: 12,
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 12,
+    marginLeft: 15,
+    marginRight: 15,
   },
   searchBtnText: {
     color: "#fff",
@@ -224,5 +230,40 @@ const styles = StyleSheet.create({
   },
   chatIcon: {
     marginLeft: 12,
+  },
+  fieldWrap: {
+    marginBottom: 12,
+  },
+  outlineInputBox: {
+    borderWidth: 1,
+    borderColor: "#29375C",
+    borderRadius: 12,
+    backgroundColor: "#f7f7f7",
+    paddingHorizontal: 25,
+    marginLeft: 15,
+    marginRight: 15,
+    position: "relative",
+  },
+  floatingLabel: {
+    position: "absolute",
+    top: -16,
+    left: 18,
+    backgroundColor: "#f7f7f7",
+    paddingHorizontal: 6,
+    color: "#29375C",
+    fontFamily: fonts.semiBold,
+    fontSize: 14,
+    zIndex: 2,
+  },
+  inputTextOutline: {
+    color: "#29375C",
+    fontSize: 16,
+    fontFamily: fonts.medium,
+  },
+  required: {
+    color: "#E53935",
+    fontSize: 18,
+    marginLeft: 2,
+    marginTop: -2,
   },
 });

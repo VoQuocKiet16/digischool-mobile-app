@@ -13,6 +13,7 @@ import {
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import PlusIcon from "../../components/PlusIcon";
 import { getMyNews } from "../../services/news.service";
+import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 export default function ManageNewsScreen() {
   const [news, setNews] = useState<any[]>([]);
@@ -68,7 +69,7 @@ export default function ManageNewsScreen() {
               style={{
                 textAlign: "center",
                 marginTop: 40,
-                fontFamily: "Baloo2-Medium",
+                fontFamily: fonts.medium,
                 fontSize: 16,
                 color: "#A0A0A0",
               }}
@@ -192,13 +193,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: "#29375C",
     flex: 1,
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   cardDesc: {
     color: "#7D88A7",
     fontSize: 14,
     marginBottom: 6,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   cardFooter: {
     flexDirection: "row",
@@ -207,7 +208,7 @@ const styles = StyleSheet.create({
   cardTime: {
     color: "#29375C",
     fontSize: 13,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   plusWrap: {
     marginTop: 8,

@@ -11,10 +11,8 @@ import {
 import HeaderLayout from "../../../components/layout/HeaderLayout";
 import LoadingModal from "../../../components/LoadingModal";
 // Đã bỏ SuccessModal
-import {
-  createSubstituteRequest,
-  getAvailableTeachers,
-} from "../../../services/lesson_request.service";
+import { createSubstituteRequest, getAvailableTeachers } from "@/services/lesson_request.service";
+import { fonts } from "../../../utils/responsive";
 
 const TEACHERS = [
   "Thầy/Cô Nguyen Van C",
@@ -127,7 +125,7 @@ export default function SubstituteRequest() {
             {showDropdown && (
               <View style={styles.modalContent}>
                 {teachers.length === 0 ? (
-                  <Text style={{ color: "#29375C", fontSize: 16, fontFamily: "Baloo2-Medium", marginTop: 10 }}>Không có giáo viên phù hợp</Text>
+                  <Text style={{ color: "#29375C", fontSize: 16, fontFamily: fonts.medium, marginTop: 10 }}>Không có giáo viên phù hợp</Text>
                 ) : (
                   teachers.map((t, idx) => (
                     <TouchableOpacity
@@ -208,14 +206,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#f7f7f7",
     paddingHorizontal: 6,
     color: "#29375C",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 14,
     zIndex: 2,
   },
   inputTextOutline: {
     color: "#29375C",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   required: {
     color: "#E53935",
@@ -233,12 +231,12 @@ const styles = StyleSheet.create({
   dropdownText: {
     color: "#29375C",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   dropdownPlaceholder: {
     color: "#9CA3AF",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   modalContent: {
     backgroundColor: "#f7f7f7",
@@ -254,7 +252,7 @@ const styles = StyleSheet.create({
   modalItemText: {
     fontSize: 16,
     color: "#29375C",
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   sendBtn: {
     backgroundColor: "#29375C",
@@ -272,7 +270,7 @@ const styles = StyleSheet.create({
   },
   sendBtnText: {
     color: "#fff",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 18,
   },
   teacherRow: {

@@ -22,6 +22,7 @@ import { NotificationProvider } from "../contexts/NotificationContext";
 import { UserProvider, useUserContext } from "../contexts/UserContext";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { fonts, responsiveValues } from "../utils/responsive";
 
 
 function RootLayoutContent() {
@@ -58,6 +59,11 @@ function RootLayoutContent() {
   ];
   const managerTabs = [
     {
+      name: "Quản lý",
+      route: "/manage_school",
+      icon: <MaterialIcons name="school" size={24} color="#22304A" />,
+    },
+    {
       name: "Tài khoản",
       route: "/manage_account",
       icon: <MaterialIcons name="group" size={24} color="#22304A" />,
@@ -77,11 +83,7 @@ function RootLayoutContent() {
       route: "/manage_schedule",
       icon: <MaterialIcons name="calendar-today" size={24} color="#22304A" />,
     },
-    {
-      name: "Quản lý",
-      route: "/manage_school",
-      icon: <MaterialIcons name="school" size={24} color="#22304A" />,
-    },
+    
   ];
 
   // Xác định role
@@ -98,6 +100,17 @@ function RootLayoutContent() {
   const tabs = role === "manager" ? managerTabs : studentTabs;
   // Xác định tab nào đang active
   const currentRoute = pathname;
+  // Các route cần HIỆN tabbar
+  const shownTabBarRoutes = [
+    "/manage_account",
+    "/",
+    "/manage_process",
+    "/manage_rollcall",
+    "/manage_schedule",
+    "/manage_school",
+    "/message",
+    "/news",
+  ]
   // Các route cần ẩn tabbar
   const hiddenTabBarRoutes = [
     "/auth",
@@ -128,11 +141,10 @@ function RootLayoutContent() {
     "/message/add_contact",
     "/activity/add_activity",
     "/activity/detail_activity",
+    "/manage/detail_account",
   ];
-  // Kiểm tra có cần ẩn tabbar không
-  const isTabBarHidden = hiddenTabBarRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
+  // Chỉ hiện tabbar ở đúng các route này
+  const isTabBarHidden = !shownTabBarRoutes.some((route) => pathname === route);
   // Khi bấm tab
   const handleTabPress = (route: string) => {
     if (currentRoute !== route) {
@@ -245,36 +257,34 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   tabBar: {
     flexDirection: "row",
-    height: 90,
-    borderTopWidth: 1,
-    borderTopColor: "#eee",
     backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "space-around",
-    paddingBottom: 10,
+    paddingTop: 8,
+    paddingBottom: 20,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#E6E9F0",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 8,
   },
   tabItem: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 6,
+    paddingVertical: 8,
   },
   tabItemActive: {
-    backgroundColor: "#FFFFFF",
+    // Active state styling
   },
   tabText: {
-    fontSize: 14,
-    color: "#C4C4C4",
-    marginTop: 2,
-    fontFamily: "Baloo2-SemiBold",
+    fontSize: responsiveValues.fontSize.sm,
+    marginTop: 4,
+    fontFamily: fonts.semiBold,
   },
   tabTextActive: {
     color: "#29375C",
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
   },
 });

@@ -15,6 +15,7 @@ import LoadingModal from "../../components/LoadingModal";
 import { API_ERROR_MESSAGES } from "../../constants/api.constants";
 import { useUserContext } from "../../contexts/UserContext";
 import { getMe, login } from "../../services/auth.service";
+import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -291,14 +292,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#29375C",
     marginBottom: 8,
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
   },
   subtitle: {
     fontSize: 18,
     color: "#29375C",
     marginBottom: 85,
     lineHeight: 22,
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   label: {
     fontSize: 16,
@@ -307,7 +308,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginLeft: 5,
     fontWeight: "500",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   inputContainer: {
     flexDirection: "row",
@@ -328,20 +329,20 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 18,
     color: "#29375C",
-    fontFamily: "Baloo2-Regular",
+    fontFamily: fonts.regular,
   },
   forgotPassword: {
     alignSelf: "flex-end",
     marginTop: 12,
     marginBottom: 24,
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   forgotPasswordText: {
     color: "#29375C",
     fontWeight: "500",
     fontSize: 14,
     textDecorationLine: "underline",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   loginButton: {
     backgroundColor: "#29375C",
@@ -354,6 +355,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "500",
     fontSize: 18,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
 });

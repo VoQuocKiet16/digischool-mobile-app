@@ -3,6 +3,7 @@ import Lesson_Information from "@/components/lesson_detail/Lesson_Information";
 import ConfirmTeachedModal from "@/components/notifications_modal/ConfirmTeachedModal";
 import PlusIcon from "@/components/PlusIcon";
 import RefreshableScrollView from "@/components/RefreshableScrollView";
+import { fonts, responsive, responsiveValues } from "@/utils/responsive";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 import { router, useLocalSearchParams } from "expo-router";
@@ -10,12 +11,11 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Modal,
   StyleSheet,
   Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  View,
+  View
 } from "react-native";
 import {
   completeLesson,
@@ -218,9 +218,11 @@ const LessonDetailScreen = () => {
       subtitle={getLessonSubtitle(lessonData)}
       onBack={() => router.back()}
       rightIcon={
-        <TouchableOpacity onPress={() => setMenuVisible(true)}>
-          <Ionicons name="menu" size={24} color="#29375C" />
-        </TouchableOpacity>
+        <TouchableWithoutFeedback onPress={() => setMenuVisible(!menuVisible)}>
+          <TouchableOpacity onPress={() => setMenuVisible(!menuVisible)}>
+            <Ionicons name="menu" size={responsiveValues.iconSize.xxl} color="#29375C" />
+          </TouchableOpacity>
+        </TouchableWithoutFeedback>
       }
     >
       <RefreshableScrollView
@@ -281,128 +283,126 @@ const LessonDetailScreen = () => {
         iconColor="#fff"
         iconBgColor="#29375C"
       />
-      <Modal
-        visible={menuVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setMenuVisible(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setMenuVisible(false)}>
-          <View style={styles.overlay}>
-            <View style={styles.menuBox}>
-              <TouchableOpacity
-                style={[
-                  styles.menuItem,
-                  {
-                    flexDirection: "row",
-                    alignItems: "center",
-                    opacity: pendingRequest ? 0.5 : 1,
+     {menuVisible && (
+        <View style={styles.overlay}>
+          <TouchableOpacity 
+            // style={{ flex: 1 }} 
+            onPress={() => setMenuVisible(false)}
+            activeOpacity={1}
+          />
+          <View style={styles.menuBox}>
+            <TouchableOpacity
+              style={[
+                styles.menuItem,
+                {
+                  flexDirection: "row",
+                  alignItems: "center",
+                  opacity: pendingRequest ? 0.5 : 1,
+                },
+              ]}
+              onPress={() => {
+                if (pendingRequest) return;
+                setMenuVisible(false);
+                router.push({
+                  pathname: "/teachers/lesson_request/substitute_request",
+                  params: { lessonId: lessonId },
+                });
+              }}
+              disabled={!!pendingRequest}
+            >
+              <MaterialIcons name="swap-horiz" size={20} color="#fff" />
+              <Text style={[styles.menuText, { marginLeft: 8 }]}>
+                Dạy thay
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.menuItem,
+                {
+                  flexDirection: "row",
+                  alignItems: "center",
+                  opacity: pendingRequest ? 0.5 : 1,
+                },
+              ]}
+              onPress={() => {
+                if (pendingRequest) return;
+                setMenuVisible(false);
+                router.push({
+                  pathname: "/teachers/lesson_request/swap_schedule",
+                  params: {
+                    lessonId: lessonId,
+                    className: lessonData?.class?.className,
+                    lessonFrom: JSON.stringify(lessonData),
+                    lessonDate: lessonData?.scheduledDate,
+                    lessonYear: lessonData?.academicYear?.name || "2025-2026",
                   },
-                ]}
-                onPress={() => {
-                  if (pendingRequest) return;
-                  setMenuVisible(false);
-                  router.push({
-                    pathname: "/teachers/lesson_request/substitute_request",
-                    params: { lessonId: lessonId },
-                  });
-                }}
-                disabled={!!pendingRequest}
-              >
-                <MaterialIcons name="swap-horiz" size={20} color="#fff" />
-                <Text style={[styles.menuText, { marginLeft: 8 }]}>
-                  Dạy thay
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.menuItem,
-                  {
-                    flexDirection: "row",
-                    alignItems: "center",
-                    opacity: pendingRequest ? 0.5 : 1,
+                });
+              }}
+              disabled={!!pendingRequest}
+            >
+              <MaterialIcons name="compare-arrows" size={20} color="#fff" />
+              <Text style={[styles.menuText, { marginLeft: 8 }]}>
+                Đổi tiết
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.menuItem,
+                {
+                  flexDirection: "row",
+                  alignItems: "center",
+                  opacity: pendingRequest ? 0.5 : 1,
+                },
+              ]}
+              onPress={() => {
+                if (pendingRequest) return;
+                setMenuVisible(false);
+                router.push({
+                  pathname: "/teachers/lesson_request/makeup_schedule",
+                  params: {
+                    lessonId: lessonId,
+                    className: lessonData?.class?.className,
+                    lessonDate: lessonData?.scheduledDate,
+                    lessonYear: lessonData?.academicYear?.name || "2025-2026",
                   },
-                ]}
-                onPress={() => {
-                  if (pendingRequest) return;
-                  setMenuVisible(false);
-                  router.push({
-                    pathname: "/teachers/lesson_request/swap_schedule",
-                    params: {
-                      lessonId: lessonId,
-                      className: lessonData?.class?.className,
-                      lessonFrom: JSON.stringify(lessonData),
-                      lessonDate: lessonData?.scheduledDate,
-                      lessonYear: lessonData?.academicYear?.name || "2025-2026",
-                    },
-                  });
-                }}
-                disabled={!!pendingRequest}
-              >
-                <MaterialIcons name="compare-arrows" size={20} color="#fff" />
-                <Text style={[styles.menuText, { marginLeft: 8 }]}>
-                  Đổi tiết
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.menuItem,
-                  {
-                    flexDirection: "row",
-                    alignItems: "center",
-                    opacity: pendingRequest ? 0.5 : 1,
+                });
+              }}
+              disabled={!!pendingRequest}
+            >
+              <MaterialIcons name="event-available" size={20} color="#fff" />
+              <Text style={[styles.menuText, { marginLeft: 8 }]}>Dạy bù</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.menuItem,
+                { flexDirection: "row", alignItems: "center" },
+              ]}
+              onPress={() => {
+                setMenuVisible(false);
+                router.push({
+                  pathname: "/note/note",
+                  params: {
+                    lessonId: lessonId,
+                    lessonData: JSON.stringify(lessonData),
                   },
-                ]}
-                onPress={() => {
-                  if (pendingRequest) return;
-                  setMenuVisible(false);
-                  router.push({
-                    pathname: "/teachers/lesson_request/makeup_schedule",
-                    params: {
-                      lessonId: lessonId,
-                      className: lessonData?.class?.className,
-                      lessonDate: lessonData?.scheduledDate,
-                      lessonYear: lessonData?.academicYear?.name || "2025-2026",
-                    },
-                  });
-                }}
-                disabled={!!pendingRequest}
-              >
-                <MaterialIcons name="event-available" size={20} color="#fff" />
-                <Text style={[styles.menuText, { marginLeft: 8 }]}>Dạy bù</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.menuItem,
-                  { flexDirection: "row", alignItems: "center" },
-                ]}
-                onPress={() => {
-                  setMenuVisible(false);
-                  router.push({
-                    pathname: "/note/note",
-                    params: {
-                      lessonId: lessonId,
-                      lessonData: JSON.stringify(lessonData),
-                    },
-                  });
-                }}
-              >
-                <MaterialIcons name="note" size={20} color="#fff" />
-                <Text style={[styles.menuText, { marginLeft: 8 }]}>
-                  Ghi chú
-                </Text>
-              </TouchableOpacity>
-            </View>
+                });
+              }}
+            >
+              <MaterialIcons name="note" size={20} color="#fff" />
+              <Text style={[styles.menuText, { marginLeft: 8 }]}>
+                Ghi chú
+              </Text>
+            </TouchableOpacity>
           </View>
-        </TouchableWithoutFeedback>
-      </Modal>
+        </View>
+      )}
     </HeaderLayout>
   );
 };
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingBottom: 90,
+    paddingBottom: responsive.height(11),
   },
   loadingContainer: {
     flex: 1,
@@ -410,61 +410,72 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    marginTop: 16,
-    fontSize: 16,
+    marginTop: responsiveValues.padding.md,
+    fontSize: responsiveValues.fontSize.md,
     color: "#666",
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: responsiveValues.padding.lg,
   },
   errorText: {
-    fontSize: 16,
+    fontSize: responsiveValues.fontSize.md,
     color: "#F04438",
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: responsiveValues.padding.lg,
   },
   retryButton: {
     backgroundColor: "#3A546D",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingHorizontal: responsiveValues.padding.lg,
+    paddingVertical: responsiveValues.padding.sm,
+    borderRadius: responsiveValues.borderRadius.md,
   },
   retryButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: responsiveValues.fontSize.md,
     fontWeight: "500",
   },
   overlay: {
     position: "absolute",
-    top: 120,
+    top: 0,
     left: 0,
-    right: 20,
+    right: 0,
     bottom: 0,
     flex: 1,
     backgroundColor: "transparent",
     justifyContent: "flex-start",
     alignItems: "flex-end",
+    paddingTop: responsive.height(9),
+    paddingRight: responsiveValues.padding.sm,
   },
   menuBox: {
     backgroundColor: "#29375C",
-    borderRadius: 10,
-    padding: 8,
-    minWidth: 120,
+    borderRadius: responsiveValues.borderRadius.md,
+    padding: responsiveValues.padding.sm,
+    minWidth: responsive.width(30),
     marginTop: 0,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    zIndex: 1000,
+    position: "absolute",
+    top: responsive.height(9),
+    right: responsiveValues.padding.sm,
   },
   menuItem: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    marginTop: 5,
+    paddingVertical: responsiveValues.padding.sm,
+    paddingHorizontal: responsiveValues.padding.md,
+    borderRadius: responsiveValues.borderRadius.md,
+    marginTop: responsiveValues.padding.xs,
   },
   menuText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: responsiveValues.fontSize.md,
     fontWeight: "500",
     opacity: 0.7,
   },

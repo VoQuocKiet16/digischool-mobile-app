@@ -17,6 +17,7 @@ import {
   getNewsDetail,
   unfavoriteNews,
 } from "../../services/news.service";
+import { fonts, responsiveValues } from "../../utils/responsive";
 
 export default function NewsDetailScreen() {
   const router = useRouter();
@@ -99,7 +100,7 @@ export default function NewsDetailScreen() {
         ) : (
           <Ionicons
             name={favorite ? "bookmark" : "bookmark-outline"}
-            size={28}
+            size={responsiveValues.iconSize.xxl}
             color="#29375C"
           />
         )
@@ -161,29 +162,29 @@ const styles = StyleSheet.create({
     paddingTop: 18,
   },
   title: {
-    fontSize: 28,
+    fontSize: responsiveValues.fontSize.xxxl,
     color: "#000",
     marginBottom: 10,
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   hashtag: {
     color: "#3B6EF6",
-    fontSize: 15,
+    fontSize: responsiveValues.fontSize.sm,
     marginTop: 12,
     marginBottom: 2,
     fontWeight: "500",
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   author: {
     color: "#29375C",
-    fontSize: 18,
+    fontSize: responsiveValues.fontSize.sm,
     marginBottom: 6,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   time: {
     color: "#A0A0A0",
-    fontSize: 15,
-    fontFamily: "Baloo2-Medium",
+    fontSize: responsiveValues.fontSize.sm,
+    fontFamily: fonts.medium,
   },
   center: {
     flex: 1,

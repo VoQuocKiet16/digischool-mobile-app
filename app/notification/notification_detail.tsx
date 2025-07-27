@@ -12,6 +12,7 @@ import {
 import { WebView } from "react-native-webview";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import { approveOrRejectRequest } from "../../services/approve_reject.service";
+import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 function timeAgo(dateString: string): string {
   const now = new Date();
@@ -45,8 +46,6 @@ export default function NotificationDetailScreen() {
   const relatedObjectId = relatedObject?.id || params.relatedObject_id;
   const relatedObjectRequestType = relatedObject?.requestType || params.relatedObject_requestType;
   const relatedObjectStatus = relatedObject?.status || params.relatedObject_status;
-
-  console.log("[DEBUG] requestType:", relatedObjectRequestType, "status:", relatedObjectStatus);
 
   const [loading, setLoading] = React.useState(false);
   const slideAnim = React.useRef(new Animated.Value(100)).current; // Initial position off-screen
@@ -178,7 +177,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: "#000",
     marginBottom: 10,
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   webview: {
     width: "100%",
@@ -190,12 +189,12 @@ const styles = StyleSheet.create({
     color: "#000",
     fontSize: 18,
     marginBottom: 6,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   time: {
     color: "#A0A0A0",
     fontSize: 15,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   actionBar: {
     position: "absolute",
@@ -211,7 +210,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 20,
     marginBottom: 10,
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   actionButtons: {
     flexDirection: "row",
@@ -238,12 +237,12 @@ const styles = StyleSheet.create({
   },
   rejectText: {
     color: "#fff",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 16,
   },
   acceptText: {
     color: "#fff",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 16,
   },
 });

@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -19,6 +20,7 @@ import {
   View,
 } from "react-native";
 import chatService from "../../services/chat.service";
+import { fonts, responsive, responsiveValues } from "../../utils/responsive";
 
 // Hàm format giờ:phút
 function formatHourMinute(dateString: string) {
@@ -46,7 +48,7 @@ function formatDateLabel(dateString: string) {
 
 export default function MessageBoxScreen() {
   // Nhận params từ router
-  const { userId, token, myId, name } = useLocalSearchParams();
+  const { userId, token: paramToken, myId: paramMyId, name } = useLocalSearchParams();
 
   const router = useRouter();
   const [messages, setMessages] = useState<any[]>([]);
@@ -57,6 +59,35 @@ export default function MessageBoxScreen() {
   const flatListRef = useRef<FlatList>(null);
   const [selectedImage, setSelectedImage] = useState<any>(null);
   const [imageLoading, setImageLoading] = useState(false);
+  const [token, setToken] = useState<string | null>(paramToken as string || null);
+  const [myId, setMyId] = useState<string | null>(paramMyId as string || null);
+  const [isReady, setIsReady] = useState(false);
+  const [myName, setMyName] = useState<string>('bạn');
+
+  // Lấy token và myId từ AsyncStorage nếu chưa có
+  useEffect(() => {
+    let done = false;
+    const getData = async () => {
+      if (!token) {
+        const t = await AsyncStorage.getItem("token");
+        if (t) setToken(t);
+      }
+      if (!myId) {
+        const id = await AsyncStorage.getItem("userId");
+        if (id) setMyId(id);
+      }
+      setIsReady(true);
+    };
+    getData();
+    return () => { done = true; };
+  }, []);
+
+  // Lấy tên người gửi từ AsyncStorage
+  useEffect(() => {
+    AsyncStorage.getItem('name').then(name => {
+      if (name) setMyName(name);
+    });
+  }, []);
 
   // Reset imageLoading khi selectedImage thay đổi
   useEffect(() => {
@@ -71,7 +102,14 @@ export default function MessageBoxScreen() {
 
   // Lấy lịch sử chat và kết nối socket
   useEffect(() => {
-    if (!userId || !token || !myId) {
+    if (!isReady) return; // Chờ lấy xong token/myId
+    if (
+      typeof userId !== 'string' || !userId.trim() ||
+      typeof token !== 'string' || !token.trim() ||
+      typeof myId !== 'string' || !myId.trim()
+    ) {
+      setLoading(false);
+      setError("Thiếu thông tin người dùng hoặc token");
       return;
     }
     setLoading(true);
@@ -80,7 +118,15 @@ export default function MessageBoxScreen() {
       .getMessagesWith(userId as string, token as string)
       .then((res) => {
         if (res.success) {
-          setMessages(res.data.reverse());
+          // Lọc bỏ tin nhắn rỗng (không có content và mediaUrl)
+          const filtered = (res.data || []).filter((msg: any) => !!msg.content || !!msg.mediaUrl);
+          // Sắp xếp theo thời gian tăng dần (cũ nhất lên đầu)
+          const sorted = filtered.sort((a: any, b: any) => {
+            const timeA = new Date(a.createdAt || a.time || 0).getTime();
+            const timeB = new Date(b.createdAt || b.time || 0).getTime();
+            return timeA - timeB;
+          });
+          setMessages(sorted);
         } else {
           setError(res.message || "Lỗi không xác định");
           setMessages([]);
@@ -122,7 +168,7 @@ export default function MessageBoxScreen() {
     return () => {
       chatService.disconnect();
     };
-  }, [userId, token, myId]);
+  }, [isReady, userId, token, myId]);
 
   useEffect(() => {
     if (error) {
@@ -394,13 +440,39 @@ export default function MessageBoxScreen() {
       >
         <View style={{ flex: 1, backgroundColor: "#29375C" }}>
           {/* Danh sách tin nhắn */}
-          <View style={[styles.listWrapper, { marginTop: 10, flex: 1 }]}>
+          <View style={[styles.listWrapper, { flex: 1 }]}>
             {loading ? (
               <ActivityIndicator style={{ marginTop: 40 }} />
             ) : error ? (
               <Text style={{ color: "red", textAlign: "center", marginTop: 40 }}>
                 {error}
               </Text>
+            ) : messages.length === 0 ? (
+              <View style={{ alignItems: 'center', marginTop: 60, paddingHorizontal: 24 }}>
+                <View style={{
+                  backgroundColor: '#fff',
+                  borderRadius: 20,
+                  paddingVertical: 28,
+                  paddingHorizontal: 20,
+                  alignItems: 'center',
+                  shadowColor: '#000',
+                  shadowOpacity: 0.06,
+                  shadowRadius: 8,
+                  elevation: 2,
+                  width: 320,
+                  maxWidth: '100%',
+                }}>
+                  <Text style={{ color: '#29375C', fontSize: 18, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', fontFamily: fonts.bold }}>
+                    Xin chào bạn !
+                  </Text>
+                  <Text style={{ color: '#29375C', fontSize: 15, marginBottom: 18, textAlign: 'center', lineHeight: 22 }}>
+                    Hãy gửi tin nhắn để bắt đầu cuộc trò chuyện với {name || 'người nhận'} nhé.
+                  </Text>
+                  <Text style={{ color: '#888', fontSize: 13, textAlign: 'center', maxWidth: 260 }}>
+                    Khi bạn gửi tin nhắn, {name || 'người nhận'} sẽ nhìn thấy tin nhắn của bạn.
+                  </Text>
+                </View>
+              </View>
             ) : (
               <FlatList
                 ref={flatListRef}
@@ -544,42 +616,42 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: "#29375C",
-    paddingTop: 36,
-    paddingBottom: 18,
-    paddingHorizontal: 20,
+    paddingTop: responsive.height(4),
+    paddingBottom: responsive.height(2),
+    paddingHorizontal: responsiveValues.padding.lg,
     flexDirection: "row",
     alignItems: "center",
   },
   headerTitle: {
     color: "#fff",
-    fontSize: 20,
+    fontSize: responsiveValues.fontSize.xl,
     fontWeight: "bold",
-    marginBottom: 2,
-    fontFamily: "Baloo2-Bold",
+    marginBottom: responsiveValues.padding.xs,
+    fontFamily: fonts.bold,
   },
   headerSubtitle: {
     color: "#fff",
-    fontSize: 14,
+    fontSize: responsiveValues.fontSize.sm,
     opacity: 0.7,
   },
   listContent: {
-    paddingHorizontal: 12,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingHorizontal: responsiveValues.padding.md,
+    paddingTop: responsiveValues.padding.md,
+    paddingBottom: responsiveValues.padding.sm,
     flexGrow: 1,
     justifyContent: "flex-end",
   },
   listWrapper: {
     backgroundColor: "#fff",
-    borderTopLeftRadius: 60,
-    borderTopRightRadius: 60,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     flex: 1,
     overflow: "hidden",
   },
   messageRow: {
     flexDirection: "row",
     alignItems: "flex-end",
-    marginBottom: 12,
+    marginBottom: responsiveValues.padding.md,
   },
   messageRowMe: {
     justifyContent: "flex-end",
@@ -588,29 +660,29 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
   },
   avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    marginHorizontal: 6,
+    width: responsiveValues.iconSize.lg,
+    height: responsiveValues.iconSize.lg,
+    borderRadius: responsiveValues.borderRadius.xl,
+    marginHorizontal: responsiveValues.padding.xs,
   },
   bubble: {
     maxWidth: "70%",
-    borderRadius: 16,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    marginHorizontal: 2,
+    borderRadius: responsiveValues.borderRadius.md,
+    paddingVertical: responsiveValues.padding.sm,
+    paddingHorizontal: responsiveValues.padding.md,
+    marginHorizontal: responsiveValues.padding.xs,
   },
   bubbleMe: {
-    borderBottomRightRadius: 4,
+    borderBottomRightRadius: responsiveValues.borderRadius.sm,
   },
   bubbleOther: {
     backgroundColor: "#29375C",
-    borderBottomLeftRadius: 4,
+    borderBottomLeftRadius: responsiveValues.borderRadius.sm,
   },
   messageText: {
-    fontSize: 15,
-    marginBottom: 4,
-    fontFamily: "Baloo2-Bold",
+    fontSize: responsiveValues.fontSize.md,
+    marginBottom: responsiveValues.padding.xs,
+    fontFamily: fonts.bold,
   },
   textMe: {
     color: "#fff",
@@ -619,25 +691,25 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   time: {
-    fontSize: 11,
+    fontSize: responsiveValues.fontSize.xs,
     color: "#fff",
     opacity: 0.7,
     alignSelf: "flex-end",
   },
   timeBelow: {
-    fontSize: 11,
+    fontSize: responsiveValues.fontSize.xs,
     color: '#A0A0A0',
-    marginTop: 2,
+    marginTop: responsiveValues.padding.xs,
     alignSelf: 'flex-end',
   },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#fff",
-    borderRadius: 24,
-    margin: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    borderRadius: responsiveValues.borderRadius.xl,
+    margin: responsiveValues.padding.md,
+    paddingHorizontal: responsiveValues.padding.sm,
+    paddingVertical: responsiveValues.padding.xs,
     shadowColor: "#29375C",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.80,
@@ -646,27 +718,27 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: responsiveValues.fontSize.md,
     color: "#29375C",
-    paddingVertical: 8,
-    paddingHorizontal: 8,
+    paddingVertical: responsiveValues.padding.sm,
+    paddingHorizontal: responsiveValues.padding.sm,
     backgroundColor: "transparent",
   },
   sendBtn: {
-    padding: 6,
-    borderRadius: 20,
+    padding: responsiveValues.padding.xs,
+    borderRadius: responsiveValues.borderRadius.lg,
   },
   statusBelow: {
     backgroundColor: "#BFC6D1",
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    borderRadius: responsiveValues.borderRadius.sm,
+    paddingHorizontal: responsiveValues.padding.sm,
+    paddingVertical: responsiveValues.padding.xs,
     alignSelf: "flex-end",
-    marginTop: 2,
-    marginBottom: 4,
+    marginTop: responsiveValues.padding.xs,
+    marginBottom: responsiveValues.padding.xs,
   },
   statusText: {
     color: "#fff",
-    fontSize: 10,
+    fontSize: responsiveValues.fontSize.xs,
   },
 });

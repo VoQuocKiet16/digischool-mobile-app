@@ -12,6 +12,7 @@ import {
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import UpdateContactInfo from "../../components/setting/personal/update/UpdateContactInfo";
 import UpdateProfileInfo from "../../components/setting/personal/update/UpdateProfileInfo";
+import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 export default function UpdatePersonal() {
   const [avatar, setAvatar] = useState(
@@ -95,7 +96,7 @@ const styles = StyleSheet.create({
   role: {
     fontSize: 18,
     color: "#29375C",
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     marginBottom: 25,
     alignSelf: "center",
   },

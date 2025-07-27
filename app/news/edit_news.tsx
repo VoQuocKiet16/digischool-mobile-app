@@ -21,6 +21,7 @@ import {
   getNewsDetail,
   updateNews,
 } from "../../services/news.service";
+import { fonts } from "../../utils/responsive";
 
 export default function EditNewsScreen() {
   const params = useLocalSearchParams();
@@ -245,7 +246,7 @@ export default function EditNewsScreen() {
                   <Text
                     style={{
                       color: "#fff",
-                      fontFamily: "Baloo2-Medium",
+                      fontFamily: fonts.medium,
                       fontSize: 14,
                     }}
                   >
@@ -294,7 +295,7 @@ export default function EditNewsScreen() {
                   <Text
                     style={{
                       color: "#29375C",
-                      fontFamily: "Baloo2-SemiBold",
+                      fontFamily: fonts.semiBold,
                       fontSize: 16,
                     }}
                   >
@@ -318,7 +319,7 @@ export default function EditNewsScreen() {
                   <Text
                     style={{
                       color: "#fff",
-                      fontFamily: "Baloo2-SemiBold",
+                      fontFamily: fonts.semiBold,
                       fontSize: 16,
                     }}
                   >
@@ -367,7 +368,7 @@ export default function EditNewsScreen() {
                   <Text
                     style={{
                       color: "#29375C",
-                      fontFamily: "Baloo2-SemiBold",
+                      fontFamily: fonts.semiBold,
                       fontSize: 16,
                     }}
                   >
@@ -525,7 +526,7 @@ const styles = StyleSheet.create({
   },
   deleteBtnText: {
     color: "#CF2020",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 18,
   },
   saveBtn: {
@@ -541,7 +542,7 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     color: "#fff",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 18,
   },
   containerNews: {
@@ -571,14 +572,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#f7f7f7",
     paddingHorizontal: 6,
     color: "#29375C",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 14,
     zIndex: 2,
   },
   inputTextOutline: {
     color: "#29375C",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   contentInputBox: {
     flexDirection: "row",
@@ -596,7 +597,7 @@ const styles = StyleSheet.create({
   },
   contentInputText: {
     color: "#29375C",
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     fontSize: 16,
   },
 });

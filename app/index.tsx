@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import Header from "../components/Header";
 import { useNotificationContext } from "../contexts/NotificationContext";
+import { responsiveValues } from "../utils/responsive";
 import ScheduleStudentsScreen from "./students/schedule/schedule";
 import ScheduleTeacherScreen from "./teachers/schedule/schedule";
 
@@ -78,6 +79,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#f7f7f7",
   },
 });

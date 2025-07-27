@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import CustomDatePickerModal from "./CustomDatePickerModal";
+import { fonts } from "../../../../utils/responsive";
 
 export default function UpdateProfileInfo() {
   const [name, setName] = useState("Nguyen Van A");
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
     fontSize: 25,
     color: "#29375C",
     flex: 1,
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
   },
   icon: {
     color: "#29375C",
@@ -197,13 +198,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     fontSize: 14,
     color: "#29375C",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     zIndex: 2,
   },
   inputTextOutline: {
     fontSize: 16,
     color: "#29375C",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
   },
   label: {
     fontSize: 14,

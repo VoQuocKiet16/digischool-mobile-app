@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import chatService from "../../services/chat.service";
+import { fonts } from "../../utils/responsive";
 
 // Giả sử token và myId lấy từ context hoặc props, ở đây hardcode để demo
 type Props = {
@@ -230,7 +231,7 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
               </TouchableOpacity>
             );
           }}
-          contentContainerStyle={{ paddingBottom: 16 }}
+          contentContainerStyle={{ paddingBottom: 80 }}
           showsVerticalScrollIndicator={false}
         />
       )}
@@ -242,7 +243,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F7F7F7",
-    paddingHorizontal: 16,
+    // paddingHorizontal: 16, // Bỏ dòng này để line trắng full màn hình
   },
   searchRow: {
     flexDirection: "row",
@@ -269,7 +270,7 @@ const styles = StyleSheet.create({
     color: "#29375C",
     backgroundColor: "transparent",
     paddingVertical: 0,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   addChatBtn: {
     width: 55,
@@ -348,8 +349,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 0,
     marginBottom: 0,
     paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderBottomWidth: 3,
+    paddingHorizontal: 16, // Giữ padding này để nội dung không sát mép
+    borderBottomWidth: 2,
     borderBottomColor: "#FFFFFF",
   },
   avatarCustom: {

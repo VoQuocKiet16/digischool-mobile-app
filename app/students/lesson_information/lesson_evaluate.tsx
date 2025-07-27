@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { fonts } from "../../../utils/responsive";
 
 const QUESTIONS = [
   "Giáo viên có giải thích bài học một cách dễ hiểu và rõ ràng không?",
@@ -92,7 +93,7 @@ const LessonEvaluateScreen = () => {
       {QUESTIONS.map((q, idx) => (
         <View key={idx} style={styles.questionBlock}>
           <Text style={styles.questionLabel}>
-            Câu hỏi: <Text style={{ fontFamily: "Baloo2-Medium" }}>{q}</Text>
+            Câu hỏi: <Text style={{ fontFamily: fonts.medium }}>{q}</Text>
           </Text>
           <View style={styles.confirmInputBox}>
             <Text style={styles.confirmLabel}>Đánh giá</Text>
@@ -165,7 +166,7 @@ const LessonEvaluateScreen = () => {
             color: "red",
             textAlign: "center",
             marginBottom: 8,
-            fontFamily: "Baloo2-Medium",
+            fontFamily: fonts.medium,
           }}
         >
           {error}
@@ -240,14 +241,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#29375C",
     marginBottom: 8,
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
     letterSpacing: 0.5,
   },
   answerLabel: {
     fontSize: 13,
     color: "#29375C",
     marginBottom: 6,
-    fontFamily: "Baloo2-Bold",
+    fontFamily: fonts.bold,
   },
   starsRow: {
     flexDirection: "row",
@@ -276,7 +277,7 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     color: "#fff",
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     fontSize: 18,
   },
   confirmInputBox: {
@@ -299,12 +300,12 @@ const styles = StyleSheet.create({
     color: "#29375C",
     fontSize: 14,
     zIndex: 2,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   confirmInput: {
     color: "#29375C",
     fontSize: 14,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     marginTop: 2,
   },
   checkboxRow: {
@@ -318,7 +319,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#29375C",
     flex: 1,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
   },
   confirmInputBoxComment: {
     borderWidth: 1,
@@ -336,7 +337,7 @@ const styles = StyleSheet.create({
   confirmInputComment: {
     color: "#29375C",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     minHeight: 100,
     marginTop: 2,
   },

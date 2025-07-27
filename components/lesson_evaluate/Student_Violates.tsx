@@ -15,6 +15,7 @@ import {
 import PlusIcon from "../PlusIcon";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
+import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 interface ViolateItem {
   student: string;
@@ -285,13 +286,13 @@ const styles = StyleSheet.create({
   headerText: {
     color: "#25345C",
     fontSize: 24,
-    fontFamily: "Baloo2-SemiBold",
+    fontFamily: fonts.semiBold,
     marginBottom: 2,
   },
   headerSubtext: {
     color: "#666666",
     fontSize: 14,
-    fontFamily: "Baloo2-Regular",
+    fontFamily: fonts.regular,
   },
   closeBtn: {
     backgroundColor: "#FFA49F",
@@ -341,13 +342,13 @@ const styles = StyleSheet.create({
   },
   studentName: {
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     color: "#fff",
     flex: 1,
   },
   placeholderText: {
     color: "#999",
-    fontFamily: "Baloo2-Regular",
+    fontFamily: fonts.regular,
   },
   removeButton: {
     padding: 4,
@@ -368,7 +369,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     fontSize: 14,
-    fontFamily: "Baloo2-Regular",
+    fontFamily: fonts.regular,
     color: "#1a1a1a",
     borderWidth: 1,
     borderColor: "#e0e0e0",
@@ -401,7 +402,7 @@ const styles = StyleSheet.create({
   },
   dropdownItemText: {
     fontSize: 16,
-    fontFamily: "Baloo2-Regular",
+    fontFamily: fonts.regular,
     color: "#fff",
   },
   addButton: {
@@ -413,7 +414,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: "#29375C",
     fontSize: 16,
-    fontFamily: "Baloo2-Medium",
+    fontFamily: fonts.medium,
     marginLeft: 8,
     textDecorationLine: "underline",
   },
