@@ -40,12 +40,12 @@ export default function AddAccount() {
         >
           {/* Username */}
           <View style={styles.confirmInputBox}>
-            <Text style={styles.confirmLabel}>Tên người dùng</Text>
+            <Text style={styles.confirmLabel}>Email</Text>
             <TextInput
               style={styles.confirmInput}
               value={username}
               onChangeText={setUsername}
-              placeholder="Nhập tên người dùng"
+              placeholder="Nhập email"
               placeholderTextColor="#AEB6C1"
             />
           </View>

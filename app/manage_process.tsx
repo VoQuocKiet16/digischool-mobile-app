@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View
 } from "react-native";
@@ -69,20 +70,40 @@ const TABLE_DATA = [
     { subject: 'Công nghệ', data: [2,2,2,2,2] },
   ],
 ];
+
 const CLASS_LIST = [
   ['10A1','10A2','10A3','10A4','10A5'],
   ['11A1','11A2','11A3','11A4','11A5'],
   ['12A1','12A2','12A3','12A4','12A5'],
 ];
 
+// Dữ liệu yêu cầu số tiết cho từng môn học (data cứng)
+const REQUIRED_LESSONS: { [key: string]: number } = {
+  'Toán': 4,
+  'Ngữ Văn': 4,
+  'Vật lý': 3,
+  'Hóa học': 2,
+  'Sinh học': 3,
+  'Lịch sử': 2,
+  'Địa lý': 2,
+  'GDCD': 2,
+  'Ngoại ngữ': 3,
+  'Thể dục': 2,
+  'GDQP': 2,
+  'Tin học': 2,
+  'Công nghệ': 2,
+};
+
 export default function ManageProcess() {
   const [block, setBlock] = useState(0);
   const [semester, setSemester] = useState(0);
   const [week, setWeek] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showConfigModal, setShowConfigModal] = useState(false);
   const [highlightRow, setHighlightRow] = useState<number|null>(null);
   const [highlightCol, setHighlightCol] = useState<number|null>(null);
   const [userName, setUserName] = useState("");
+  const [configData, setConfigData] = useState<{ [key: string]: number }>(REQUIRED_LESSONS);
 
   useEffect(() => {
     AsyncStorage.getItem("userName").then(name => {
@@ -94,6 +115,26 @@ export default function ManageProcess() {
     setSemester(sIdx);
     setWeek(wIdx);
     setShowDropdown(false);
+  };
+
+  const handleConfigChange = (subject: string, value: string) => {
+    const numValue = parseInt(value) || 0;
+    setConfigData(prev => ({
+      ...prev,
+      [subject]: numValue
+    }));
+  };
+
+  const getCellColor = (subject: string, actualLessons: number) => {
+    const required = configData[subject] || 0;
+    
+    if (actualLessons === required) {
+      return '#2CB654'; // Xanh - đủ tiết
+    } else if (actualLessons > required) {
+      return '#F9A825'; // Vàng - dư tiết (dạy bù)
+    } else {
+      return '#F04438'; // Đỏ - thiếu tiết
+    }
   };
 
   return (
@@ -135,6 +176,16 @@ export default function ManageProcess() {
               color="#fff"
               style={{ marginLeft: 8 }}
             />
+          </TouchableOpacity>
+          
+          {/* Icon cấu hình */}
+          <TouchableOpacity
+            style={styles.configBtn}
+            onPress={() => setShowConfigModal(true)}
+            activeOpacity={0.7}
+          >
+            <MaterialIcons name="settings" size={20} color="#fff" />
+            <Text style={styles.configText}>Cấu hình</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -208,6 +259,77 @@ export default function ManageProcess() {
           </View>
         </Pressable>
       </Modal>
+
+      {/* Modal cấu hình số tiết */}
+      <Modal
+        visible={showConfigModal}
+        transparent
+        animationType="fade"
+        statusBarTranslucent={true}
+      >
+        <Pressable
+          style={styles.configOverlay}
+          onPress={() => {}} // Không làm gì khi nhấn overlay
+        >
+          <View style={styles.configBox}>
+            {/* Header */}
+            <View style={styles.configHeader}>
+              <View style={styles.configTitleWrap}>
+                <MaterialIcons name="settings" size={24} color="#29375C" />
+                <Text style={styles.configTitle}>Cấu hình số tiết yêu cầu</Text>
+              </View>
+              <TouchableOpacity style={styles.closeBtn} onPress={() => setShowConfigModal(false)}>
+                <MaterialIcons name="close" size={24} color="#29375C" />
+              </TouchableOpacity>
+            </View>
+            
+            {/* Divider */}
+            <View style={styles.configDivider} />
+            
+            {/* Content */}
+            <ScrollView style={styles.configContent} showsVerticalScrollIndicator={false}>
+              <Text style={styles.configSubtitle}>
+                Thiết lập số tiết tối thiểu cho từng môn học mỗi tuần
+              </Text>
+              
+              <View style={styles.configGrid}>
+                {Object.keys(configData).map((subject, index) => (
+                  <View key={subject} style={styles.configItem}>
+                    <View style={styles.configItemHeader}>
+                      <Text style={styles.configSubjectText}>{subject}</Text>
+                    </View>
+                    <View style={styles.configInputWrap}>
+                      <Text style={styles.configInputLabel}>Tiết/tuần</Text>
+                      <TextInput
+                        style={styles.configInput}
+                        value={configData[subject].toString()}
+                        onChangeText={(value) => handleConfigChange(subject, value)}
+                        keyboardType="numeric"
+                        maxLength={2}
+                        textAlign="center"
+                      />
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+            
+            {/* Footer */}
+            <View style={styles.configFooter}>
+              <TouchableOpacity
+                style={styles.configSaveBtn}
+                onPress={() => {
+                  // Lưu cấu hình vào AsyncStorage hoặc state
+                  console.log('Đã lưu cấu hình:', configData);
+                  // Có thể thêm logic lưu vào AsyncStorage ở đây
+                }}
+              >
+                <Text style={styles.configSaveText}>Lưu cấu hình</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
       
       {/* Chú thích màu */}
       <View style={styles.legendRowTable}>
@@ -273,11 +395,7 @@ export default function ManageProcess() {
                 <Text style={styles.tableSubjectText}>{row.subject}</Text>
               </TouchableOpacity>
               {row.data.map((val, colIdx) => {
-                // Quy tắc màu: xanh (đủ), cam (dạy trước), đỏ (chưa đủ)
-                let color = '#2CB654'; // xanh
-                if ((row.subject==='Ngữ Văn' && colIdx===2 && val===3) || (row.subject==='Sinh học' && val===3) || (row.subject==='Toán' && val===3) || (row.subject==='Vật lý' && val===3) || (row.subject==='Ngoại ngữ' && val===3)) color = '#F9A825'; // cam
-                if ((row.subject==='Vật lý' && colIdx===1 && val===1) || (row.subject==='Địa lý' && (colIdx===1||colIdx===2) && val===1)) color = '#F04438'; // đỏ
-                if ((row.subject==='Ngữ Văn' && colIdx<2 && val===2) || (row.subject==='Hóa học' && val===2) || (row.subject==='Lịch sử' && val===2) || (row.subject==='GDCD' && val===2) || (row.subject==='Thể dục' && val===2) || (row.subject==='Giáo dục quốc phòng và an ninh' && val===2) || (row.subject==='Tin học' && val===2) || (row.subject==='Công nghệ' && val===2)) color = '#2CB654'; // xanh
+                const color = getCellColor(row.subject, val);
                 const highlight = highlightRow===rowIdx || highlightCol===colIdx;
                 return (
                   <View style={[styles.tableCell, highlight && styles.tableCellHighlight]} key={colIdx}>
@@ -385,6 +503,150 @@ const styles = StyleSheet.create({
   dropdownItemTextActive: {
     color: "#29375C",
     fontFamily: "Baloo2-SemiBold",
+  },
+  configBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#29375C',
+    borderRadius: 24,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    alignSelf: 'center',
+    marginLeft: 10,
+  },
+  configText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+    fontFamily: fonts.bold,
+    marginLeft: 5,
+  },
+  configOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  configBox: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 20,
+    width: '95%',
+    maxHeight: '85%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  configHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  configTitleWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  configTitle: {
+    fontSize: 20,
+    color: '#29375C',
+    fontFamily: 'Baloo2-Bold',
+  },
+  closeBtn: {
+    padding: 5,
+  },
+  configDivider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginBottom: 15,
+  },
+  configContent: {
+    marginBottom: 20,
+    maxHeight: 300,
+  },
+  configSubtitle: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 15,
+    fontFamily: fonts.medium,
+  },
+  configGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  configItem: {
+    width: '48%',
+    borderRadius: 8,
+    padding: 8,
+  },
+  configItemHeader: {
+    marginBottom: 6,
+  },
+  configSubjectText: {
+    fontSize: 14,
+    color: '#29375C',
+    fontFamily: 'Baloo2-SemiBold',
+    marginBottom: 4,
+  },
+  configInputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#29375C',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  configInputLabel: {
+    fontSize: 12,
+    color: '#fff',
+    fontFamily: fonts.medium,
+    marginRight: 4,
+  },
+  configInput: {
+    flex: 1,
+    fontSize: 14,
+    color: '#fff',
+    fontFamily: fonts.bold,
+    textAlign: 'right',
+  },
+  configFooter: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 8,
+  },
+  configCancelBtn: {
+    flex: 1,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+  },
+  configCancelText: {
+    color: '#6B7280',
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: fonts.bold,
+    textAlign: 'center',
+  },
+  configSaveBtn: {
+    flex: 1,
+    backgroundColor: '#29375C',
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  configSaveText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: fonts.bold,
+    textAlign: 'center',
   },
   tableWrap: {
     marginTop: 18,

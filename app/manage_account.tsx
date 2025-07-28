@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
   plusIconWrap: {
     position: "absolute",
     right: 24,
-    bottom: 110,
+    bottom: 120,
     zIndex: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
