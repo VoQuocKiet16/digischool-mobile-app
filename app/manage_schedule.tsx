@@ -398,6 +398,7 @@ export default function ManageSchedule() {
                   value={startDate}
                   onChangeText={setStartDate}
                   placeholder="YYYY-MM-DD"
+                  placeholderTextColor="#7B859C"
                 />
               </View>
 
@@ -408,6 +409,7 @@ export default function ManageSchedule() {
                   value={endDate}
                   onChangeText={setEndDate}
                   placeholder="YYYY-MM-DD"
+                  placeholderTextColor="#7B859C"
                 />
               </View>
 
