@@ -282,6 +282,7 @@ const styles = StyleSheet.create({
     fontSize: responsiveValues.fontSize.sm,
     marginTop: 4,
     fontFamily: fonts.semiBold,
+    color: '#C4C4C4',
   },
   tabTextActive: {
     color: "#29375C",

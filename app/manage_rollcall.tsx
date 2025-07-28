@@ -1,77 +1,193 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Header from "../components/Header";
+import ManageService, { TeacherRollcallData, WeekDaysResponse } from "../services/manage.service";
 
-const DAYS = [
-  "25/06/2025",
-  "24/06/2025",
-  "23/06/2025",
-  "22/06/2025",
-  "21/06/2025",
-  "20/06/2025",
-];
 const STATUS = ["Tất cả", "Chưa điểm danh", "Đã điểm danh", "Trễ"];
-const SUBJECTS = [
-  "Tất cả",
-  "Toán",
-  "Ngữ Văn",
-  "Vật lý",
-  "Hóa học",
-  "Sinh học",
-  "Lịch sử",
-  "Địa lý",
-  "GDCD",
-  "Ngoại ngữ",
-  "Thể dục",
-  "GDQP",
-  "Tin học",
-  "Công nghệ",
-];
 
 export default function ManageRollcall() {
-  const [day, setDay] = useState(DAYS[0]);
+  const [selectedDate, setSelectedDate] = useState<string>("");
   const [showDay, setShowDay] = useState(false);
+  const [showWeekSelector, setShowWeekSelector] = useState(false);
   const [status, setStatus] = useState(STATUS[0]);
   const [showStatus, setShowStatus] = useState(false);
-  const [subject, setSubject] = useState(SUBJECTS[0]);
+  const [subject, setSubject] = useState("Tất cả");
   const [showSubject, setShowSubject] = useState(false);
   const [userName, setUserName] = useState("");
+  
+  // State cho dữ liệu từ API
+  const [rollcallData, setRollcallData] = useState<TeacherRollcallData[]>([]);
+  const [weekDays, setWeekDays] = useState<WeekDaysResponse | null>(null);
+  const [subjects, setSubjects] = useState<string[]>(["Tất cả"]);
+  const [loading, setLoading] = useState(false);
+  const [currentWeekNumber, setCurrentWeekNumber] = useState<number>(1);
+  const [academicYear, setAcademicYear] = useState<string>("");
+  const [selectedWeekNumber, setSelectedWeekNumber] = useState<number>(1);
 
-  // Dữ liệu mẫu đủ trường
-  const [allRollcalls] = useState([
-    { name: 'Nguyen Van A', class: '10A1', period: 3, time: '08:30', status: 'Đã điểm danh', date: '25/06/2025', subject: 'Toán' },
-    { name: 'Nguyen Van A', class: '10A1', period: 3, time: '08:30', status: 'Đã điểm danh', date: '25/06/2025', subject: 'Toán' },
-    { name: 'Nguyen Van A', class: '10A1', period: 3, time: '08:30', status: 'Trễ', date: '25/06/2025', subject: 'Toán' },
-    { name: 'Nguyen Van A', class: '10A1', period: 3, time: '08:30', status: 'Chưa điểm danh', date: '25/06/2025', subject: 'Toán' },
-    { name: 'Nguyen Van B', class: '10A2', period: 2, time: '09:30', status: 'Đã điểm danh', date: '24/06/2025', subject: 'Vật lý' },
-    { name: 'Nguyen Van C', class: '10A3', period: 1, time: '10:30', status: 'Trễ', date: '23/06/2025', subject: 'Ngữ Văn' },
-    { name: 'Nguyen Van D', class: '10A4', period: 4, time: '11:30', status: 'Chưa điểm danh', date: '22/06/2025', subject: 'Toán' },
-  ]);
-
-  // Filter tự động khi thay đổi
-  const filteredRollcalls = allRollcalls.filter(item =>
-    item.date === day &&
-    (status === 'Tất cả' || item.status === status) &&
-    (subject === 'Tất cả' || item.subject === subject)
-  );
-
-  // Overlay tắt dropdown
-  const showAnyDropdown = showDay || showStatus || showSubject;
-
-  // Khi chọn ngày, nếu trạng thái đang là 'Tất cả' thì chuyển về trạng thái đầu tiên không phải 'Tất cả'
-  const handleSelectDay = (d: string) => {
-    setDay(d);
-    if (status === 'Tất cả') setStatus('Chưa điểm danh');
-    setShowDay(false);
+  // Lấy ngày hiện tại
+  const getCurrentDate = () => {
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const year = today.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
+  // Lấy số tuần hiện tại
+  const getCurrentWeekNumber = () => {
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const days = Math.floor((now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
+    return Math.ceil((days + startOfYear.getDay() + 1) / 7);
+  };
+
+  // Load dữ liệu ban đầu
   useEffect(() => {
-    AsyncStorage.getItem("userName").then(name => {
-      if (name) setUserName(name);
-    });
+    const initializeData = async () => {
+      try {
+        setLoading(true);
+        
+        // Lấy thông tin user
+        const name = await AsyncStorage.getItem("userName");
+        if (name) setUserName(name);
+
+        // Lấy số tuần hiện tại
+        const weekNum = getCurrentWeekNumber();
+        setCurrentWeekNumber(weekNum);
+        setSelectedWeekNumber(weekNum);
+
+        // Lấy danh sách môn học
+        await loadSubjects();
+
+        // Load ngày hiện tại trước
+        const currentDate = getCurrentDate();
+        setSelectedDate(currentDate);
+        await loadRollcallData(currentDate);
+
+      } catch (error) {
+        console.error('Lỗi khi khởi tạo dữ liệu:', error);
+        Alert.alert('Lỗi', 'Không thể tải dữ liệu. Vui lòng thử lại.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeData();
   }, []);
+
+  // Load danh sách ngày trong tuần khi chọn tuần
+  const loadWeekDays = async (weekNumber: number) => {
+    try {
+      setLoading(true);
+      const weekData = await ManageService.getWeekDays(weekNumber);
+      setWeekDays(weekData);
+      setAcademicYear(weekData.academicYear);
+      setShowWeekSelector(false);
+      setShowDay(true); // Hiển thị dropdown chọn ngày
+    } catch (error) {
+      console.error('Lỗi khi load week days:', error);
+      Alert.alert('Lỗi', 'Không thể tải dữ liệu tuần. Vui lòng thử lại.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load danh sách môn học
+  const loadSubjects = async () => {
+    try {
+      const subjectsList = await ManageService.getSubjects();
+      setSubjects(["Tất cả", ...subjectsList]);
+    } catch (error) {
+      console.error('Lỗi khi load subjects:', error);
+      // Giữ nguyên danh sách mặc định nếu API lỗi
+    }
+  };
+
+  // Load dữ liệu điểm danh
+  const loadRollcallData = async (date: string, currentSubject?: string, currentStatus?: string) => {
+    try {
+      setLoading(true);
+      
+      const filters: any = {};
+      const subjectToUse = currentSubject !== undefined ? currentSubject : subject;
+      const statusToUse = currentStatus !== undefined ? currentStatus : status;
+      
+      if (statusToUse !== 'Tất cả') filters.status = statusToUse;
+      if (subjectToUse !== 'Tất cả') filters.subject = subjectToUse;
+      if (selectedWeekNumber) filters.weekNumber = selectedWeekNumber;
+      if (academicYear) filters.academicYear = academicYear;
+
+      // Convert date format
+      const convertedDate = convertDateFormat(date);
+      
+      const data = await ManageService.getTeacherRollcall(convertedDate, filters);
+      setRollcallData(data.rollcalls);
+    } catch (error) {
+      console.error('Lỗi khi load rollcall data:', error);
+      Alert.alert('Lỗi', 'Không thể tải dữ liệu điểm danh. Vui lòng thử lại.');
+      setRollcallData([]); // Reset data nếu lỗi
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Khi chọn tuần
+  const handleSelectWeek = async (weekNumber: number) => {
+    setSelectedWeekNumber(weekNumber);
+    await loadWeekDays(weekNumber);
+  };
+
+  // Khi chọn ngày
+  const handleSelectDay = async (date: string) => {
+    setSelectedDate(date);
+    setShowDay(false);
+    await loadRollcallData(date);
+  };
+
+  // Khi thay đổi filter
+  const handleFilterChange = async (newSubject?: string, newStatus?: string) => {
+    if (selectedDate) {
+      const currentSubject = newSubject !== undefined ? newSubject : subject;
+      const currentStatus = newStatus !== undefined ? newStatus : status;
+      await loadRollcallData(selectedDate, currentSubject, currentStatus);
+    }
+  };
+
+  // Khi chọn trạng thái
+  const handleSelectStatus = async (newStatus: string) => {
+    setStatus(newStatus);
+    setShowStatus(false);
+    await handleFilterChange(undefined, newStatus);
+  };
+
+  // Khi chọn môn học
+  const handleSelectSubject = async (newSubject: string) => {
+    setSubject(newSubject);
+    setShowSubject(false);
+    await handleFilterChange(newSubject, undefined);
+  };
+
+  // Format thời gian từ HH:MM sang HH:MM
+  const formatTime = (time: string) => {
+    if (!time) return '';
+    return time.substring(0, 5); // Lấy HH:MM
+  };
+
+  // Convert date format từ dd/mm/yyyy sang yyyy-mm-dd
+  const convertDateFormat = (date: string) => {
+    if (!date) return '';
+    const parts = date.split('/');
+    if (parts.length === 3) {
+      const [day, month, year] = parts;
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+    return date;
+  };
+
+  // Overlay tắt dropdown
+  const showAnyDropdown = showDay || showStatus || showSubject || showWeekSelector;
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f7f7f7" }}>
@@ -81,49 +197,96 @@ export default function ManageRollcall() {
       <View style={styles.filterRowWrap}>
         {/* Filter ngày */}
         <View style={{position:'relative'}}>
-          <TouchableOpacity style={styles.filterBtn} activeOpacity={0.8} onPress={() => {setShowDay(v=>!v); setShowStatus(false); setShowSubject(false);}}>
-            <Text style={styles.filterBtnText}>{day}</Text>
+          <TouchableOpacity 
+            style={styles.filterBtn} 
+            activeOpacity={0.8} 
+            onPress={() => {
+              setShowWeekSelector(v=>!v); 
+              setShowDay(false); 
+              setShowStatus(false); 
+              setShowSubject(false);
+            }}
+            disabled={loading}
+          >
+            <Text style={styles.filterBtnText}>{selectedDate || "Chọn ngày..."}</Text>
             <MaterialIcons name="arrow-drop-down" size={18} color="#29375C" style={{marginLeft: 2}} />
           </TouchableOpacity>
-          {showDay && (
+          
+          {/* Dropdown chọn tuần */}
+          {showWeekSelector && (
             <View style={[styles.dropdownList, {maxHeight: 180}]}> 
               <ScrollView showsVerticalScrollIndicator={false}>
-                {DAYS.map(d => (
-                  <TouchableOpacity key={d} style={styles.dropdownItem} onPress={() => handleSelectDay(d)}>
-                    <Text style={styles.dropdownItemText}>{d}</Text>
+                {Array.from({length: 52}, (_, i) => i + 1).map((weekNum) => (
+                  <TouchableOpacity 
+                    key={weekNum} 
+                    style={styles.dropdownItem} 
+                    onPress={() => handleSelectWeek(weekNum)}
+                  >
+                    <Text style={styles.dropdownItemText}>Tuần {weekNum}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+          
+          {/* Dropdown chọn ngày sau khi chọn tuần */}
+          {showDay && weekDays && (
+            <View style={[styles.dropdownList, {maxHeight: 180}]}> 
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {weekDays.days.map((day, index) => (
+                  <TouchableOpacity 
+                    key={index} 
+                    style={styles.dropdownItem} 
+                    onPress={() => handleSelectDay(day.formattedDate)}
+                  >
+                    <Text style={styles.dropdownItemText}>{day.formattedDate}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
             </View>
           )}
         </View>
+        
         {/* Filter trạng thái */}
         <View style={{position:'relative'}}>
-          <TouchableOpacity style={styles.filterBtn} activeOpacity={0.8} onPress={() => {setShowStatus(v=>!v); setShowDay(false); setShowSubject(false);}}>
+          <TouchableOpacity 
+            style={styles.filterBtn} 
+            activeOpacity={0.8} 
+            onPress={() => {setShowStatus(v=>!v); setShowDay(false); setShowSubject(false);}}
+            disabled={loading}
+          >
             <Text style={styles.filterBtnText}>{status}</Text>
             <MaterialIcons name="arrow-drop-down" size={18} color="#29375C" style={{marginLeft: 2}} />
           </TouchableOpacity>
           {showStatus && (
             <View style={styles.dropdownList}>
               {STATUS.map(s => (
-                <TouchableOpacity key={s} style={styles.dropdownItem} onPress={() => {setStatus(s); setShowStatus(false);}}>
+                <TouchableOpacity key={s} style={styles.dropdownItem} onPress={() => handleSelectStatus(s)}>
                   <Text style={styles.dropdownItemText}>{s}</Text>
                 </TouchableOpacity>
               ))}
             </View>
           )}
         </View>
+        
         {/* Filter bộ môn */}
         <View style={{position:'relative'}}>
-          <TouchableOpacity style={styles.filterBtn} activeOpacity={0.8} onPress={() => {setShowSubject(v=>!v); setShowDay(false); setShowStatus(false);}}>
+          <TouchableOpacity 
+            style={styles.filterBtn} 
+            activeOpacity={0.8} 
+            onPress={() => {setShowSubject(v=>!v); setShowDay(false); setShowStatus(false);}}
+            disabled={loading}
+          >
             <Text style={styles.filterBtnText}>{subject}</Text>
             <MaterialIcons name="arrow-drop-down" size={18} color="#29375C" style={{marginLeft: 2}} />
           </TouchableOpacity>
           {showSubject && (
             <View style={[styles.dropdownList, {maxHeight: 220}]}> 
               <ScrollView showsVerticalScrollIndicator={false}>
-                {SUBJECTS.map(sj => (
-                  <TouchableOpacity key={sj} style={styles.dropdownItem} onPress={() => {setSubject(sj); setShowSubject(false);}}>
+                {subjects.map(sj => (
+                  <TouchableOpacity key={sj} style={styles.dropdownItem} onPress={() => {
+                    handleSelectSubject(sj);
+                  }}>
                     <Text style={styles.dropdownItemText}>{sj}</Text>
                   </TouchableOpacity>
                 ))}
@@ -135,7 +298,12 @@ export default function ManageRollcall() {
       
       {/* Overlay tắt dropdown */}
       {showAnyDropdown && (
-        <Pressable style={styles.dropdownOverlay} onPress={() => {setShowDay(false); setShowStatus(false); setShowSubject(false);}} />
+        <Pressable style={styles.dropdownOverlay} onPress={() => {
+          setShowDay(false); 
+          setShowStatus(false); 
+          setShowSubject(false);
+          setShowWeekSelector(false);
+        }} />
       )}
       
       {/* Danh sách điểm danh */}
@@ -147,8 +315,13 @@ export default function ManageRollcall() {
           </Text>
         </View>
         
-        {filteredRollcalls.length > 0 ? (
-          filteredRollcalls.map((item, idx) => (
+        {loading ? (
+          <View style={styles.emptyStateContainer}>
+            <MaterialIcons name="hourglass-empty" size={48} color="#29375C" style={{marginBottom: 12}} />
+            <Text style={styles.emptyStateTitle}>Đang tải dữ liệu...</Text>
+          </View>
+        ) : rollcallData.length > 0 ? (
+          rollcallData.map((item, idx) => (
             <View style={styles.rollcallCard} key={idx}>
               <View style={styles.rollcallRow}>
                 <View style={styles.rollcallAvatarBox}>
@@ -157,11 +330,11 @@ export default function ManageRollcall() {
                   </View>
                 </View>
                 <View style={{flex:1, justifyContent:'center'}}>
-                  <Text style={styles.rollcallName}>[GV] {item.name}</Text>
+                  <Text style={styles.rollcallName}>[GV] {item.teacherName}</Text>
                   <Text style={styles.rollcallClass}>Lớp: {item.class} | Tiết {item.period}</Text>
                   <View style={{flexDirection:'row', alignItems:'center', marginTop:2}}>
                     <MaterialIcons name="access-time" size={16} color="#29375C" style={{marginRight:2}} />
-                    <Text style={styles.rollcallTime}>{item.time}'</Text>
+                    <Text style={styles.rollcallTime}>{formatTime(item.startTime)} - {formatTime(item.endTime)}</Text>
                   </View>
                 </View>
                 {/* Trạng thái */}
@@ -265,6 +438,7 @@ const styles = StyleSheet.create({
   },
   rollcallListWrap: {
     marginTop: 8,
+    marginBottom: 100,
     marginHorizontal: 0,
   },
   rollcallHeaderSubject: {
