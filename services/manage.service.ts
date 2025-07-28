@@ -67,6 +67,104 @@ export interface ClassesByGrade {
   gradeLevel: number;
 }
 
+export interface AccountData {
+  _id: string;
+  id?: string; // Backend có thể trả về id thay vì _id
+  name: string;
+  email: string;
+  role: string;
+  active: boolean;
+  studentId?: string;
+  teacherId?: string;
+  className?: string;
+  subjectName?: string;
+  gradeLevel?: number;
+  dateOfBirth?: string;
+  gender?: string;
+  phone?: string;
+  address?: string;
+  avatar?: string;
+  // Các trường có thể có từ API
+  class?: string;
+  subject?: string;
+  code?: string;
+}
+
+export interface AccountsResponse {
+  accounts: AccountData[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface AccountDetailResponse {
+  _id: string;
+  id?: string; // Backend có thể trả về id thay vì _id
+  name: string;
+  email: string;
+  role: string | string[]; // Có thể là string hoặc array
+  active: boolean;
+  studentId?: string;
+  teacherId?: string;
+  className?: string;
+  subjectName?: string;
+  gradeLevel?: number;
+  dateOfBirth?: string;
+  gender?: string;
+  phone?: string;
+  address?: string;
+  avatar?: string;
+  createdAt: string;
+  updatedAt: string;
+  // Các trường mới từ API
+  code?: string;
+  subject?: string;
+  subjectCode?: string;
+  subjects?: string[];
+  class?: {
+    name: string;
+    gradeLevel?: number;
+    academicYear?: string;
+  };
+  homeroomClass?: {
+    id: string;
+    name: string;
+    gradeLevel: number;
+    academicYear: string;
+  };
+  roleInfo?: {
+    type: string;
+    isHomeroom?: boolean;
+    isHomeroomTeacher?: boolean;
+  };
+}
+
+export interface ImportScheduleResponse {
+  success: boolean;
+  message: string;
+  data: {
+    errors: string[];
+    createdTeachers: any[];
+    updatedClasses: any[];
+    teacherMappings: any[];
+    totalLessons: number;
+    totalTeachersCreated: number;
+    totalClassesUpdated: number;
+    totalTeacherMappings: number;
+  };
+}
+
+export interface ImportScheduleData {
+  academicYear: string;
+  gradeLevel: string;
+  semester: string;
+  weekNumber?: string;
+  startDate?: string;
+  endDate?: string;
+  file: any; // File object
+}
+
 class ManageService {
   /**
    * Lấy dữ liệu điểm danh giáo viên theo ngày
@@ -261,6 +359,123 @@ class ManageService {
       return response.data.data;
     } catch (error) {
       console.error('Lỗi khi lấy danh sách lớp theo khối:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy danh sách tài khoản cho quản lý
+   */
+  async getAccountsForManagement(filters?: {
+    role?: string;
+    search?: string;
+    gradeLevel?: number;
+    className?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<AccountsResponse> {
+    try {
+      const params = new URLSearchParams();
+      
+      if (filters?.role) params.append('role', filters.role);
+      if (filters?.search) params.append('search', filters.search);
+      if (filters?.gradeLevel) params.append('gradeLevel', filters.gradeLevel.toString());
+      if (filters?.className) params.append('className', filters.className);
+      if (filters?.page) params.append('page', filters.page.toString());
+      if (filters?.limit) params.append('limit', filters.limit.toString());
+
+      const response = await api.get(`/api/users/management/accounts?${params.toString()}`);
+      return response.data.data;
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách tài khoản:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy danh sách lớp theo khối
+   */
+  async getClassesByGradeForManagement(gradeLevel: number): Promise<string[]> {
+    try {
+      const params = new URLSearchParams();
+      params.append('gradeLevel', gradeLevel.toString());
+
+      const response = await api.get(`/api/users/management/classes?${params.toString()}`);
+      return response.data.data;
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách lớp:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy thông tin chi tiết tài khoản
+   */
+  async getAccountDetail(id: string): Promise<AccountDetailResponse> {
+    try {
+      const response = await api.get(`/api/users/management/accounts/${id}`);
+      return response.data.data;
+    } catch (error) {
+      console.error('Lỗi khi lấy thông tin tài khoản:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Cập nhật trạng thái tài khoản
+   */
+  async updateAccountStatus(id: string, active: boolean): Promise<any> {
+    try {
+      const response = await api.patch(`/api/users/${id}/status`, { active });
+      return response.data;
+    } catch (error) {
+      console.error('Lỗi khi cập nhật trạng thái tài khoản:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Xóa tài khoản
+   */
+  async deleteAccount(id: string): Promise<any> {
+    try {
+      const response = await api.delete(`/manage/accounts/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async importScheduleFromExcel(data: ImportScheduleData): Promise<ImportScheduleResponse> {
+    try {
+      const formData = new FormData();
+      
+      // Thêm file
+      formData.append('file', data.file);
+      
+      // Thêm các trường dữ liệu khác
+      formData.append('academicYear', data.academicYear);
+      formData.append('gradeLevel', data.gradeLevel);
+      formData.append('semester', data.semester);
+      
+      if (data.weekNumber) {
+        formData.append('weekNumber', data.weekNumber);
+      }
+      if (data.startDate) {
+        formData.append('startDate', data.startDate);
+      }
+      if (data.endDate) {
+        formData.append('endDate', data.endDate);
+      }
+
+      const response = await api.post('api/schedules/import-excel', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      return response.data;
+    } catch (error: any) {
       throw error;
     }
   }

@@ -119,7 +119,10 @@ export default function ManageRollcall() {
       if (selectedWeekNumber) filters.weekNumber = selectedWeekNumber;
       if (academicYear) filters.academicYear = academicYear;
 
-      const data = await ManageService.getTeacherRollcall(date, filters);
+      // Convert date format
+      const convertedDate = convertDateFormat(date);
+      
+      const data = await ManageService.getTeacherRollcall(convertedDate, filters);
       setRollcallData(data.rollcalls);
     } catch (error) {
       console.error('Lỗi khi load rollcall data:', error);

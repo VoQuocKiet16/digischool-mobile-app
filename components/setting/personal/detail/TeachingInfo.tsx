@@ -15,9 +15,14 @@ const TeachingInfo: React.FC<TeachingInfoProps> = ({ userData }) => {
     if (!userData?.subjects || userData.subjects.length === 0) {
       return "Chưa cập nhật";
     }
-    return userData.subjects
-      .map((subject: any) => subject.subjectName)
-      .join(", ");
+    // Xử lý cả trường hợp subjects là string array hoặc object array
+    if (typeof userData.subjects[0] === 'string') {
+      return userData.subjects.join(", ");
+    } else {
+      return userData.subjects
+        .map((subject: any) => subject.subjectName || subject)
+        .join(", ");
+    }
   };
 
   const getHomeroomClass = () => {

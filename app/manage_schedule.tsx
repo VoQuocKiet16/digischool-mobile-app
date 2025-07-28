@@ -1,5 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as DocumentPicker from 'expo-document-picker';
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -12,12 +13,13 @@ import {
   View
 } from "react-native";
 import Header from "../components/Header";
+import LoadingModal from "../components/LoadingModal";
+import manageService from "../services/manage.service";
 
 // Data cứng cho demo
-const ACADEMIC_YEARS = ["2024-2025", "2023-2024"];
+const ACADEMIC_YEARS = ["2025-2026", "2024-2025"];
 const GRADE_LEVELS = ["10", "11", "12"];
-const SEMESTERS = ["Học kỳ 1", "Học kỳ 2"];
-const SCHEDULE_TYPES = ["Thứ 2 - Thứ 7", "Thứ 2 - Thứ 6"];
+const SEMESTERS = ["1", "2"];
 
 // Data mẫu cho Excel preview
 const SAMPLE_EXCEL_DATA = [
@@ -57,14 +59,16 @@ export default function ManageSchedule() {
   const [userName, setUserName] = useState("");
   const [showImportModal, setShowImportModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<any>(null);
+  const [loadingModalVisible, setLoadingModalVisible] = useState(false);
+  const [loadingSuccess, setLoadingSuccess] = useState(false);
   
   // Form data
   const [academicYear, setAcademicYear] = useState(ACADEMIC_YEARS[0]);
   const [gradeLevel, setGradeLevel] = useState(GRADE_LEVELS[0]);
   const [semester, setSemester] = useState(SEMESTERS[0]);
   const [weekNumber, setWeekNumber] = useState("1");
-  const [scheduleType, setScheduleType] = useState(SCHEDULE_TYPES[0]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   
@@ -72,7 +76,9 @@ export default function ManageSchedule() {
   const [showAcademicYear, setShowAcademicYear] = useState(false);
   const [showGradeLevel, setShowGradeLevel] = useState(false);
   const [showSemester, setShowSemester] = useState(false);
-  const [showScheduleType, setShowScheduleType] = useState(false);
+
+  // Initialize service
+  const scheduleService = manageService;
 
   useEffect(() => {
     AsyncStorage.getItem("userName").then(name => {
@@ -88,23 +94,79 @@ export default function ManageSchedule() {
     setShowPreviewModal(true);
   };
 
-  const handleConfirmImport = () => {
+  const handleConfirmImport = async () => {
+    if (!selectedFile) {
+      Alert.alert("Lỗi", "Vui lòng chọn file Excel trước khi import.");
+      return;
+    }
+
+    setIsLoading(true);
     setShowImportModal(false);
-    setShowSuccessModal(true);
-    // Simulate import process
-    setTimeout(() => {
-      setShowSuccessModal(false);
-    }, 2000);
+    setLoadingModalVisible(true);
+    setLoadingSuccess(false);
+
+    try {
+      const importData = {
+        academicYear,
+        gradeLevel,
+        semester,
+        weekNumber,
+        startDate,
+        endDate,
+        file: selectedFile,
+      };
+
+      const result = await scheduleService.importScheduleFromExcel(importData);
+      
+      if (result.success) {
+        setLoadingSuccess(true);
+        setTimeout(() => {
+          setLoadingModalVisible(false);
+          setLoadingSuccess(false);
+        }, 2000);
+      } else {
+        setLoadingModalVisible(false);
+        Alert.alert("Lỗi", result.message || "Import thất bại");
+      }
+    } catch (error: any) {
+      setLoadingModalVisible(false);
+      // Hiển thị thông báo lỗi chi tiết
+      let errorMessage = "Không thể import file. Vui lòng thử lại.";
+      if (error.response?.status === 404) {
+        errorMessage = "API endpoint không tồn tại (404). Vui lòng kiểm tra cấu hình backend.";
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      Alert.alert("Lỗi Import", errorMessage);
+    } finally {
+      setIsLoading(false);
+      setSelectedFile(null);
+    }
   };
 
-  const handleFileSelect = () => {
-    Alert.alert(
-      "Chọn file Excel",
-      "Tính năng này sẽ được tích hợp với file picker thực tế",
-      [
-        { text: "OK", onPress: () => handleConfirmImport() }
-      ]
-    );
+  const handleFileSelect = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets[0]) {
+        const file = result.assets[0];
+        
+        // Tạo file object cho FormData
+        const fileObject = {
+          uri: file.uri,
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          name: file.name,
+        };
+        
+        setSelectedFile(fileObject);
+      }
+    } catch (error) {
+      Alert.alert("Lỗi", "Không thể chọn file. Vui lòng thử lại.");
+    }
   };
 
   return (
@@ -360,35 +422,7 @@ export default function ManageSchedule() {
                 />
               </View>
 
-              {/* Schedule Type */}
-              <View style={styles.formField}>
-                <Text style={styles.fieldLabel}>Loại thời khóa biểu</Text>
-                <View style={styles.dropdownContainer}>
-                  <TouchableOpacity 
-                    style={styles.dropdownButton}
-                    onPress={() => setShowScheduleType(!showScheduleType)}
-                  >
-                    <Text style={styles.dropdownText}>{scheduleType}</Text>
-                    <MaterialIcons name="arrow-drop-down" size={20} color="#29375C" />
-                  </TouchableOpacity>
-                  {showScheduleType && (
-                    <View style={styles.dropdownList}>
-                      {SCHEDULE_TYPES.map((type) => (
-                        <TouchableOpacity
-                          key={type}
-                          style={styles.dropdownItem}
-                          onPress={() => {
-                            setScheduleType(type);
-                            setShowScheduleType(false);
-                          }}
-                        >
-                          <Text style={styles.dropdownItemText}>{type}</Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  )}
-                </View>
-              </View>
+
 
               {/* Date Range */}
               <View style={styles.formField}>
@@ -419,10 +453,18 @@ export default function ManageSchedule() {
                 <TouchableOpacity 
                   style={styles.fileUploadButton}
                   onPress={handleFileSelect}
+                  disabled={isLoading}
                 >
                   <MaterialIcons name="cloud-upload" size={24} color="#29375C" />
-                  <Text style={styles.fileUploadText}>Chọn file Excel</Text>
+                  <Text style={styles.fileUploadText}>
+                    {selectedFile ? selectedFile.name : "Chọn file Excel"}
+                  </Text>
                 </TouchableOpacity>
+                {selectedFile && (
+                  <Text style={styles.fileSelectedText}>
+                    ✓ File đã chọn: {selectedFile.name}
+                  </Text>
+                )}
               </View>
             </ScrollView>
 
@@ -434,10 +476,13 @@ export default function ManageSchedule() {
                 <Text style={styles.cancelButtonText}>Hủy</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={styles.confirmButton}
+                style={[styles.confirmButton, isLoading && styles.disabledButton]}
                 onPress={handleConfirmImport}
+                disabled={isLoading}
               >
-                <Text style={styles.confirmButtonText}>Import</Text>
+                <Text style={styles.confirmButtonText}>
+                  {isLoading ? "Đang import..." : "Import"}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -515,23 +560,12 @@ export default function ManageSchedule() {
         </View>
       </Modal>
 
-      {/* Success Modal */}
-      <Modal
-        visible={showSuccessModal}
-        animationType="fade"
-        transparent={true}
-        onRequestClose={() => setShowSuccessModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.successModalContent}>
-            <MaterialIcons name="check-circle" size={64} color="#7ED957" />
-            <Text style={styles.successTitle}>Import thành công!</Text>
-            <Text style={styles.successDescription}>
-              Thời khóa biểu đã được tạo thành công cho {gradeLevel} khối {academicYear}
-            </Text>
-          </View>
-        </View>
-      </Modal>
+      {/* Loading Modal */}
+      <LoadingModal
+        visible={loadingModalVisible}
+        text={loadingSuccess ? "Import thành công!" : "Đang import thời khóa biểu..."}
+        success={loadingSuccess}
+      />
     </View>
   );
 }
@@ -783,6 +817,13 @@ const styles = StyleSheet.create({
     fontFamily: "Baloo2-Medium",
     color: "#29375C",
   },
+  fileSelectedText: {
+    fontSize: 12,
+    fontFamily: "Baloo2-Medium",
+    color: "#7ED957",
+    marginTop: 8,
+    textAlign: "center",
+  },
   modalFooter: {
     flexDirection: "row",
     padding: 20,
@@ -813,6 +854,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Baloo2-SemiBold",
     color: "#fff",
+  },
+  disabledButton: {
+    backgroundColor: "#7B859C",
+    opacity: 0.6,
   },
   previewDescription: {
     fontSize: 14,
@@ -866,26 +911,5 @@ const styles = StyleSheet.create({
     fontFamily: "Baloo2-Medium",
     color: "#7B859C",
     marginBottom: 4,
-  },
-  successModalContent: {
-    backgroundColor: "#f7f7f7",
-    borderRadius: 20,
-    padding: 40,
-    alignItems: "center",
-    width: "80%",
-  },
-  successTitle: {
-    fontSize: 20,
-    fontFamily: "Baloo2-Bold",
-    color: "#29375C",
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  successDescription: {
-    fontSize: 14,
-    fontFamily: "Baloo2-Medium",
-    color: "#7B859C",
-    textAlign: "center",
-    lineHeight: 20,
   },
 });

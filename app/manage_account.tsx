@@ -3,9 +3,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from "react";
-import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Header from "../components/Header";
-import { fonts } from "../utils/responsive";
+import ManageService, { AccountData, AccountsResponse } from "../services/manage.service";
 
 const FILTERS = ["Học sinh", "Giáo viên"];
 const BLOCKS = ["Khối 10", "Khối 11", "Khối 12"];
@@ -26,36 +26,91 @@ export default function ManageAccount() {
   const [blockDropdownOpen, setBlockDropdownOpen] = useState(false);
   const [classDropdownOpen, setClassDropdownOpen] = useState(false);
   const [userName, setUserName] = useState("");
+  const [loading, setLoading] = useState(false);
+  
+  // State cho dữ liệu từ API
+  const [accounts, setAccounts] = useState<AccountData[]>([]);
+  const [classesByGrade, setClassesByGrade] = useState<string[]>([]);
+  const [totalAccounts, setTotalAccounts] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  // State cho filter (không tự động apply)
+  const [tempBlockIdx, setTempBlockIdx] = useState<number|null>(null);
+  const [tempClassIdx, setTempClassIdx] = useState<number|null>(null);
 
   useEffect(() => {
     AsyncStorage.getItem("userName").then(name => {
       if (name) setUserName(name);
     });
+    
+    // Load dữ liệu ban đầu
+    loadAccounts();
   }, []);
 
-  // Dữ liệu mẫu
-  const students = [
-    { name: 'Nguyen Van A', class: '10A1', code: 'HS-101', avatar: require('../assets/images/avt_default.png') },
-    { name: 'Nguyen Van B', class: '10A2', code: 'HS-102', avatar: require('../assets/images/avt_default.png') },
-    { name: 'Nguyen Van C', class: '10A3', code: 'HS-103', avatar: require('../assets/images/avt_default.png') },
-    { name: 'Nguyen Van D', class: '10A4', code: 'HS-104', avatar: require('../assets/images/avt_default.png') },
-  ];
-  const teachers = [
-    { name: 'Tran Thi B', subject: 'Toán', code: 'GV-201', avatar: require('../assets/images/avt_default.png') },
-    { name: 'Le Van C', subject: 'Vật lý', code: 'GV-202', avatar: require('../assets/images/avt_default.png') },
-    { name: 'Pham Van D', subject: 'Ngữ Văn', code: 'GV-203', avatar: require('../assets/images/avt_default.png') },
-    { name: 'Nguyen Thi E', subject: 'Hóa học', code: 'GV-204', avatar: require('../assets/images/avt_default.png') },
-  ];
-  const filteredStudents = students.filter(s =>
-    s.name.toLowerCase().includes(search.toLowerCase()) ||
-    s.class.toLowerCase().includes(search.toLowerCase()) ||
-    s.code.toLowerCase().includes(search.toLowerCase())
-  );
-  const filteredTeachers = teachers.filter(t =>
-    t.name.toLowerCase().includes(search.toLowerCase()) ||
-    t.subject.toLowerCase().includes(search.toLowerCase()) ||
-    t.code.toLowerCase().includes(search.toLowerCase())
-  );
+  // Load dữ liệu khi thay đổi filter (chỉ khi có thay đổi thực sự)
+  useEffect(() => {
+    setCurrentPage(1); // Reset về trang đầu khi thay đổi filter
+    loadAccounts();
+  }, [filterIdx, search, blockIdx, classIdx]);
+
+  // Load dữ liệu khi thay đổi page
+  useEffect(() => {
+    if (currentPage > 1) {
+      loadAccounts();
+    }
+  }, [currentPage]);
+
+  // Load danh sách tài khoản
+  const loadAccounts = async () => {
+    try {
+      setLoading(true);
+      
+      const role = filterIdx === 0 ? 'student' : 'teacher';
+      const filters: any = {
+        role,
+        page: currentPage,
+        limit: 20
+      };
+      
+      if (search) filters.search = search;
+      if (blockIdx !== null) filters.gradeLevel = 10 + blockIdx;
+      if (classIdx !== null && blockIdx !== null) {
+        filters.className = CLASSES[blockIdx][classIdx];
+      }
+
+      const data: AccountsResponse = await ManageService.getAccountsForManagement(filters);
+      setAccounts(data.accounts);
+      setTotalAccounts(data.total);
+      setTotalPages(data.totalPages);
+    } catch (error) {
+      Alert.alert('Lỗi', 'Không thể tải danh sách tài khoản. Vui lòng thử lại.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load danh sách lớp theo khối
+  const loadClassesByGrade = async (gradeLevel: number) => {
+    try {
+      const classes = await ManageService.getClassesByGradeForManagement(gradeLevel);
+      
+      // Xử lý cả trường hợp trả về string[] hoặc object array
+      if (classes && classes.length > 0) {
+        if (typeof classes[0] === 'string') {
+          setClassesByGrade(classes as string[]);
+        } else {
+          // Nếu là object array, extract className
+          const classNames = classes.map((cls: any) => cls.className || cls.name || cls);
+          setClassesByGrade(classNames);
+        }
+      } else {
+        setClassesByGrade([]);
+      }
+    } catch (error) {
+      setClassesByGrade([]);
+    }
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f7f7f7" }}>
@@ -91,7 +146,15 @@ export default function ManageAccount() {
               onChangeText={setSearch}
             />
           </View>
-          <TouchableOpacity style={styles.advFilterBtn} onPress={() => setShowFilter(true)}>
+          <TouchableOpacity 
+            style={styles.advFilterBtn} 
+            onPress={() => {
+              // Khởi tạo temp state với giá trị hiện tại
+              setTempBlockIdx(blockIdx);
+              setTempClassIdx(classIdx);
+              setShowFilter(true);
+            }}
+          >
             <MaterialIcons name="tune" size={22} color="#29375C" />
           </TouchableOpacity>
         </View>
@@ -103,43 +166,59 @@ export default function ManageAccount() {
         contentContainerStyle={{paddingBottom: 64}} 
         showsVerticalScrollIndicator={false}
       >
-        {filterIdx === 0
-          ? filteredStudents.map((s, idx) => (
-              <View style={styles.accountCard} key={idx}>
-                <View style={styles.accountRow}>
-                  <View style={styles.accountAvatarBox}>
-                    <Image source={s.avatar} style={styles.accountAvatar} />
-                  </View>
-                  <View style={{flex:1, justifyContent:'center'}}>
-                    <Text style={styles.accountName}>[HS] {s.name}</Text>
-                    <Text style={styles.accountClass}>Lớp: {s.class}</Text>
-                    <Text style={styles.accountCode}>Mã học sinh: {s.code}</Text>
-                  </View>
-                  <TouchableOpacity style={styles.accountDetailBtn} onPress={() => router.push('/manage/detail_account')}>
-                    <Text style={styles.accountDetailText}>Xem chi tiết</Text>
-                    <MaterialIcons name="chevron-right" size={20} color="#29375C" />
-                  </TouchableOpacity>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Đang tải danh sách tài khoản...</Text>
+          </View>
+        ) : accounts.length === 0 ? (
+          <View style={styles.noDataContainer}>
+            <Text style={styles.noDataText}>Không tìm thấy tài khoản nào.</Text>
+          </View>
+        ) : (
+          accounts.map((account, idx) => (
+            <View style={styles.accountCard} key={account._id || idx}>
+              <View style={styles.accountRow}>
+                <View style={styles.accountAvatarBox}>
+                  <Image 
+                    source={account.avatar ? { uri: account.avatar } : require('../assets/images/avt_default.png')} 
+                    style={styles.accountAvatar} 
+                  />
                 </View>
-              </View>
-            ))
-          : filteredTeachers.map((t, idx) => (
-              <View style={styles.accountCard} key={idx}>
-                <View style={styles.accountRow}>
-                  <View style={styles.accountAvatarBox}>
-                    <Image source={t.avatar} style={styles.accountAvatar} />
-                  </View>
-                  <View style={{flex:1, justifyContent:'center'}}>
-                    <Text style={styles.accountName}>[GV] {t.name}</Text>
-                    <Text style={styles.accountClass}>Bộ môn: {t.subject}</Text>
-                    <Text style={styles.accountCode}>Mã giáo viên: {t.code}</Text>
-                  </View>
-                  <TouchableOpacity style={styles.accountDetailBtn} onPress={() => router.push('/manage/detail_account')}>
-                    <Text style={styles.accountDetailText}>Xem chi tiết</Text>
-                    <MaterialIcons name="chevron-right" size={20} color="#29375C" />
-                  </TouchableOpacity>
+                <View style={{flex:1, justifyContent:'center'}}>
+                  <Text style={styles.accountName}>
+                    {filterIdx === 0 ? '[HS]' : '[GV]'} {account.name}
+                  </Text>
+                  {filterIdx === 0 ? (
+                    <Text style={styles.accountClass}>
+                      Lớp: {account.className || account.class || 'N/A'}
+                    </Text>
+                  ) : (
+                    <Text style={styles.accountClass}>
+                      Bộ môn: {account.subjectName || account.subject || 'N/A'}
+                    </Text>
+                  )}
+                  <Text style={styles.accountCode}>
+                    {filterIdx === 0 ? 'Mã học sinh' : 'Mã giáo viên'}: {account.studentId || account.teacherId || account.code || 'N/A'}
+                  </Text>
                 </View>
+                <TouchableOpacity 
+                  style={styles.accountDetailBtn} 
+                  onPress={() => {
+                    const accountId = account.id || account._id;
+                    if (accountId) {
+                      router.push(`/manage/detail_account?id=${accountId}` as any);
+                    } else {
+                      Alert.alert('Lỗi', 'Không tìm thấy ID tài khoản.');
+                    }
+                  }}
+                >
+                  <Text style={styles.accountDetailText}>Xem chi tiết</Text>
+                  <MaterialIcons name="chevron-right" size={20} color="#29375C" />
+                </TouchableOpacity>
               </View>
-            ))}
+            </View>
+          ))
+        )}
       </ScrollView>
       
       {/* Nút thêm tài khoản (PlusIcon) */}
@@ -174,7 +253,7 @@ export default function ManageAccount() {
                 onPress={() => {setBlockDropdownOpen(v=>!v); setClassDropdownOpen(false);}}
               >
                 <Text style={styles.dropdownText}>
-                  {blockIdx!==null ? BLOCKS[blockIdx] : 'Chọn khối'}
+                  {tempBlockIdx!==null ? BLOCKS[tempBlockIdx] : 'Chọn khối'}
                 </Text>
                 <MaterialIcons name="arrow-drop-down" size={22} color="#29375C" />
               </TouchableOpacity>
@@ -184,7 +263,13 @@ export default function ManageAccount() {
                     <TouchableOpacity 
                       key={b} 
                       style={styles.dropdownItem} 
-                      onPress={() => {setBlockIdx(idx); setClassIdx(null); setBlockDropdownOpen(false);}}
+                      onPress={() => {
+                        setTempBlockIdx(idx); 
+                        setTempClassIdx(null); 
+                        setBlockDropdownOpen(false);
+                        // Load classes cho khối được chọn
+                        loadClassesByGrade(10 + idx);
+                      }}
                     >
                       <Text style={styles.dropdownItemText}>{b}</Text>
                     </TouchableOpacity>
@@ -199,33 +284,49 @@ export default function ManageAccount() {
             <View style={styles.outlineInputBox}>
               <Text style={styles.floatingLabel}>Lớp</Text>
               <TouchableOpacity
-                style={[styles.dropdownTouchable, {opacity: blockIdx===null?0.5:1}]}
-                disabled={blockIdx===null}
+                style={[styles.dropdownTouchable, {opacity: tempBlockIdx===null?0.5:1}]}
+                disabled={tempBlockIdx===null}
                 onPress={() => {setClassDropdownOpen(v=>!v); setBlockDropdownOpen(false);}}
               >
                 <Text style={styles.dropdownText}>
-                  {blockIdx!==null && classIdx!==null ? CLASSES[blockIdx][classIdx] : 'Chọn lớp'}
+                  {tempBlockIdx!==null && tempClassIdx!==null && classesByGrade.length > 0 
+                    ? classesByGrade[tempClassIdx] 
+                    : 'Chọn lớp'}
                 </Text>
                 <MaterialIcons name="arrow-drop-down" size={22} color="#29375C" />
               </TouchableOpacity>
-              {classDropdownOpen && blockIdx!==null && (
+              {classDropdownOpen && tempBlockIdx!==null && (
                 <View style={styles.dropdownList}>
-                  {CLASSES[blockIdx].map((c, idx) => (
-                    <TouchableOpacity 
-                      key={c} 
-                      style={styles.dropdownItem} 
-                      onPress={() => {setClassIdx(idx); setClassDropdownOpen(false);}}
-                    >
-                      <Text style={styles.dropdownItemText}>{c}</Text>
-                    </TouchableOpacity>
-                  ))}
+                  {classesByGrade.length > 0 ? (
+                    classesByGrade.map((className, idx) => (
+                      <TouchableOpacity 
+                        key={className} 
+                        style={styles.dropdownItem} 
+                        onPress={() => {setTempClassIdx(idx); setClassDropdownOpen(false);}}
+                      >
+                        <Text style={styles.dropdownItemText}>{className}</Text>
+                      </TouchableOpacity>
+                    ))
+                  ) : (
+                    <View style={styles.dropdownItem}>
+                      <Text style={styles.dropdownItemText}>Không có lớp nào</Text>
+                    </View>
+                  )}
                 </View>
               )}
             </View>
           </View>
           
           {/* Nút tìm kiếm */}
-          <TouchableOpacity style={styles.filterModalBtn} onPress={() => setShowFilter(false)}>
+          <TouchableOpacity 
+            style={styles.filterModalBtn} 
+            onPress={() => {
+              // Apply filter khi nhấn tìm kiếm
+              setBlockIdx(tempBlockIdx);
+              setClassIdx(tempClassIdx);
+              setShowFilter(false);
+            }}
+          >
             <Text style={styles.filterModalBtnText}>Tìm kiếm</Text>
           </TouchableOpacity>
         </View>
@@ -291,6 +392,7 @@ const styles = StyleSheet.create({
   accountListWrap: {
     marginTop: 10,
     marginHorizontal: 0,
+    marginBottom: 50,
   },
   accountCard: {
     marginTop: 12,
@@ -430,9 +532,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   filterModalBtnText: {
-    color: "#fff",
-    fontFamily: "Baloo2-SemiBold",
-    fontSize: 17,
+    color: '#fff',
+    fontSize: 16,
+    fontFamily: 'Baloo2-SemiBold',
   },
   fieldWrap: {
     marginBottom: 15,
@@ -489,5 +591,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#29375C",
     fontFamily: "Baloo2-Medium",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  loadingText: {
+    fontSize: 18,
+    color: '#29375C',
+    fontFamily: 'Baloo2-SemiBold',
+  },
+  noDataContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  noDataText: {
+    fontSize: 18,
+    color: '#29375C',
+    fontFamily: 'Baloo2-SemiBold',
   },
 });

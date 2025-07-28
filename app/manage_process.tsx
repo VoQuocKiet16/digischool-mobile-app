@@ -24,7 +24,7 @@ const WEEKS = Array.from({ length: 20 }, (_, i) => `Tuần ${i + 1}`);
 // Dữ liệu yêu cầu số tiết cho từng môn học (data cứng)
 const REQUIRED_LESSONS: { [key: string]: number } = {
   'Toán': 4,
-  'Ngữ Văn': 4,
+  'Ngữ văn': 4,
   'Vật lý': 3,
   'Hóa học': 2,
   'Sinh học': 3,
@@ -35,7 +35,6 @@ const REQUIRED_LESSONS: { [key: string]: number } = {
   'Thể dục': 2,
   'GDQP': 2,
   'Tin học': 2,
-  'Công nghệ': 2,
 };
 
 export default function ManageProcess() {
@@ -850,10 +849,9 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
+    marginTop: 100,
     alignItems: 'center',
-    backgroundColor: '#f7f7f7',
-    paddingTop: 100,
+    backgroundColor: '#f7f7f7'
   },
   loadingText: {
     marginTop: 10,
