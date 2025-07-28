@@ -11,7 +11,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { getLessonDetail } from "../../../services/schedule.service";
 import { LessonData } from "../../../types/lesson.types";
@@ -26,6 +26,8 @@ const LessonDetailScreen = () => {
   const [error, setError] = useState("");
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
   const pollingRef = useRef<NodeJS.Timeout | number | null>(null);
+  const menuIconRef = useRef<View>(null);
+  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
 
   useEffect(() => {
     if (lessonId) {
@@ -120,8 +122,16 @@ const LessonDetailScreen = () => {
       subtitle={getLessonSubtitle(lessonData)}
       onBack={() => router.back()}
       rightIcon={
-        <TouchableOpacity onPress={() => setMenuVisible(true)}>
-            <MaterialIcons name="menu" size={responsiveValues.iconSize.xl} color="#29375C" />
+        <TouchableOpacity
+          ref={menuIconRef}
+          onPress={() => {
+            menuIconRef.current?.measureInWindow((x: number, y: number, width: number, height: number) => {
+              setMenuPosition({ x, y, width, height });
+              setMenuVisible(true);
+            });
+          }}
+        >
+          <MaterialIcons name="menu" size={responsiveValues.iconSize.xl} color="#29375C" />
         </TouchableOpacity>
       }
     >
@@ -145,7 +155,18 @@ const LessonDetailScreen = () => {
         onRequestClose={() => setMenuVisible(false)}
       >
         <Pressable style={styles.overlay} onPress={() => setMenuVisible(false)}>
-          <View style={styles.menuBox}>
+          <View
+            style={[
+              styles.menuBox,
+              {
+                position: "absolute",
+                top: menuPosition.y + 0, // 40 là chiều cao menu, 4 là khoảng cách nhỏ
+                left: menuPosition.x + menuPosition.width - 110, // 110 là minWidth của menuBox
+                marginTop: 0,
+                marginRight: 0,
+              },
+            ]}
+          >
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
@@ -218,8 +239,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 5,
     minWidth: 110,
-    marginTop: 75,
-    marginRight: 8,
+    // Xoá marginTop và marginRight để dùng position tuyệt đối
   },
   menuItem: {
     padding: 5,

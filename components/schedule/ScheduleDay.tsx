@@ -309,6 +309,7 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
                   })}
                   type={slotData.type}
                   slotData={slotData}
+                  isSwapLesson={isSwapLesson}
                 />
               </View>
             );
