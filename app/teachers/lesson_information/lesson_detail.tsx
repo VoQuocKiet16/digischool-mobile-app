@@ -7,14 +7,13 @@ import { fonts, responsive, responsiveValues } from "@/utils/responsive";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   StyleSheet,
   Text,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   View
 } from "react-native";
 import {
@@ -41,6 +40,8 @@ const LessonDetailScreen = () => {
     statusText: string;
   } | null>(null);
   const isFocused = useIsFocused();
+  const menuIconRef = useRef<View>(null);
+  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
 
   useEffect(() => {
     if (lessonId) {
@@ -218,11 +219,17 @@ const LessonDetailScreen = () => {
       subtitle={getLessonSubtitle(lessonData)}
       onBack={() => router.back()}
       rightIcon={
-        <TouchableWithoutFeedback onPress={() => setMenuVisible(!menuVisible)}>
-          <TouchableOpacity onPress={() => setMenuVisible(!menuVisible)}>
-            <Ionicons name="menu" size={responsiveValues.iconSize.xxl} color="#29375C" />
-          </TouchableOpacity>
-        </TouchableWithoutFeedback>
+        <TouchableOpacity
+          ref={menuIconRef}
+          onPress={() => {
+            menuIconRef.current?.measureInWindow((x: number, y: number, width: number, height: number) => {
+              setMenuPosition({ x, y, width, height });
+              setMenuVisible(true);
+            });
+          }}
+        >
+          <Ionicons name="menu" size={responsiveValues.iconSize.xxl} color="#29375C" />
+        </TouchableOpacity>
       }
     >
       <RefreshableScrollView
@@ -285,12 +292,23 @@ const LessonDetailScreen = () => {
       />
      {menuVisible && (
         <View style={styles.overlay}>
-          <TouchableOpacity 
-            // style={{ flex: 1 }} 
+          <TouchableOpacity
+            style={StyleSheet.absoluteFill}
             onPress={() => setMenuVisible(false)}
             activeOpacity={1}
           />
-          <View style={styles.menuBox}>
+          <View
+            style={[
+              styles.menuBox,
+              {
+                position: "absolute",
+                top: menuPosition.y + menuPosition.height,
+                left: menuPosition.x + menuPosition.width - 140,
+                marginTop: 0,
+                marginRight: 0,
+              },
+            ]}
+          >
             <TouchableOpacity
               style={[
                 styles.menuItem,
@@ -444,18 +462,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    flex: 1,
     backgroundColor: "transparent",
-    justifyContent: "flex-start",
-    alignItems: "flex-end",
-    paddingTop: responsive.height(9),
-    paddingRight: responsiveValues.padding.sm,
   },
   menuBox: {
     backgroundColor: "#29375C",
     borderRadius: responsiveValues.borderRadius.md,
     padding: responsiveValues.padding.sm,
-    minWidth: responsive.width(30),
+    minWidth: 110, // Đặt cứng để đồng bộ với logic left
     marginTop: 0,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -463,9 +476,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
     zIndex: 1000,
-    position: "absolute",
-    top: responsive.height(9),
-    right: responsiveValues.padding.sm,
+    // position, top, left sẽ được set động
   },
   menuItem: {
     paddingVertical: responsiveValues.padding.sm,

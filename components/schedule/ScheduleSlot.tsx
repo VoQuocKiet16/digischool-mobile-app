@@ -2,7 +2,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { responsive, responsiveValues, fonts } from "../../utils/responsive";
+import { fonts } from "../../utils/responsive";
 
 interface ScheduleSlotProps {
   text: string;
@@ -28,6 +28,7 @@ interface ScheduleSlotProps {
   lessonId?: string;
   type?: string;
   slotData?: any;
+  isSwapLesson?: boolean;
 }
 
 const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
@@ -45,6 +46,7 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
   lessonId,
   type,
   slotData,
+  isSwapLesson = false,
 }) => {
   const router = useRouter();
 
@@ -101,6 +103,17 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
     slotStyle = styles.selectedSlot;
     slotText = "Đã chọn";
     textStyle = styles.selectedSlotText;
+  } else if (cellStatus === "current") {
+    slotStyle = styles.currentSlot;
+    textStyle = styles.currentSlotText;
+  } else if (cellStatus === "exchangeable") {
+    if (isSwapLesson) {
+      slotStyle = styles.filledSlot;
+      textStyle = styles.filledSlotText;
+    } else {
+      slotStyle = styles.exchangeableSlot;
+      textStyle = styles.exchangeableSlotText;
+    }
   } else if (isUserAdded) {
     slotStyle = styles.userAddedSlot;
   }
@@ -342,6 +355,34 @@ const styles = StyleSheet.create({
   },
   userActivitySlotText: {
     color: "#fff",
+    fontSize: 9,
+    textAlign: "center",
+    includeFontPadding: false,
+    textAlignVertical: "center",
+    fontFamily: fonts.semiBold,
+  },
+  exchangeableSwapSlot: {
+    backgroundColor: "#F6F8FB", // xám nhạt hơn
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#F9B233",
+    borderStyle: "dashed",
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    width: "90%",
+    height: 77,
+    minHeight: 77,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+    elevation: 3,
+  },
+  exchangeableSwapSlotText: {
+    color: "#29375C",
+    fontWeight: "bold",
     fontSize: 9,
     textAlign: "center",
     includeFontPadding: false,

@@ -78,6 +78,9 @@ export default function AddContactScreen() {
                 placeholder="hocsinh1"
                 placeholderTextColor="#9CA3AF"
                 editable={!loading}
+                underlineColorAndroid="transparent"
+                numberOfLines={1}
+                multiline={false}
               />
             </View>
           </View>
@@ -243,8 +246,9 @@ const styles = StyleSheet.create({
     marginLeft: 15,
     marginRight: 15,
     position: "relative",
-    height: 48,
-    paddingVertical: 12,
+    minHeight: 44,
+    paddingVertical: 0,
+    justifyContent: "center",
   },
   floatingLabel: {
     position: "absolute",
@@ -260,7 +264,10 @@ const styles = StyleSheet.create({
   inputTextOutline: {
     color: "#29375C",
     fontSize: 16,
-    fontFamily: fonts.medium,
+    // fontFamily: fonts.medium,
+    // lineHeight: 22,
+    paddingVertical: 0,
+    height: 44,
   },
   required: {
     color: "#E53935",
