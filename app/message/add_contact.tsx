@@ -243,6 +243,8 @@ const styles = StyleSheet.create({
     marginLeft: 15,
     marginRight: 15,
     position: "relative",
+    height: 48,
+    paddingVertical: 12,
   },
   floatingLabel: {
     position: "absolute",

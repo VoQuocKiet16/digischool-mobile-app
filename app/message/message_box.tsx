@@ -247,6 +247,18 @@ export default function MessageBoxScreen() {
           token as string
         );
         if (uploadRes.success && uploadRes.data.url) {
+          // Thêm tin nhắn tạm thời vào messages
+          const tempMsg = {
+            sender: myId,
+            receiver: userId,
+            content: "",
+            mediaUrl: uploadRes.data.url,
+            type: "image",
+            createdAt: new Date().toISOString(),
+            status: "sending",
+            avatar: null,
+          };
+          setMessages((prev) => [...prev, tempMsg]);
           await chatService.sendMessageAPI(
             {
               receiver: userId,
@@ -264,7 +276,7 @@ export default function MessageBoxScreen() {
             type: "image",
           });
           setSelectedImage(null);
-          } else {
+        } else {
           Alert.alert("Lỗi gửi ảnh", uploadRes.message || "Không gửi được ảnh");
         }
       } catch (err) {
@@ -283,6 +295,17 @@ export default function MessageBoxScreen() {
       content: input.replace(/^[\s\n]+|[\s\n]+$/g, ""),
       type: "text",
     };
+    // Thêm tin nhắn tạm thời vào messages
+    const tempMsg = {
+      sender: myId,
+      receiver: userId,
+      content: data.content,
+      type: "text",
+      createdAt: new Date().toISOString(),
+      status: "sending",
+      avatar: null,
+    };
+    setMessages((prev) => [...prev, tempMsg]);
     const res = await chatService.sendMessageAPI(data, token as string);
     if (!res.success) {
       Alert.alert("Lỗi gửi tin nhắn", res.message || "Gửi tin nhắn thất bại");
