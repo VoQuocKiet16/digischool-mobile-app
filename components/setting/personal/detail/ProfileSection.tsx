@@ -14,6 +14,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ userData }) => {
         return "Học sinh";
       case "teacher":
         return "Giáo viên";
+      case "homeroom_teacher":
+        return "Giáo viên";
       case "manager":
         return "Quản trị viên";
       default:

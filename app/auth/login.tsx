@@ -15,7 +15,7 @@ import LoadingModal from "../../components/LoadingModal";
 import { API_ERROR_MESSAGES } from "../../constants/api.constants";
 import { useUserContext } from "../../contexts/UserContext";
 import { getMe, login } from "../../services/auth.service";
-import { responsive, responsiveValues, fonts } from "../../utils/responsive";
+import { fonts } from "../../utils/responsive";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -71,44 +71,44 @@ export default function LoginScreen() {
                 );
               }
 
-              if (userResponse.data.phone !== null) {
+              if (userResponse.data.phone != null) {
                 await AsyncStorage.setItem(
                   "userPhone",
                   userResponse.data.phone
                 );
               }
-              if (userResponse.data.address !== null) {
+              if (userResponse.data.address != null) {
                 await AsyncStorage.setItem(
                   "userAddress",
                   userResponse.data.address
                 );
               }
-              if (userResponse.data.dateOfBirth !== null) {
+              if (userResponse.data.dateOfBirth != null) {
                 await AsyncStorage.setItem(
                   "userDateOfBirth",
                   userResponse.data.dateOfBirth
                 );
               }
-              if (userResponse.data.gender !== null) {
+              if (userResponse.data.gender != null) {
                 await AsyncStorage.setItem(
                   "userGender",
                   userResponse.data.gender
                 );
               }
 
-              if (userResponse.data.studentId !== null) {
+              if (userResponse.data.studentId != null) {
                 await AsyncStorage.setItem(
                   "userStudentId",
                   userResponse.data.studentId
                 );
               }
-              if (userResponse.data.id !== null) {
+              if (userResponse.data.id != null) {
                 await AsyncStorage.setItem(
                   "userTeacherId",
                   userResponse.data.id
                 );
               }
-              if (userResponse.data.managerId !== null) {
+              if (userResponse.data.managerId != null) {
                 await AsyncStorage.setItem(
                   "userManagerId",
                   userResponse.data.managerId

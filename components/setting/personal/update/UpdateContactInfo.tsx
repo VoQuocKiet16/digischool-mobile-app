@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,13 +7,27 @@ import {
   View,
 } from "react-native";
 import { TextInput } from "react-native-paper";
+import { UserData } from "../../../../types/user.types";
 import { fonts } from "../../../../utils/responsive";
 
-export default function UpdateContactInfo() {
-  const [phone, setPhone] = useState("0123456789");
-  const [email, setEmail] = useState("hocsinh@email.com");
-  const [address, setAddress] = useState("Hà Nội");
+interface UpdateContactInfoProps {
+  userData: UserData | null;
+}
+
+export default function UpdateContactInfo({ userData }: UpdateContactInfoProps) {
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
   const [showInfo, setShowInfo] = useState(true);
+
+  // Load data từ userData khi component mount hoặc userData thay đổi
+  useEffect(() => {
+    if (userData) {
+      setPhone(userData.phone || "");
+      setEmail(userData.email || "");
+      setAddress(userData.address || "");
+    }
+  }, [userData]);
 
   return (
     <View style={styles.container}>

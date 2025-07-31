@@ -90,7 +90,7 @@ function RootLayoutContent() {
   let role = null;
   if (userData?.roleInfo?.type === "manager") {
     role = "manager";
-  } else if (userData?.roleInfo?.type === "teacher") {
+  } else if (userData?.roleInfo?.type === "teacher" || userData?.roleInfo?.type === "homeroom_teacher") {
     role = "teacher";
   } else if (userData?.roleInfo?.type === "student") {
     role = "student";

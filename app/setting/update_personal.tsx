@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   ScrollView,
@@ -12,19 +12,29 @@ import {
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import UpdateContactInfo from "../../components/setting/personal/update/UpdateContactInfo";
 import UpdateProfileInfo from "../../components/setting/personal/update/UpdateProfileInfo";
-import { responsive, responsiveValues, fonts } from "../../utils/responsive";
+import { useUserData } from "../../hooks/useUserData";
+import { fonts } from "../../utils/responsive";
 
 export default function UpdatePersonal() {
   const [avatar, setAvatar] = useState(
     require("../../assets/images/avt_default.png")
   );
-  const [name, setName] = useState("Nguyễn Văn A");
-  const [dob, setDob] = useState("01/01/2006");
-  const [gender, setGender] = useState("Nam");
-  const [phone, setPhone] = useState("0123456789");
-  const [email, setEmail] = useState("hocsinh@email.com");
-  const [address, setAddress] = useState("Hà Nội");
+  const [role, setRole] = useState("");
   const router = useRouter();
+  const { userData } = useUserData();
+
+  // Load role từ userData
+  useEffect(() => {
+    if (userData?.roleInfo?.type) {
+      const roleMap: { [key: string]: string } = {
+        'student': 'Học sinh',
+        'teacher': 'Giáo viên',
+        'homeroom_teacher': 'Giáo viên chủ nhiệm',
+        'manager': 'Quản trị viên'
+      };
+      setRole(roleMap[userData.roleInfo.type] || 'Người dùng');
+    }
+  }, [userData]);
 
   // Hàm chọn ảnh đại diện (giả lập)
   const handleChangeAvatar = () => {
@@ -49,9 +59,9 @@ export default function UpdatePersonal() {
             <Ionicons name="camera-outline" size={20} color="#fff" />
           </TouchableOpacity>
         </View>
-        <Text style={styles.role}>Học sinh</Text>
-        <UpdateProfileInfo />
-        <UpdateContactInfo />
+        <Text style={styles.role}>{role}</Text>
+        <UpdateProfileInfo userData={userData} />
+        <UpdateContactInfo userData={userData} />
         <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
           <Text style={styles.saveBtnText}>Lưu thay đổi</Text>
         </TouchableOpacity>
