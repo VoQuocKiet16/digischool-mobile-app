@@ -43,6 +43,10 @@
       "eas": {
         "projectId": "b17d889f-c31f-4576-a6d8-24a04087a724"
       }
-    }
+    },
+    "assetBundlePatterns": [
+      "**/*",
+      "assets/fonts/*"
+    ]
   }
 }
