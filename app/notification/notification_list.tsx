@@ -12,7 +12,9 @@ import {
   View,
 } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import { io, Socket } from "socket.io-client";
 import HeaderLayout from "../../components/layout/HeaderLayout";
+import { useNotificationContext } from "../../contexts/NotificationContext";
 import {
   getNotifications,
   markAllNotificationsAsRead,
@@ -20,6 +22,8 @@ import {
   Notification,
 } from "../../services/notification.service";
 import { fonts } from "../../utils/responsive";
+
+const SOCKET_URL = "http://192.168.1.7:8080/";
 
 const TABS = [
   { key: "user", label: "Người dùng" },
@@ -59,15 +63,70 @@ export default function NotificationListScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
+  const [socket, setSocket] = useState<Socket | null>(null);
   const router = useRouter();
+  const { refreshNotifications } = useNotificationContext();
 
+  // Kết nối socket và lắng nghe notification mới
   useEffect(() => {
-    (async () => {
-      const userInfoString = await AsyncStorage.getItem("userId");
-      if (userInfoString) {
-        setUserId(userInfoString);
+    const initializeSocket = async () => {
+      try {
+        const [userId, token] = await Promise.all([
+          AsyncStorage.getItem("userId"),
+          AsyncStorage.getItem("token"),
+        ]);
+
+        if (userId && token) {
+          setUserId(userId);
+          
+          const newSocket = io(SOCKET_URL, {
+            transports: ["websocket"],
+            auth: { token: `Bearer ${token}` },
+            reconnection: true,
+            reconnectionAttempts: 10,
+            reconnectionDelay: 1000,
+          });
+
+          newSocket.on("connect", () => {
+            console.log("✅ Notification list socket connected");
+          });
+
+          newSocket.on("disconnect", () => {
+            console.log("❌ Notification list socket disconnected");
+          });
+
+          // Lắng nghe notification mới
+          newSocket.on("new_notification", (notification: Notification) => {
+            // Thêm notification vào đúng category
+            switch (notification.type) {
+              case "user":
+                setNotificationsUser(prev => [notification, ...prev]);
+                break;
+              case "activity":
+                setNotificationsActivity(prev => [notification, ...prev]);
+                break;
+              case "system":
+                setNotificationsSystem(prev => [notification, ...prev]);
+                break;
+            }
+          });
+
+          newSocket.emit("join", userId);
+          setSocket(newSocket);
+        }
+      } catch (error) {
+        console.error("❌ Error initializing notification list socket:", error);
       }
-    })();
+    };
+
+    initializeSocket();
+
+    // Cleanup khi component unmount
+    return () => {
+      if (socket) {
+        socket.disconnect();
+      }
+    };
   }, []);
 
   const fetchAllNotifications = async () => {
@@ -151,6 +210,8 @@ export default function NotificationListScreen() {
       if (!token) return;
       await markAllNotificationsAsRead(token);
       fetchAllNotifications();
+      // Cập nhật notification context
+      refreshNotifications();
     } catch {}
   };
 
@@ -159,6 +220,8 @@ export default function NotificationListScreen() {
       const token = await AsyncStorage.getItem("token");
       if (token) {
         await markNotificationAsRead(item._id, token);
+        // Cập nhật notification context
+        refreshNotifications();
       }
     } catch (err) {
       alert("Lỗi khi đánh dấu thông báo đã đọc");
