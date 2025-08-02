@@ -12,18 +12,14 @@ import {
   View,
 } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import { io, Socket } from "socket.io-client";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import { useNotificationContext } from "../../contexts/NotificationContext";
 import {
-  getNotifications,
   markAllNotificationsAsRead,
   markNotificationAsRead,
   Notification,
 } from "../../services/notification.service";
 import { fonts } from "../../utils/responsive";
-
-const SOCKET_URL = "http://192.168.1.7:8080/";
 
 const TABS = [
   { key: "user", label: "Người dùng" },
@@ -51,102 +47,33 @@ function truncateText(text: string, maxLength = 90) {
 export default function NotificationListScreen() {
   const [tab, setTab] = useState("user");
   const [search, setSearch] = useState("");
-  const [notificationsUser, setNotificationsUser] = useState<Notification[]>(
-    []
-  );
-  const [notificationsActivity, setNotificationsActivity] = useState<
-    Notification[]
-  >([]);
-  const [notificationsSystem, setNotificationsSystem] = useState<
-    Notification[]
-  >([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
-  const [socket, setSocket] = useState<Socket | null>(null);
   const router = useRouter();
-  const { refreshNotifications } = useNotificationContext();
+  
+  const {
+    notificationsUser,
+    notificationsActivity,
+    notificationsSystem,
+    refreshNotifications,
+    refreshNotificationsByType,
+  } = useNotificationContext();
 
-  // Kết nối socket và lắng nghe notification mới
+  // Lấy userId từ AsyncStorage
   useEffect(() => {
-    const initializeSocket = async () => {
-      try {
-        const [userId, token] = await Promise.all([
-          AsyncStorage.getItem("userId"),
-          AsyncStorage.getItem("token"),
-        ]);
-
-        if (userId && token) {
-          setUserId(userId);
-          
-          const newSocket = io(SOCKET_URL, {
-            transports: ["websocket"],
-            auth: { token: `Bearer ${token}` },
-            reconnection: true,
-            reconnectionAttempts: 10,
-            reconnectionDelay: 1000,
-          });
-
-          newSocket.on("connect", () => {
-            console.log("✅ Notification list socket connected");
-          });
-
-          newSocket.on("disconnect", () => {
-            console.log("❌ Notification list socket disconnected");
-          });
-
-          // Lắng nghe notification mới
-          newSocket.on("new_notification", (notification: Notification) => {
-            // Thêm notification vào đúng category
-            switch (notification.type) {
-              case "user":
-                setNotificationsUser(prev => [notification, ...prev]);
-                break;
-              case "activity":
-                setNotificationsActivity(prev => [notification, ...prev]);
-                break;
-              case "system":
-                setNotificationsSystem(prev => [notification, ...prev]);
-                break;
-            }
-          });
-
-          newSocket.emit("join", userId);
-          setSocket(newSocket);
-        }
-      } catch (error) {
-        console.error("❌ Error initializing notification list socket:", error);
-      }
+    const getUserId = async () => {
+      const id = await AsyncStorage.getItem("userId");
+      setUserId(id);
     };
-
-    initializeSocket();
-
-    // Cleanup khi component unmount
-    return () => {
-      if (socket) {
-        socket.disconnect();
-      }
-    };
+    getUserId();
   }, []);
 
   const fetchAllNotifications = async () => {
     setLoading(true);
     setError("");
     try {
-      const token = await AsyncStorage.getItem("token");
-      if (!token) {
-        setError("Không tìm thấy token đăng nhập");
-        setLoading(false);
-        return;
-      }
-      const [user, activity, system] = await Promise.all([
-        getNotifications({ type: "user", token }),
-        getNotifications({ type: "activity", token }),
-        getNotifications({ type: "system", token }),
-      ]);
-      setNotificationsUser(user.data || []);
-      setNotificationsActivity(activity.data || []);
-      setNotificationsSystem(system.data || []);
+      await refreshNotifications();
     } catch (err) {
       setError("Không thể tải thông báo");
     }
@@ -210,8 +137,6 @@ export default function NotificationListScreen() {
       if (!token) return;
       await markAllNotificationsAsRead(token);
       fetchAllNotifications();
-      // Cập nhật notification context
-      refreshNotifications();
     } catch {}
   };
 
@@ -220,8 +145,8 @@ export default function NotificationListScreen() {
       const token = await AsyncStorage.getItem("token");
       if (token) {
         await markNotificationAsRead(item._id, token);
-        // Cập nhật notification context
-        refreshNotifications();
+        // Refresh notifications sau khi đánh dấu đã đọc
+        refreshNotificationsByType(tab as 'user' | 'activity' | 'system');
       }
     } catch (err) {
       alert("Lỗi khi đánh dấu thông báo đã đọc");
@@ -233,6 +158,7 @@ export default function NotificationListScreen() {
         content: item.content,
         sender_name: item.sender?.name || "",
         sender_gender: item.sender?.gender || "",
+        sender_role: item.sender?.role || [],
         sender_id: item.sender?._id || "",
         createdAt: item.createdAt,
         relatedObject_id: item.relatedObject?.id || "",

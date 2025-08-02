@@ -42,7 +42,7 @@ export default function Header({
   };
 
   // Truncate tên thành 15 ký tự
-  const truncatedName = name.length > 15 ? name.slice(0, 15) + "..." : name;
+  const truncatedName = name.length > 25 ? name.slice(0, 20) + "..." : name;
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>

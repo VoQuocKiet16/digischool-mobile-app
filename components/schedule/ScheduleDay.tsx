@@ -2,13 +2,13 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Modal,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  useWindowDimensions,
-  View,
+    Modal,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    useWindowDimensions,
+    View,
 } from "react-native";
 import { Activity } from "../../app/students/schedule/schedule";
 import { useUserData } from "../../hooks/useUserData";
@@ -105,7 +105,7 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
   const handleLeaveRequest = () => {
     setMenuVisible(false);
     const role = userData?.roleInfo?.type;
-    if (role === "teacher") {
+    if (role === "teacher" || role === "homeroom_teacher") {
       router.push("/teachers/leave_request/leave_request");
     } else {
       router.push("/students/leave_request/leave_request");
@@ -113,7 +113,6 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
   };
   const handleExportSchedule = () => {
     setMenuVisible(false);
-    // TODO: Thực hiện chức năng xuất TKB ở đây
     alert("Chức năng xuất TKB!");
   };
 

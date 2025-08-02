@@ -24,6 +24,7 @@ const LessonDetailScreen = () => {
   const [lessonData, setLessonData] = useState<LessonData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
   const pollingRef = useRef<NodeJS.Timeout | number | null>(null);
   const menuIconRef = useRef<View>(null);
@@ -40,7 +41,7 @@ const LessonDetailScreen = () => {
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
     };
-  }, [lessonId]);
+  }, [lessonId, refreshKey]);
 
   const fetchLessonDetail = async () => {
     setLoading(true);
@@ -79,6 +80,11 @@ const LessonDetailScreen = () => {
       pathname: "/students/lesson_information/lesson_evaluate",
       params: { lessonId: lessonData?._id },
     });
+  };
+
+  const handleRefresh = async () => {
+    await fetchLessonDetail();
+    setRefreshKey((k) => k + 1);
   };
 
   if (loading) {
@@ -138,7 +144,7 @@ const LessonDetailScreen = () => {
       <RefreshableScrollView
         style={{ flex: 1 }}
         contentContainerStyle={styles.scrollContent}
-        onRefresh={fetchLessonDetail}
+        onRefresh={handleRefresh}
         showsVerticalScrollIndicator={false}
       >
         <Lesson_Information
@@ -146,6 +152,8 @@ const LessonDetailScreen = () => {
           onEvaluatePress={handleEvaluatePress}
           role="student"
           lessonData={lessonData}
+          onRefresh={handleRefresh}
+          refreshKey={refreshKey}
         />
       </RefreshableScrollView>
       <Modal
