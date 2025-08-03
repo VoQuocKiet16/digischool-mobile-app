@@ -210,6 +210,7 @@ function RootLayoutContent() {
           onTabPress={handleTabPress}
           visible={!isTabBarHidden}
         />
+        
       )}
       
       {/* Global Toast Notification */}
