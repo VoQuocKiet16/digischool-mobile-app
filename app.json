@@ -12,11 +12,10 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/digi-logo.png",
+        "foregroundImage": "./assets/images/app-digi-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "package": "com.kietvo123.DIGISchool"
+      "package": "com.kietvo123.digischool"
     },
     "web": {
       "bundler": "metro",
@@ -38,6 +37,16 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b17d889f-c31f-4576-a6d8-24a04087a724"
+      }
+    },
+    "assetBundlePatterns": [
+      "**/*",
+      "assets/fonts/*"
+    ]
   }
 }

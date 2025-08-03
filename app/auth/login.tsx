@@ -15,7 +15,8 @@ import LoadingModal from "../../components/LoadingModal";
 import { API_ERROR_MESSAGES } from "../../constants/api.constants";
 import { useUserContext } from "../../contexts/UserContext";
 import { getMe, login } from "../../services/auth.service";
-import { fonts } from "../../utils/responsive";
+import { fonts, getFontStyle } from "../../utils/responsive";
+import { useFonts } from "expo-font";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -249,7 +250,7 @@ export default function LoginScreen() {
 
           {error ? (
             <Text
-              style={{ color: "red", marginBottom: 8, fontFamily: "Baloo2" }}
+              style={{ color: "red", marginBottom: 8, ...getFontStyle(fonts.regular) }}
             >
               {error}
             </Text>
@@ -289,26 +290,24 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: "bold",
+    ...getFontStyle(fonts.semiBold),
     color: "#29375C",
     marginBottom: 8,
-    fontFamily: fonts.bold,
   },
   subtitle: {
     fontSize: 18,
+    ...getFontStyle(fonts.regular),
     color: "#29375C",
     marginBottom: 85,
-    lineHeight: 22,
-    fontFamily: fonts.semiBold,
+    lineHeight: 26,
   },
   label: {
     fontSize: 16,
+    ...getFontStyle(fonts.semiBold),
     color: "#29375C",
     marginBottom: 6,
     marginTop: 12,
     marginLeft: 5,
-    fontWeight: "500",
-    fontFamily: fonts.semiBold,
   },
   inputContainer: {
     flexDirection: "row",
@@ -328,21 +327,19 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 18,
+    ...getFontStyle(fonts.regular),
     color: "#29375C",
-    fontFamily: fonts.regular,
   },
   forgotPassword: {
     alignSelf: "flex-end",
     marginTop: 12,
     marginBottom: 24,
-    fontFamily: fonts.semiBold,
   },
   forgotPasswordText: {
     color: "#29375C",
-    fontWeight: "500",
     fontSize: 14,
     textDecorationLine: "underline",
-    fontFamily: fonts.semiBold,
+    ...getFontStyle(fonts.semiBold),
   },
   loginButton: {
     backgroundColor: "#29375C",
@@ -353,8 +350,7 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     color: "#fff",
-    fontWeight: "500",
     fontSize: 18,
-    fontFamily: fonts.medium,
+    ...getFontStyle(fonts.medium),
   },
 });

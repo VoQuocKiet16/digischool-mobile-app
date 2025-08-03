@@ -24,7 +24,8 @@ import { NotificationProvider, useNotificationContext } from "../contexts/Notifi
 import { UserProvider, useUserContext } from "../contexts/UserContext";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { fonts, responsiveValues } from "../utils/responsive";
+import SafeScreen from "@/components/SafeScreen";
+import { fonts, responsiveValues } from "@/utils/responsive";
 
 
 function RootLayoutContent() {
@@ -183,66 +184,70 @@ function RootLayoutContent() {
 
   if (!loaded) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#29375C" />
-      </View>
+      <SafeScreen>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color="#29375C" />
+        </View>
+      </SafeScreen>
     );
   }
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <View style={{ flex: 1 }}>
-        <Slot />
-        {role && (
-          <Animated.View
-            style={[
-              styles.tabBar,
-              {
-                opacity: tabBarAnim,
-                transform: [
-                  {
-                    translateY: tabBarAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [100, 0],
-                    }),
-                  },
-                ],
-                position: "absolute",
-                left: 0,
-                right: 0,
-                bottom: 0,
-              },
-            ]}
-            pointerEvents={isTabBarHidden ? "none" : "auto"}
-          >
-            {tabs.map((tab) => (
-              <TouchableOpacity
-                key={tab.route}
-                style={[
-                  styles.tabItem,
-                  currentRoute === tab.route && styles.tabItemActive,
-                ]}
-                onPress={() => handleTabPress(tab.route)}
-              >
-                <View>
-                  {React.cloneElement(tab.icon, {
-                    color: currentRoute === tab.route ? "#29375C" : "#C4C4C4",
-                  })}
-                </View>
-                <Text
+      <SafeScreen>
+        <View style={{ flex: 1 }}>
+          <Slot />
+          {role && (
+            <Animated.View
+              style={[
+                styles.tabBar,
+                {
+                  opacity: tabBarAnim,
+                  transform: [
+                    {
+                      translateY: tabBarAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [100, 0],
+                      }),
+                    },
+                  ],
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                },
+              ]}
+              pointerEvents={isTabBarHidden ? "none" : "auto"}
+            >
+              {tabs.map((tab) => (
+                <TouchableOpacity
+                  key={tab.route}
                   style={[
-                    styles.tabText,
-                    currentRoute === tab.route && styles.tabTextActive,
+                    styles.tabItem,
+                    currentRoute === tab.route && styles.tabItemActive,
                   ]}
+                  onPress={() => handleTabPress(tab.route)}
                 >
-                  {tab.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </Animated.View>
-        )}
-      </View>
-      <StatusBar style="auto" />
+                  <View>
+                    {React.cloneElement(tab.icon, {
+                      color: currentRoute === tab.route ? "#29375C" : "#C4C4C4",
+                    })}
+                  </View>
+                  <Text
+                    style={[
+                      styles.tabText,
+                      currentRoute === tab.route && styles.tabTextActive,
+                    ]}
+                  >
+                    {tab.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </Animated.View>
+          )}
+        </View>
+        <StatusBar style="auto" />
+      </SafeScreen>
       
       {/* Global Toast Notification */}
       <ToastNotification
@@ -340,15 +345,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     backgroundColor: "#fff",
     paddingTop: 8,
-    paddingBottom: 20,
     paddingHorizontal: 16,
     borderTopWidth: 1,
     borderTopColor: "#E6E9F0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 8,
   },
   tabItem: {
     flex: 1,
