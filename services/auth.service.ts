@@ -20,17 +20,37 @@ export const login = async (email: string, password: string) => {
 
 export const logout = async () => {
   try {
-    // Xóa dữ liệu local trước để tránh lỗi authorization
-    await AsyncStorage.multiRemove(["token", "role", "userName"]);
+    // Clear all session data first to avoid authorization errors
+    await AsyncStorage.multiRemove([
+      "token", 
+      "userId", 
+      "role", 
+      "userName", 
+      "userEmail", 
+      "userPhone", 
+      "userAddress", 
+      "userRoleInfo", 
+      "userInfo"
+    ]);
 
-    // Sau đó mới gửi request logout đến server
+    // Then send logout request to server
     const response = await api.post(API_ENDPOINTS.AUTH.LOGOUT);
     return response.data;
   } catch (error: any) {
-    // Nếu có lỗi khi gửi request logout, vẫn đảm bảo dữ liệu local đã được xóa
-    await AsyncStorage.multiRemove(["token", "role", "userName"]);
+    // If there's an error sending logout request, still ensure local data is cleared
+    await AsyncStorage.multiRemove([
+      "token", 
+      "userId", 
+      "role", 
+      "userName", 
+      "userEmail", 
+      "userPhone", 
+      "userAddress", 
+      "userRoleInfo", 
+      "userInfo"
+    ]);
 
-    // Nếu lỗi là do authorization (401, 403), coi như logout thành công
+    // If error is due to authorization (401, 403), consider logout successful
     if (
       error.response &&
       (error.response.status === 401 || error.response.status === 403)
@@ -42,6 +62,29 @@ export const logout = async () => {
       throw error.response.data;
     }
     throw { message: "Lỗi không xác định. Vui lòng thử lại." };
+  }
+};
+
+// Function to handle session expiration
+export const handleSessionExpiration = async () => {
+  try {
+    // Clear all session data
+    await AsyncStorage.multiRemove([
+      "token", 
+      "userId", 
+      "role", 
+      "userName", 
+      "userEmail", 
+      "userPhone", 
+      "userAddress", 
+      "userRoleInfo", 
+      "userInfo"
+    ]);
+    
+    return { success: true, message: "Session cleared" };
+  } catch (error) {
+    console.error("Error clearing session:", error);
+    throw error;
   }
 };
 

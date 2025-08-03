@@ -20,14 +20,35 @@ const Setting: React.FC = () => {
   const handleLogout = async () => {
     setShowLogoutModal(false);
     try {
+      // Logout function đã handle việc clear session data
       await logout();
-      await AsyncStorage.clear();
       
       // Reconnect socket để disconnect với user cũ
       reconnectSocket();
       
       router.replace("/auth/login");
     } catch (err) {
+      // Nếu có lỗi, vẫn clear session data và redirect
+      await AsyncStorage.multiRemove([
+        "token", 
+        "userId", 
+        "role", 
+        "userName", 
+        "userEmail", 
+        "userPhone", 
+        "userAddress", 
+        "userRoleInfo", 
+        "userInfo",
+        "userDateOfBirth",
+        "userGender",
+        "userStudentId",
+        "userTeacherId",
+        "userManagerId",
+        "userClass",
+        "userSubjects"
+      ]);
+      
+      router.replace("/auth/login");
     }
   };
 
