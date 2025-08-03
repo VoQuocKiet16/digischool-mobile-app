@@ -325,18 +325,18 @@ const LessonDetailScreen = () => {
                 {
                   flexDirection: "row",
                   alignItems: "center",
-                  opacity: pendingRequest ? 0.5 : 1,
+                  opacity: (pendingRequest || lessonData?.status === "completed") ? 0.5 : 1,
                 },
               ]}
               onPress={() => {
-                if (pendingRequest) return;
+                if (pendingRequest || lessonData?.status === "completed") return;
                 setMenuVisible(false);
                 router.push({
                   pathname: "/teachers/lesson_request/substitute_request",
                   params: { lessonId: lessonId },
                 });
               }}
-              disabled={!!pendingRequest}
+              disabled={!!pendingRequest || lessonData?.status === "completed"}
             >
               <MaterialIcons name="swap-horiz" size={20} color="#fff" />
               <Text style={[styles.menuText, { marginLeft: 8 }]}>
@@ -349,11 +349,11 @@ const LessonDetailScreen = () => {
                 {
                   flexDirection: "row",
                   alignItems: "center",
-                  opacity: pendingRequest ? 0.5 : 1,
+                  opacity: (pendingRequest || lessonData?.status === "completed") ? 0.5 : 1,
                 },
               ]}
               onPress={() => {
-                if (pendingRequest) return;
+                if (pendingRequest || lessonData?.status === "completed") return;
                 setMenuVisible(false);
                 router.push({
                   pathname: "/teachers/lesson_request/swap_schedule",
@@ -366,7 +366,7 @@ const LessonDetailScreen = () => {
                   },
                 });
               }}
-              disabled={!!pendingRequest}
+              disabled={!!pendingRequest || lessonData?.status === "completed"}
             >
               <MaterialIcons name="compare-arrows" size={20} color="#fff" />
               <Text style={[styles.menuText, { marginLeft: 8 }]}>
@@ -379,11 +379,11 @@ const LessonDetailScreen = () => {
                 {
                   flexDirection: "row",
                   alignItems: "center",
-                  opacity: pendingRequest ? 0.5 : 1,
+                  opacity: (pendingRequest || lessonData?.status === "completed") ? 0.5 : 1,
                 },
               ]}
               onPress={() => {
-                if (pendingRequest) return;
+                if (pendingRequest || lessonData?.status === "completed") return;
                 setMenuVisible(false);
                 router.push({
                   pathname: "/teachers/lesson_request/makeup_schedule",
@@ -395,7 +395,7 @@ const LessonDetailScreen = () => {
                   },
                 });
               }}
-              disabled={!!pendingRequest}
+              disabled={!!pendingRequest || lessonData?.status === "completed"}
             >
               <MaterialIcons name="event-available" size={20} color="#fff" />
               <Text style={[styles.menuText, { marginLeft: 8 }]}>Dạy bù</Text>
