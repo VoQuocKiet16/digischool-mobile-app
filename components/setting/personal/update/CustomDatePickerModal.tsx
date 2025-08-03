@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import {
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 interface CustomDatePickerModalProps {
@@ -30,6 +30,15 @@ export default function CustomDatePickerModal({
     initialDate.getMonth() + 1
   );
   const [selectedDay, setSelectedDay] = useState(initialDate.getDate());
+
+  // Cập nhật các giá trị khi initialDate thay đổi hoặc modal mở
+  useEffect(() => {
+    if (visible && initialDate) {
+      setSelectedYear(initialDate.getFullYear());
+      setSelectedMonth(initialDate.getMonth() + 1);
+      setSelectedDay(initialDate.getDate());
+    }
+  }, [visible, initialDate]);
 
   // Dropdown state
   const [showDayDropdown, setShowDayDropdown] = useState(false);

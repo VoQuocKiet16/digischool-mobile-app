@@ -1,8 +1,15 @@
 export interface RoleInfo {
-  homeroomClass?: string;
-  school?: string;
+  homeroomClass?: any;
+  school?: any;
   type?: string;
   [key: string]: any;
+}
+
+export interface Subject {
+  id: string;
+  subjectName: string;
+  subjectCode: string;
+  description: string;
 }
 
 export interface UserData {
@@ -16,6 +23,6 @@ export interface UserData {
   teacherId: string | null;
   managerId: string | null;
   class: any | null;
-  subjects: any | null;
+  subject: Subject | null;
   roleInfo: RoleInfo | null;
 }

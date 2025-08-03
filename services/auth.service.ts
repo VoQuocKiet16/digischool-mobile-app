@@ -90,3 +90,21 @@ export const getMe = async () => {
     throw { message: "Lỗi không xác định. Vui lòng thử lại." };
   }
 };
+
+export const updatePersonalInfo = async (data: {
+  name?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  phone?: string;
+  address?: string;
+}) => {
+  try {
+    const response = await api.put(API_ENDPOINTS.AUTH.UPDATE_PERSONAL_INFO, data);
+    return response.data;
+  } catch (error: any) {
+    if (error.response && error.response.data) {
+      throw error.response.data;
+    }
+    throw { message: "Lỗi không xác định. Vui lòng thử lại." };
+  }
+};

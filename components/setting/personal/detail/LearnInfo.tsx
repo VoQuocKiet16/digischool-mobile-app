@@ -34,7 +34,7 @@ const LearnInfo: React.FC<LearnInfoProps> = ({ userData }) => {
           <View style={styles.item}>
             <Text style={styles.label}>Lớp học</Text>
             <Text style={styles.value}>
-              {userData?.class?.name || "Chưa cập nhật"}
+              {userData?.class?.className || "Chưa cập nhật"}
             </Text>
             <View style={styles.underline} />
           </View>
@@ -46,7 +46,7 @@ const LearnInfo: React.FC<LearnInfoProps> = ({ userData }) => {
           <View style={styles.item}>
             <Text style={styles.label}>Trường học</Text>
             <Text style={styles.value}>
-              {userData?.class?.school || "Chưa cập nhật"}
+              {userData?.roleInfo?.school?.name || "Chưa cập nhật"}
             </Text>
             <View style={styles.underline} />
           </View>

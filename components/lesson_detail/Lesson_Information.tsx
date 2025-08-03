@@ -2,11 +2,15 @@ import ConfirmDeleteModal from "@/components/notifications_modal/ConfirmDeleteMo
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import {
+  cancelStudentLeaveRequest,
+  deleteTeacherLeaveRequest,
+} from "@/services/leave_request.service";
+import {
   cancelMakeupRequest,
   cancelSubstituteRequest,
   cancelSwapRequest,
 } from "@/services/lesson_request.service";
-import { LessonData } from "@/types/lesson.types";
+import { LessonData, StudentLeaveRequest, TeacherLeaveRequest } from "@/types/lesson.types";
 import { fonts } from "@/utils/responsive";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -67,6 +71,8 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
   const textInputRef = useRef<TextInput>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showLeaveRequestDeleteModal, setShowLeaveRequestDeleteModal] = useState(false);
+  const [deletingLeaveRequest, setDeletingLeaveRequest] = useState(false);
 
   // Cập nhật showDescriptionCard và descValue khi lessonData thay đổi
   React.useEffect(() => {
@@ -93,16 +99,21 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
   }, [shouldAddDescription, role, onAddDescriptionComplete]);
 
   const handleEvaluate = () => {
-    if (role === "teacher") {
-      router.push({
-        pathname: "/teachers/lesson_information/lesson_evaluate",
-        params: { lessonId: lessonData?._id },
-      });
+    if (onEvaluatePress) {
+      onEvaluatePress();
     } else {
-      router.push({
-        pathname: "/students/lesson_information/lesson_evaluate",
-        params: { lessonId: lessonData?._id },
-      });
+      // Fallback nếu không có onEvaluatePress
+      if (role === "teacher") {
+        router.push({
+          pathname: "/teachers/lesson_information/lesson_evaluate",
+          params: { lessonId: lessonData?._id },
+        });
+      } else {
+        router.push({
+          pathname: "/students/lesson_information/lesson_evaluate",
+          params: { lessonId: lessonData?._id },
+        });
+      }
     }
   };
 
@@ -182,6 +193,129 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
     const className = lessonData.class?.className || "Chưa rõ";
 
     return `${session} • ${periodText} • ${subject} • ${className}`;
+  };
+
+  // Kiểm tra có yêu cầu nghỉ phép không (pending, approved)
+  const hasLeaveRequest = () => {
+    if (role === "student") {
+      return lessonData?.studentLeaveRequests?.some((request: StudentLeaveRequest) => 
+        ["pending", "approved"].includes(request.status)
+      );
+    } else {
+      return lessonData?.teacherLeaveRequests?.some((request: TeacherLeaveRequest) => 
+        ["pending", "approved"].includes(request.status)
+      );
+    }
+  };
+
+  const getLeaveRequestStatus = () => {
+    if (role === "student") {
+      const request = lessonData?.studentLeaveRequests?.find((r: StudentLeaveRequest) => 
+        ["pending", "approved"].includes(r.status)
+      );
+      return request?.status || null;
+    } else {
+      const request = lessonData?.teacherLeaveRequests?.find((r: TeacherLeaveRequest) => 
+        ["pending", "approved"].includes(r.status)
+      );
+      return request?.status || null;
+    }
+  };
+
+  const getLeaveRequestType = () => {
+    if (role === "student") {
+      return "nghỉ phép";
+    } else {
+      return "nghỉ phép";
+    }
+  };
+
+  const getLeaveRequestStatusText = () => {
+    const status = getLeaveRequestStatus();
+    if (role === "student") {
+      switch (status) {
+        case "pending":
+          return "Đang chờ giáo viên phê duyệt";
+        case "approved":
+          return "Đã được phê duyệt";
+        default:
+          return "Đang chờ giáo viên phê duyệt";
+      }
+    } else {
+      switch (status) {
+        case "pending":
+          return "Đang chờ quản lý phê duyệt";
+        case "approved":
+          return "Đã được phê duyệt";
+        default:
+          return "Đang chờ quản lý phê duyệt";
+      }
+    }
+  };
+
+  const getLeaveRequestStyle = () => {
+    const status = getLeaveRequestStatus();
+    switch (status) {
+      case "pending":
+        return {
+          backgroundColor: "#F9B233",
+          textColor: "#fff",
+          iconColor: "#fff"
+        };
+      case "approved":
+        return {
+          backgroundColor: "#5FC16E",
+          textColor: "#fff",
+          iconColor: "#fff"
+        };
+      default:
+        return {
+          backgroundColor: "#F9B233",
+          textColor: "#fff",
+          iconColor: "#fff"
+        };
+    }
+  };
+
+  const canCancelLeaveRequest = () => {
+    const status = getLeaveRequestStatus();
+    return status === "pending";
+  };
+
+  // Kiểm tra có được approved nghỉ phép không
+  const hasApprovedLeaveRequest = () => {
+    if (role === "student") {
+      return lessonData?.studentLeaveRequests?.some((request: StudentLeaveRequest) => 
+        request.status === "approved"
+      );
+    } else {
+      return lessonData?.teacherLeaveRequests?.some((request: TeacherLeaveRequest) => 
+        request.status === "approved"
+      );
+    }
+  };
+
+  const handleDeleteLeaveRequest = async () => {
+    setDeletingLeaveRequest(true);
+    try {
+      if (role === "student") {
+        const requestId = lessonData?.studentLeaveRequests?.find((r: StudentLeaveRequest) => r.status === "pending")?._id;
+        if (requestId) {
+          await cancelStudentLeaveRequest(requestId);
+        }
+      } else {
+        const requestId = lessonData?.teacherLeaveRequests?.find((r: TeacherLeaveRequest) => r.status === "pending")?._id;
+        if (requestId) {
+          await deleteTeacherLeaveRequest(requestId);
+        }
+      }
+      setShowLeaveRequestDeleteModal(false);
+      if (onRefresh) onRefresh();
+    } catch (error: any) {
+      Alert.alert("Lỗi", error.message || "Không thể xóa yêu cầu nghỉ phép");
+    } finally {
+      setDeletingLeaveRequest(false);
+    }
   };
 
   return (
@@ -335,9 +469,13 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
         {!isCompleted &&
           (role === "teacher" ? (
             <TouchableOpacity
-              style={styles.statusRowOrangeWrap}
-              onPress={onCompletePress}
-              activeOpacity={0.7}
+              style={[
+                styles.statusRowOrangeWrap,
+                hasApprovedLeaveRequest() && { opacity: 0.5 }
+              ]}
+              onPress={hasApprovedLeaveRequest() ? undefined : onCompletePress}
+              activeOpacity={hasApprovedLeaveRequest() ? 1 : 0.7}
+              disabled={hasApprovedLeaveRequest()}
             >
               <View style={styles.statusRowOrangeLeft}>
                 <View style={styles.statusIconWrapOrange}>
@@ -348,18 +486,25 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
                   />
                 </View>
                 <ThemedText style={styles.statusTextOrange}>
-                  Chưa hoàn thành tiết học
+                  {hasApprovedLeaveRequest() 
+                    ? "Đã được nghỉ phép" 
+                    : "Chưa hoàn thành tiết học"
+                  }
                 </ThemedText>
               </View>
-              <MaterialIcons
-                name="fmd-bad"
-                size={20}
-                color="#F04438"
-                style={styles.statusAlertDot}
-              />
-              <View style={styles.statusArrowWrap}>
-                <MaterialIcons name="chevron-right" size={28} color="#fff" />
-              </View>
+              {!hasApprovedLeaveRequest() && (
+                <>
+                  <MaterialIcons
+                    name="fmd-bad"
+                    size={20}
+                    color="#F04438"
+                    style={styles.statusAlertDot}
+                  />
+                  <View style={styles.statusArrowWrap}>
+                    <MaterialIcons name="chevron-right" size={28} color="#fff" />
+                  </View>
+                </>
+              )}
             </TouchableOpacity>
           ) : (
             <View style={styles.statusRowOrangeWrap}>
@@ -456,6 +601,17 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
                     Đã đánh giá giáo viên
                   </ThemedText>
                 </View>
+              ) : hasApprovedLeaveRequest() ? (
+                <View style={[styles.statusRowBlueWrap, { opacity: 0.5 }]}>
+                  <View style={styles.statusRowBlueLeft}>
+                    <View style={styles.statusIconWrapBlue}>
+                      <MaterialIcons name="comment" size={20} color="#2CA6B0" />
+                    </View>
+                    <ThemedText style={styles.statusTextBlue}>
+                      Đã được nghỉ phép
+                    </ThemedText>
+                  </View>
+                </View>
               ) : (
                 <TouchableOpacity
                   style={styles.statusRowBlueWrap}
@@ -488,6 +644,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
           </>
         )}
       </ThemedView>
+
       {/* Card 5: Trạng thái yêu cầu tiết học nếu có */}
       {pendingRequest && (
         <ThemedView style={styles.card}>
@@ -554,6 +711,63 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
             title="Huỷ yêu cầu?"
             message={`Bạn có chắc chắn muốn huỷ yêu cầu này?`}
           />
+        </ThemedView>
+      )}
+
+      {/* Card 6: Yêu cầu nghỉ phép nếu có */}
+      {hasLeaveRequest() && (
+        <ThemedView style={styles.card}>
+          <View style={styles.headerRow}>
+            <View style={styles.headerBar} />
+            <ThemedText type="subtitle" style={styles.headerText}>
+              Yêu cầu {getLeaveRequestType()}
+            </ThemedText>
+            {canCancelLeaveRequest() && (
+              <TouchableOpacity
+                style={[styles.closeBtn, { marginLeft: "auto", marginRight: 0 }]}
+                onPress={() => setShowLeaveRequestDeleteModal(true)}
+              >
+                <View style={styles.closeCircle}>
+                  <MaterialIcons name="close" size={22} color="#fff" />
+                </View>
+              </TouchableOpacity>
+            )}
+          </View>
+          <View style={[
+            styles.statusRowOrangeWrap,
+            { backgroundColor: getLeaveRequestStyle().backgroundColor }
+          ]}>
+            <View style={styles.statusRowOrangeLeft}>
+              <View style={[
+                styles.statusIconWrapOrange, 
+                { 
+                  marginRight: 5,
+                  backgroundColor: getLeaveRequestStyle().backgroundColor 
+                }
+              ]}>
+                <MaterialIcons
+                  name="event-busy"
+                  size={20}
+                  color={getLeaveRequestStyle().iconColor}
+                />
+              </View>
+              <ThemedText style={[
+                styles.statusTextOrange,
+                { color: getLeaveRequestStyle().textColor }
+              ]}>
+                {getLeaveRequestStatusText()}
+              </ThemedText>
+            </View>
+          </View>
+          {canCancelLeaveRequest() && (
+            <ConfirmDeleteModal
+              visible={showLeaveRequestDeleteModal}
+              onCancel={() => setShowLeaveRequestDeleteModal(false)}
+              onConfirm={handleDeleteLeaveRequest}
+              title="Huỷ yêu cầu nghỉ phép?"
+              message={`Bạn có chắc chắn muốn huỷ yêu cầu nghỉ phép này?`}
+            />
+          )}
         </ThemedView>
       )}
     </View>

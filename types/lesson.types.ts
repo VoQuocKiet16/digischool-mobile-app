@@ -68,6 +68,10 @@ export interface LessonData {
   substituteRequests?: SubstituteRequest[];
   swapRequests?: SwapRequest[];
   makeupRequests?: MakeupRequest[];
+  
+  // Leave requests
+  studentLeaveRequests?: StudentLeaveRequest[];
+  teacherLeaveRequests?: TeacherLeaveRequest[];
 }
 
 // Định nghĩa các interface cho các loại request
@@ -164,5 +168,68 @@ export interface MakeupRequest {
   createdAt: string;
   updatedAt: string;
   requestId: string;
+  __v: number;
+}
+
+export interface StudentLeaveRequest {
+  _id: string;
+  studentId: {
+    _id: string;
+    name: string;
+    email: string;
+    fullName?: string;
+  };
+  teacherId?: {
+    _id: string;
+    name: string;
+    email: string;
+    fullName?: string;
+  };
+  classId: {
+    _id: string;
+    className: string;
+  };
+  subjectId?: {
+    _id: string;
+    subjectName: string;
+    subjectCode: string;
+  };
+  lessonId: string;
+  reason: string;
+  phoneNumber: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+export interface TeacherLeaveRequest {
+  _id: string;
+  teacherId: {
+    _id: string;
+    name: string;
+    email: string;
+    fullName?: string;
+  };
+  managerId?: {
+    _id: string;
+    name: string;
+    email: string;
+    fullName?: string;
+  };
+  classId?: {
+    _id: string;
+    className: string;
+  };
+  subjectId?: {
+    _id: string;
+    subjectName: string;
+    subjectCode: string;
+  };
+  lessonId: string;
+  reason: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
   __v: number;
 }

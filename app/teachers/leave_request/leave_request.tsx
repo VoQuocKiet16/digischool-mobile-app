@@ -15,8 +15,8 @@ import HeaderLayout from "../../../components/layout/HeaderLayout";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getTeacherSchedule } from "../../../services/schedule.service";
-import { Activity } from "../schedule/schedule";
 import { fonts } from "../../../utils/responsive";
+import { Activity } from "../schedule/schedule";
 
 const defaultActivity = (text: string, hasNotification = false): Activity => ({
   text,
@@ -73,13 +73,9 @@ function mapApiToTeacherScheduleData(apiData: any): {
     const periodIndex = (lesson.timeSlot?.period || 1) - 1;
     if (periodIndex >= 0 && periodIndex < 10) {
       let text = "";
-      if (lesson.topic) {
-        text = `${lesson.class?.className || ""} - ${lesson.topic}`;
-      } else if (lesson.subject?.subjectName) {
-        text = `${lesson.class?.className || ""} - ${
-          lesson.subject.subjectName
-        }`;
-      }
+      text = `${lesson.class?.className || ""} - ${
+        lesson.subject.subjectName
+      }`;
       if (text) {
         schedule[periodIndex][dayIndex] = { text, type: "default" };
         if (lesson._id) {

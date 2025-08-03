@@ -10,16 +10,26 @@ import PlusIcon from "../PlusIcon";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
 
+interface ApprovedLeaveStudent {
+  id: string;
+  name: string;
+  reason: string;
+}
+
 interface Student_AbsentProps {
   lessonId: string;
   onAbsentStudentsChange?: (
     absentStudents: { student: string; name: string }[]
   ) => void;
+  approvedLeaveStudents?: ApprovedLeaveStudent[];
+  selectedStudents?: string[];
 }
 
 const Student_Absent: React.FC<Student_AbsentProps> = ({
   lessonId,
   onAbsentStudentsChange,
+  approvedLeaveStudents = [],
+  selectedStudents = [],
 }) => {
   const [showCard, setShowCard] = useState(false);
   const [absentList, setAbsentList] = useState<
@@ -34,6 +44,13 @@ const Student_Absent: React.FC<Student_AbsentProps> = ({
       loadStudents();
     }
   }, [showCard, lessonId]);
+
+  // Tự động mở card nếu có học sinh đã approved nghỉ phép
+  useEffect(() => {
+    if (approvedLeaveStudents.length > 0) {
+      setShowCard(true);
+    }
+  }, [approvedLeaveStudents]);
 
   useEffect(() => {
     onAbsentStudentsChange?.(absentList.filter((item) => item.student));
@@ -85,6 +102,17 @@ const Student_Absent: React.FC<Student_AbsentProps> = ({
     }
   };
 
+  // Lọc danh sách học sinh có thể chọn (loại bỏ học sinh đã được chọn và học sinh đã approved nghỉ phép)
+  const getAvailableStudents = () => {
+    const approvedStudentIds = approvedLeaveStudents.map(student => student.id);
+    const selectedStudentIds = selectedStudents.filter(id => id !== "");
+    
+    return students.filter(student => 
+      !approvedStudentIds.includes(student.id) && 
+      !selectedStudentIds.includes(student.id)
+    );
+  };
+
   return (
     <View>
       {!showCard ? (
@@ -100,18 +128,52 @@ const Student_Absent: React.FC<Student_AbsentProps> = ({
                 Học sinh vắng
               </ThemedText>
               <ThemedText style={styles.headerSubtext}>
-                {absentList.filter((item) => item.student).length} học sinh
+                {absentList.filter((item) => item.student).length + approvedLeaveStudents.length} học sinh
               </ThemedText>
             </View>
-            <TouchableOpacity
-              style={styles.closeBtn}
-              onPress={() => setShowCard(false)}
-            >
-              <View style={styles.closeCircle}>
-                <MaterialIcons name="close" size={22} color="#fff" />
-              </View>
-            </TouchableOpacity>
+            {approvedLeaveStudents.length === 0 && (
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setShowCard(false)}
+              >
+                <View style={styles.closeCircle}>
+                  <MaterialIcons name="close" size={22} color="#fff" />
+                </View>
+              </TouchableOpacity>
+            )}
           </View>
+
+          {/* Hiển thị học sinh đã được approved nghỉ phép */}
+          {approvedLeaveStudents.length > 0 && (
+            <View style={styles.approvedSection}>
+              {approvedLeaveStudents.map((student, index) => (
+                <View key={`approved-${index}`} style={styles.approvedStudentCard}>
+                  <View style={styles.approvedStudentRow}>
+                    <View style={styles.approvedStudentInfo}>
+                      <MaterialIcons
+                        name="person"
+                        size={20}
+                        color="#4CAF50"
+                        style={styles.studentIcon}
+                      />
+                      <ThemedText style={styles.approvedStudentName}>
+                        {student.name}
+                      </ThemedText>
+                    </View>
+                    <View style={styles.approvedBadge}>
+                      <ThemedText style={styles.approvedBadgeText}>
+                        Đã phép
+                      </ThemedText>
+                    </View>
+                  </View>
+                  <ThemedText style={styles.approvedReason}>
+                    Lý do: {student.reason}
+                  </ThemedText>
+                </View>
+              ))}
+            </View>
+          )}
+
           <View style={styles.studentsContainer}>
             {absentList.map((item, index) => (
               <View key={index} style={styles.studentCard}>
@@ -158,25 +220,33 @@ const Student_Absent: React.FC<Student_AbsentProps> = ({
 
                 {dropdownIndex === index && (
                   <View style={styles.dropdown}>
-                    {students.map((student) => (
-                      <TouchableOpacity
-                        key={student.id}
-                        style={styles.dropdownItem}
-                        onPress={() =>
-                          handleSelectStudent(student.id, student.name, index)
-                        }
-                      >
-                        <MaterialIcons
-                          name="person"
-                          size={16}
-                          color="#9E9E9E"
-                          style={{ marginRight: 8 }}
-                        />
-                        <ThemedText style={styles.dropdownItemText}>
-                          {student.name}
+                    {getAvailableStudents().length > 0 ? (
+                      getAvailableStudents().map((student) => (
+                        <TouchableOpacity
+                          key={student.id}
+                          style={styles.dropdownItem}
+                          onPress={() =>
+                            handleSelectStudent(student.id, student.name, index)
+                          }
+                        >
+                          <MaterialIcons
+                            name="person"
+                            size={16}
+                            color="#9E9E9E"
+                            style={{ marginRight: 8 }}
+                          />
+                          <ThemedText style={styles.dropdownItemText}>
+                            {student.name}
+                          </ThemedText>
+                        </TouchableOpacity>
+                      ))
+                    ) : (
+                      <View style={styles.emptyDropdown}>
+                        <ThemedText style={styles.emptyDropdownText}>
+                          Không có học sinh để chọn
                         </ThemedText>
-                      </TouchableOpacity>
-                    ))}
+                      </View>
+                    )}
                   </View>
                 )}
               </View>
@@ -248,6 +318,52 @@ const styles = StyleSheet.create({
     height: 24,
     alignItems: "center",
     justifyContent: "center",
+  },
+  approvedSection: {
+    marginBottom: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  approvedStudentCard: {
+    backgroundColor: "#E8F5E8",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+  },
+  approvedStudentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  approvedStudentInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  approvedStudentName: {
+    color: "#2E7D32",
+    fontSize: 16,
+    fontFamily: fonts.medium,
+    marginLeft: 8,
+  },
+  approvedBadge: {
+    backgroundColor: "#4CAF50",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  approvedBadgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontFamily: fonts.medium,
+  },
+  approvedReason: {
+    color: "#666666",
+    fontSize: 14,
+    fontFamily: fonts.regular,
+    marginTop: 4,
+    fontStyle: "italic",
   },
   studentsContainer: {
     marginBottom: 16,
@@ -329,6 +445,15 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
     marginLeft: 8,
     textDecorationLine: "underline",
+  },
+  emptyDropdown: {
+    alignItems: "center",
+    paddingVertical: 10,
+  },
+  emptyDropdownText: {
+    color: "#9E9E9E",
+    fontSize: 14,
+    fontFamily: fonts.regular,
   },
 });
 

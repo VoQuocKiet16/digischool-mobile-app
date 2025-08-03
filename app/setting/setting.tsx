@@ -32,22 +32,13 @@ const Setting: React.FC = () => {
     return "Người dùng";
   };
 
-  const getRoleDetail = () => {
-    if (!userData) return "Đang tải...";
-
-    const roles = userData.roleInfo?.role || [];
-
+  const getRoleDetail = (roles: string[]) => {
     if (roles.includes("student")) {
-      return userData.class?.className || "Chưa có thông tin lớp";
+      return userData?.class?.className || "Đang tải...";
     } else if (roles.includes("teacher")) {
-      if (userData.subjects && userData.subjects.length > 0) {
-        return userData.subjects
-          .map((subject: any) => subject.subjectName || subject.name || subject)
-          .join(", ");
-      }
-      return "Chưa có thông tin bộ môn";
+      return userData?.subject?.subjectName || "Đang tải...";
     } else if (roles.includes("manager")) {
-      return "Quản trị hệ thống";
+      return "Ban giám hiệu";
     }
 
     return "Người dùng";
@@ -66,7 +57,11 @@ const Setting: React.FC = () => {
             style={styles.avatar}
           />
           <View style={{ flex: 1 }}>
-            <Text style={styles.name}>
+            <Text
+              style={styles.name}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {userData?.name
                 ? userData.name
                 : "Đang tải..."}
@@ -75,7 +70,7 @@ const Setting: React.FC = () => {
               {userData
                 ? `${getRoleDisplay(
                     userData.roleInfo?.role || []
-                  )} - ${getRoleDetail()}`
+                  )} - ${getRoleDetail(userData.roleInfo?.role || [])}`
                 : "Đang tải..."}
             </Text>
           </View>
