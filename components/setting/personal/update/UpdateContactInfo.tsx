@@ -12,9 +12,10 @@ import { fonts } from "../../../../utils/responsive";
 
 interface UpdateContactInfoProps {
   userData: UserData | null;
+  onDataChange?: (data: { phone: string; address: string }) => void;
 }
 
-export default function UpdateContactInfo({ userData }: UpdateContactInfoProps) {
+export default function UpdateContactInfo({ userData, onDataChange }: UpdateContactInfoProps) {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
@@ -28,6 +29,16 @@ export default function UpdateContactInfo({ userData }: UpdateContactInfoProps) 
       setAddress(userData.address || "");
     }
   }, [userData]);
+
+  // Notify parent when data changes
+  useEffect(() => {
+    if (onDataChange) {
+      onDataChange({
+        phone,
+        address
+      });
+    }
+  }, [phone, address, onDataChange]);
 
   return (
     <View style={styles.container}>

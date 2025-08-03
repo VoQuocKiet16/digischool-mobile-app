@@ -108,6 +108,7 @@ export const responsiveValues = {
     lg: responsive.iconSize(24),
     xl: responsive.iconSize(28),
     xxl: responsive.iconSize(32),
+    xxxl: responsive.iconSize(55),
   },
   
   // Border radius
@@ -118,6 +119,7 @@ export const responsiveValues = {
     xl: responsive.borderRadius(16),
     xxl: responsive.borderRadius(20),
     xxxl: responsive.borderRadius(28),
+    xxxxl: responsive.borderRadius(32),
   },
 };
 

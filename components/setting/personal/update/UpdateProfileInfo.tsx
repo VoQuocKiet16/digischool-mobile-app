@@ -13,9 +13,10 @@ import CustomDatePickerModal from "./CustomDatePickerModal";
 
 interface UpdateProfileInfoProps {
   userData: UserData | null;
+  onDataChange?: (data: { name: string; dateOfBirth: string; gender: string }) => void;
 }
 
-export default function UpdateProfileInfo({ userData }: UpdateProfileInfoProps) {
+export default function UpdateProfileInfo({ userData, onDataChange }: UpdateProfileInfoProps) {
   const [name, setName] = useState("");
   const [dob, setDob] = useState("");
   const [gender, setGender] = useState("");
@@ -50,6 +51,25 @@ export default function UpdateProfileInfo({ userData }: UpdateProfileInfoProps) 
       }
     }
   }, [userData]);
+
+  // Notify parent when data changes
+  useEffect(() => {
+    if (onDataChange) {
+      const genderMap: { [key: string]: string } = {
+        'Nam': 'male',
+        'Nữ': 'female',
+        'Khác': 'other'
+      };
+      
+      const dateString = selectedDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+      
+      onDataChange({
+        name,
+        dateOfBirth: dateString,
+        gender: genderMap[gender] || gender
+      });
+    }
+  }, [name, selectedDate, gender, onDataChange]);
 
   const genderOptions = [
     { key: "Nam", value: "Nam" },
