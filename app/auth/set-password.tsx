@@ -11,11 +11,13 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import LoadingModal from "../../components/LoadingModal";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import SuccessModal from "../../components/notifications_modal/SuccessModal";
+import { useNotificationContext } from "../../contexts/NotificationContext";
 import { setPasswordNewUser } from "../../services/auth.service";
-import { responsive, responsiveValues, fonts } from "../../utils/responsive";
+import { fonts } from "../../utils/responsive";
 
 export default function SetPasswordScreen() {
   const router = useRouter();
+  const { reconnectSocket } = useNotificationContext();
   const params = useLocalSearchParams();
   const token = typeof params.token === "string" ? params.token : "";
   const isNewUser = String(params.isNewUser) === "true";
@@ -232,6 +234,8 @@ export default function SetPasswordScreen() {
         visible={showSuccess}
         onClose={() => {
           setShowSuccess(false);
+          // Disconnect socket cũ trước khi chuyển về login
+          reconnectSocket();
           router.replace("/auth/login");
         }}
         title="Thành công"

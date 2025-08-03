@@ -1,5 +1,4 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useFocusEffect } from "@react-navigation/native";
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { baseURL } from "../services/api.config";
@@ -61,117 +60,94 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   const socketRef = useRef<Socket | null>(null);
   const isConnectingRef = useRef(false);
 
-  // Kết nối socket để nhận realtime notifications
-  useEffect(() => {
-    const initializeSocket = async () => {
-      try {
-        const [currentUserId, currentToken] = await Promise.all([
-          AsyncStorage.getItem("userId"),
-          AsyncStorage.getItem("token"),
-        ]);
+  // Tạo socket connection
+  const createSocket = useCallback(async () => {
+    try {
+      const [currentUserId, currentToken] = await Promise.all([
+        AsyncStorage.getItem("userId"),
+        AsyncStorage.getItem("token"),
+      ]);
 
-        // Nếu đang kết nối, không làm gì
-        if (isConnectingRef.current) {
-          return;
-        }
-
-        // Nếu user hoặc token thay đổi, disconnect socket cũ
-        if (socketRef.current && (currentUserId !== userId || currentToken !== userToken)) {
-          console.log("🔄 User changed, disconnecting old socket...");
-          socketRef.current.disconnect();
-          socketRef.current = null;
-          setSocket(null);
-        }
-
-        if (currentUserId && currentToken) {
-          setUserId(currentUserId);
-          setUserToken(currentToken);
-          
-          // Chỉ tạo socket mới nếu chưa có hoặc user thay đổi
-          if (!socketRef.current || currentUserId !== userId || currentToken !== userToken) {
-            console.log("🔄 Creating new socket for user:", currentUserId);
-            isConnectingRef.current = true;
-            
-            const newSocket = io(SOCKET_URL, {
-              transports: ["websocket"],
-              auth: { token: `Bearer ${currentToken}` },
-              reconnection: true,
-              reconnectionAttempts: 5,
-              reconnectionDelay: 1000,
-              timeout: 20000,
-            });
-
-            newSocket.on("connect", () => {
-              console.log("✅ Notification socket connected for user:", currentUserId);
-              isConnectingRef.current = false;
-            });
-
-            newSocket.on("disconnect", () => {
-              console.log("❌ Notification socket disconnected for user:", currentUserId);
-              isConnectingRef.current = false;
-            });
-
-            newSocket.on("connect_error", (error) => {
-              console.error("❌ Notification socket connection error:", error);
-              isConnectingRef.current = false;
-            });
-
-            // Lắng nghe notification mới
-            newSocket.on("new_notification", (notification: Notification) => {
-              // Kiểm tra xem notification có dành cho user hiện tại không
-              if (notification.receivers?.includes(currentUserId)) {
-                // Thêm notification vào đúng category
-                switch (notification.type) {
-                  case "user":
-                    setNotificationsUser(prev => [notification, ...prev]);
-                    break;
-                  case "activity":
-                    setNotificationsActivity(prev => [notification, ...prev]);
-                    break;
-                  case "system":
-                    setNotificationsSystem(prev => [notification, ...prev]);
-                    break;
-                }
-                
-                // Cập nhật hasUnreadNotification
-                setHasUnreadNotification(true);
-                
-                // Hiển thị toast
-                showToast(notification.title, notification.content);
-              }
-            });
-
-            newSocket.emit("join", currentUserId);
-            socketRef.current = newSocket;
-            setSocket(newSocket);
-          }
-        } else {
-          // Nếu không có user hoặc token, disconnect socket
-          if (socketRef.current) {
-            console.log("🔄 No user/token, disconnecting socket...");
-            socketRef.current.disconnect();
-            socketRef.current = null;
-            setSocket(null);
-          }
-          setUserId(null);
-          setUserToken(null);
-        }
-      } catch (error) {
-        console.error("❌ Error initializing notification socket:", error);
-        isConnectingRef.current = false;
+      // Nếu đang kết nối hoặc không có user/token, không làm gì
+      if (isConnectingRef.current || !currentUserId || !currentToken) {
+        return;
       }
-    };
 
-    initializeSocket();
+      // Nếu đã có socket và đang kết nối, không làm gì
+      if (socketRef.current && socketRef.current.connected) {
+        return;
+      }
 
-    // Cleanup khi component unmount
-    return () => {
+      // Disconnect socket cũ nếu có
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
       }
-    };
-  }, []); // Chỉ chạy một lần khi mount
+
+      console.log("🔄 Creating socket for user:", currentUserId);
+      isConnectingRef.current = true;
+      
+      const newSocket = io(SOCKET_URL, {
+        transports: ["websocket"],
+        auth: { token: `Bearer ${currentToken}` },
+        reconnection: false, // Tắt auto reconnection để tự quản lý
+        timeout: 10000,
+      });
+
+      newSocket.on("connect", () => {
+        console.log("✅ Socket connected for user:", currentUserId);
+        isConnectingRef.current = false;
+        setUserId(currentUserId);
+        setUserToken(currentToken);
+      });
+
+      newSocket.on("disconnect", () => {
+        console.log("❌ Socket disconnected for user:", currentUserId);
+        isConnectingRef.current = false;
+      });
+
+      newSocket.on("connect_error", (error) => {
+        console.error("❌ Socket connection error:", error);
+        isConnectingRef.current = false;
+      });
+
+      // Lắng nghe notification mới
+      newSocket.on("new_notification", (notification: Notification) => {
+        if (notification.receivers?.includes(currentUserId)) {
+          switch (notification.type) {
+            case "user":
+              setNotificationsUser(prev => [notification, ...prev]);
+              break;
+            case "activity":
+              setNotificationsActivity(prev => [notification, ...prev]);
+              break;
+            case "system":
+              setNotificationsSystem(prev => [notification, ...prev]);
+              break;
+          }
+          
+          setHasUnreadNotification(true);
+          showToast(notification.title, notification.content);
+        }
+      });
+
+      newSocket.emit("join", currentUserId);
+      socketRef.current = newSocket;
+      setSocket(newSocket);
+    } catch (error) {
+      console.error("❌ Error creating socket:", error);
+      isConnectingRef.current = false;
+    }
+  }, []);
+
+  // Check và reconnect socket mỗi 5 giây
+  useEffect(() => {
+    const interval = setInterval(() => {
+      createSocket();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [createSocket]);
 
   // Tính toán hasUnreadNotification dựa trên tất cả notifications và userId
   useEffect(() => {
@@ -260,124 +236,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
     setUserToken(null);
     isConnectingRef.current = false;
     
-    // Khởi tạo lại socket sau một chút
-    setTimeout(() => {
-      const initializeSocket = async () => {
-        try {
-          const [currentUserId, currentToken] = await Promise.all([
-            AsyncStorage.getItem("userId"),
-            AsyncStorage.getItem("token"),
-          ]);
-
-          if (currentUserId && currentToken) {
-            console.log("🔄 Reconnecting socket for user:", currentUserId);
-            isConnectingRef.current = true;
-            
-            const newSocket = io(SOCKET_URL, {
-              transports: ["websocket"],
-              auth: { token: `Bearer ${currentToken}` },
-              reconnection: true,
-              reconnectionAttempts: 5,
-              reconnectionDelay: 1000,
-              timeout: 20000,
-            });
-
-            newSocket.on("connect", () => {
-              console.log("✅ Notification socket reconnected for user:", currentUserId);
-              isConnectingRef.current = false;
-            });
-
-            newSocket.on("disconnect", () => {
-              console.log("❌ Notification socket disconnected for user:", currentUserId);
-              isConnectingRef.current = false;
-            });
-
-            newSocket.on("connect_error", (error) => {
-              console.error("❌ Notification socket connection error:", error);
-              isConnectingRef.current = false;
-            });
-
-            // Lắng nghe notification mới
-            newSocket.on("new_notification", (notification: Notification) => {
-              if (notification.receivers?.includes(currentUserId)) {
-                switch (notification.type) {
-                  case "user":
-                    setNotificationsUser(prev => [notification, ...prev]);
-                    break;
-                  case "activity":
-                    setNotificationsActivity(prev => [notification, ...prev]);
-                    break;
-                  case "system":
-                    setNotificationsSystem(prev => [notification, ...prev]);
-                    break;
-                }
-                
-                setHasUnreadNotification(true);
-                showToast(notification.title, notification.content);
-              }
-            });
-
-            newSocket.emit("join", currentUserId);
-            socketRef.current = newSocket;
-            setSocket(newSocket);
-            setUserId(currentUserId);
-            setUserToken(currentToken);
-          }
-        } catch (error) {
-          console.error("❌ Error reconnecting notification socket:", error);
-          isConnectingRef.current = false;
-        }
-      };
-      
-      initializeSocket();
-    }, 1000); // Delay 1 giây trước khi reconnect
+    // Tạo socket mới ngay lập tức
+    createSocket();
   };
-
-  // Reconnect socket khi app được focus lại
-  useFocusEffect(
-    useCallback(() => {
-      const checkAndReconnect = async () => {
-        try {
-          const [currentUserId, currentToken] = await Promise.all([
-            AsyncStorage.getItem("userId"),
-            AsyncStorage.getItem("token"),
-          ]);
-
-          // Nếu có user và token nhưng socket không kết nối, reconnect
-          if (currentUserId && currentToken && (!socketRef.current || !socketRef.current.connected)) {
-            console.log("🔄 App focused, reconnecting socket...");
-            reconnectSocket();
-          }
-        } catch (error) {
-          console.error("❌ Error checking socket on focus:", error);
-        }
-      };
-
-      checkAndReconnect();
-    }, [])
-  );
-
-  // Kiểm tra socket connection định kỳ
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        const [currentUserId, currentToken] = await Promise.all([
-          AsyncStorage.getItem("userId"),
-          AsyncStorage.getItem("token"),
-        ]);
-
-        // Nếu có user và token nhưng socket không kết nối, reconnect
-        if (currentUserId && currentToken && (!socketRef.current || !socketRef.current.connected)) {
-          console.log("🔄 Socket disconnected, reconnecting...");
-          reconnectSocket();
-        }
-      } catch (error) {
-        console.error("❌ Error checking socket connection:", error);
-      }
-    }, 30000); // Kiểm tra mỗi 30 giây
-
-    return () => clearInterval(interval);
-  }, []);
 
   const value: NotificationContextType = {
     // Notification list by type

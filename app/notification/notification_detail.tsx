@@ -87,7 +87,6 @@ export default function NotificationDetailScreen() {
         "approve",
         token
       );
-      alert("Chấp nhận thành công!");
       router.back();
     } catch (err: any) {
       alert("Có lỗi xảy ra khi chấp nhận: " + (err?.message || err));
