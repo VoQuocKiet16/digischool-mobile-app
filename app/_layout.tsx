@@ -46,7 +46,7 @@ function RootLayoutContent() {
   const { toastVisible, toastTitle, toastMessage, hideToast } = useNotificationContext();
 
   useSessionCheck();
-
+  
   const studentTabs = [
     {
       route: "/",
