@@ -23,4 +23,11 @@ export const Colors = {
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
   },
+  // Colors for animated tab bar
+  primary: '#29375C',
+  white: '#FFFFFF',
+  black: '#000000',
+  gray: '#C4C4C4',
 };
+
+export default Colors;

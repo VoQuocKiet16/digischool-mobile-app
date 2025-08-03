@@ -19,6 +19,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import SafeScreen from "../../components/SafeScreen";
 import chatService from "../../services/chat.service";
 import { fonts, responsive, responsiveValues } from "../../utils/responsive";
 
@@ -442,135 +443,121 @@ export default function MessageBoxScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={{ marginRight: 12 }}
-        >
-          <Ionicons name="chevron-back-outline" size={24} color="#fff" />
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.headerTitle}>{name || "Đoạn chat"}</Text>
-        </View>
-      </View>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={0}
-      >
-        <View style={{ flex: 1, backgroundColor: "#29375C" }}>
-          {/* Danh sách tin nhắn */}
-          <View style={[styles.listWrapper, { flex: 1 }]}>
-            {loading ? (
-              <ActivityIndicator style={{ marginTop: 40 }} />
-            ) : error ? (
-              <Text style={{ color: "red", textAlign: "center", marginTop: 40 }}>
-                {error}
-              </Text>
-            ) : messages.length === 0 ? (
-              <View style={{ alignItems: 'center', marginTop: 60, paddingHorizontal: 24 }}>
-                <View style={{
-                  alignItems: 'center',
-                  width: 320,
-                  maxWidth: '100%',
-                }}>
-                  <Text style={{ color: '#29375C', fontSize: 18, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', fontFamily: fonts.bold }}>
-                    Xin chào bạn !
-                  </Text>
-                  <Text style={{ color: '#29375C', fontSize: 15, marginBottom: 18, textAlign: 'center', lineHeight: 22, fontFamily: fonts.regular }}>
-                    Hãy gửi tin nhắn để bắt đầu cuộc trò chuyện với {name || 'người nhận'} nhé.
-                  </Text>
-                </View>
-              </View>
-            ) : (
-              <FlatList
-                ref={flatListRef}
-                data={messages}
-                keyExtractor={(item) =>
-                  item._id?.toString() ||
-                  item.id?.toString() ||
-                  Math.random().toString()
-                }
-                renderItem={({ item, index }) => {
-                  // Xác định có cần chèn label ngày không
-                  const prevMsg = index > 0 ? messages[index - 1] : null;
-                  const currDate = item.createdAt ? new Date(item.createdAt).toDateString() : '';
-                  const prevDate = prevMsg && prevMsg.createdAt ? new Date(prevMsg.createdAt).toDateString() : '';
-                  const showDateLabel = !prevMsg || currDate !== prevDate;
-                  return (
-                    <>
-                      {showDateLabel && formatDateLabel(item.createdAt) && (
-                        <View style={{ alignItems: 'center', marginVertical: 8 }}>
-                          <Text style={{ backgroundColor: '#BFC6D1', color: '#fff', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4, fontSize: 14 }}>
-                            {formatDateLabel(item.createdAt)}
-                          </Text>
-                        </View>
-                      )}
-                      {renderMessage({ item, index })}
-                    </>
-                  );
-                }}
-                contentContainerStyle={styles.listContent}
-                showsVerticalScrollIndicator={false}
-                onContentSizeChange={() =>
-                  flatListRef.current?.scrollToEnd({ animated: true })
-                }
-                keyboardShouldPersistTaps="handled"
-              />
-            )}
+    <SafeScreen>
+      <View style={{ flex: 1, backgroundColor: "#fff" }}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={{ marginRight: 12 }}
+          >
+            <Ionicons name="chevron-back-outline" size={24} color="#fff" />
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.headerTitle}>{name || "Đoạn chat"}</Text>
           </View>
-          {/* Preview ảnh đã chọn (nếu có) và input gửi tin nhắn */}
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-            <View>
-              {selectedImage && (
-                <View
-                  style={{
-                    width: "100%",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    backgroundColor: "#fff",
-                    padding: 8,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.08,
-                    shadowRadius: 2,
-                    elevation: 2,
-                    alignSelf: "stretch",
+        </View>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={responsiveValues.padding.lg}
+        >
+          <View style={{ flex: 1, backgroundColor: "#29375C" }}>
+            {/* Danh sách tin nhắn */}
+            <View style={[styles.listWrapper, { flex: 1 }]}>
+              {loading ? (
+                <ActivityIndicator style={{ marginTop: 40 }} />
+              ) : error ? (
+                <Text style={{ color: "red", textAlign: "center", marginTop: 40 }}>
+                  {error}
+                </Text>
+              ) : messages.length === 0 ? (
+                <View style={{ alignItems: 'center', marginTop: 60, paddingHorizontal: 24 }}>
+                  <View style={{
+                    alignItems: 'center',
+                    width: 320,
+                    maxWidth: '100%',
+                  }}>
+                    <Text style={{ color: '#29375C', fontSize: 18, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', fontFamily: fonts.bold }}>
+                      Xin chào bạn !
+                    </Text>
+                    <Text style={{ color: '#29375C', fontSize: 15, marginBottom: 18, textAlign: 'center', lineHeight: 22, fontFamily: fonts.regular }}>
+                      Hãy gửi tin nhắn để bắt đầu cuộc trò chuyện với {name || 'người nhận'} nhé.
+                    </Text>
+                  </View>
+                </View>
+              ) : (
+                <FlatList
+                  ref={flatListRef}
+                  data={messages}
+                  keyExtractor={(item) =>
+                    item._id?.toString() ||
+                    item.id?.toString() ||
+                    Math.random().toString()
+                  }
+                  renderItem={({ item, index }) => {
+                    // Xác định có cần chèn label ngày không
+                    const prevMsg = index > 0 ? messages[index - 1] : null;
+                    const currDate = item.createdAt ? new Date(item.createdAt).toDateString() : '';
+                    const prevDate = prevMsg && prevMsg.createdAt ? new Date(prevMsg.createdAt).toDateString() : '';
+                    const showDateLabel = !prevMsg || currDate !== prevDate;
+                    return (
+                      <>
+                        {showDateLabel && formatDateLabel(item.createdAt) && (
+                          <View style={{ alignItems: 'center', marginVertical: 8 }}>
+                            <Text style={{ backgroundColor: '#BFC6D1', color: '#fff', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4, fontSize: 14 }}>
+                              {formatDateLabel(item.createdAt)}
+                            </Text>
+                          </View>
+                        )}
+                        {renderMessage({ item, index })}
+                      </>
+                    );
                   }}
-                >
-                  {imageLoading ? (
-                    <View style={{ width: 100, height: 100, alignItems: 'center', justifyContent: 'center' }}>
-                      <ActivityIndicator size="large" color="#29375C" />
-                      {/* Render ảnh ẩn để ép sự kiện load */}
+                  contentContainerStyle={styles.listContent}
+                  showsVerticalScrollIndicator={false}
+                  onContentSizeChange={() =>
+                    flatListRef.current?.scrollToEnd({ animated: true })
+                  }
+                  keyboardShouldPersistTaps="handled"
+                />
+              )}
+            </View>
+            {/* Preview ảnh đã chọn (nếu có) và input gửi tin nhắn */}
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+              <View style={styles.inputContainer}>
+                {selectedImage && (
+                  <View style={styles.imagePreviewContainer}>
+                    {imageLoading ? (
+                      <View style={{ width: 100, height: 100, alignItems: 'center', justifyContent: 'center' }}>
+                        <ActivityIndicator size="large" color="#29375C" />
+                        {/* Render ảnh ẩn để ép sự kiện load */}
+                        <Image
+                          source={{ uri: selectedImage.uri }}
+                          style={{ width: 1, height: 1, position: 'absolute', opacity: 0 }}
+                          onLoad={() => setImageLoading(false)}
+                          onLoadEnd={() => setImageLoading(false)}
+                        />
+                      </View>
+                    ) : (
                       <Image
                         source={{ uri: selectedImage.uri }}
-                        style={{ width: 1, height: 1, position: 'absolute', opacity: 0 }}
+                        style={{ width: 100, height: 100, borderRadius: 8 }}
                         onLoad={() => setImageLoading(false)}
                         onLoadEnd={() => setImageLoading(false)}
                       />
-                    </View>
-                  ) : (
-                    <Image
-                      source={{ uri: selectedImage.uri }}
-                      style={{ width: 100, height: 100, borderRadius: 8 }}
-                      onLoad={() => setImageLoading(false)}
-                      onLoadEnd={() => setImageLoading(false)}
-                    />
-                  )}
-                  <TouchableOpacity
-                    onPress={() => {
-                      setSelectedImage(null);
-                      setImageLoading(false);
-                    }}
-                    style={{ marginLeft: 8 }}
-                  >
-                    <Ionicons name="close-circle" size={28} color="red" />
-                  </TouchableOpacity>
-                </View>
-              )}
-              <View style={{ backgroundColor: "#fff", borderBottomLeftRadius: 0, borderBottomRightRadius: 0, paddingBottom: 30 }}>
+                    )}
+                    <TouchableOpacity
+                      onPress={() => {
+                        setSelectedImage(null);
+                        setImageLoading(false);
+                      }}
+                      style={{ marginLeft: -16, marginBottom: 100 }}
+                    >
+                      <Ionicons name="close-circle" size={28} color="red" />
+                    </TouchableOpacity>
+                  </View>
+                )}
                 <View style={styles.inputRow}>
                   <Ionicons
                     name="happy-outline"
@@ -607,11 +594,11 @@ export default function MessageBoxScreen() {
                   </TouchableOpacity>
                 </View>
               </View>
-            </View>
-          </TouchableWithoutFeedback>
-        </View>
-      </KeyboardAvoidingView>
-    </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </KeyboardAvoidingView>
+      </View>
+    </SafeScreen>
   );
 }
 
@@ -643,6 +630,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 42,
     flex: 1,
     overflow: "hidden",
+    marginBottom: 0, // Đảm bảo không có khoảng cách
   },
   messageRow: {
     flexDirection: "row",
@@ -698,7 +686,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#fff",
     borderRadius: responsiveValues.borderRadius.xxxl,
-    margin: responsiveValues.padding.lg,
+    marginHorizontal: responsiveValues.padding.lg,
     paddingHorizontal: responsiveValues.padding.lg,
     paddingVertical: responsiveValues.padding.sm,
     shadowColor: "#29375C",
@@ -718,5 +706,20 @@ const styles = StyleSheet.create({
   },
   sendBtn: {
     padding: responsiveValues.padding.xs,
+  },
+  inputContainer: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 0, // Loại bỏ border radius để liền mạch với listWrapper
+    borderTopRightRadius: 0,
+    shadowColor: "#000",
+  },
+  imagePreviewContainer: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 20,
+    elevation: 2,
+    alignSelf: "stretch",
   },
 });
