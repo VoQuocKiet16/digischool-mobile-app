@@ -3,11 +3,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Header from "../components/Header";
+import { useNotificationContext } from "../contexts/NotificationContext";
 import ManageService, { TeacherRollcallData, WeekDaysResponse } from "../services/manage.service";
 
 const STATUS = ["Tất cả", "Chưa điểm danh", "Đã điểm danh", "Trễ"];
 
 export default function ManageRollcall() {
+  const { hasUnreadNotification } = useNotificationContext();
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [showDay, setShowDay] = useState(false);
   const [showWeekSelector, setShowWeekSelector] = useState(false);
@@ -191,7 +193,7 @@ export default function ManageRollcall() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f7f7f7" }}>
-      <Header title="Điểm danh" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} />
+      <Header title="Điểm danh" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} hasUnreadNotification={hasUnreadNotification} />
       
       {/* Filter hàng ngang */}
       <View style={styles.filterRowWrap}>

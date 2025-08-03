@@ -523,23 +523,9 @@ export default function MessageBoxScreen() {
           </View>
           {/* Preview ảnh đã chọn (nếu có) và input gửi tin nhắn */}
           <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-            <View>
+            <View style={styles.inputContainer}>
               {selectedImage && (
-                <View
-                  style={{
-                    width: "100%",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    backgroundColor: "#fff",
-                    padding: 8,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.08,
-                    shadowRadius: 2,
-                    elevation: 2,
-                    alignSelf: "stretch",
-                  }}
-                >
+                <View style={styles.imagePreviewContainer}>
                   {imageLoading ? (
                     <View style={{ width: 100, height: 100, alignItems: 'center', justifyContent: 'center' }}>
                       <ActivityIndicator size="large" color="#29375C" />
@@ -564,48 +550,46 @@ export default function MessageBoxScreen() {
                       setSelectedImage(null);
                       setImageLoading(false);
                     }}
-                    style={{ marginLeft: 8 }}
+                    style={{ marginLeft: -16, marginBottom: 100 }}
                   >
                     <Ionicons name="close-circle" size={28} color="red" />
                   </TouchableOpacity>
                 </View>
               )}
-              <View style={{ backgroundColor: "#fff", borderBottomLeftRadius: 0, borderBottomRightRadius: 0, paddingBottom: 30 }}>
-                <View style={styles.inputRow}>
+              <View style={styles.inputRow}>
+                <Ionicons
+                  name="happy-outline"
+                  size={24}
+                  color="#29375C"
+                  style={{ marginHorizontal: 8 }}
+                />
+                <TouchableOpacity
+                  onPress={handlePickImage}
+                  disabled={sending}
+                >
+                  <Ionicons name="image" size={24} color="#29375C" />
+                </TouchableOpacity>
+                <TextInput
+                  style={[styles.input, { maxHeight: 100, textAlignVertical: 'top' }]}
+                  placeholder="Nhập tin nhắn tại đây..."
+                  placeholderTextColor="#A0A0A0"
+                  value={input}
+                  onChangeText={setInput}
+                  editable={!sending}
+                  multiline={true}
+                  blurOnSubmit={false}
+                />
+                <TouchableOpacity
+                  style={styles.sendBtn}
+                  onPress={handleSend}
+                  disabled={sending}
+                >
                   <Ionicons
-                    name="happy-outline"
+                    name="send"
                     size={24}
-                    color="#29375C"
-                    style={{ marginHorizontal: 8 }}
+                    color={sending ? "#A0A0A0" : "#29375C"}
                   />
-                  <TouchableOpacity
-                    onPress={handlePickImage}
-                    disabled={sending}
-                  >
-                    <Ionicons name="image" size={24} color="#29375C" />
-                  </TouchableOpacity>
-                  <TextInput
-                    style={[styles.input, { maxHeight: 100, textAlignVertical: 'top' }]}
-                    placeholder="Nhập tin nhắn tại đây..."
-                    placeholderTextColor="#A0A0A0"
-                    value={input}
-                    onChangeText={setInput}
-                    editable={!sending}
-                    multiline={true}
-                    blurOnSubmit={false}
-                  />
-                  <TouchableOpacity
-                    style={styles.sendBtn}
-                    onPress={handleSend}
-                    disabled={sending}
-                  >
-                    <Ionicons
-                      name="send"
-                      size={24}
-                      color={sending ? "#A0A0A0" : "#29375C"}
-                    />
-                  </TouchableOpacity>
-                </View>
+                </TouchableOpacity>
               </View>
             </View>
           </TouchableWithoutFeedback>
@@ -643,6 +627,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 42,
     flex: 1,
     overflow: "hidden",
+    marginBottom: 0, // Đảm bảo không có khoảng cách
   },
   messageRow: {
     flexDirection: "row",
@@ -698,7 +683,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#fff",
     borderRadius: responsiveValues.borderRadius.xxxl,
-    margin: responsiveValues.padding.lg,
+    marginHorizontal: responsiveValues.padding.lg,
     paddingHorizontal: responsiveValues.padding.lg,
     paddingVertical: responsiveValues.padding.sm,
     shadowColor: "#29375C",
@@ -718,5 +703,20 @@ const styles = StyleSheet.create({
   },
   sendBtn: {
     padding: responsiveValues.padding.xs,
+  },
+  inputContainer: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 0, // Loại bỏ border radius để liền mạch với listWrapper
+    borderTopRightRadius: 0,
+    shadowColor: "#000",
+  },
+  imagePreviewContainer: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 20,
+    elevation: 2,
+    alignSelf: "stretch",
   },
 });

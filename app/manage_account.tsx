@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from "react";
 import { Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Header from "../components/Header";
+import { useNotificationContext } from "../contexts/NotificationContext";
 import ManageService, { AccountData, AccountsResponse } from "../services/manage.service";
 
 const FILTERS = ["Học sinh", "Giáo viên"];
@@ -18,6 +19,7 @@ const CLASSES = [
 export default function ManageAccount() {
   const navigation = useNavigation();
   const router = useRouter();
+  const { hasUnreadNotification } = useNotificationContext();
   const [filterIdx, setFilterIdx] = useState(0);
   const [search, setSearch] = useState("");
   const [showFilter, setShowFilter] = useState(false);
@@ -114,7 +116,7 @@ export default function ManageAccount() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f7f7f7" }}>
-      <Header title="Tài khoản" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} />
+      <Header title="Tài khoản" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} hasUnreadNotification={hasUnreadNotification} />
       
       {/* Filter chọn Học sinh/Giáo viên */}
       <View style={styles.container}>

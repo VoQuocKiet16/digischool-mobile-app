@@ -13,10 +13,10 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import LoadingModal from "../../components/LoadingModal";
 import { API_ERROR_MESSAGES } from "../../constants/api.constants";
+import { useNotificationContext } from "../../contexts/NotificationContext";
 import { useUserContext } from "../../contexts/UserContext";
 import { getMe, login } from "../../services/auth.service";
 import { fonts, getFontStyle } from "../../utils/responsive";
-import { useFonts } from "expo-font";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -26,6 +26,7 @@ export default function LoginScreen() {
   const [error, setError] = useState("");
   const router = useRouter();
   const { setUserData } = useUserContext();
+  const { reconnectSocket } = useNotificationContext();
 
   const isValid = email.trim() !== "" && password.trim() !== "";
 
@@ -147,6 +148,9 @@ export default function LoginScreen() {
                 await AsyncStorage.setItem("userId", userResponse.data.id);
               }
               setUserData(userResponse.data);
+              
+              // Reconnect socket với user mới
+              reconnectSocket();
             }
           } catch (error) {
             if (res.data?.user?.role) {
@@ -286,7 +290,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 32,
-    marginTop: 100,
   },
   title: {
     fontSize: 32,

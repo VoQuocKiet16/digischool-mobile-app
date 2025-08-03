@@ -21,7 +21,7 @@ import {
   unfavoriteNews,
 } from "../../services/news.service";
 import { getAllSubjects } from "../../services/subjects.service";
-import { responsive, responsiveValues, fonts } from "../../utils/responsive";
+import { fonts, responsive, responsiveValues } from "../../utils/responsive";
 
 const { width, height } = Dimensions.get('window');
 
@@ -68,16 +68,16 @@ export default function NewsFeedScreen() {
         // Map subjectName sang icon
         const iconMap: Record<string, any> = {
           "Ngữ văn": require("../../assets/images/literature.png"),
-          Toán: require("../../assets/images/math.png"),
+          "Toán": require("../../assets/images/math.png"),
           "Ngoại ngữ": require("../../assets/images/foreign.png"),
           "Vật lý": require("../../assets/images/physics.png"),
           "Hóa học": require("../../assets/images/chemistry.png"),
           "Sinh học": require("../../assets/images/biology.png"),
           "Lịch sử": require("../../assets/images/history.png"),
           "Địa lý": require("../../assets/images/geography.png"),
-          GDCD: require("../../assets/images/gdcd.png"),
+          "GDCD": require("../../assets/images/gdcd.png"),
           "Thể dục": require("../../assets/images/pe.png"),
-          GDQP: require("../../assets/images/nationaldefense.png"),
+          "GDQP": require("../../assets/images/nationaldefense.png"),
           "Tin học": require("../../assets/images/informatics.png"),
         };
         const mapped = res.data.subjects.map((s) => ({
@@ -544,19 +544,19 @@ export default function NewsFeedScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 16, backgroundColor: "#F7F7F7" },
+  container: { flex: 1, paddingHorizontal: responsiveValues.padding.md, backgroundColor: "#F7F7F7" },
   tabRow: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 24,
-    marginBottom: 8,
-    gap: 8,
+    marginTop: responsiveValues.padding.lg,
+    marginBottom: responsiveValues.padding.sm,
+    gap: responsiveValues.padding.sm,
   },
   tabBtn: {
     flex: 1,
     backgroundColor: "#E6E9F0",
-    borderRadius: 30,
-    paddingVertical: 12,
+    borderRadius: responsiveValues.borderRadius.xxxl,
+    paddingVertical: responsiveValues.padding.sm,
     marginHorizontal: 5,
     alignItems: "center",
   },
@@ -566,29 +566,27 @@ const styles = StyleSheet.create({
   tabText: {
     color: "#29375C",
     fontFamily: fonts.semiBold,
-    fontSize: 18,
+    fontSize: responsiveValues.fontSize.lg,
   },
   tabTextActive: {
     color: "#fff",
   },
   subjectScroll: {
-    marginTop: height * 0.010, // responsive theo chiều cao
-    marginBottom: height * 0.005, // responsive theo chiều cao
-    // paddingVertical: height * 0.001, // responsive theo chiều cao
-    paddingLeft: width * 0.02, // responsive theo chiều rộng
+    marginTop: responsive.height(1), // responsive theo chiều cao
+    paddingLeft: responsive.width(2), // responsive theo chiều rộng
   },
   subjectItem: {
     alignItems: "center",
-    marginRight: width * 0.045, // responsive
-    minWidth: width * 0.14, // responsive
+    marginRight: responsive.width(4.5), // responsive
+    minWidth: responsive.width(14), // responsive
   },
   subjectIconWrap: {
-    width: width * 0.17,
-    height: width * 0.17,
-    borderRadius: width * 0.13,
+    width: responsive.width(17),
+    height: responsive.width(17),
+    borderRadius: responsive.width(13),
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: height * 0.006,
+    marginBottom: responsive.height(0.6),
     borderWidth: 2,
     borderColor: "transparent",
   },
@@ -597,39 +595,39 @@ const styles = StyleSheet.create({
     backgroundColor: "#E6E9F0",
   },
   subjectIcon: {
-    width: width * 0.12,
-    height: width * 0.12,
+    width: responsive.width(12),
+    height: responsive.width(12),
   },
   subjectLabel: {
-    fontSize: width * 0.033,
+    fontSize: responsive.fontSize(13),
     color: "#29375C",
     fontWeight: "500",
-    marginBottom: height * 0.002,
+    marginBottom: responsive.height(0.2),
   },
   subjectLabelActive: {
     color: "#29375C",
     fontWeight: "bold",
   },
   subjectUnderline: {
-    width: width * 0.06,
-    height: height * 0.004,
+    width: responsive.width(6),
+    height: responsive.height(0.4),
     backgroundColor: "#29375C",
     borderRadius: 2,
-    marginTop: height * 0.002,
+    marginTop: responsive.height(0.2),
   },
   newsCardContainer: {
-    width: width * 0.85, // 85% chiều rộng màn hình
-    height: height * 0.50, // 55% chiều cao màn hình
-    marginRight: 20,
-    marginTop: 8,
+    width: responsive.cardWidth(75), // 85% chiều rộng màn hình
+    height: responsive.cardHeight(45), // 50% chiều cao màn hình
+    marginRight: responsiveValues.padding.lg,
+    marginTop: responsiveValues.padding.sm,
   },
   newsCard: {
     backgroundColor: "#fff",
-    borderRadius: 28,
+    borderRadius: responsiveValues.borderRadius.xxxl,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 2,
-    shadowRadius: 8,
+    shadowRadius: responsiveValues.padding.sm,
     elevation: 2,
     overflow: "hidden",
     position: "relative",
@@ -650,10 +648,10 @@ const styles = StyleSheet.create({
   },
   bookmarkBtn: {
     position: "absolute",
-    top: 14,
-    right: 14,
+    top: responsiveValues.padding.sm,
+    right: responsiveValues.padding.sm,
     backgroundColor: "rgba(37,52,93,0.7)",
-    borderRadius: 16,
+    borderRadius: responsiveValues.borderRadius.md,
     padding: 4,
     zIndex: 2,
   },
@@ -662,12 +660,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    padding: 24,
+    padding: responsiveValues.padding.lg,
   },
   newsTitle: {
     color: "#fff",
-    fontSize: 28,
-    marginBottom: 12,
+    fontSize: responsiveValues.fontSize.xxxl,
+    marginBottom: responsiveValues.padding.sm,
     textShadowColor: "rgba(0,0,0,0.25)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
@@ -677,55 +675,55 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginTop: 2,
-    marginBottom: 20,
+    marginBottom: responsiveValues.padding.lg,
   },
   newsSubjectIcon: {
-    width: 32,
-    height: 32,
+    width: responsiveValues.iconSize.md,
+    height: responsiveValues.iconSize.md,
     marginRight: 4,
   },
   newsInfoText: {
     color: "#fff",
-    fontSize: 16,
-    marginRight: 8,
+    fontSize: responsiveValues.fontSize.md,
+    marginRight: responsiveValues.padding.sm,
     fontFamily: fonts.medium,
   },
   newsAuthor: {
     color: "#fff",
-    fontSize: 12,
+    fontSize: responsiveValues.fontSize.xs,
     fontWeight: "bold",
-    marginRight: 8,
+    marginRight: responsiveValues.padding.sm,
   },
   newsHashtag: {
     color: "#fff",
-    fontSize: 12,
+    fontSize: responsiveValues.fontSize.xs,
     fontStyle: "italic",
   },
   menuPopup: {
     position: "absolute",
-    top: 40,
-    right: 8,
+    top: responsiveValues.padding.xl,
+    right: responsiveValues.padding.sm,
     backgroundColor: "#29375C",
-    borderRadius: 10,
-    padding: 8,
+    borderRadius: responsiveValues.borderRadius.md,
+    padding: responsiveValues.padding.sm,
     minWidth: 160,
     marginTop: 0,
     zIndex: 100,
     shadowColor: "#000",
     shadowOpacity: 0.12,
-    shadowRadius: 8,
+    shadowRadius: responsiveValues.padding.sm,
     elevation: 4,
   },
   menuItem: {
-    padding: 12,
-    borderRadius: 6,
+    padding: responsiveValues.padding.sm,
+    borderRadius: responsiveValues.borderRadius.sm,
     flexDirection: "row",
     alignItems: "center",
   },
   menuItemText: {
     color: "#fff",
-    fontSize: 15,
+    fontSize: responsiveValues.fontSize.sm,
     fontWeight: "500",
-    marginLeft: 8,
+    marginLeft: responsiveValues.padding.sm,
   },
 });

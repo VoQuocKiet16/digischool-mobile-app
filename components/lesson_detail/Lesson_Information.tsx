@@ -608,7 +608,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
                       <MaterialIcons name="comment" size={20} color="#2CA6B0" />
                     </View>
                     <ThemedText style={styles.statusTextBlue}>
-                      Đã được nghỉ phép
+                      Đã xin nghỉ phép
                     </ThemedText>
                   </View>
                 </View>

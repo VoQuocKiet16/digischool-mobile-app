@@ -3,7 +3,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
-import { responsive, responsiveValues, fonts } from "../../utils/responsive";
 
 const DATA = {
   student: [
