@@ -22,7 +22,9 @@ import AnimatedTabBar from "../components/AnimatedTabBar";
 import { Icons } from "../components/Icons";
 import ToastNotification from "../components/ToastNotification";
 import { NotificationProvider, useNotificationContext } from "../contexts/NotificationContext";
+import { SessionProvider } from "../contexts/SessionContext";
 import { UserProvider, useUserContext } from "../contexts/UserContext";
+import { useSessionCheck } from "../hooks/useSessionCheck";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { fonts } from "@/utils/responsive";
@@ -43,7 +45,8 @@ function RootLayoutContent() {
   const { userData, setUserData } = useUserContext();
   const { toastVisible, toastTitle, toastMessage, hideToast } = useNotificationContext();
 
-  // Tab cấu hình cho AnimatedTabBar
+  useSessionCheck();
+
   const studentTabs = [
     {
       route: "/",
@@ -231,75 +234,77 @@ function RootLayoutContent() {
 export default function RootLayout() {
   return (
     <UserProvider>
-      <NotificationProvider>
-        <RootLayoutContent />
-        <Toast 
-          config={{
-            success: (props) => {
-              const router = useRouter();
-              return (
-                <TouchableOpacity
-                  onPress={() => {
-                    Toast.hide();
-                    router.push("/notification/notification_list");
-                  }}
-                  style={{
-                    backgroundColor: '#FFFFFF',
-                    borderRadius: 12,
-                    marginHorizontal: 20,
-                    marginTop: 80,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.25,
-                    shadowRadius: 8,
-                    elevation: 5,
-                    borderLeftWidth: 8,
-                    borderLeftColor: '#4CAF50',
-                  }}
-                >
-                  <View style={{
-                    width: 30,
-                    height: 30,
-                    borderRadius: 25,
-                    backgroundColor: '#4CAF50',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginLeft: 16,
-                    marginRight: 16,
-                  }}>
-                    <MaterialIcons name="check" size={24} color="#FFFFFF" />
-                  </View>
-                  <View style={{ flex: 1, paddingVertical: 16 }}>
-                    <Text style={{
-                      color: '#1E3A8A',
-                      marginTop: 8,
-                      fontSize: 16,
-                      fontFamily: fonts.medium,
-                      lineHeight: 20,
-                    }}>
-                      Bạn có thông báo mới
-                    </Text>
-                  </View>
-                  <TouchableOpacity 
-                    style={{
-                      padding: 8,
-                      marginRight: 8,
-                    }}
-                    onPress={(e) => {
-                      e.stopPropagation();
+      <SessionProvider>
+        <NotificationProvider>
+          <RootLayoutContent />
+          <Toast 
+            config={{
+              success: (props) => {
+                const router = useRouter();
+                return (
+                  <TouchableOpacity
+                    onPress={() => {
                       Toast.hide();
+                      router.push("/notification/notification_list");
+                    }}
+                    style={{
+                      backgroundColor: '#FFFFFF',
+                      borderRadius: 12,
+                      marginHorizontal: 20,
+                      marginTop: 80,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.25,
+                      shadowRadius: 8,
+                      elevation: 5,
+                      borderLeftWidth: 8,
+                      borderLeftColor: '#4CAF50',
                     }}
                   >
-                    <MaterialIcons name="close" size={20} color="#9CA3AF" />
+                    <View style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: 25,
+                      backgroundColor: '#4CAF50',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      marginLeft: 16,
+                      marginRight: 16,
+                    }}>
+                      <MaterialIcons name="check" size={24} color="#FFFFFF" />
+                    </View>
+                    <View style={{ flex: 1, paddingVertical: 16 }}>
+                      <Text style={{
+                        color: '#1E3A8A',
+                        marginTop: 8,
+                        fontSize: 16,
+                        fontFamily: fonts.medium,
+                        lineHeight: 20,
+                      }}>
+                        Bạn có thông báo mới
+                      </Text>
+                    </View>
+                    <TouchableOpacity 
+                      style={{
+                        padding: 8,
+                        marginRight: 8,
+                      }}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        Toast.hide();
+                      }}
+                    >
+                      <MaterialIcons name="close" size={20} color="#9CA3AF" />
+                    </TouchableOpacity>
                   </TouchableOpacity>
-                </TouchableOpacity>
-              );
-            },
-          }}
-        />
-      </NotificationProvider>
+                );
+              },
+            }}
+          />
+        </NotificationProvider>
+      </SessionProvider>
     </UserProvider>
   );
 }
