@@ -6,6 +6,7 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import ConfirmLogoutModal from "../../components/notifications_modal/ConfirmLogoutModal";
 import RefreshableScrollView from "../../components/RefreshableScrollView";
+import { useNotificationContext } from "../../contexts/NotificationContext";
 import { useUserData } from "../../hooks/useUserData";
 import { logout } from "../../services/auth.service";
 import { fonts } from "../../utils/responsive";
@@ -13,6 +14,7 @@ import { fonts } from "../../utils/responsive";
 const Setting: React.FC = () => {
   const router = useRouter();
   const { userData, refreshUserData } = useUserData();
+  const { reconnectSocket } = useNotificationContext();
   const [showLogoutModal, setShowLogoutModal] = React.useState(false);
 
   const handleLogout = async () => {
@@ -20,6 +22,10 @@ const Setting: React.FC = () => {
     try {
       await logout();
       await AsyncStorage.clear();
+      
+      // Reconnect socket để disconnect với user cũ
+      reconnectSocket();
+      
       router.replace("/auth/login");
     } catch (err) {
     }
@@ -104,7 +110,10 @@ const Setting: React.FC = () => {
               style={styles.menuArrow}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => router.push("/setting/security")}
+          >
             <View style={styles.menuIcon}>
               <Ionicons name="lock-closed-outline" size={28} color="#FFFFFF" />
             </View>

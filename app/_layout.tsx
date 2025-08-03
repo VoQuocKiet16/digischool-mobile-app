@@ -23,8 +23,8 @@ import ToastNotification from "../components/ToastNotification";
 import { NotificationProvider, useNotificationContext } from "../contexts/NotificationContext";
 import { UserProvider, useUserContext } from "../contexts/UserContext";
 
-import { useColorScheme } from "@/hooks/useColorScheme";
 import SafeScreen from "@/components/SafeScreen";
+import { useColorScheme } from "@/hooks/useColorScheme";
 import { fonts, responsiveValues } from "@/utils/responsive";
 
 
@@ -87,7 +87,11 @@ function RootLayoutContent() {
       route: "/manage_schedule",
       icon: <MaterialIcons name="calendar-today" size={24} color="#22304A" />,
     },
-    
+    {
+      name: "Phản hồi",
+      route: "/manage_feedback",
+      icon: <MaterialIcons name="feedback" size={24} color="#22304A" />,
+    },
   ];
 
   // Xác định role
@@ -112,6 +116,7 @@ function RootLayoutContent() {
     "/manage_rollcall",
     "/manage_schedule",
     "/manage_school",
+    "/manage_feedback",
     "/message",
     "/news",
   ]

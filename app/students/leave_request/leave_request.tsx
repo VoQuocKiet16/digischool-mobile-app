@@ -16,8 +16,8 @@ import HeaderLayout from "../../../components/layout/HeaderLayout";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getStudentSchedule } from "../../../services/schedule.service";
-import { Activity } from "../schedule/schedule";
 import { fonts } from "../../../utils/responsive";
+import { Activity } from "../schedule/schedule";
 
 const days = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
 const morningPeriods = ["Tiết 1", "Tiết 2", "Tiết 3", "Tiết 4", "Tiết 5"];
@@ -185,12 +185,15 @@ export default function LeaveRequestScreen() {
         )
       );
     } else {
+      // Tính toán đúng index trong toàn bộ schedule
+      const actualPeriodIndex = session === "Buổi sáng" ? periodIndex : periodIndex + 5;
+      
       setSelected([
         ...selected,
         {
           row: periodIndex,
           col: dayIndex,
-          lessonId: lessonIds[periodIndex][dayIndex] || "",
+          lessonId: lessonIds[actualPeriodIndex][dayIndex] || "",
           session,
           week: weekNumber,
         },
@@ -404,8 +407,11 @@ export default function LeaveRequestScreen() {
                   ({ row, col }) => displayedData[row][col]?.text || ""
                 );
                 const lessonIdsSelected = selected.map(
-                  ({ row, col }) => lessonIds[row][col]
+                  ({ lessonId }) => lessonId
                 );
+                console.log("Selected slots:", selected);
+                console.log("Subjects:", subjects);
+                console.log("Lesson IDs:", lessonIdsSelected);
                 router.push({
                   pathname: "/students/leave_request/leave_request_info",
                   params: {
@@ -413,7 +419,6 @@ export default function LeaveRequestScreen() {
                     subjects: JSON.stringify(subjects),
                     days: JSON.stringify(days),
                     lessonIds: JSON.stringify(lessonIdsSelected),
-                    // Nếu muốn truyền phone, reason thì lấy từ state cục bộ hoặc context nếu có
                   },
                 });
               }

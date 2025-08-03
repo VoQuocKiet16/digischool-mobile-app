@@ -108,3 +108,23 @@ export const updatePersonalInfo = async (data: {
     throw { message: "Lỗi không xác định. Vui lòng thử lại." };
   }
 };
+
+export const changePassword = async (
+  currentPassword: string,
+  newPassword: string,
+  confirmPassword: string
+) => {
+  try {
+    const response = await api.post(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, {
+      currentPassword,
+      newPassword,
+      confirmPassword,
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.response && error.response.data) {
+      throw error.response.data;
+    }
+    throw { message: "Lỗi không xác định. Vui lòng thử lại." };
+  }
+};

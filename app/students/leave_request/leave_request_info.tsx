@@ -22,9 +22,6 @@ export default function LeaveRequestInfoScreen() {
   const selectedSlots = params.selectedSlots
     ? JSON.parse(params.selectedSlots as string)
     : [];
-  const periods = params.periods
-    ? JSON.parse(params.periods as string)
-    : ["Tiết 1", "Tiết 2", "Tiết 3", "Tiết 4", "Tiết 5"];
   const days = params.days
     ? JSON.parse(params.days as string)
     : ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];

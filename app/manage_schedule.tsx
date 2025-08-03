@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import Header from "../components/Header";
 import LoadingModal from "../components/LoadingModal";
+import { useNotificationContext } from "../contexts/NotificationContext";
 import manageService from "../services/manage.service";
 
 // Data cứng cho demo
@@ -56,6 +57,7 @@ const SAMPLE_EXCEL_DATA = [
 ];
 
 export default function ManageSchedule() {
+  const { hasUnreadNotification } = useNotificationContext();
   const [userName, setUserName] = useState("");
   const [showImportModal, setShowImportModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -171,7 +173,7 @@ export default function ManageSchedule() {
 
   return (
     <View style={styles.container}>
-      <Header title="Thời khoá biểu" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} />
+      <Header title="Thời khoá biểu" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} hasUnreadNotification={hasUnreadNotification} />
       
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header Section */}
