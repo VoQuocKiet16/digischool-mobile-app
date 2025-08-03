@@ -14,12 +14,13 @@ import ChartSchoolWeek from "../components/manage/ChartSchoolWeek";
 import ChartStudentTopday from "../components/manage/ChartStudentTopday";
 import ChartStudentWeek from "../components/manage/ChartStudentWeek";
 import ChartTeacher from "../components/manage/ChartTeacher";
-import { fonts } from "../utils/responsive";
+import { useNotificationContext } from "../contexts/NotificationContext";
 
 const FILTERS = ["Toàn trường", "Giáo viên", "Học sinh"];
 const SUB_FILTERS = ["Hôm nay", "Tuần này"];
 
 export default function ManageSchool() {
+  const { hasUnreadNotification } = useNotificationContext();
   const [filter, setFilter] = useState(0);
   const [subFilter, setSubFilter] = useState(0);
   const [userName, setUserName] = useState("");
@@ -50,8 +51,9 @@ export default function ManageSchool() {
   return (
     <View style={{ flex: 1, backgroundColor: "#F7F8FA" }}>
       <Header
-        title="Quản lý trường"
+        title="Quản lý"
         name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"}
+        hasUnreadNotification={hasUnreadNotification}
       />
 
       <View style={styles.container}>

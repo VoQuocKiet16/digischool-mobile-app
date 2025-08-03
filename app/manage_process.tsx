@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import Svg, { Line, Text as SvgText } from 'react-native-svg';
 import Header from '../components/Header';
+import { useNotificationContext } from "../contexts/NotificationContext";
 import ManageService, { LessonRequirements, TeachingProgressData } from '../services/manage.service';
 import { fonts } from "../utils/responsive";
 
@@ -38,6 +39,7 @@ const REQUIRED_LESSONS: { [key: string]: number } = {
 };
 
 export default function ManageProcess() {
+  const { hasUnreadNotification } = useNotificationContext();
   const [block, setBlock] = useState(0);
   const [semester, setSemester] = useState(0);
   const [week, setWeek] = useState(0);
@@ -209,7 +211,7 @@ export default function ManageProcess() {
   return (
     <View style={{ flex: 1, backgroundColor: "#f7f7f7" }}>
       {/* Header */}
-      <Header title="Tiến trình" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} />
+      <Header title="Tiến trình" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} hasUnreadNotification={hasUnreadNotification} />
       
       {/* Filter lớn */}
       <View style={styles.container}>

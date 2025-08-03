@@ -165,6 +165,46 @@ export interface ImportScheduleData {
   file: any; // File object
 }
 
+// Feedback interfaces
+export interface FeedbackData {
+  _id: string;
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  rating: number;
+  description: string;
+  status: 'pending' | 'reviewed' | 'resolved';
+  adminResponse?: string;
+  respondedBy?: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  respondedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FeedbacksResponse {
+  feedbacks: FeedbackData[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
+export interface FeedbackStats {
+  total: number;
+  pending: number;
+  reviewed: number;
+  resolved: number;
+  averageRating: number;
+}
+
 class ManageService {
   /**
    * Lấy dữ liệu điểm danh giáo viên theo ngày
@@ -476,6 +516,73 @@ class ManageService {
       
       return response.data;
     } catch (error: any) {
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy danh sách feedback của phụ huynh (cho manager)
+   */
+  async getParentFeedbacks(filters?: {
+    status?: string;
+    rating?: number;
+    page?: number;
+    limit?: number;
+  }): Promise<FeedbacksResponse> {
+    try {
+      const params = new URLSearchParams();
+      
+      if (filters?.status) params.append('status', filters.status);
+      if (filters?.rating) params.append('rating', filters.rating.toString());
+      if (filters?.page) params.append('page', filters.page.toString());
+      if (filters?.limit) params.append('limit', filters.limit.toString());
+
+      const response = await api.get(`/api/parents/feedback?${params.toString()}`);
+      return response.data.data;
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách feedback:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy thống kê feedback
+   */
+  async getFeedbackStats(): Promise<FeedbackStats> {
+    try {
+      const response = await api.get('/api/parents/feedback/stats');
+      return response.data.data;
+    } catch (error) {
+      console.error('Lỗi khi lấy thống kê feedback:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Cập nhật trạng thái feedback
+   */
+  async updateFeedbackStatus(feedbackId: string, status: string, adminResponse?: string): Promise<any> {
+    try {
+      const response = await api.patch(`/api/parents/feedback/${feedbackId}/status`, {
+        status,
+        adminResponse
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Lỗi khi cập nhật trạng thái feedback:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy chi tiết feedback
+   */
+  async getFeedbackDetail(feedbackId: string): Promise<FeedbackData> {
+    try {
+      const response = await api.get(`/api/parents/feedback/${feedbackId}`);
+      return response.data.data;
+    } catch (error) {
+      console.error('Lỗi khi lấy chi tiết feedback:', error);
       throw error;
     }
   }
