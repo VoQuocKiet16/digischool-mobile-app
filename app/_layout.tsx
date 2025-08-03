@@ -45,6 +45,8 @@ function RootLayoutContent() {
   const { userData, setUserData } = useUserContext();
   const { toastVisible, toastTitle, toastMessage, hideToast } = useNotificationContext();
 
+  useSessionCheck();
+  
   const studentTabs = [
     {
       route: "/",
@@ -211,61 +213,8 @@ function RootLayoutContent() {
           onTabPress={handleTabPress}
           visible={!isTabBarHidden}
         />
+        
       )}
-      <StatusBar style="auto" />
-      <SafeScreen>
-        <View style={{ flex: 1 }}>
-          <Slot />
-          {role && (
-            <Animated.View
-              style={[
-                styles.tabBar,
-                {
-                  opacity: tabBarAnim,
-                  transform: [
-                    {
-                      translateY: tabBarAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [100, 0],
-                      }),
-                    },
-                  ],
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                },
-              ]}
-              pointerEvents={isTabBarHidden ? "none" : "auto"}
-            >
-              {tabs.map((tab) => (
-                <TouchableOpacity
-                  key={tab.route}
-                  style={[
-                    styles.tabItem,
-                    currentRoute === tab.route && styles.tabItemActive,
-                  ]}
-                  onPress={() => handleTabPress(tab.route)}
-                >
-                  <View>
-                    {React.cloneElement(tab.icon, {
-                      color: currentRoute === tab.route ? "#29375C" : "#C4C4C4",
-                    })}
-                  </View>
-                  <Text
-                    style={[
-                      styles.tabText,
-                      currentRoute === tab.route && styles.tabTextActive,
-                    ]}
-                  >
-                    {tab.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </Animated.View>
-          )}
-        </View>
-      </SafeScreen>
       
       {/* Global Toast Notification */}
       <ToastNotification
