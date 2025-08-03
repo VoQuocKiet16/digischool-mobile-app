@@ -69,13 +69,13 @@ export default function AddContactScreen() {
           <View style={styles.fieldWrap}>
             <View style={styles.outlineInputBox}>
               <Text style={styles.floatingLabel}>
-                Tên người dùng <Text style={styles.required}>*</Text>
+                Tên người dùng 
               </Text>
               <TextInput
                 style={styles.inputTextOutline}
                 value={username}
                 onChangeText={setUsername}
-                placeholder="hocsinh1"
+                placeholder="Nhập email tìm kiếm"
                 placeholderTextColor="#9CA3AF"
                 editable={!loading}
                 underlineColorAndroid="transparent"
@@ -92,7 +92,7 @@ export default function AddContactScreen() {
             onPress={handleSearch}
             disabled={loading || !username.trim()}
           >
-            <Text style={styles.searchBtnText}>{loading ? "Đang tìm..." : "Tìm kiếm"}</Text>
+            <Text style={styles.searchBtnText}>{loading ? "Đang tìm..." : "Tìm kiếm tài khoản"}</Text>
           </TouchableOpacity>
         </View>
         {/* Danh sách tài khoản */}
@@ -175,17 +175,20 @@ const styles = StyleSheet.create({
   },
   searchBtn: {
     backgroundColor: "#29375C",
-    borderRadius: 12,
+    borderRadius: 25,
     paddingVertical: 12,
     alignItems: "center",
     marginTop: 12,
     marginLeft: 15,
     marginRight: 15,
+    width: '70%',
+    alignSelf: 'center',
   },
   searchBtnText: {
     color: "#fff",
-    fontWeight: "bold",
     fontSize: 16,
+    fontFamily: fonts.semiBold,
+
   },
   listWrapper: {
     backgroundColor: "#29375C",
@@ -264,15 +267,10 @@ const styles = StyleSheet.create({
   inputTextOutline: {
     color: "#29375C",
     fontSize: 16,
-    // fontFamily: fonts.medium,
-    // lineHeight: 22,
+    fontFamily: fonts.regular,
+    lineHeight: 22,
+    marginTop: 4,
     paddingVertical: 0,
     height: 44,
-  },
-  required: {
-    color: "#E53935",
-    fontSize: 18,
-    marginLeft: 2,
-    marginTop: -2,
   },
 });

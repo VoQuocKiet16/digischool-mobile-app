@@ -7,6 +7,7 @@ export interface Notification {
     gender: string;
     name: string;
     _id: string;
+    role: string[];
   };
   receivers?: string[];
   receiverScope?: any;

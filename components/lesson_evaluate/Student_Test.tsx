@@ -1,31 +1,41 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
-  Alert,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import {
-  lessonEvaluateService,
-  Student,
+    lessonEvaluateService,
+    Student,
 } from "../../services/lesson_evaluate.service";
+import { fonts } from "../../utils/responsive";
 import PlusIcon from "../PlusIcon";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
-import { responsive, responsiveValues, fonts } from "../../utils/responsive";
+
+interface ApprovedLeaveStudent {
+  id: string;
+  name: string;
+  reason: string;
+}
 
 interface Student_TestProps {
   lessonId: string;
   onOralTestsChange?: (
     oralTests: { student: string; name: string; score: number }[]
   ) => void;
+  approvedLeaveStudents?: ApprovedLeaveStudent[];
+  selectedStudents?: string[];
 }
 
 const Student_Test: React.FC<Student_TestProps> = ({
   lessonId,
   onOralTestsChange,
+  approvedLeaveStudents = [],
+  selectedStudents = [],
 }) => {
   const [showCard, setShowCard] = useState(false);
   const [testList, setTestList] = useState<{ student: string; name: string }[]>(
@@ -107,6 +117,17 @@ const Student_Test: React.FC<Student_TestProps> = ({
     if (num >= 8) return "#4CAF50";
     if (num >= 6.5) return "#FF9800";
     return "#F44336";
+  };
+
+  // Lọc danh sách học sinh có thể chọn (loại bỏ học sinh đã được chọn và học sinh đã approved nghỉ phép)
+  const getAvailableStudents = () => {
+    const approvedStudentIds = approvedLeaveStudents.map(student => student.id);
+    const selectedStudentIds = selectedStudents.filter(id => id !== "");
+    
+    return students.filter(student => 
+      !approvedStudentIds.includes(student.id) && 
+      !selectedStudentIds.includes(student.id)
+    );
   };
 
   return (
@@ -220,25 +241,33 @@ const Student_Test: React.FC<Student_TestProps> = ({
 
                 {dropdownIndex === index && (
                   <View style={styles.dropdown}>
-                    {students.map((student) => (
-                      <TouchableOpacity
-                        key={student.id}
-                        style={styles.dropdownItem}
-                        onPress={() =>
-                          handleSelectStudent(student.id, student.name, index)
-                        }
-                      >
-                        <MaterialIcons
-                          name="person"
-                          size={16}
-                          color="#9E9E9E"
-                          style={{ marginRight: 8 }}
-                        />
-                        <ThemedText style={styles.dropdownItemText}>
-                          {student.name}
+                    {getAvailableStudents().length > 0 ? (
+                      getAvailableStudents().map((student) => (
+                        <TouchableOpacity
+                          key={student.id}
+                          style={styles.dropdownItem}
+                          onPress={() =>
+                            handleSelectStudent(student.id, student.name, index)
+                          }
+                        >
+                          <MaterialIcons
+                            name="person"
+                            size={16}
+                            color="#9E9E9E"
+                            style={{ marginRight: 8 }}
+                          />
+                          <ThemedText style={styles.dropdownItemText}>
+                            {student.name}
+                          </ThemedText>
+                        </TouchableOpacity>
+                      ))
+                    ) : (
+                      <View style={styles.emptyDropdown}>
+                        <ThemedText style={styles.emptyDropdownText}>
+                          Không có học sinh để chọn
                         </ThemedText>
-                      </TouchableOpacity>
-                    ))}
+                      </View>
+                    )}
                   </View>
                 )}
               </View>
@@ -410,6 +439,16 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
     marginLeft: 8,
     textDecorationLine: "underline",
+  },
+  emptyDropdown: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: "center",
+  },
+  emptyDropdownText: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 14,
+    fontFamily: fonts.regular,
   },
 });
 

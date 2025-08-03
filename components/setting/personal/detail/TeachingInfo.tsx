@@ -12,31 +12,24 @@ const TeachingInfo: React.FC<TeachingInfoProps> = ({ userData }) => {
   const [showInfo, setShowInfo] = useState(true);
 
   const getSubjectsDisplay = () => {
-    if (!userData?.subjects || userData.subjects.length === 0) {
-      return "Chưa cập nhật";
+    if (!userData?.subject || !userData.subject.subjectName) {
+      return "Đang tải...";
     }
-    // Xử lý cả trường hợp subjects là string array hoặc object array
-    if (typeof userData.subjects[0] === 'string') {
-      return userData.subjects.join(", ");
-    } else {
-      return userData.subjects
-        .map((subject: any) => subject.subjectName || subject)
-        .join(", ");
-    }
+    return userData.subject.subjectName;
   };
 
   const getHomeroomClass = () => {
-    if (!userData?.roleInfo?.homeroomClass) {
-      return "Chưa cập nhật";
+    if (!userData?.roleInfo?.homeroomClass || !userData.roleInfo.homeroomClass.className) {
+      return "Đang tải...";
     }
-    return userData.roleInfo.homeroomClass;
+    return userData.roleInfo.homeroomClass.className;
   };
 
   const getSchoolName = () => {
-    if (!userData?.roleInfo?.school) {
-      return "Chưa cập nhật";
+    if (!userData?.roleInfo?.school || !userData.roleInfo.school.name) {
+      return "Đang tải...";
     }
-    return userData.roleInfo.school;
+    return userData.roleInfo.school.name;
   };
 
   return (

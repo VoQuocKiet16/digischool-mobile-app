@@ -6,7 +6,7 @@ import LoadingModal from "@/components/LoadingModal";
 import { lessonEvaluateService } from "@/services/lesson_evaluate.service";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -17,12 +17,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { LessonData, StudentLeaveRequest } from "../../../types/lesson.types";
 import { fonts } from "../../../utils/responsive";
   
 const RANKS = ["A+", "A", "B+", "B"];
 
 const LessonEvaluateTeacherScreen = () => {
-  const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
+  const { lessonId, lessonData: lessonDataParam } = useLocalSearchParams<{ lessonId: string; lessonData: string }>();
   const [lesson, setLesson] = useState("");
   const [content, setContent] = useState("");
   const [comment, setComment] = useState("");
@@ -33,6 +34,7 @@ const LessonEvaluateTeacherScreen = () => {
   const [loadingSuccess, setLoadingSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [lessonData, setLessonData] = useState<LessonData | null>(null);
   const [absentStudents, setAbsentStudents] = useState<
     { student: string; name: string }[]
   >([]);
@@ -43,6 +45,33 @@ const LessonEvaluateTeacherScreen = () => {
     { student: string; reason: string }[]
   >([]);
   const router = useRouter();
+
+  // Parse lessonData từ params
+  useEffect(() => {
+    if (lessonDataParam) {
+      try {
+        const parsedLessonData = JSON.parse(lessonDataParam);
+        setLessonData(parsedLessonData);
+      } catch (error) {
+        console.error("Error parsing lessonData:", error);
+      }
+    }
+  }, [lessonDataParam]);
+
+  // Lấy danh sách học sinh đã được approved nghỉ phép
+  const getApprovedLeaveStudents = () => {
+    if (!lessonData?.studentLeaveRequests) {
+      return [];
+    }
+    
+    return lessonData.studentLeaveRequests
+      .filter((request: StudentLeaveRequest) => request.status === "approved")
+      .map((request: StudentLeaveRequest) => ({
+        id: request.studentId._id,
+        name: request.studentId.name,
+        reason: request.reason,
+      }));
+  };
 
   const isValid =
     (lesson || "").trim().length > 0 &&
@@ -155,6 +184,8 @@ const LessonEvaluateTeacherScreen = () => {
             <Student_Absent
               lessonId={lessonId || ""}
               onAbsentStudentsChange={setAbsentStudents}
+              approvedLeaveStudents={getApprovedLeaveStudents()}
+              selectedStudents={absentStudents.map(item => item.student)}
             />
           </View>
           {/* Học sinh vi phạm */}
@@ -162,6 +193,8 @@ const LessonEvaluateTeacherScreen = () => {
             <Student_Violates
               lessonId={lessonId || ""}
               onViolationsChange={setViolations}
+              approvedLeaveStudents={getApprovedLeaveStudents()}
+              selectedStudents={violations.map(item => item.student)}
             />
           </View>
           {/* Kiểm tra miệng */}
@@ -169,6 +202,8 @@ const LessonEvaluateTeacherScreen = () => {
             <Student_Test
               lessonId={lessonId || ""}
               onOralTestsChange={setOralTests}
+              approvedLeaveStudents={getApprovedLeaveStudents()}
+              selectedStudents={oralTests.map(item => item.student)}
             />
           </View>
           {/* Nhận xét */}

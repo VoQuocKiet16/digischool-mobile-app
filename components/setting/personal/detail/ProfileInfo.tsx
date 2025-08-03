@@ -38,6 +38,8 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({ userData }) => {
         return "Mã học sinh";
       case "teacher":
         return "Mã giáo viên";
+      case "homeroom_teacher":
+        return "Mã giáo viên";
       case "manager":
         return "Mã quản lý";
       default:

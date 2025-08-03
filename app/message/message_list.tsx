@@ -69,16 +69,16 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
           fetchConversations();
           return prevData;
         }
-        // Chỉ tăng unread nếu mình là người nhận
-        let newUnread = prevData[idx].unread || 0;
+        // Chỉ tăng unreadCount nếu mình là người nhận
+        let newUnreadCount = prevData[idx].unreadCount || 0;
         if (msg.receiver === myId) {
-          newUnread = newUnread + 1;
+          newUnreadCount = newUnreadCount + 1;
         }
         const updatedConversation = {
           ...prevData[idx],
           lastMessage: msg.content || msg.text || "[Tin nhắn mới]",
-          time: msg.time || new Date().toISOString(),
-          unread: newUnread,
+          lastMessageTime: msg.time || new Date().toISOString(),
+          unreadCount: newUnreadCount,
         };
         const newData = [
           updatedConversation,
@@ -166,16 +166,29 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
             if (isSentByMe && lastMsg) {
               lastMsg = `Bạn: ${lastMsg}`;
             }
+
+            // Format thời gian
+            const formatTime = (dateString: string): string => {
+              const now = new Date();
+              const date = new Date(dateString);
+              const diff = Math.floor((now.getTime() - date.getTime()) / 1000); // seconds
+              if (diff < 60) return "Vừa xong";
+              if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
+              if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
+              if (diff < 2592000) return `${Math.floor(diff / 86400)} ngày trước`;
+              return date.toLocaleDateString("vi-VN");
+            };
+
             return (
               <TouchableOpacity
                 onPress={async () => {
-                  if (item.unread > 0) {
+                  if (item.unreadCount > 0) {
                     setChatData((prevData) => {
                       const idx = prevData.findIndex(
                         (c) => c.userId === item.userId || c.id === item.id
                       );
                       if (idx === -1) return prevData;
-                      const updated = { ...prevData[idx], unread: 0 };
+                      const updated = { ...prevData[idx], unreadCount: 0 };
                       const newData = [
                         updated,
                         ...prevData.slice(0, idx),
@@ -210,7 +223,7 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
                     <Text
                       style={[
                         styles.lastMessageCustom,
-                        item.unread > 0 && { fontWeight: "bold", color: "#29375C" }
+                        item.unreadCount > 0 && { fontFamily: fonts.semiBold, color: "#29375C" }
                       ]}
                       numberOfLines={1}
                     >
@@ -221,12 +234,17 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
                           : "Chưa có tin nhắn"}
                     </Text>
                   </View>
-                  {/* Hiển thị badge số chưa đọc nếu có */}
-                  {item.unread > 0 && (
-                    <View style={styles.unreadBadge}>
-                      <Text style={styles.unreadText}>{item.unread}</Text>
-                    </View>
-                  )}
+                  <View style={styles.rightInfo}>
+                    <Text style={styles.time}>
+                      {item.lastMessageTime ? formatTime(item.lastMessageTime) : ""}
+                    </Text>
+                    {/* Hiển thị badge số chưa đọc nếu có */}
+                    {item.unreadCount > 0 && (
+                      <View style={styles.unreadBadge}>
+                        <Text style={styles.unreadText}>{item.unreadCount}</Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
               </TouchableOpacity>
             );
@@ -243,7 +261,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F7F7F7",
-    // paddingHorizontal: 16, // Bỏ dòng này để line trắng full màn hình
   },
   searchRow: {
     flexDirection: "row",
@@ -283,50 +300,16 @@ const styles = StyleSheet.create({
     borderColor: "#29375C",
     marginTop: 20,
   },
-  chatItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F7F7F7",
-    borderRadius: 12,
-    marginHorizontal: 16,
-    marginBottom: 10,
-    padding: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    marginRight: 12,
-  },
-  chatContent: {
-    flex: 1,
-    justifyContent: "center",
-  },
-  name: {
-    fontWeight: "bold",
-    fontSize: 16,
-    color: "#29375C",
-    marginBottom: 2,
-  },
-  lastMessage: {
-    fontSize: 13,
-    color: "#A0A0A0",
-    marginBottom: 0,
-  },
   rightInfo: {
     alignItems: "flex-end",
     justifyContent: "space-between",
-    height: 40,
+    height: 55,
   },
   time: {
     fontSize: 13,
     color: "#A0A0A0",
     marginBottom: 6,
+    fontFamily: fonts.regular,
   },
   unreadBadge: {
     backgroundColor: "#FFA726",
@@ -339,24 +322,23 @@ const styles = StyleSheet.create({
   },
   unreadText: {
     color: "#fff",
-    fontWeight: "bold",
+    fontFamily: fonts.medium,
     fontSize: 14,
   },
   chatItemCustom: {
     flexDirection: "row",
-    alignItems: "center",
     backgroundColor: "#F7F7F7",
     marginHorizontal: 0,
     marginBottom: 0,
     paddingVertical: 16,
-    paddingHorizontal: 16, // Giữ padding này để nội dung không sát mép
+    paddingHorizontal: 16,
     borderBottomWidth: 2,
     borderBottomColor: "#FFFFFF",
   },
   avatarCustom: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 55,
+    height: 55,
+    borderRadius: 27.5,
     marginRight: 12,
   },
   chatContentCustom: {
@@ -364,7 +346,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   nameCustom: {
-    fontWeight: "bold",
+    fontFamily: fonts.medium,
     fontSize: 16,
     color: "#29375C",
     marginBottom: 2,
@@ -372,6 +354,6 @@ const styles = StyleSheet.create({
   lastMessageCustom: {
     fontSize: 13,
     color: "#A0A0A0",
-    marginBottom: 0,
+    fontFamily: fonts.medium,
   },
 });

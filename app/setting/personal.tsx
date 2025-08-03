@@ -39,8 +39,8 @@ const Personal: React.FC = () => {
         <ProfileInfo userData={userData} />
         <ContactInfo userData={userData} />
 
-        {userRole === "student" && <LearnInfo userData={userData} />}
-        {userRole === "teacher" && <TeachingInfo userData={userData} />}
+        {userRole == "student" && <LearnInfo userData={userData} />}
+        {(userRole == "teacher" || userRole == "homeroom_teacher") && <TeachingInfo userData={userData} />}
 
         <AccountInfo userData={userData} />
       </RefreshableScrollView>

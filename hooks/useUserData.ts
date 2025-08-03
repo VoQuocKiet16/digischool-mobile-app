@@ -40,11 +40,14 @@ export const useUserData = () => {
           teacherId: userTeacherId,
           managerId: userManagerId,
           class: userClassString ? JSON.parse(userClassString) : null,
-          subjects: userSubjectsString ? JSON.parse(userSubjectsString) : [],
+          subject: userSubjectsString ? JSON.parse(userSubjectsString) : null,
           roleInfo: roleInfo,
         };
         setUserData(userFromStorage);
         setError(null);
+        
+        // Luôn gọi API để cập nhật dữ liệu mới nhất
+        fetchUserData();
       } else {
         // Nếu không có dữ liệu trong AsyncStorage, gọi API
         await fetchUserData();
@@ -81,7 +84,7 @@ export const useUserData = () => {
           teacherId: response.data.teacherId,
           managerId: response.data.managerId,
           class: response.data.class,
-          subjects: response.data.subjects || [],
+          subject: response.data.subject || null,
           roleInfo: roleInfo,
         };
         setUserData(userData);
@@ -131,10 +134,10 @@ export const useUserData = () => {
       if (data.class !== null) {
         await AsyncStorage.setItem("userClass", JSON.stringify(data.class));
       }
-      if (data.subjects) {
+      if (data.subject != null) {
         await AsyncStorage.setItem(
           "userSubjects",
-          JSON.stringify(data.subjects)
+          JSON.stringify(data.subject)
         );
       }
       if (data.roleInfo) {

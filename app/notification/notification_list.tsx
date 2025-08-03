@@ -13,8 +13,8 @@ import {
 } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import HeaderLayout from "../../components/layout/HeaderLayout";
+import { useNotificationContext } from "../../contexts/NotificationContext";
 import {
-  getNotifications,
   markAllNotificationsAsRead,
   markNotificationAsRead,
   Notification,
@@ -47,47 +47,33 @@ function truncateText(text: string, maxLength = 90) {
 export default function NotificationListScreen() {
   const [tab, setTab] = useState("user");
   const [search, setSearch] = useState("");
-  const [notificationsUser, setNotificationsUser] = useState<Notification[]>(
-    []
-  );
-  const [notificationsActivity, setNotificationsActivity] = useState<
-    Notification[]
-  >([]);
-  const [notificationsSystem, setNotificationsSystem] = useState<
-    Notification[]
-  >([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
   const router = useRouter();
+  
+  const {
+    notificationsUser,
+    notificationsActivity,
+    notificationsSystem,
+    refreshNotifications,
+    refreshNotificationsByType,
+  } = useNotificationContext();
 
+  // Lấy userId từ AsyncStorage
   useEffect(() => {
-    (async () => {
-      const userInfoString = await AsyncStorage.getItem("userId");
-      if (userInfoString) {
-        setUserId(userInfoString);
-      }
-    })();
+    const getUserId = async () => {
+      const id = await AsyncStorage.getItem("userId");
+      setUserId(id);
+    };
+    getUserId();
   }, []);
 
   const fetchAllNotifications = async () => {
     setLoading(true);
     setError("");
     try {
-      const token = await AsyncStorage.getItem("token");
-      if (!token) {
-        setError("Không tìm thấy token đăng nhập");
-        setLoading(false);
-        return;
-      }
-      const [user, activity, system] = await Promise.all([
-        getNotifications({ type: "user", token }),
-        getNotifications({ type: "activity", token }),
-        getNotifications({ type: "system", token }),
-      ]);
-      setNotificationsUser(user.data || []);
-      setNotificationsActivity(activity.data || []);
-      setNotificationsSystem(system.data || []);
+      await refreshNotifications();
     } catch (err) {
       setError("Không thể tải thông báo");
     }
@@ -159,6 +145,8 @@ export default function NotificationListScreen() {
       const token = await AsyncStorage.getItem("token");
       if (token) {
         await markNotificationAsRead(item._id, token);
+        // Refresh notifications sau khi đánh dấu đã đọc
+        refreshNotificationsByType(tab as 'user' | 'activity' | 'system');
       }
     } catch (err) {
       alert("Lỗi khi đánh dấu thông báo đã đọc");
@@ -170,6 +158,7 @@ export default function NotificationListScreen() {
         content: item.content,
         sender_name: item.sender?.name || "",
         sender_gender: item.sender?.gender || "",
+        sender_role: item.sender?.role || [],
         sender_id: item.sender?._id || "",
         createdAt: item.createdAt,
         relatedObject_id: item.relatedObject?.id || "",

@@ -7,6 +7,7 @@ export const API_ENDPOINTS = {
     SET_PASSWORD: "/api/users/set-password",
     FORGOT_PASSWORD: "/api/auth/forgot-password",
     GET_ME: "/api/auth/me",
+    UPDATE_PERSONAL_INFO: "/api/users/personal-info",
   },
 };
 

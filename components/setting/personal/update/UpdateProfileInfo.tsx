@@ -1,5 +1,5 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,17 +7,69 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import CustomDatePickerModal from "./CustomDatePickerModal";
+import { UserData } from "../../../../types/user.types";
 import { fonts } from "../../../../utils/responsive";
+import CustomDatePickerModal from "./CustomDatePickerModal";
 
-export default function UpdateProfileInfo() {
-  const [name, setName] = useState("Nguyen Van A");
-  const [dob, setDob] = useState("01 - 01 - 2003");
-  const [gender, setGender] = useState("Nam");
+interface UpdateProfileInfoProps {
+  userData: UserData | null;
+  onDataChange?: (data: { name: string; dateOfBirth: string; gender: string }) => void;
+}
+
+export default function UpdateProfileInfo({ userData, onDataChange }: UpdateProfileInfoProps) {
+  const [name, setName] = useState("");
+  const [dob, setDob] = useState("");
+  const [gender, setGender] = useState("");
   const [showInfo, setShowInfo] = useState(true);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date(2003, 0, 1));
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [showGenderDropdown, setShowGenderDropdown] = useState(false);
+
+  // Load data từ userData khi component mount hoặc userData thay đổi
+  useEffect(() => {
+    if (userData) {
+      setName(userData.name || "");
+      
+      // Xử lý dateOfBirth
+      if (userData.dateOfBirth) {
+        const date = new Date(userData.dateOfBirth);
+        const day = date.getDate().toString().padStart(2, "0");
+        const month = (date.getMonth() + 1).toString().padStart(2, "0");
+        const year = date.getFullYear();
+        setDob(`${day} - ${month} - ${year}`);
+        setSelectedDate(date);
+      }
+      
+      // Xử lý gender
+      if (userData.gender) {
+        const genderMap: { [key: string]: string } = {
+          'male': 'Nam',
+          'female': 'Nữ',
+          'other': 'Khác'
+        };
+        setGender(genderMap[userData.gender] || userData.gender);
+      }
+    }
+  }, [userData]);
+
+  // Notify parent when data changes
+  useEffect(() => {
+    if (onDataChange) {
+      const genderMap: { [key: string]: string } = {
+        'Nam': 'male',
+        'Nữ': 'female',
+        'Khác': 'other'
+      };
+      
+      const dateString = selectedDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+      
+      onDataChange({
+        name,
+        dateOfBirth: dateString,
+        gender: genderMap[gender] || gender
+      });
+    }
+  }, [name, selectedDate, gender, onDataChange]);
 
   const genderOptions = [
     { key: "Nam", value: "Nam" },
@@ -33,6 +85,11 @@ export default function UpdateProfileInfo() {
     const year = date.getFullYear();
     setDob(`${day} - ${month} - ${year}`);
     setShowDatePicker(false);
+  };
+
+  // Khi mở modal date picker
+  const handleOpenDatePicker = () => {
+    setShowDatePicker(true);
   };
 
   return (
@@ -81,7 +138,7 @@ export default function UpdateProfileInfo() {
               />
               <TouchableOpacity
                 style={styles.inputIconOutline}
-                onPress={() => setShowDatePicker(true)}
+                onPress={handleOpenDatePicker}
               >
                 <MaterialIcons
                   name="calendar-today"
@@ -139,7 +196,7 @@ export default function UpdateProfileInfo() {
           {/* Custom Date Picker Modal */}
           <CustomDatePickerModal
             visible={showDatePicker}
-            initialDate={selectedDate}
+            initialDate={userData?.dateOfBirth ? new Date(userData.dateOfBirth) : new Date()}
             onConfirm={handleDateConfirm}
             onCancel={() => setShowDatePicker(false)}
           />

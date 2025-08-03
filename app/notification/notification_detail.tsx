@@ -32,6 +32,7 @@ export default function NotificationDetailScreen() {
   const content = params.content || "<p>Không có nội dung</p>";
   const senderName = params.sender_name || "";
   const senderGender = params.sender_gender || "";
+  const senderRole = params.sender_role || [];
   const createdAt = params.createdAt || "";
   // Parse relatedObject an toàn
   let relatedObject = null;
@@ -58,7 +59,8 @@ export default function NotificationDetailScreen() {
     "student_leave_request",
   ].includes(relatedObjectRequestType as string)
     && relatedObjectStatus !== "approved"
-    && relatedObjectStatus !== "rejected";
+    && relatedObjectStatus !== "rejected"
+    && relatedObjectStatus !== "cancelled";
 
   React.useEffect(() => {
     if (showActionBar) {
@@ -143,7 +145,7 @@ export default function NotificationDetailScreen() {
         />
         {senderName ? (
           <Text style={styles.sender}>
-            {senderGender === "male" ? "Thầy" : "Cô"} {senderName}{" "}
+            {senderRole.includes("student") ? "[HS]" : senderRole.includes("teacher") ? "[GV]" : "[AD]"} {senderName}{" "}
           </Text>
         ) : null}
         {createdAt ? (

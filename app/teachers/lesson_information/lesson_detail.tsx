@@ -22,7 +22,7 @@ import {
   getLessonDetail,
   updateLessonDescription,
 } from "../../../services/schedule.service";
-import { LessonData } from "../../../types/lesson.types";
+import { LessonData, TeacherLeaveRequest } from "../../../types/lesson.types";
 import { getLessonSubtitle } from "../../../utils/lessonSubtitle";
 
 const LessonDetailScreen = () => {
@@ -42,6 +42,13 @@ const LessonDetailScreen = () => {
   const isFocused = useIsFocused();
   const menuIconRef = useRef<View>(null);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
+
+  // Kiểm tra có được approved nghỉ phép không
+  const hasApprovedLeaveRequest = () => {
+    return lessonData?.teacherLeaveRequests?.some((request: TeacherLeaveRequest) => 
+      request.status === "approved"
+    );
+  };
 
   useEffect(() => {
     if (lessonId) {
@@ -174,7 +181,10 @@ const LessonDetailScreen = () => {
   const handleEvaluatePress = () => {
     router.push({
       pathname: "/teachers/lesson_information/lesson_evaluate",
-      params: { lessonId: lessonData?._id },
+      params: { 
+        lessonId: lessonData?._id,
+        lessonData: JSON.stringify(lessonData)
+      },
     });
   };
 
@@ -252,7 +262,7 @@ const LessonDetailScreen = () => {
           refreshKey={refreshKey}
         />
         <View style={{ marginHorizontal: 30, marginTop: 0, marginBottom: 12 }}>
-          {!lessonData?.description && lessonData?.status !== "completed" && (
+          {!lessonData?.description && lessonData?.status !== "completed" && !hasApprovedLeaveRequest() && (
             <View style={{ marginBottom: 12 }}>
               <PlusIcon
                 text="Thêm mô tả"
@@ -262,7 +272,7 @@ const LessonDetailScreen = () => {
               />
             </View>
           )}
-          {!lessonData?.testInfo && lessonData?.status !== "completed" && (
+          {!lessonData?.testInfo && lessonData?.status !== "completed" && !hasApprovedLeaveRequest() && (
             <PlusIcon
               text="Dặn dò kiểm tra"
               onPress={() =>

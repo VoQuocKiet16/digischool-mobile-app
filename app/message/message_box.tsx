@@ -344,10 +344,12 @@ export default function MessageBoxScreen() {
     const isMyLastMsg = isMe && item._id === myLastMessageId;
     // Khôi phục lại hai dòng này để tránh lỗi linter
     const prevMsg = index > 0 ? messages[index - 1] : null;
-    const showAvatar = !prevMsg || prevMsg.sender !== item.sender;
     const nextMsg = index < messages.length - 1 ? messages[index + 1] : null;
     // Chỉ hiển thị thời gian nếu là cuối cụm (tin nhắn tiếp theo khác sender hoặc là cuối danh sách)
     const showTime = !nextMsg || nextMsg.sender !== item.sender;
+    
+    // Logic hiển thị avatar: luôn hiển thị avatar cho tin nhắn cuối cùng của mỗi người
+    const showAvatar = isMe ? (!nextMsg || nextMsg.sender !== item.sender) : (!nextMsg || nextMsg.sender !== item.sender);
     return (
       <View
         style={[
@@ -359,7 +361,7 @@ export default function MessageBoxScreen() {
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'flex-end', marginBottom: 8, width: '100%' }}>
             <View style={{ flexShrink: 1, flexGrow: 1, maxWidth: '90%', alignItems: 'flex-end' }}>
               <LinearGradient
-                colors={["#29375C", "#6D8FEF"]}
+                colors={["#29375C", "#29375C"]}
                 start={{ x: 0, y: 1 }}
                 end={{ x: 1, y: 1 }}
                 style={[styles.bubble, styles.bubbleMe]}
@@ -377,16 +379,9 @@ export default function MessageBoxScreen() {
                 ) : (
                   <Text style={[styles.messageText, { color: '#fff' }]}> {(item.content || "").replace(/^[\s\n]+|[\s\n]+$/g, "")}</Text>
                 )}
-                {showTime && (
-                  <Text style={styles.timeBelow}>{formatHourMinute(item.createdAt)}</Text>
-                )}
-                <Text style={[styles.time, { color: '#fff', alignSelf: 'flex-end' }]}>{item.time || ""}</Text>
               </LinearGradient>
-              {/* Trạng thái đã xem/đã nhận ngoài bubble, nằm dưới bubble */}
-              {showTime && item.status === "read" && isLastMyMsg(item, messages, myId) && (
-                <View style={styles.statusBelow}>
-                  <Text style={styles.statusText}>Đã xem</Text>
-                </View>
+              {showTime && (
+                  <Text style={styles.timeBelow}>{formatHourMinute(item.createdAt)}</Text>
               )}
             </View>
             {showAvatar ? (
@@ -403,9 +398,9 @@ export default function MessageBoxScreen() {
             )}
           </View>
         )}
-        {/* Tin nhắn của người nhận giữ nguyên */}
+        {/* Tin nhắn của người nhận */}
         {!isMe && (
-          <>
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'flex-end', marginBottom: 8, width: '100%' }}>
             {showAvatar ? (
               <Image
                 source={
@@ -418,25 +413,29 @@ export default function MessageBoxScreen() {
             ) : (
               <View style={styles.avatar} />
             )}
-            <View style={[styles.bubble, styles.bubbleOther]}>
-              {item.mediaUrl && item.type === "image" ? (
-                <Image
-                  source={{ uri: item.mediaUrl }}
-                  style={{
-                    width: 180,
-                    height: 180,
-                    borderRadius: 12,
-                    marginBottom: 4,
-                  }}
-                />
-              ) : (
-                <Text style={[styles.messageText, styles.textOther]}> {(item.content || "").replace(/^[\s\n]+|[\s\n]+$/g, "")}</Text>
-              )}
+            <View style={{ flexShrink: 1, flexGrow: 1, maxWidth: '90%', alignItems: 'flex-start' }}>
+              <View style={[styles.bubble, styles.bubbleOther]}>
+                {item.mediaUrl && item.type === "image" ? (
+                  <Image
+                    source={{ uri: item.mediaUrl }}
+                    style={{
+                      width: 180,
+                      height: 180,
+                      borderRadius: 12,
+                      marginBottom: 4,
+                    }}
+                  />
+                ) : (
+                  <Text style={[styles.messageText, styles.textOther]}>
+                    {(item.content || "").replace(/^[\s\n]+|[\s\n]+$/g, "")}
+                  </Text>
+                )}
+              </View>
               {showTime && (
-                <Text style={styles.timeBelow}>{formatHourMinute(item.createdAt)}</Text>
+                <Text style={[styles.timeBelow, { alignSelf: 'flex-start' }]}>{formatHourMinute(item.createdAt)}</Text>
               )}
             </View>
-          </>
+          </View>
         )}
       </View>
     );
@@ -450,7 +449,7 @@ export default function MessageBoxScreen() {
           onPress={() => router.back()}
           style={{ marginRight: 12 }}
         >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons name="chevron-back-outline" size={24} color="#fff" />
         </TouchableOpacity>
         <View>
           <Text style={styles.headerTitle}>{name || "Đoạn chat"}</Text>
@@ -473,26 +472,15 @@ export default function MessageBoxScreen() {
             ) : messages.length === 0 ? (
               <View style={{ alignItems: 'center', marginTop: 60, paddingHorizontal: 24 }}>
                 <View style={{
-                  backgroundColor: '#fff',
-                  borderRadius: 20,
-                  paddingVertical: 28,
-                  paddingHorizontal: 20,
                   alignItems: 'center',
-                  shadowColor: '#000',
-                  shadowOpacity: 0.06,
-                  shadowRadius: 8,
-                  elevation: 2,
                   width: 320,
                   maxWidth: '100%',
                 }}>
                   <Text style={{ color: '#29375C', fontSize: 18, fontWeight: 'bold', marginBottom: 10, textAlign: 'center', fontFamily: fonts.bold }}>
                     Xin chào bạn !
                   </Text>
-                  <Text style={{ color: '#29375C', fontSize: 15, marginBottom: 18, textAlign: 'center', lineHeight: 22 }}>
+                  <Text style={{ color: '#29375C', fontSize: 15, marginBottom: 18, textAlign: 'center', lineHeight: 22, fontFamily: fonts.regular }}>
                     Hãy gửi tin nhắn để bắt đầu cuộc trò chuyện với {name || 'người nhận'} nhé.
-                  </Text>
-                  <Text style={{ color: '#888', fontSize: 13, textAlign: 'center', maxWidth: 260 }}>
-                    Khi bạn gửi tin nhắn, {name || 'người nhận'} sẽ nhìn thấy tin nhắn của bạn.
                   </Text>
                 </View>
               </View>
@@ -582,7 +570,7 @@ export default function MessageBoxScreen() {
                   </TouchableOpacity>
                 </View>
               )}
-              <View style={{ backgroundColor: "#fff", borderBottomLeftRadius: 0, borderBottomRightRadius: 0, paddingBottom: 16 }}>
+              <View style={{ backgroundColor: "#fff", borderBottomLeftRadius: 0, borderBottomRightRadius: 0, paddingBottom: 30 }}>
                 <View style={styles.inputRow}>
                   <Ionicons
                     name="happy-outline"
@@ -591,7 +579,6 @@ export default function MessageBoxScreen() {
                     style={{ marginHorizontal: 8 }}
                   />
                   <TouchableOpacity
-                    style={styles.sendBtn}
                     onPress={handlePickImage}
                     disabled={sending}
                   >
@@ -629,17 +616,9 @@ export default function MessageBoxScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
   header: {
     backgroundColor: "#29375C",
-    paddingTop: responsive.height(4),
+    paddingTop: responsive.height(6),
     paddingBottom: responsive.height(2),
     paddingHorizontal: responsiveValues.padding.lg,
     flexDirection: "row",
@@ -648,14 +627,8 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: "#fff",
     fontSize: responsiveValues.fontSize.xl,
-    fontWeight: "bold",
+    fontFamily: fonts.semiBold,
     marginBottom: responsiveValues.padding.xs,
-    fontFamily: fonts.bold,
-  },
-  headerSubtitle: {
-    color: "#fff",
-    fontSize: responsiveValues.fontSize.sm,
-    opacity: 0.7,
   },
   listContent: {
     paddingHorizontal: responsiveValues.padding.md,
@@ -666,8 +639,8 @@ const styles = StyleSheet.create({
   },
   listWrapper: {
     backgroundColor: "#fff",
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
+    borderTopLeftRadius: 42,
+    borderTopRightRadius: 42,
     flex: 1,
     overflow: "hidden",
   },
@@ -690,22 +663,22 @@ const styles = StyleSheet.create({
   },
   bubble: {
     maxWidth: "70%",
-    borderRadius: responsiveValues.borderRadius.md,
+    borderRadius: 35,
     paddingVertical: responsiveValues.padding.sm,
     paddingHorizontal: responsiveValues.padding.md,
     marginHorizontal: responsiveValues.padding.xs,
   },
   bubbleMe: {
-    borderBottomRightRadius: responsiveValues.borderRadius.sm,
+    borderBottomRightRadius: 0,
   },
   bubbleOther: {
-    backgroundColor: "#29375C",
-    borderBottomLeftRadius: responsiveValues.borderRadius.sm,
+    backgroundColor: "#5E6987",
+    borderBottomLeftRadius: 0,
   },
   messageText: {
     fontSize: responsiveValues.fontSize.md,
     marginBottom: responsiveValues.padding.xs,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.regular,
   },
   textMe: {
     color: "#fff",
@@ -713,55 +686,37 @@ const styles = StyleSheet.create({
   textOther: {
     color: "#fff",
   },
-  time: {
-    fontSize: responsiveValues.fontSize.xs,
-    color: "#fff",
-    opacity: 0.7,
-    alignSelf: "flex-end",
-  },
   timeBelow: {
     fontSize: responsiveValues.fontSize.xs,
     color: '#A0A0A0',
     marginTop: responsiveValues.padding.xs,
     alignSelf: 'flex-end',
+    fontFamily: fonts.regular,
   },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#fff",
-    borderRadius: responsiveValues.borderRadius.xl,
-    margin: responsiveValues.padding.md,
-    paddingHorizontal: responsiveValues.padding.sm,
-    paddingVertical: responsiveValues.padding.xs,
+    borderRadius: responsiveValues.borderRadius.xxxl,
+    margin: responsiveValues.padding.lg,
+    paddingHorizontal: responsiveValues.padding.lg,
+    paddingVertical: responsiveValues.padding.sm,
     shadowColor: "#29375C",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.80,
+    shadowOpacity: 0.5,
     shadowRadius: 16,
-    elevation: 8,
+    elevation: 5,
   },
   input: {
     flex: 1,
     fontSize: responsiveValues.fontSize.md,
     color: "#29375C",
-    paddingVertical: responsiveValues.padding.sm,
-    paddingHorizontal: responsiveValues.padding.sm,
-    backgroundColor: "transparent",
+    paddingVertical: responsiveValues.padding.xs,
+    paddingHorizontal: responsiveValues.padding.xs,
+    marginLeft: responsiveValues.padding.md,
+    fontFamily: fonts.regular,
   },
   sendBtn: {
     padding: responsiveValues.padding.xs,
-    borderRadius: responsiveValues.borderRadius.lg,
-  },
-  statusBelow: {
-    backgroundColor: "#BFC6D1",
-    borderRadius: responsiveValues.borderRadius.sm,
-    paddingHorizontal: responsiveValues.padding.sm,
-    paddingVertical: responsiveValues.padding.xs,
-    alignSelf: "flex-end",
-    marginTop: responsiveValues.padding.xs,
-    marginBottom: responsiveValues.padding.xs,
-  },
-  statusText: {
-    color: "#fff",
-    fontSize: responsiveValues.fontSize.xs,
   },
 });

@@ -87,9 +87,7 @@ export default function SwapLesson() {
             (lesson.period || lesson.timeSlot?.period || 1) - 1;
           if (periodIndex >= 0 && periodIndex < 10) {
             schedule[periodIndex][dayIndex] = {
-              text: lesson.topic
-                ? lesson.topic
-                : lesson.subject?.subjectName || lesson.subject?.name || "",
+              text: lesson.subject?.subjectName || "",
               type: lesson.type || "default",
               lessonId: lesson.lessonId || lesson._id || "",
               _id: lesson._id || lesson.lessonId || "",
