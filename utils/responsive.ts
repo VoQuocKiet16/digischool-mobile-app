@@ -88,6 +88,8 @@ export const responsiveValues = {
     md: responsive.spacing(16),
     lg: responsive.spacing(24),
     xl: responsive.spacing(32),
+    xxl: responsive.spacing(40),
+    xxxl: responsive.spacing(55),
   },
   
   // Font sizes
@@ -109,6 +111,7 @@ export const responsiveValues = {
     xl: responsive.iconSize(28),
     xxl: responsive.iconSize(32),
     xxxl: responsive.iconSize(55),
+    xxxxl: responsive.iconSize(80),
   },
   
   // Border radius
