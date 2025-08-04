@@ -143,6 +143,24 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
         <Text style={{ color: "red", textAlign: "center", marginTop: 40 }}>
           {error}
         </Text>
+      ) : chatData.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <View style={styles.emptyIconContainer}>
+            <Ionicons name="chatbubbles-outline" size={70} color="#A0A0A0" />
+          </View>
+          <Text style={styles.emptyTitle}>Chưa có tin nhắn nào</Text>
+          <Text style={styles.emptySubtitle}>
+            Bắt đầu trò chuyện với bạn bè và đồng nghiệp
+          </Text>
+          <TouchableOpacity
+            style={styles.startChatButton}
+            onPress={() => router.push("/message/add_contact")}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="arrow-forward" size={20} color="#29375C" style={{ marginRight: 8 }} />
+            <Text style={styles.startChatButtonText}>Bắt đầu tìm kiếm người dùng</Text>
+          </TouchableOpacity>
+        </View>
       ) : (
         <FlatList
           data={chatData}
@@ -354,6 +372,38 @@ const styles = StyleSheet.create({
   lastMessageCustom: {
     fontSize: 13,
     color: "#A0A0A0",
+    fontFamily: fonts.medium,
+  },
+  emptyContainer: {
+    marginTop: 100,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyIconContainer: {
+    marginBottom: 24,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontFamily: fonts.semiBold,
+    color: "#29375C",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 16,
+    fontFamily: fonts.regular,
+    color: "#A0A0A0",
+    textAlign: "center",
+    marginBottom: 32,
+    lineHeight: 22,
+  },
+  startChatButton: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  startChatButtonText: {
+    color: "#29375C",
+    fontSize: 14,
     fontFamily: fonts.medium,
   },
 });
