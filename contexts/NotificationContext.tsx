@@ -73,6 +73,17 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
         return;
       }
 
+      // Kiểm tra nếu user thay đổi, clear notifications cũ
+      if (userId && userId !== currentUserId) {
+        // Chỉ clear khi có user mới, không clear khi user logout
+        if (currentUserId) {
+          setNotificationsUser([]);
+          setNotificationsActivity([]);
+          setNotificationsSystem([]);
+          setHasUnreadNotification(false);
+        }
+      }
+
       // Nếu đã có socket và đang kết nối, không làm gì
       if (socketRef.current && socketRef.current.connected) {
         return;
@@ -84,7 +95,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
         socketRef.current = null;
       }
 
-      console.log("🔄 Creating socket for user:", currentUserId);
       isConnectingRef.current = true;
       
       const newSocket = io(SOCKET_URL, {
@@ -95,19 +105,16 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       });
 
       newSocket.on("connect", () => {
-        console.log("✅ Socket connected for user:", currentUserId);
         isConnectingRef.current = false;
         setUserId(currentUserId);
         setUserToken(currentToken);
       });
 
       newSocket.on("disconnect", () => {
-        console.log("❌ Socket disconnected for user:", currentUserId);
         isConnectingRef.current = false;
       });
 
       newSocket.on("connect_error", (error) => {
-        console.error("❌ Socket connection error:", error);
         isConnectingRef.current = false;
       });
 
@@ -135,7 +142,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       socketRef.current = newSocket;
       setSocket(newSocket);
     } catch (error) {
-      console.error("❌ Error creating socket:", error);
       isConnectingRef.current = false;
     }
   }, []);
@@ -148,6 +154,17 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
 
     return () => clearInterval(interval);
   }, [createSocket]);
+
+  // Clear notifications khi user logout (userId = null)
+  useEffect(() => {
+    if (!userId && (notificationsUser.length > 0 || notificationsActivity.length > 0 || notificationsSystem.length > 0)) {
+      // Chỉ clear khi user thực sự logout (userId = null)
+      setNotificationsUser([]);
+      setNotificationsActivity([]);
+      setNotificationsSystem([]);
+      setHasUnreadNotification(false);
+    }
+  }, [userId, notificationsUser.length, notificationsActivity.length, notificationsSystem.length]);
 
   // Tính toán hasUnreadNotification dựa trên tất cả notifications và userId
   useEffect(() => {
@@ -167,20 +184,40 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const fetchAllNotifications = async () => {
     try {
-      const token = await AsyncStorage.getItem("token");
-      if (!token) return;
-      
-      const [user, activity, system] = await Promise.all([
-        getNotifications({ type: "user", token }),
-        getNotifications({ type: "activity", token }),
-        getNotifications({ type: "system", token }),
+      const [currentUserId, token] = await Promise.all([
+        AsyncStorage.getItem("userId"),
+        AsyncStorage.getItem("token"),
       ]);
       
-      setNotificationsUser(user.data || []);
-      setNotificationsActivity(activity.data || []);
-      setNotificationsSystem(system.data || []);
+      if (!token || !currentUserId) return;
+      
+      // Kiểm tra nếu user thay đổi, chỉ clear sau khi load notifications mới
+      if (userId && userId !== currentUserId && currentUserId) {
+        // Load notifications mới trước
+        const [user, activity, system] = await Promise.all([
+          getNotifications({ type: "user", token }),
+          getNotifications({ type: "activity", token }),
+          getNotifications({ type: "system", token }),
+        ]);
+        
+        // Sau đó mới clear và set notifications mới
+        setNotificationsUser(user.data || []);
+        setNotificationsActivity(activity.data || []);
+        setNotificationsSystem(system.data || []);
+      } else {
+        // User không thay đổi, load bình thường
+        const [user, activity, system] = await Promise.all([
+          getNotifications({ type: "user", token }),
+          getNotifications({ type: "activity", token }),
+          getNotifications({ type: "system", token }),
+        ]);
+        
+        setNotificationsUser(user.data || []);
+        setNotificationsActivity(activity.data || []);
+        setNotificationsSystem(system.data || []);
+      }
     } catch (error) {
-      console.error("❌ Error fetching notifications:", error);
+      // Handle error silently
     }
   };
 

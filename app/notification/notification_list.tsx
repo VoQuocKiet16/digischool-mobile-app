@@ -40,8 +40,15 @@ function timeAgo(dateString: string): string {
 
 function truncateText(text: string, maxLength = 90) {
   if (!text) return "";
-  if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength) + "...";
+  
+  // Loại bỏ HTML tags
+  const stripHtml = (html: string) => {
+    return html.replace(/<[^>]*>/g, '');
+  };
+  
+  const cleanText = stripHtml(text);
+  if (cleanText.length <= maxLength) return cleanText;
+  return cleanText.slice(0, maxLength) + "...";
 }
 
 export default function NotificationListScreen() {
@@ -50,6 +57,7 @@ export default function NotificationListScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const router = useRouter();
   
   const {
@@ -60,13 +68,22 @@ export default function NotificationListScreen() {
     refreshNotificationsByType,
   } = useNotificationContext();
 
-  // Lấy userId từ AsyncStorage
+  // Lấy userId và role từ AsyncStorage
   useEffect(() => {
-    const getUserId = async () => {
+    const getUserData = async () => {
       const id = await AsyncStorage.getItem("userId");
       setUserId(id);
+      
+      // Lấy role
+      const roleData = await AsyncStorage.getItem("role");
+      if (roleData) {
+        const roles = JSON.parse(roleData);
+        if (Array.isArray(roles) && roles.length > 0) {
+          setUserRole(roles[0]);
+        }
+      }
     };
-    getUserId();
+    getUserData();
   }, []);
 
   const fetchAllNotifications = async () => {
@@ -92,6 +109,10 @@ export default function NotificationListScreen() {
   );
 
   const safeUserId = userId || "";
+  
+  // Kiểm tra xem user có quyền tạo notification không
+  const canCreateNotification = userRole === "teacher" || userRole === "homeroom_teacher" || userRole === "manager";
+  
   const unreadCounts = {
     user: notificationsUser.filter(
       (n) => !n.isReadBy || !n.isReadBy.includes(safeUserId)
@@ -171,11 +192,11 @@ export default function NotificationListScreen() {
   return (
     <HeaderLayout
       title="Thông báo"
-      onBack={() => router.back()}
-      rightIcon={<MaterialIcons name="add" size={30} color="#29375C" />}
-      onRightIconPress={() => {
+      onBack={() => router.push("/")}
+      rightIcon={canCreateNotification ? <MaterialIcons name="add" size={30} color="#29375C" /> : undefined}
+      onRightIconPress={canCreateNotification ? () => {
         router.push("/notification/notification_create");
-      }}
+      } : undefined}
     >
       <View style={styles.tabsRow}>
         {TABS.map((t) => (

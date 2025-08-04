@@ -21,6 +21,29 @@ export interface Notification {
   updatedAt: string;
 }
 
+export interface Department {
+  name: string;
+}
+
+export interface Grade {
+  gradeLevel: number;
+}
+
+export interface Class {
+  id: string;
+  name: string;
+  grade: number;
+}
+
+export interface CreateManualNotificationData {
+  title: string;
+  content: string;
+  scopeType?: string;
+  department?: string;
+  grade?: string;
+  selectedClass?: string;
+}
+
 import api from "./api.config";
 
 export const getNotifications = async ({
@@ -64,6 +87,51 @@ export const markAllNotificationsAsRead = async (token: string) => {
   const res = await api.patch(
     `api/notifications/read-all`,
     {},
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return res.data;
+};
+
+// Manual Notification APIs
+export const createManualNotification = async (
+  data: CreateManualNotificationData,
+  token: string
+) => {
+  const res = await api.post(
+    `api/notifications/create-manual`,
+    data,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return res.data;
+};
+
+export const getDepartments = async (token: string) => {
+  const res = await api.get(
+    `api/notifications/departments`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return res.data;
+};
+
+export const getGrades = async (token: string) => {
+  const res = await api.get(
+    `api/notifications/grades`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return res.data;
+};
+
+export const getClasses = async (token: string) => {
+  const res = await api.get(
+    `api/notifications/classes`,
     {
       headers: { Authorization: `Bearer ${token}` },
     }

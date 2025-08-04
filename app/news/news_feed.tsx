@@ -224,7 +224,7 @@ export default function NewsFeedScreen() {
               onPress={() => setShowMenu(!showMenu)}
               style={{ padding: 6 }}
             >
-              <MaterialIcons name="menu" size={28} color="#29375C" />
+              <MaterialIcons name="menu" size={responsiveValues.iconSize.xxxxl} color="#29375C" />
             </TouchableOpacity>
             {showMenu && (
               <View style={styles.menuPopup}>
@@ -237,7 +237,7 @@ export default function NewsFeedScreen() {
                 >
                   <MaterialIcons
                     name="add-circle-outline"
-                    size={20}
+                    size={responsiveValues.iconSize.xl}
                     color="#fff"
                   />
                   <Text style={styles.menuItemText}>Thêm tin tức</Text>
@@ -249,7 +249,7 @@ export default function NewsFeedScreen() {
                     router.push("/news/manage_news");
                   }}
                 >
-                  <MaterialIcons name="settings" size={20} color="#fff" />
+                  <MaterialIcons name="settings" size={responsiveValues.iconSize.xl} color="#fff" />
                   <Text style={styles.menuItemText}>Quản lý tin tức</Text>
                 </TouchableOpacity>
               </View>
@@ -701,7 +701,7 @@ const styles = StyleSheet.create({
   },
   menuPopup: {
     position: "absolute",
-    top: responsiveValues.padding.xl,
+    top: responsiveValues.padding.xxxl + 10, // Thêm khoảng cách để menu hiển thị bên dưới icon
     right: responsiveValues.padding.sm,
     backgroundColor: "#29375C",
     borderRadius: responsiveValues.borderRadius.md,
@@ -715,15 +715,15 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   menuItem: {
-    padding: responsiveValues.padding.sm,
+    padding: responsiveValues.padding.xs,
     borderRadius: responsiveValues.borderRadius.sm,
     flexDirection: "row",
     alignItems: "center",
   },
   menuItemText: {
     color: "#fff",
-    fontSize: responsiveValues.fontSize.sm,
+    fontSize: responsiveValues.fontSize.xs,
     fontWeight: "500",
-    marginLeft: responsiveValues.padding.sm,
+    marginLeft: responsiveValues.padding.xs,
   },
 });
