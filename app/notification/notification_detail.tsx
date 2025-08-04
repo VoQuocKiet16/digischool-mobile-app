@@ -12,7 +12,7 @@ import {
 import { WebView } from "react-native-webview";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import { approveOrRejectRequest } from "../../services/approve_reject.service";
-import { responsive, responsiveValues, fonts } from "../../utils/responsive";
+import { fonts } from "../../utils/responsive";
 
 function timeAgo(dateString: string): string {
   const now = new Date();
@@ -49,7 +49,34 @@ export default function NotificationDetailScreen() {
   const relatedObjectStatus = relatedObject?.status || params.relatedObject_status;
 
   const [loading, setLoading] = React.useState(false);
+  const [currentUserRole, setCurrentUserRole] = React.useState<string[]>([]);
   const slideAnim = React.useRef(new Animated.Value(100)).current; // Initial position off-screen
+
+  // Lấy role của người dùng hiện tại
+  React.useEffect(() => {
+    const getUserRole = async () => {
+      try {
+        const userRoleInfo = await AsyncStorage.getItem("userRoleInfo");
+        if (userRoleInfo) {
+          const parsedRoleInfo = JSON.parse(userRoleInfo);
+          const userRole = parsedRoleInfo?.role || [];
+          setCurrentUserRole(userRole);
+        }
+      } catch (error) {
+        alert("Lỗi khi lấy role người dùng: " + (error as Error).message);
+      }
+    };
+    getUserRole();
+  }, []);
+
+  // Kiểm tra xem có phải role quản lý không
+  const isManager = currentUserRole.includes("manager") || currentUserRole.includes("admin");
+  
+  // Kiểm tra xem có phải request type cần ẩn modal không
+  const shouldHideForManager = isManager && (
+    relatedObjectRequestType === "substitute_request" || 
+    relatedObjectRequestType === "swap_request"
+  );
 
   const showActionBar = [
     "substitute_request",
@@ -60,7 +87,8 @@ export default function NotificationDetailScreen() {
   ].includes(relatedObjectRequestType as string)
     && relatedObjectStatus !== "approved"
     && relatedObjectStatus !== "rejected"
-    && relatedObjectStatus !== "cancelled";
+    && relatedObjectStatus !== "cancelled"
+    && !shouldHideForManager;
 
   React.useEffect(() => {
     if (showActionBar) {

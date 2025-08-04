@@ -236,7 +236,7 @@ export default function MakeupSchedule() {
       const lessonTo = {
         _id: slot._id,
         period: slot.period,
-        subject: slot.subject,
+        subject: slot.subject?.subjectName || slot.subject?.name || "",
         text: slot.text,
         fixedInfo: slot.fixedInfo,
         scheduledDate: slot.scheduledDate,
@@ -324,8 +324,6 @@ export default function MakeupSchedule() {
               text:
                 lesson.type === "empty"
                   ? "Trống"
-                  : lesson.topic
-                  ? lesson.topic
                   : lesson.subject?.subjectName || lesson.subject?.name || "",
               type: lesson.type || "default",
               lessonId: lesson.lessonId || lesson._id || "",
