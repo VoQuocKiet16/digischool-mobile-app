@@ -300,16 +300,16 @@ export default function NotificationCreateScreen() {
         <View style={styles.fieldWrap}>
           <View style={styles.outlineInputBox}>
             <Text style={styles.floatingLabel}>
-              Tiêu đề <Text style={styles.required}>*</Text>
-            </Text>
-            <TextInput
+            Tiêu đề <Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
               style={styles.inputTextOutline}
               placeholder="Nhập tiêu đề thông báo"
               placeholderTextColor="#9CA3AF"
-              value={title}
-              onChangeText={setTitle}
-            />
-          </View>
+            value={title}
+            onChangeText={setTitle}
+          />
+        </View>
         </View>
 
         {/* Phạm vi thông báo */}
@@ -318,8 +318,8 @@ export default function NotificationCreateScreen() {
           <View style={styles.fieldWrap}>
             <View style={styles.outlineInputBox}>
               <Text style={styles.floatingLabel}>
-                Phạm vi thông báo <Text style={styles.required}>*</Text>
-              </Text>
+            Phạm vi thông báo <Text style={styles.required}>*</Text>
+          </Text>
               <Text style={styles.teacherScopeText}>Lớp đảm nhiệm</Text>
             </View>
           </View>
@@ -716,11 +716,11 @@ export default function NotificationCreateScreen() {
                   }}
                 >
                   Xem trước nội dung
-                </Text>
+          </Text>
                 <TouchableOpacity onPress={() => setPreviewVisible(false)}>
                   <MaterialIcons name="close" size={24} color="#29375C" />
                 </TouchableOpacity>
-              </View>
+        </View>
               <WebView
                 originWhitelist={["*"]}
                 source={{
@@ -728,8 +728,8 @@ export default function NotificationCreateScreen() {
                 }}
                 style={{ flex: 1 }}
                 showsVerticalScrollIndicator={true}
-              />
-            </View>
+          />
+        </View>
           </View>
         </Modal>
 

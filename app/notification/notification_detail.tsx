@@ -172,7 +172,7 @@ export default function NotificationDetailScreen() {
         />
         {senderName ? (
           <Text style={styles.sender}>
-            {senderRole.includes("student") ? "[HS]" : senderRole.includes("teacher") ? "[GV]" : "[AD]"} {senderName}{" "}
+            {senderRole.includes("student") ? "[HS]" : senderRole.includes("teacher") ? "[GV]" : "[QL]"} {senderName}{" "}
           </Text>
         ) : null}
         {createdAt ? (
