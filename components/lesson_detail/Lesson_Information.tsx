@@ -957,7 +957,7 @@ const styles = StyleSheet.create({
   },
   statusTextOrange: {
     color: "#fff",
-    fontSize: 18,
+    fontSize: 16,
     marginTop: 5,
     fontFamily: fonts.medium,
   },

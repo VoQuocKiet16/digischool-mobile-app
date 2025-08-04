@@ -50,6 +50,12 @@ const LessonDetailScreen = () => {
     );
   };
 
+  const hasPendingLeaveRequest = () => {
+    return lessonData?.teacherLeaveRequests?.some((request: TeacherLeaveRequest) => 
+      request.status === "pending"
+    );
+  };
+
   useEffect(() => {
     if (lessonId) {
       fetchLessonDetail();
@@ -325,18 +331,18 @@ const LessonDetailScreen = () => {
                 {
                   flexDirection: "row",
                   alignItems: "center",
-                  opacity: (pendingRequest || lessonData?.status === "completed") ? 0.5 : 1,
+                  opacity: (pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()) ? 0.5 : 1,
                 },
               ]}
               onPress={() => {
-                if (pendingRequest || lessonData?.status === "completed") return;
+                if (pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()) return;
                 setMenuVisible(false);
                 router.push({
                   pathname: "/teachers/lesson_request/substitute_request",
                   params: { lessonId: lessonId },
                 });
               }}
-              disabled={!!pendingRequest || lessonData?.status === "completed"}
+              disabled={!!pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()}
             >
               <MaterialIcons name="swap-horiz" size={20} color="#fff" />
               <Text style={[styles.menuText, { marginLeft: 8 }]}>
@@ -349,11 +355,11 @@ const LessonDetailScreen = () => {
                 {
                   flexDirection: "row",
                   alignItems: "center",
-                  opacity: (pendingRequest || lessonData?.status === "completed") ? 0.5 : 1,
+                  opacity: (pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()) ? 0.5 : 1,
                 },
               ]}
               onPress={() => {
-                if (pendingRequest || lessonData?.status === "completed") return;
+                if (pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()) return;
                 setMenuVisible(false);
                 router.push({
                   pathname: "/teachers/lesson_request/swap_schedule",
@@ -366,7 +372,7 @@ const LessonDetailScreen = () => {
                   },
                 });
               }}
-              disabled={!!pendingRequest || lessonData?.status === "completed"}
+              disabled={!!pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()}
             >
               <MaterialIcons name="compare-arrows" size={20} color="#fff" />
               <Text style={[styles.menuText, { marginLeft: 8 }]}>
@@ -379,11 +385,11 @@ const LessonDetailScreen = () => {
                 {
                   flexDirection: "row",
                   alignItems: "center",
-                  opacity: (pendingRequest || lessonData?.status === "completed") ? 0.5 : 1,
+                  opacity: (pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()) ? 0.5 : 1,
                 },
               ]}
               onPress={() => {
-                if (pendingRequest || lessonData?.status === "completed") return;
+                if (pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()) return;
                 setMenuVisible(false);
                 router.push({
                   pathname: "/teachers/lesson_request/makeup_schedule",
@@ -395,7 +401,7 @@ const LessonDetailScreen = () => {
                   },
                 });
               }}
-              disabled={!!pendingRequest || lessonData?.status === "completed"}
+              disabled={!!pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()}
             >
               <MaterialIcons name="event-available" size={20} color="#fff" />
               <Text style={[styles.menuText, { marginLeft: 8 }]}>Dạy bù</Text>

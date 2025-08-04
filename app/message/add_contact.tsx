@@ -69,7 +69,7 @@ export default function AddContactScreen() {
           <View style={styles.fieldWrap}>
             <View style={styles.outlineInputBox}>
               <Text style={styles.floatingLabel}>
-                Tên người dùng 
+                Thông tin tìm kkiếm
               </Text>
               <TextInput
                 style={styles.inputTextOutline}
@@ -99,6 +99,15 @@ export default function AddContactScreen() {
         {searchResult.length > 0 && (
           <Animated.View style={[styles.listWrapper, { transform: [{ translateY: slideAnim }] }]}>
             <Text style={styles.listTitle}>Tài khoản tồn tại</Text>
+            
+            {/* Tooltip thông báo giới hạn kết quả */}
+            <View style={styles.tooltipContainer}>
+              <Ionicons name="information-circle-outline" size={16} color="#FFD700" style={styles.tooltipIcon} />
+              <Text style={styles.tooltipText}>
+                Hiển thị tối đa 20 kết quả. Tìm kiếm chi tiết hơn để có kết quả chính xác.
+              </Text>
+            </View>
+            
             <FlatList
               data={searchResult}
               keyExtractor={(item) => item.id}
@@ -197,12 +206,13 @@ const styles = StyleSheet.create({
     marginTop: 32,
     paddingHorizontal: 0,
     paddingTop: 24,
+    paddingBottom: 250,
   },
   listTitle: {
     color: "#fff",
-    fontSize: 22,
-    fontWeight: "bold",
-    marginLeft: 24,
+    fontSize: 24,
+    fontFamily: fonts.semiBold,
+    textAlign: "center",
     marginBottom: 18,
   },
   accountRow: {
@@ -224,8 +234,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   name: {
-    fontWeight: "bold",
-    fontSize: 17,
+    fontFamily: fonts.semiBold,
+    fontSize: 20,
     color: "#fff",
     marginBottom: 2,
   },
@@ -233,6 +243,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#fff",
     opacity: 0.7,
+    fontFamily: fonts.regular,
   },
   chatIcon: {
     marginLeft: 12,
@@ -272,5 +283,27 @@ const styles = StyleSheet.create({
     marginTop: 4,
     paddingVertical: 0,
     height: 44,
+  },
+  tooltipContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 215, 0, 0.1)",
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 215, 0, 0.3)",
+  },
+  tooltipIcon: {
+    marginRight: 8,
+  },
+  tooltipText: {
+    flex: 1,
+    color: "#FFD700",
+    fontSize: 13,
+    fontFamily: fonts.medium,
+    lineHeight: 18,
   },
 });
