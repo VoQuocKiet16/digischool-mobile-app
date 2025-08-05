@@ -205,6 +205,21 @@ export interface FeedbackStats {
   averageRating: number;
 }
 
+export interface ImportAccountsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    success: any[];
+    failed: any[];
+    total: number;
+  };
+}
+
+export interface ImportAccountsData {
+  file: any; // File object
+  accountType: 'student' | 'teacher' | 'parent';
+}
+
 class ManageService {
   /**
    * Lấy dữ liệu điểm danh giáo viên theo ngày
@@ -583,6 +598,84 @@ class ManageService {
       return response.data.data;
     } catch (error) {
       console.error('Lỗi khi lấy chi tiết feedback:', error);
+      throw error;
+    }
+  }
+
+  async importStudentsFromExcel(data: ImportAccountsData): Promise<ImportAccountsResponse> {
+    try {
+      const formData = new FormData();
+      formData.append('file', data.file);
+      
+      const response = await api.post('api/users/import-students', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  }
+
+  async importTeachersFromExcel(data: ImportAccountsData): Promise<ImportAccountsResponse> {
+    try {
+      const formData = new FormData();
+      formData.append('file', data.file);
+      
+      const response = await api.post('api/users/import-teachers', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  }
+
+  async importParentsFromExcel(data: ImportAccountsData): Promise<ImportAccountsResponse> {
+    try {
+      const formData = new FormData();
+      formData.append('file', data.file);
+      
+      const response = await api.post('api/users/import-parents', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  }
+
+  async createStudent(studentData: any): Promise<any> {
+    try {
+      const response = await api.post('api/users/create-student', studentData);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  }
+
+  async createTeacher(teacherData: any): Promise<any> {
+    try {
+      const response = await api.post('api/users/create-teacher', teacherData);
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  }
+
+  async createParent(parentData: any): Promise<any> {
+    try {
+      const response = await api.post('api/users/create-parent', parentData);
+      return response.data;
+    } catch (error: any) {
       throw error;
     }
   }
