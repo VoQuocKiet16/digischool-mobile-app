@@ -470,8 +470,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
           (role === "teacher" ? (
             <TouchableOpacity
               style={[
-                styles.statusRowOrangeWrap,
-                hasApprovedLeaveRequest() && { opacity: 0.5 }
+                hasApprovedLeaveRequest() ? styles.statusRowGreen : styles.statusRowOrangeWrap,
               ]}
               onPress={hasApprovedLeaveRequest() ? undefined : onCompletePress}
               activeOpacity={hasApprovedLeaveRequest() ? 1 : 0.7}

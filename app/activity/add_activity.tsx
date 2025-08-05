@@ -193,8 +193,8 @@ const AddActivityScreen = () => {
                 visible={showLoading}
                 text={
                   showSuccess
-                    ? "Thêm hoạt động thành công!"
-                    : "Đang thêm hoạt động..."
+                    ? "Thêm thành công"
+                    : "Đang thêm..."
                 }
                 success={showSuccess}
               />

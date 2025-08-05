@@ -77,7 +77,11 @@ function mapApiToTeacherScheduleData(apiData: any): {
         lesson.subject.subjectName
       }`;
       if (text) {
-        schedule[periodIndex][dayIndex] = { text, type: "default" };
+        schedule[periodIndex][dayIndex] = { 
+          text, 
+          type: "default",
+          status: lesson.status || "scheduled" // Thêm status từ API
+        };
         if (lesson._id) {
           lessonIds[periodIndex][dayIndex] = lesson._id;
         }
@@ -217,11 +221,23 @@ export default function TeacherLeaveRequestScreen() {
     }
   };
 
-  // Hiển thị dữ liệu theo session
-  const displayedData =
+  // Hiển thị dữ liệu theo session và lọc bỏ tiết completed
+  const displayedData: (Activity | null)[][] =
     session === "Buổi sáng"
-      ? scheduleData.slice(0, 5)
-      : scheduleData.slice(5, 10);
+      ? scheduleData.slice(0, 5).map(row => 
+          row.map(slot => 
+            slot && slot.status === "completed" 
+              ? null 
+              : slot
+          )
+        )
+      : scheduleData.slice(5, 10).map(row => 
+          row.map(slot => 
+            slot && slot.status === "completed" 
+              ? null 
+              : slot
+          )
+        );
   const periods = session === "Buổi sáng" ? morningPeriods : afternoonPeriods;
 
   return (

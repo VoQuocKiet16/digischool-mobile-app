@@ -67,6 +67,7 @@ export default function MessageBoxScreen() {
   const [isReady, setIsReady] = useState(false);
   const [myName, setMyName] = useState<string>('bạn');
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   // Lấy token và myId từ AsyncStorage nếu chưa có
   useEffect(() => {
@@ -219,6 +220,31 @@ export default function MessageBoxScreen() {
     };
   }, [myId]);
 
+  // Thêm useEffect để lắng nghe sự kiện bàn phím
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        setKeyboardVisible(true);
+        // Scroll xuống tin nhắn cuối cùng khi bàn phím xuất hiện
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setKeyboardVisible(false);
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener?.remove();
+      keyboardDidHideListener?.remove();
+    };
+  }, []);
+
   const handlePickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: 'images',
@@ -295,6 +321,10 @@ export default function MessageBoxScreen() {
             type: "image",
           });
           setSelectedImage(null);
+          // Scroll xuống tin nhắn cuối cùng sau khi gửi
+          setTimeout(() => {
+            flatListRef.current?.scrollToEnd({ animated: true });
+          }, 100);
         } else {
           Alert.alert("Lỗi gửi ảnh", uploadRes.message || "Không gửi được ảnh");
         }
@@ -340,6 +370,10 @@ export default function MessageBoxScreen() {
     });
     setInput("");
     setSending(false);
+    // Scroll xuống tin nhắn cuối cùng sau khi gửi
+    setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }, 100);
   };
 
   // Xác định id tin nhắn mới nhất của mình
@@ -495,7 +529,7 @@ export default function MessageBoxScreen() {
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={responsiveValues.padding.lg}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 10 : responsiveValues.padding.lg}
         >
           <View style={{ flex: 1, backgroundColor: "#29375C" }}>
             {/* Danh sách tin nhắn */}
@@ -549,12 +583,28 @@ export default function MessageBoxScreen() {
                       </>
                     );
                   }}
-                  contentContainerStyle={styles.listContent}
+                  contentContainerStyle={[
+                    styles.listContent,
+                    { paddingBottom: keyboardVisible ? responsiveValues.padding.xl : responsiveValues.padding.sm }
+                  ]}
                   showsVerticalScrollIndicator={false}
-                  onContentSizeChange={() =>
-                    flatListRef.current?.scrollToEnd({ animated: true })
-                  }
+                  onContentSizeChange={() => {
+                    // Chỉ scroll tự động khi không phải user đang scroll
+                    if (!keyboardVisible) {
+                      flatListRef.current?.scrollToEnd({ animated: true });
+                    }
+                  }}
+                  onLayout={() => {
+                    // Scroll xuống cuối khi layout thay đổi
+                    setTimeout(() => {
+                      flatListRef.current?.scrollToEnd({ animated: false });
+                    }, 100);
+                  }}
                   keyboardShouldPersistTaps="handled"
+                  maintainVisibleContentPosition={{
+                    minIndexForVisible: 0,
+                    autoscrollToTopThreshold: 10,
+                  }}
                 />
               )}
             </View>
@@ -615,6 +665,12 @@ export default function MessageBoxScreen() {
                     editable={!sending}
                     multiline={true}
                     blurOnSubmit={false}
+                    onFocus={() => {
+                      // Scroll xuống tin nhắn cuối cùng khi focus vào input
+                      setTimeout(() => {
+                        flatListRef.current?.scrollToEnd({ animated: true });
+                      }, 100);
+                    }}
                   />
                   <TouchableOpacity
                     style={styles.sendBtn}
@@ -722,6 +778,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: responsiveValues.borderRadius.xxxl,
     marginHorizontal: responsiveValues.padding.lg,
+    marginBottom: responsiveValues.padding.lg,
     paddingHorizontal: responsiveValues.padding.lg,
     paddingVertical: responsiveValues.padding.sm,
     shadowColor: "#29375C",

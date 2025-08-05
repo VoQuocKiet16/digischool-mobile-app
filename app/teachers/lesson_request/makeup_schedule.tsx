@@ -140,13 +140,13 @@ export default function MakeupSchedule() {
   // Ở đây mặc định là tiết 1
 
   // Filter dữ liệu để ẩn slot có subject trùng subject của lesson hiện tại (trừ slot hiện tại và slot đã dạy)
-  const filteredDisplayedData =
+  const filteredDisplayedData: (any | null)[][] =
     session === "Buổi sáng"
       ? scheduleData.slice(0, 5).map((row, periodIdx) =>
           row.map((slot, dayIdx) => {
             if (!slot) return null;
             if (slot._id && slot._id === lessonId) return slot; // slot hiện tại
-            if (slot.status === "completed") return slot; // slot đã dạy
+            if (slot.status === "completed") return null; // Ẩn slot đã dạy
             // Ẩn slot có subject trùng subject hiện tại
             if (
               slot.subject &&
@@ -173,7 +173,7 @@ export default function MakeupSchedule() {
           row.map((slot, dayIdx) => {
             if (!slot) return null;
             if (slot._id && slot._id === lessonId) return slot; // slot hiện tại
-            if (slot.status === "completed") return slot; // slot đã dạy
+            if (slot.status === "completed") return null; // Ẩn slot đã dạy
             // Ẩn slot có subject trùng subject hiện tại
             if (
               slot.subject &&
@@ -457,19 +457,6 @@ export default function MakeupSchedule() {
         </Modal>
         {/* Chú thích */}
         <View style={styles.legendRow}>
-          <View style={styles.legendItem}>
-            <View
-              style={[
-                styles.legendBox,
-                {
-                  borderColor: "#B6B6B6",
-                  borderStyle: "dashed",
-                  backgroundColor: "#fff",
-                },
-              ]}
-            />
-            <Text style={styles.legendText}>Đã được dạy</Text>
-          </View>
           <View style={styles.legendItem}>
             <View
               style={[

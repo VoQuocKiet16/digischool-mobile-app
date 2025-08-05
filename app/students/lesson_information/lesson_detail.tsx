@@ -1,13 +1,11 @@
 import HeaderLayout from "@/components/layout/HeaderLayout";
 import Lesson_Information from "@/components/lesson_detail/Lesson_Information";
+import MenuDropdown from "@/components/MenuDropdown";
 import RefreshableScrollView from "@/components/RefreshableScrollView";
-import { MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Modal,
-  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -16,10 +14,9 @@ import {
 import { getLessonDetail } from "../../../services/schedule.service";
 import { LessonData } from "../../../types/lesson.types";
 import { getLessonSubtitle } from "../../../utils/lessonSubtitle";
-import { fonts, responsiveValues } from "../../../utils/responsive";
+import { responsiveValues } from "../../../utils/responsive";
 
 const LessonDetailScreen = () => {
-  const [menuVisible, setMenuVisible] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [lessonData, setLessonData] = useState<LessonData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -27,8 +24,6 @@ const LessonDetailScreen = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
   const pollingRef = useRef<NodeJS.Timeout | number | null>(null);
-  const menuIconRef = useRef<View>(null);
-  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
 
   useEffect(() => {
     if (lessonId) {
@@ -87,6 +82,24 @@ const LessonDetailScreen = () => {
     setRefreshKey((k) => k + 1);
   };
 
+  const handleNotePress = () => {
+    router.push({
+      pathname: "/note/note",
+      params: {
+        lessonId: lessonData?._id,
+        lessonData: JSON.stringify(lessonData),
+      },
+    });
+  };
+
+  const menuItems = [
+    {
+      id: "note",
+      title: "Ghi chú",
+      onPress: handleNotePress,
+    },
+  ];
+
   if (loading) {
     return (
       <HeaderLayout
@@ -128,17 +141,12 @@ const LessonDetailScreen = () => {
       subtitle={getLessonSubtitle(lessonData)}
       onBack={() => router.back()}
       rightIcon={
-        <TouchableOpacity
-          ref={menuIconRef}
-          onPress={() => {
-            menuIconRef.current?.measureInWindow((x: number, y: number, width: number, height: number) => {
-              setMenuPosition({ x, y, width, height });
-              setMenuVisible(true);
-            });
-          }}
-        >
-          <MaterialIcons name="menu" size={responsiveValues.iconSize.xl} color="#29375C" />
-        </TouchableOpacity>
+        <MenuDropdown
+          items={menuItems}
+          anchorIcon="menu"
+          anchorIconSize={responsiveValues.iconSize.xl}
+          anchorIconColor="#29375C"
+        />
       }
     >
       <RefreshableScrollView
@@ -156,43 +164,6 @@ const LessonDetailScreen = () => {
           refreshKey={refreshKey}
         />
       </RefreshableScrollView>
-      <Modal
-        visible={menuVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setMenuVisible(false)}
-      >
-        <Pressable style={styles.overlay} onPress={() => setMenuVisible(false)}>
-          <View
-            style={[
-              styles.menuBox,
-              {
-                position: "absolute",
-                top: menuPosition.y + 0, // 40 là chiều cao menu, 4 là khoảng cách nhỏ
-                left: menuPosition.x + menuPosition.width - 110, // 110 là minWidth của menuBox
-                marginTop: 0,
-                marginRight: 0,
-              },
-            ]}
-          >
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                setMenuVisible(false);
-                router.push({
-                  pathname: "/note/note",
-                  params: {
-                    lessonId: lessonData?._id,
-                    lessonData: JSON.stringify(lessonData),
-                  },
-                });
-              }}
-            >
-              <Text style={styles.menuText}>Ghi chú</Text>
-            </TouchableOpacity>
-          </View>
-        </Pressable>
-      </Modal>
     </HeaderLayout>
   );
 };
@@ -233,29 +204,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "500",
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: "transparent",
-    justifyContent: "flex-start",
-    alignItems: "flex-end",
-    paddingTop: 48,
-    paddingRight: 12,
-  },
-  menuBox: {
-    backgroundColor: "#29375C",
-    borderRadius: 10,
-    padding: 5,
-    minWidth: 110,
-    // Xoá marginTop và marginRight để dùng position tuyệt đối
-  },
-  menuItem: {
-    padding: 5,
-  },
-  menuText: {
-    color: "#fff",
-    fontSize: 16,
-    fontFamily: fonts.medium,
   },
 });
 
