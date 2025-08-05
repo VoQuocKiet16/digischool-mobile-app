@@ -12,7 +12,6 @@ import {
   View,
 } from "react-native";
 import HeaderLayout from "../../../components/layout/HeaderLayout";
-// import DaySelector from "../../../components/schedule/DaySelector";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getStudentSchedule } from "../../../services/schedule.service";
@@ -45,7 +44,11 @@ function mapApiToScheduleData(apiData: any): {
     if (periodIndex >= 0 && periodIndex < 10) {
       let text = "";
       text = lesson.subject?.subjectName || "";
-      schedule[periodIndex][dayIndex] = { text, type: "default" };
+      schedule[periodIndex][dayIndex] = { 
+        text, 
+        type: "default",
+        status: lesson.status || "scheduled" // Thêm status từ API
+      };
       if (lesson._id) {
         lessonIds[periodIndex][dayIndex] = lesson._id;
       }
@@ -201,11 +204,23 @@ export default function LeaveRequestScreen() {
     }
   };
 
-  // Hiển thị dữ liệu theo session
-  const displayedData =
+  // Hiển thị dữ liệu theo session và lọc bỏ tiết completed
+  const displayedData: (Activity | null)[][] =
     session === "Buổi sáng"
-      ? scheduleData.slice(0, 5)
-      : scheduleData.slice(5, 10);
+      ? scheduleData.slice(0, 5).map(row => 
+          row.map(slot => 
+            slot && slot.status === "completed" 
+              ? null 
+              : slot
+          )
+        )
+      : scheduleData.slice(5, 10).map(row => 
+          row.map(slot => 
+            slot && slot.status === "completed" 
+              ? null 
+              : slot
+          )
+        );
   const periods = session === "Buổi sáng" ? morningPeriods : afternoonPeriods;
 
   return (

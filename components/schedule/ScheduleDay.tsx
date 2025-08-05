@@ -1,18 +1,18 @@
-import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    Modal,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    useWindowDimensions,
-    View,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  useWindowDimensions,
+  View,
 } from "react-native";
 import { Activity } from "../../app/students/schedule/schedule";
 import { useUserData } from "../../hooks/useUserData";
 import { fonts } from "../../utils/responsive";
+import MenuDropdown from "../MenuDropdown";
 import ScheduleSlot from "./ScheduleSlot";
 
 interface ScheduleDayProps {
@@ -29,7 +29,7 @@ interface ScheduleDayProps {
     activity: string,
     lessonId?: string
   ) => void;
-  scheduleData: Activity[][];
+  scheduleData: (Activity | null)[][];
   selectedSlots?: { row: number; col: number }[];
   onSelectSlot?: (dayIndex: number, periodIndex: number) => void;
   cellStatusData?: ("taught" | "current" | "exchangeable" | "default")[][];
@@ -94,16 +94,12 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
   const { width } = useWindowDimensions();
   const numCols = days.length + 1;
   const colWidth = width / numCols;
-  const [menuVisible, setMenuVisible] = useState(false);
   const { userData } = useUserData();
   const router = useRouter();
   const [dateInfoModalVisible, setDateInfoModalVisible] = useState(false);
   const [selectedDateInfo, setSelectedDateInfo] = useState("");
 
-  const toggleMenuVisibility = () => setMenuVisible(!menuVisible);
-
   const handleLeaveRequest = () => {
-    setMenuVisible(false);
     const role = userData?.roleInfo?.type;
     if (role === "teacher" || role === "homeroom_teacher") {
       router.push("/teachers/leave_request/leave_request");
@@ -111,10 +107,23 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
       router.push("/students/leave_request/leave_request");
     }
   };
+
   const handleExportSchedule = () => {
-    setMenuVisible(false);
     alert("Chức năng xuất TKB!");
   };
+
+  const menuItems = [
+    {
+      id: "export",
+      title: "Xuất TKB ra",
+      onPress: handleExportSchedule,
+    },
+    {
+      id: "leave",
+      title: "Xin phép nghỉ",
+      onPress: handleLeaveRequest,
+    },
+  ];
 
   return (
     <View style={styles.table}>
@@ -127,13 +136,13 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
           ]}
         >
           {showUtilityButton && (
-            <TouchableOpacity
-              style={styles.utilityButton}
-              onPress={toggleMenuVisibility}
-              activeOpacity={0.7}
-            >
-              <MaterialIcons name="arrow-drop-down" size={16} color="#fff" />
-            </TouchableOpacity>
+            <MenuDropdown
+              items={menuItems}
+              anchorIcon="arrow-drop-down"
+              anchorIconSize={16}
+              anchorIconColor="#fff"
+              anchorStyle={styles.utilityButton}
+            />
           )}
         </View>
         {/* Dải phân cách */}
@@ -172,46 +181,6 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
         ))}
       </View>
 
-      {/* Modal menu utilityButton */}
-      <Modal
-        transparent={true}
-        statusBarTranslucent={true}
-        visible={menuVisible}
-        animationType="fade"
-        onRequestClose={toggleMenuVisibility}
-      >
-        <TouchableWithoutFeedback onPress={toggleMenuVisibility}>
-          <View style={{ flex: 1 }}>
-            <View style={styles.menuContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.menuItem,
-                  { flexDirection: "row", alignItems: "center" },
-                ]}
-                onPress={handleExportSchedule}
-              >
-                <MaterialIcons name="file-download" size={20} color="#fff" />
-                <Text style={[styles.menuItemText, { marginLeft: 8 }]}>
-                  Xuất TKB ra
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.menuItem,
-                  { flexDirection: "row", alignItems: "center" },
-                ]}
-                onPress={handleLeaveRequest}
-              >
-                <MaterialIcons name="event-busy" size={20} color="#fff" />
-                <Text style={[styles.menuItemText, { marginLeft: 8 }]}>
-                  Xin phép nghỉ
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
-
       {/* Modal thông tin ngày */}
       <Modal
         visible={dateInfoModalVisible}
@@ -243,6 +212,17 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
               scheduleData[periodIndex] && scheduleData[periodIndex][dayIndex]
                 ? scheduleData[periodIndex][dayIndex]
                 : { text: "", type: "default", hasNotification: false };
+            
+            // Ẩn slot null (slot completed đã bị lọc)
+            if (slotData === null) {
+              return (
+                <View
+                  key={dayIndex}
+                  style={[styles.slotWrapper, { width: colWidth }]}
+                />
+              );
+            }
+            
             const isSelected = selectedSlots.some(
               (cell) => cell.row === periodIndex && cell.col === dayIndex
             );
@@ -368,27 +348,6 @@ const styles = StyleSheet.create({
   },
   sundayText: {
     color: "red",
-  },
-  menuContainer: {
-    position: "absolute",
-    top: 280,
-    left: 10,
-    backgroundColor: "#29375C",
-    borderRadius: 8,
-    width: 160,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  menuItem: {
-    padding: 15,
-  },
-  menuItemText: {
-    color: "#fff",
-    fontSize: 16,
-    fontFamily: fonts.medium,
   },
   periodText: {
     color: "#29375C",

@@ -1,8 +1,9 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { fonts } from "../../utils/responsive";
+import ConflictModal from "./ConflictModal";
 
 interface ScheduleSlotProps {
   text: string;
@@ -49,10 +50,17 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
   isSwapLesson = false,
 }) => {
   const router = useRouter();
+  const [showConflictModal, setShowConflictModal] = useState(false);
 
   const isEmpty = text === "Thêm" || !text;
 
   const handleAdd = () => {
+    // Xử lý slot có xung đột
+    if (type === "conflict" && slotData?.hasConflict) {
+      setShowConflictModal(true);
+      return;
+    }
+
     if (isEmpty && onAddActivity) {
       onAddActivity(dayIndex, periodIndex, text);
     } else if (!isEmpty && onSlotPress) {
@@ -85,13 +93,49 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
     }
   };
 
+  const handleViewLesson = () => {
+    setShowConflictModal(false);
+    if (slotData?.lessonId) {
+      // Chuyển đến chi tiết môn học
+      router.push({
+        pathname: "/students/lesson_information/lesson_detail",
+        params: { lessonId: slotData.lessonId },
+      });
+    }
+  };
+
+  const handleViewActivity = () => {
+    setShowConflictModal(false);
+    if (slotData?.activityData?.id) {
+      // Chuyển đến chi tiết hoạt động
+      router.push({
+        pathname: "/activity/detail_activity",
+        params: {
+          id: slotData.activityData.id,
+          title: slotData.activityText,
+          content: slotData.activityData.content,
+          time: slotData.activityData.time,
+          remindAt: slotData.activityData.remindAt,
+          date: slotData.activityData.date,
+          period: periodIndex + 1,
+        },
+      });
+    }
+  };
+
   let slotStyle = styles.filledSlot;
   let slotText = text;
   let textStyle = styles.filledSlotText;
   let showNotification = hasNotification;
 
+  // Slot có xung đột
+  if (type === "conflict") {
+    slotStyle = styles.conflictSlot;
+    textStyle = styles.conflictSlotText;
+    showNotification = true; // Luôn hiển thị notification cho slot xung đột
+  }
   // Slot hoạt động cá nhân
-  if (type === "user-activity") {
+  else if (type === "user-activity") {
     slotStyle = styles.userActivitySlot;
     textStyle = styles.userActivitySlotText;
   }
@@ -139,6 +183,16 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
           </View>
         )}
       </TouchableOpacity>
+
+      {/* Conflict Modal */}
+      <ConflictModal
+        visible={showConflictModal}
+        onClose={() => setShowConflictModal(false)}
+        onViewLesson={handleViewLesson}
+        onViewActivity={handleViewActivity}
+        lessonText={slotData?.lessonText || "Môn học"}
+        activityText={slotData?.activityText || "Hoạt động cá nhân"}
+      />
     </View>
   );
 };
@@ -361,12 +415,9 @@ const styles = StyleSheet.create({
     textAlignVertical: "center",
     fontFamily: fonts.semiBold,
   },
-  exchangeableSwapSlot: {
-    backgroundColor: "#F6F8FB", // xám nhạt hơn
+  conflictSlot: {
+    backgroundColor: "#F04438", // Màu đỏ cho xung đột
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#F9B233",
-    borderStyle: "dashed",
     paddingVertical: 12,
     paddingHorizontal: 10,
     width: "90%",
@@ -380,9 +431,8 @@ const styles = StyleSheet.create({
     shadowRadius: 2.22,
     elevation: 3,
   },
-  exchangeableSwapSlotText: {
-    color: "#29375C",
-    fontWeight: "bold",
+  conflictSlotText: {
+    color: "#fff",
     fontSize: 9,
     textAlign: "center",
     includeFontPadding: false,
