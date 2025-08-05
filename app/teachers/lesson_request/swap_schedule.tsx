@@ -16,6 +16,7 @@ import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getStudentSchedule } from "../../../services/schedule.service";
 import { fonts } from "../../../utils/responsive";
+import { Activity } from "../schedule/schedule";
 
 type PeriodCell = { row: number; col: number };
 
@@ -151,7 +152,7 @@ export default function SwapLesson() {
     Array.from({ length: 7 }, (___, dayIdx) => {
       const slot = scheduleData[periodIdx + periodOffset]?.[dayIdx];
       if (!slot) return "default";
-      if (slot.status === "completed") return "taught";
+      if (slot.status === "completed") return "default"; // Ẩn slot completed
       if (slot._id && slot._id === currentLessonId) return "current";
       // Chỉ cho phép chọn slot hợp lệ
       if (
@@ -241,10 +242,22 @@ export default function SwapLesson() {
     setShowWeekModal(false);
   };
 
-  const displayedData =
+  const displayedData: (Activity | null)[][] =
     session === "Buổi sáng"
-      ? scheduleData.slice(0, 5)
-      : scheduleData.slice(5, 10);
+      ? scheduleData.slice(0, 5).map(row => 
+          row.map(slot => 
+            slot && slot.status === "completed" 
+              ? null 
+              : slot
+          )
+        )
+      : scheduleData.slice(5, 10).map(row => 
+          row.map(slot => 
+            slot && slot.status === "completed" 
+              ? null 
+              : slot
+          )
+        );
 
   // Lọc selected cho tuần và session hiện tại
   const selectedSlots = selected.filter(
@@ -348,19 +361,6 @@ export default function SwapLesson() {
         </Modal>
         {/* Chú thích */}
         <View style={styles.legendRow}>
-          <View style={styles.legendItem}>
-            <View
-              style={[
-                styles.legendBox,
-                {
-                  borderColor: "#B6B6B6",
-                  borderStyle: "dashed",
-                  backgroundColor: "#fff",
-                },
-              ]}
-            />
-            <Text style={styles.legendText}>Đã được dạy</Text>
-          </View>
           <View style={styles.legendItem}>
             <View
               style={[

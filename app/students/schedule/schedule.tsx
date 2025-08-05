@@ -36,6 +36,7 @@ export interface Activity {
     id?: string;
   };
   hasConflict?: boolean;
+  status?: string; // Thêm status để xử lý completed
   [key: string]: any;
 }
 
@@ -108,6 +109,7 @@ function mapApiToScheduleData(apiData: any): {
         subject: lesson.subject,
         teacher: lesson.teacher,
         isMakeupLesson: lesson.isMakeupLesson || false, // Thêm flag để nhận diện tiết dạy bù
+        status: lesson.status || "scheduled", // Thêm status từ API
       };
       if (lesson._id) {
         lessonIds[periodIndex][dayIndex] = lesson._id;

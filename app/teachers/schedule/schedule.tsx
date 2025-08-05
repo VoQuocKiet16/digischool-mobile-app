@@ -36,6 +36,7 @@ export interface Activity {
     id?: string;
   };
   hasConflict?: boolean;
+  status?: string; // Thêm status để xử lý completed
   [key: string]: any;
 }
 
@@ -104,6 +105,7 @@ function mapApiToTeacherScheduleData(apiData: any): {
         schedule[periodIndex][dayIndex] = {
           text,
           type: "default",
+          status: lesson.status || "scheduled", // Thêm status từ API
         };
         if (lesson._id) {
           lessonIds[periodIndex][dayIndex] = lesson._id;

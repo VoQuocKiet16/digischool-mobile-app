@@ -2,13 +2,13 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    Modal,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    useWindowDimensions,
-    View,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  useWindowDimensions,
+  View,
 } from "react-native";
 import { Activity } from "../../app/students/schedule/schedule";
 import { useUserData } from "../../hooks/useUserData";
@@ -29,7 +29,7 @@ interface ScheduleDayProps {
     activity: string,
     lessonId?: string
   ) => void;
-  scheduleData: Activity[][];
+  scheduleData: (Activity | null)[][];
   selectedSlots?: { row: number; col: number }[];
   onSelectSlot?: (dayIndex: number, periodIndex: number) => void;
   cellStatusData?: ("taught" | "current" | "exchangeable" | "default")[][];
@@ -243,6 +243,17 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
               scheduleData[periodIndex] && scheduleData[periodIndex][dayIndex]
                 ? scheduleData[periodIndex][dayIndex]
                 : { text: "", type: "default", hasNotification: false };
+            
+            // Ẩn slot null (slot completed đã bị lọc)
+            if (slotData === null) {
+              return (
+                <View
+                  key={dayIndex}
+                  style={[styles.slotWrapper, { width: colWidth }]}
+                />
+              );
+            }
+            
             const isSelected = selectedSlots.some(
               (cell) => cell.row === periodIndex && cell.col === dayIndex
             );
