@@ -17,11 +17,25 @@ import { getTeacherSchedule } from "../../../services/schedule.service";
 
 export interface Activity {
   text: string;
-  type: "default" | "user-added" | "user-activity";
+  type: "default" | "user-added" | "user-activity" | "conflict";
   content?: string;
   time?: number;
   remindAt?: string;
   date?: string;
+  lessonId?: string;
+  subject?: any;
+  teacher?: any;
+  isMakeupLesson?: boolean;
+  lessonText?: string;
+  activityText?: string;
+  activityData?: {
+    content?: string;
+    time?: number;
+    remindAt?: string;
+    date?: string;
+    id?: string;
+  };
+  hasConflict?: boolean;
   [key: string]: any;
 }
 

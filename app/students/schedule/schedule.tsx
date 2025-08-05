@@ -17,11 +17,25 @@ import { getStudentSchedule } from "../../../services/schedule.service";
 
 export interface Activity {
   text: string;
-  type: "default" | "user-added" | "user-activity";
+  type: "default" | "user-added" | "user-activity" | "conflict";
   content?: string;
   time?: number;
   remindAt?: string;
   date?: string;
+  lessonId?: string;
+  subject?: any;
+  teacher?: any;
+  isMakeupLesson?: boolean;
+  lessonText?: string;
+  activityText?: string;
+  activityData?: {
+    content?: string;
+    time?: number;
+    remindAt?: string;
+    date?: string;
+    id?: string;
+  };
+  hasConflict?: boolean;
   [key: string]: any;
 }
 
@@ -78,6 +92,7 @@ function mapApiToScheduleData(apiData: any): {
   const academicYear = apiData?.data?.academicYear;
   const weekNumber = apiData?.data?.weeklySchedule?.weekNumber;
 
+  // Map môn học vào slot
   lessons.forEach((lesson: any) => {
     const dayNumber = lesson.dayNumber || 1; // 1-7 (Thứ 2 = 1, CN = 7)
     const dayIndex = dayNumber === 7 ? 6 : dayNumber - 1; // Chuyển về index 0-6
@@ -89,6 +104,10 @@ function mapApiToScheduleData(apiData: any): {
       schedule[periodIndex][dayIndex] = {
         text,
         type: "default",
+        lessonId: lesson._id,
+        subject: lesson.subject,
+        teacher: lesson.teacher,
+        isMakeupLesson: lesson.isMakeupLesson || false, // Thêm flag để nhận diện tiết dạy bù
       };
       if (lesson._id) {
         lessonIds[periodIndex][dayIndex] = lesson._id;
@@ -96,7 +115,7 @@ function mapApiToScheduleData(apiData: any): {
     }
   });
 
-  // Map các hoạt động cá nhân vào slot
+  // Map các hoạt động cá nhân vào slot và xử lý xung đột
   const activities = apiData?.data?.studentPersonalActivities || [];
   activities.forEach((activity: any) => {
     const date = new Date(activity.date);
@@ -106,15 +125,41 @@ function mapApiToScheduleData(apiData: any): {
     );
     const periodIndex = (activity.period || 1) - 1;
     if (periodIndex >= 0 && periodIndex < 10 && dayIndex >= 0 && dayIndex < 7) {
-      schedule[periodIndex][dayIndex] = {
-        text: activity.title,
-        type: "user-activity",
-        content: activity.content,
-        time: activity.time,
-        remindAt: activity.remindAt,
-        date: activity.date,
-        id: activity._id,
-      };
+      const existingSlot = schedule[periodIndex][dayIndex];
+      
+      // Kiểm tra xung đột: nếu slot đã có môn học
+      if (existingSlot && existingSlot.type === "default" && existingSlot.text) {
+        // Tạo slot xung đột với thông tin cả môn học và hoạt động
+        schedule[periodIndex][dayIndex] = {
+          text: `${existingSlot.text} + ${activity.title}`,
+          type: "conflict", // Loại slot mới để xử lý xung đột
+          lessonText: existingSlot.text,
+          activityText: activity.title,
+          lessonId: existingSlot.lessonId,
+          subject: existingSlot.subject,
+          teacher: existingSlot.teacher,
+          isMakeupLesson: existingSlot.isMakeupLesson,
+          activityData: {
+            content: activity.content,
+            time: activity.time,
+            remindAt: activity.remindAt,
+            date: activity.date,
+            id: activity._id,
+          },
+          hasConflict: true, // Flag để UI biết có xung đột
+        };
+      } else {
+        // Không có xung đột, thêm hoạt động bình thường
+        schedule[periodIndex][dayIndex] = {
+          text: activity.title,
+          type: "user-activity",
+          content: activity.content,
+          time: activity.time,
+          remindAt: activity.remindAt,
+          date: activity.date,
+          id: activity._id,
+        };
+      }
     }
   });
 
