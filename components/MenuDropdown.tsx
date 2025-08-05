@@ -90,7 +90,7 @@ export default function MenuDropdown({
             shadowOpacity: 0.25,
             shadowRadius: 4,
             elevation: 5,
-            minWidth: 200,
+            minWidth: 120,
             maxWidth: 300,
           }
         }}>
@@ -130,8 +130,8 @@ const styles = StyleSheet.create({
   },
   menuItemText: {
     color: '#fff',
-    fontSize: responsiveValues.fontSize.sm,
-    fontFamily: 'Inter-Medium',
+    fontSize: responsiveValues.fontSize.lg,
+    fontFamily: 'Baloo2-Medium',
   },
   divider: {
     height: 1,
