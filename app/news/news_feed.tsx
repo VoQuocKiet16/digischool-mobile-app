@@ -30,7 +30,11 @@ export default function NewsFeedScreen() {
   const [tab, setTab] = useState<"news" | "favorite">("news");
   const [selectedSubject, setSelectedSubject] = useState("all");
   const [newsList, setNewsList] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [subjectsLoading, setSubjectsLoading] = useState(true);
+  const [hasInitialized, setHasInitialized] = useState(false);
+  const [currentFilter, setCurrentFilter] = useState({ tab: "news", subject: "all" }); // Track filter hiện tại
   const [error, setError] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const router = useRouter();
@@ -64,6 +68,7 @@ export default function NewsFeedScreen() {
   useEffect(() => {
     // Lấy danh sách môn học từ API
     const fetchSubjects = async () => {
+      setSubjectsLoading(true); // Bắt đầu loading subjects
       const res = await getAllSubjects();
       if (res.success && res.data?.subjects) {
         // Map subjectName sang icon
@@ -97,48 +102,95 @@ export default function NewsFeedScreen() {
           ...mapped,
         ]);
       }
+      setSubjectsLoading(false); // Kết thúc loading subjects
     };
     fetchSubjects();
   }, []);
 
-  // Khi chọn subject, gọi API filter
+  // Load tin tức ban đầu
   useEffect(() => {
+    const fetchInitialNews = async () => {
+      setInitialLoading(true);
+      setError(null);
+      const res = await getAllNews();
+      if (res.success) {
+        setNewsList(res.data || []);
+      } else {
+        setError(res.message || "Lỗi không xác định");
+      }
+      setInitialLoading(false);
+      setHasInitialized(true);
+    };
+    fetchInitialNews();
+  }, []);
+
+  // Khi chọn subject hoặc tab, gọi API filter
+  useEffect(() => {
+    // Chỉ chạy khi đã khởi tạo xong
+    if (!hasInitialized) return;
+    
+    // Kiểm tra xem filter có thay đổi không
+    if (currentFilter.tab === tab && currentFilter.subject === selectedSubject) return;
+    
+    // Cập nhật filter hiện tại
+    setCurrentFilter({ tab, subject: selectedSubject });
+    
     const fetchNews = async () => {
       setLoading(true);
       setError(null);
+      
       if (tab === "favorite") {
+        // Tab yêu thích: lấy tất cả tin yêu thích và filter theo subject ở client-side
         const res = await getFavoriteNews();
         if (res.success) {
-          setNewsList(res.data || []);
-        } else {
-          setError(res.message || "Lỗi không xác định");
-        }
-      } else if (selectedSubject === "all") {
-        const res = await getAllNews();
-        if (res.success) {
-          setNewsList(res.data || []);
+          let filteredData = res.data || [];
+          
+          // Filter theo subject nếu không phải "all"
+          if (selectedSubject !== "all") {
+            const subjectObj = subjects.find(
+              (s) => s.key === selectedSubject || s.id === selectedSubject
+            );
+            if (subjectObj?.id) {
+              filteredData = filteredData.filter((news: any) => 
+                news.subject === subjectObj.id || news.subject === subjectObj.key
+              );
+            }
+          }
+          
+          setNewsList(filteredData);
         } else {
           setError(res.message || "Lỗi không xác định");
         }
       } else {
-        const subjectObj = subjects.find(
-          (s) => s.key === selectedSubject || s.id === selectedSubject
-        );
-        if (subjectObj?.id) {
-          const res = await getNewsBySubject(subjectObj.id);
+        // Tab tin tức: gọi API theo subject
+        if (selectedSubject === "all") {
+          const res = await getAllNews();
           if (res.success) {
             setNewsList(res.data || []);
           } else {
             setError(res.message || "Lỗi không xác định");
           }
         } else {
-          setNewsList([]);
+          const subjectObj = subjects.find(
+            (s) => s.key === selectedSubject || s.id === selectedSubject
+          );
+          if (subjectObj?.id) {
+            const res = await getNewsBySubject(subjectObj.id);
+            if (res.success) {
+              setNewsList(res.data || []);
+            } else {
+              setError(res.message || "Lỗi không xác định");
+            }
+          } else {
+            setNewsList([]);
+          }
         }
       }
+      
       setLoading(false);
     };
     fetchNews();
-  }, [selectedSubject, tab, subjects]);
+  }, [selectedSubject, tab, subjects, hasInitialized, currentFilter]);
 
   const [showMenu, setShowMenu] = useState(false);
 
@@ -247,7 +299,7 @@ export default function NewsFeedScreen() {
       </View>
 
       {/* Subject filter */}
-      {loading ? (
+      {subjectsLoading ? (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -323,7 +375,7 @@ export default function NewsFeedScreen() {
       )}
 
       {/* News list */}
-      {loading ? (
+      {initialLoading ? (
         <View style={{ flexDirection: "row", marginTop: 40 }}>
           {[1, 2, 3].map((_, idx) => (
             <View
@@ -331,6 +383,51 @@ export default function NewsFeedScreen() {
               style={{
                 width: 320,
                 height: 430,
+                backgroundColor: "#E6E9F0",
+                borderRadius: 28,
+                marginRight: 20,
+                marginBottom: 120,
+                padding: 24,
+                justifyContent: "flex-end",
+              }}
+            >
+              <View
+                style={{
+                  width: 120,
+                  height: 24,
+                  backgroundColor: "#D1D5DB",
+                  borderRadius: 8,
+                  marginBottom: 16,
+                }}
+              />
+              <View
+                style={{
+                  width: 80,
+                  height: 18,
+                  backgroundColor: "#D1D5DB",
+                  borderRadius: 8,
+                  marginBottom: 8,
+                }}
+              />
+              <View
+                style={{
+                  width: 60,
+                  height: 18,
+                  backgroundColor: "#D1D5DB",
+                  borderRadius: 8,
+                }}
+              />
+            </View>
+          ))}
+        </View>
+      ) : loading ? (
+        <View style={{ flexDirection: "row", marginTop: 40 }}>
+          {[1, 2, 3].map((_, idx) => (
+            <View
+              key={idx}
+              style={{
+                width: 320,
+                height: 360,
                 backgroundColor: "#E6E9F0",
                 borderRadius: 28,
                 marginRight: 20,
