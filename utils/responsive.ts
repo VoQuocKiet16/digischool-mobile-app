@@ -83,6 +83,7 @@ export const responsive = {
 export const responsiveValues = {
   // Spacing
   padding: {
+    s: responsive.spacing(-50),
     xs: responsive.spacing(4),
     sm: responsive.spacing(8),
     md: responsive.spacing(16),

@@ -1,13 +1,13 @@
 import HeaderLayout from "@/components/layout/HeaderLayout";
 import Lesson_Information from "@/components/lesson_detail/Lesson_Information";
+import MenuDropdown from "@/components/MenuDropdown";
 import ConfirmTeachedModal from "@/components/notifications_modal/ConfirmTeachedModal";
 import PlusIcon from "@/components/PlusIcon";
 import RefreshableScrollView from "@/components/RefreshableScrollView";
 import { fonts, responsive, responsiveValues } from "@/utils/responsive";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -26,7 +26,6 @@ import { LessonData, TeacherLeaveRequest } from "../../../types/lesson.types";
 import { getLessonSubtitle } from "../../../utils/lessonSubtitle";
 
 const LessonDetailScreen = () => {
-  const [menuVisible, setMenuVisible] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [lessonData, setLessonData] = useState<LessonData | null>(null);
@@ -40,8 +39,6 @@ const LessonDetailScreen = () => {
     statusText: string;
   } | null>(null);
   const isFocused = useIsFocused();
-  const menuIconRef = useRef<View>(null);
-  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
 
   // Kiểm tra có được approved nghỉ phép không
   const hasApprovedLeaveRequest = () => {
@@ -55,6 +52,70 @@ const LessonDetailScreen = () => {
       request.status === "pending"
     );
   };
+
+  // Menu items cho lesson detail
+  const lessonMenuItems = [
+    {
+      id: 'substitute',
+      title: 'Dạy thay',
+      onPress: () => {
+        if (pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()) return;
+        router.push({
+          pathname: "/teachers/lesson_request/substitute_request",
+          params: { lessonId: lessonId },
+        });
+      },
+      disabled: !!pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest(),
+    },
+    {
+      id: 'swap',
+      title: 'Đổi tiết',
+      onPress: () => {
+        if (pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()) return;
+        router.push({
+          pathname: "/teachers/lesson_request/swap_schedule",
+          params: {
+            lessonId: lessonId,
+            className: lessonData?.class?.className,
+            lessonFrom: JSON.stringify(lessonData),
+            lessonDate: lessonData?.scheduledDate,
+            lessonYear: lessonData?.academicYear?.name || "2025-2026",
+          },
+        });
+      },
+      disabled: !!pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest(),
+    },
+    {
+      id: 'makeup',
+      title: 'Dạy bù',
+      onPress: () => {
+        if (pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()) return;
+        router.push({
+          pathname: "/teachers/lesson_request/makeup_schedule",
+          params: {
+            lessonId: lessonId,
+            className: lessonData?.class?.className,
+            lessonDate: lessonData?.scheduledDate,
+            lessonYear: lessonData?.academicYear?.name || "2025-2026",
+          },
+        });
+      },
+      disabled: !!pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest(),
+    },
+    {
+      id: 'note',
+      title: 'Ghi chú',
+      onPress: () => {
+        router.push({
+          pathname: "/note/note",
+          params: {
+            lessonId: lessonId,
+            lessonData: JSON.stringify(lessonData),
+          },
+        });
+      },
+    },
+  ];
 
   useEffect(() => {
     if (lessonId) {
@@ -235,17 +296,14 @@ const LessonDetailScreen = () => {
       subtitle={getLessonSubtitle(lessonData)}
       onBack={() => router.back()}
       rightIcon={
-        <TouchableOpacity
-          ref={menuIconRef}
-          onPress={() => {
-            menuIconRef.current?.measureInWindow((x: number, y: number, width: number, height: number) => {
-              setMenuPosition({ x, y, width, height });
-              setMenuVisible(true);
-            });
-          }}
-        >
-          <Ionicons name="menu" size={responsiveValues.iconSize.xxl} color="#29375C" />
-        </TouchableOpacity>
+        <MenuDropdown
+          items={lessonMenuItems}
+          anchorText=""
+          anchorIcon="menu"
+          anchorIconSize={responsiveValues.iconSize.xxxxl}
+          anchorIconColor="#29375C"
+          anchorStyle={{ padding: 8 }}
+        />
       }
     >
       <RefreshableScrollView
@@ -306,130 +364,6 @@ const LessonDetailScreen = () => {
         iconColor="#fff"
         iconBgColor="#29375C"
       />
-     {menuVisible && (
-        <View style={styles.overlay}>
-          <TouchableOpacity
-            style={StyleSheet.absoluteFill}
-            onPress={() => setMenuVisible(false)}
-            activeOpacity={1}
-          />
-          <View
-            style={[
-              styles.menuBox,
-              {
-                position: "absolute",
-                top: menuPosition.y + menuPosition.height,
-                left: menuPosition.x + menuPosition.width - 140,
-                marginTop: 0,
-                marginRight: 0,
-              },
-            ]}
-          >
-            <TouchableOpacity
-              style={[
-                styles.menuItem,
-                {
-                  flexDirection: "row",
-                  alignItems: "center",
-                  opacity: (pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()) ? 0.5 : 1,
-                },
-              ]}
-              onPress={() => {
-                if (pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()) return;
-                setMenuVisible(false);
-                router.push({
-                  pathname: "/teachers/lesson_request/substitute_request",
-                  params: { lessonId: lessonId },
-                });
-              }}
-              disabled={!!pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()}
-            >
-              <MaterialIcons name="swap-horiz" size={20} color="#fff" />
-              <Text style={[styles.menuText, { marginLeft: 8 }]}>
-                Dạy thay
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.menuItem,
-                {
-                  flexDirection: "row",
-                  alignItems: "center",
-                  opacity: (pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()) ? 0.5 : 1,
-                },
-              ]}
-              onPress={() => {
-                if (pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()) return;
-                setMenuVisible(false);
-                router.push({
-                  pathname: "/teachers/lesson_request/swap_schedule",
-                  params: {
-                    lessonId: lessonId,
-                    className: lessonData?.class?.className,
-                    lessonFrom: JSON.stringify(lessonData),
-                    lessonDate: lessonData?.scheduledDate,
-                    lessonYear: lessonData?.academicYear?.name || "2025-2026",
-                  },
-                });
-              }}
-              disabled={!!pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()}
-            >
-              <MaterialIcons name="compare-arrows" size={20} color="#fff" />
-              <Text style={[styles.menuText, { marginLeft: 8 }]}>
-                Đổi tiết
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.menuItem,
-                {
-                  flexDirection: "row",
-                  alignItems: "center",
-                  opacity: (pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()) ? 0.5 : 1,
-                },
-              ]}
-              onPress={() => {
-                if (pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()) return;
-                setMenuVisible(false);
-                router.push({
-                  pathname: "/teachers/lesson_request/makeup_schedule",
-                  params: {
-                    lessonId: lessonId,
-                    className: lessonData?.class?.className,
-                    lessonDate: lessonData?.scheduledDate,
-                    lessonYear: lessonData?.academicYear?.name || "2025-2026",
-                  },
-                });
-              }}
-              disabled={!!pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()}
-            >
-              <MaterialIcons name="event-available" size={20} color="#fff" />
-              <Text style={[styles.menuText, { marginLeft: 8 }]}>Dạy bù</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.menuItem,
-                { flexDirection: "row", alignItems: "center" },
-              ]}
-              onPress={() => {
-                setMenuVisible(false);
-                router.push({
-                  pathname: "/note/note",
-                  params: {
-                    lessonId: lessonId,
-                    lessonData: JSON.stringify(lessonData),
-                  },
-                });
-              }}
-            >
-              <MaterialIcons name="note" size={20} color="#fff" />
-              <Text style={[styles.menuText, { marginLeft: 8 }]}>
-                Ghi chú
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
     </HeaderLayout>
   );
 };

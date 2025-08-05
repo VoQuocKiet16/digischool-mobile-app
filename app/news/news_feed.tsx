@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import MenuDropdown from "../../components/MenuDropdown";
 import {
   favoriteNews,
   getAllNews,
@@ -194,6 +195,19 @@ export default function NewsFeedScreen() {
       s.label !== "Sinh hoạt lớp"
   );
 
+  const teacherMenuItems = [
+    {
+      id: 'add-news',
+      title: 'Thêm tin tức',
+      onPress: () => router.push("/news/add_news"),
+    },
+    {
+      id: 'manage-news',
+      title: 'Quản lý tin tức',
+      onPress: () => router.push("/news/manage_news"),
+    },
+  ];
+
   return (
     <View style={styles.container}>
       {/* Tabs */}
@@ -219,41 +233,15 @@ export default function NewsFeedScreen() {
           </Text>
         </TouchableOpacity>
         {role === "teacher" && (
-          <View style={{ marginLeft: 8 }}>
-            <TouchableOpacity
-              onPress={() => setShowMenu(!showMenu)}
-              style={{ padding: 6 }}
-            >
-              <MaterialIcons name="menu" size={responsiveValues.iconSize.xxxxl} color="#29375C" />
-            </TouchableOpacity>
-            {showMenu && (
-              <View style={styles.menuPopup}>
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={() => {
-                    setShowMenu(false);
-                    router.push("/news/add_news");
-                  }}
-                >
-                  <MaterialIcons
-                    name="add-circle-outline"
-                    size={responsiveValues.iconSize.xl}
-                    color="#fff"
-                  />
-                  <Text style={styles.menuItemText}>Thêm tin tức</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={() => {
-                    setShowMenu(false);
-                    router.push("/news/manage_news");
-                  }}
-                >
-                  <MaterialIcons name="settings" size={responsiveValues.iconSize.xl} color="#fff" />
-                  <Text style={styles.menuItemText}>Quản lý tin tức</Text>
-                </TouchableOpacity>
-              </View>
-            )}
+          <View style={{ marginLeft: 2 }}>
+            <MenuDropdown
+              items={teacherMenuItems}
+              anchorText=""
+              anchorIcon="menu"
+              anchorIconSize={responsiveValues.iconSize.xxxxl}
+              anchorIconColor="#29375C"
+              anchorStyle={{ padding: 2 }}
+            />
           </View>
         )}
       </View>
