@@ -5,57 +5,116 @@ const SOCKET_URL =
   "https://digischool-app-374067302360.asia-southeast1.run.app/"; // Thay bằng URL backend của bạn
 
 class ChatService {
-  socket: Socket | null = null;
-  myId: string | null = null;
+  private sockets: Map<string, Socket> = new Map();
+  private messageCallbacks: Map<string, Set<(msg: any) => void>> = new Map();
+  private readCallbacks: Map<string, Set<(data: any) => void>> = new Map();
 
   connect(userId: string, token: string) {
-    if (this.socket) {
+    // Nếu đã có socket cho userId này, không tạo mới
+    if (this.sockets.has(userId)) {
       return;
     }
-    this.socket = io(SOCKET_URL, {
+
+    const socket = io(SOCKET_URL, {
       transports: ["websocket"],
       auth: { token: `Bearer ${token}` },
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
     });
-    this.socket.on("connect", () => {});
-    this.socket.on("disconnect", () => {});
-    this.socket.on("reconnect_attempt", () => {});
-    this.socket.emit("join", userId);
+
+    socket.on("connect", () => {
+      console.log(`Socket connected for user ${userId}`);
+    });
+
+    socket.on("disconnect", () => {
+      console.log(`Socket disconnected for user ${userId}`);
+    });
+
+    socket.on("reconnect_attempt", () => {
+      console.log(`Socket reconnecting for user ${userId}`);
+    });
+
+    socket.on("new_message", (msg: any) => {
+      // Chỉ gọi callback cho user này
+      const callbacks = this.messageCallbacks.get(userId);
+      if (callbacks) {
+        callbacks.forEach(callback => callback(msg));
+      }
+    });
+
+    socket.on("message_read", (data: any) => {
+      // Chỉ gọi callback cho user này
+      const callbacks = this.readCallbacks.get(userId);
+      if (callbacks) {
+        callbacks.forEach(callback => callback(data));
+      }
+    });
+
+    socket.emit("join", userId);
+    this.sockets.set(userId, socket);
   }
 
-  disconnect() {
-    this.socket?.disconnect();
-    this.socket = null;
-  }
-
-  onNewMessage(callback: (msg: any) => void) {
-    if (!this.socket) {
-      return;
+  disconnect(userId?: string) {
+    if (userId) {
+      // Disconnect specific user
+      const socket = this.sockets.get(userId);
+      if (socket) {
+        socket.disconnect();
+        this.sockets.delete(userId);
+        this.messageCallbacks.delete(userId);
+        this.readCallbacks.delete(userId);
+      }
+    } else {
+      // Disconnect all
+      this.sockets.forEach(socket => socket.disconnect());
+      this.sockets.clear();
+      this.messageCallbacks.clear();
+      this.readCallbacks.clear();
     }
-    this.socket.on("new_message", callback);
   }
 
-  offNewMessage(callback: (msg: any) => void) {
-    this.socket?.off("new_message", callback);
+  onNewMessage(userId: string, callback: (msg: any) => void) {
+    if (!this.messageCallbacks.has(userId)) {
+      this.messageCallbacks.set(userId, new Set());
+    }
+    this.messageCallbacks.get(userId)!.add(callback);
   }
 
-  sendMessageSocket(data: any) {
-    this.socket?.emit("send_message", data);
+  offNewMessage(userId: string, callback: (msg: any) => void) {
+    const callbacks = this.messageCallbacks.get(userId);
+    if (callbacks) {
+      callbacks.delete(callback);
+    }
   }
 
-  markAsRead(from: string, to: string) {
-    this.socket?.emit("mark_read", { from, to });
+  sendMessageSocket(userId: string, data: any) {
+    const socket = this.sockets.get(userId);
+    if (socket) {
+      socket.emit("send_message", data);
+    }
   }
 
-  onMessageRead(callback: (msg: any) => void) {
-    this.socket?.on("message_read", callback);
-  }
-  offMessageRead(callback: (msg: any) => void) {
-    this.socket?.off("message_read", callback);
+  markAsRead(userId: string, from: string, to: string) {
+    const socket = this.sockets.get(userId);
+    if (socket) {
+      socket.emit("mark_read", { from, to });
+    }
   }
 
+  onMessageRead(userId: string, callback: (data: any) => void) {
+    if (!this.readCallbacks.has(userId)) {
+      this.readCallbacks.set(userId, new Set());
+    }
+    this.readCallbacks.get(userId)!.add(callback);
+  }
+
+  offMessageRead(userId: string, callback: (data: any) => void) {
+    const callbacks = this.readCallbacks.get(userId);
+    if (callbacks) {
+      callbacks.delete(callback);
+    }
+  }
 
   // REST API
   async getConversations(token: string) {
@@ -134,7 +193,5 @@ class ChatService {
     }
   }
 }
-
-
 
 export default new ChatService();

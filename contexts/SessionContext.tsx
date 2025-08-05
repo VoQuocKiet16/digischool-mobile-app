@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import React, { createContext, useContext, useEffect } from "react";
 import { handleSessionExpiration } from "../services/auth.service";
+import chatService from "../services/chat.service";
 
 interface SessionContextType {
   handleLoginAgain: () => void;
@@ -22,6 +23,9 @@ export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const handleLoginAgain = async () => {
     try {
+      // Disconnect all chat connections before logout
+      chatService.disconnect();
+      
       // Clear session data
       await handleSessionExpiration();
       

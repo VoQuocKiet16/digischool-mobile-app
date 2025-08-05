@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useChatContext } from "../../contexts/ChatContext";
 import chatService from "../../services/chat.service";
 import { fonts } from "../../utils/responsive";
 
@@ -22,24 +23,30 @@ type Props = {
 };
 
 export default function MessageListScreen({ token = "demo-token" }: Props) {
+  const { currentUserId, currentToken } = useChatContext();
   const [search, setSearch] = useState("");
   const [chatData, setChatData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [myId, setMyId] = useState<string | undefined>(undefined);
+  const [myId, setMyId] = useState<string | undefined>(currentUserId || undefined);
   const [refreshFlag, setRefreshFlag] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
-    AsyncStorage.getItem("userId").then((id) => setMyId(id ?? undefined));
-  }, []);
+    if (currentUserId) {
+      setMyId(currentUserId);
+    } else {
+      AsyncStorage.getItem("userId").then((id) => setMyId(id ?? undefined));
+    }
+  }, [currentUserId]);
 
   // Tách fetchConversations ra ngoài để có thể gọi lại
   const fetchConversations = async () => {
     setLoading(true);
     setError("");
     try {
-      const res = await chatService.getConversations(token);
+      const actualToken = currentToken || token;
+      const res = await chatService.getConversations(actualToken);
       if (res.success) {
         setChatData(res.data);
       } else {
@@ -56,7 +63,7 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
 
   useEffect(() => {
     fetchConversations();
-  }, [token, refreshFlag]);
+  }, [currentToken, token, refreshFlag]);
 
   useEffect(() => {
     const handleNewMessage = (msg: any) => {
@@ -88,10 +95,35 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
         return newData;
       });
     };
-    chatService.onNewMessage(handleNewMessage);
-    return () => {
-      chatService.offNewMessage(handleNewMessage);
+    
+    const handleMessageRead = (data: any) => {
+      // Khi có tin nhắn được mark as read, reset unreadCount cho conversation đó
+      setChatData((prevData) => {
+        // Tìm conversation dựa trên data.from (người gửi tin nhắn đã được đọc)
+        const idx = prevData.findIndex(
+          (item) => item.userId === data.from || item.id === data.from
+        );
+        if (idx !== -1) {
+          const updated = { ...prevData[idx], unreadCount: 0 };
+          const newData = [
+            updated,
+            ...prevData.slice(0, idx),
+            ...prevData.slice(idx + 1),
+          ];
+          return newData;
+        }
+        return prevData;
+      });
     };
+    
+    if (myId) {
+      chatService.onNewMessage(myId, handleNewMessage);
+      chatService.onMessageRead(myId, handleMessageRead);
+      return () => {
+        chatService.offNewMessage(myId, handleNewMessage);
+        chatService.offMessageRead(myId, handleMessageRead);
+      };
+    }
   }, [myId]);
 
   useEffect(() => {
@@ -200,7 +232,14 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
             return (
               <TouchableOpacity
                 onPress={async () => {
+                  // Chỉ mark as read khi user thực sự nhấn vào conversation
                   if (item.unreadCount > 0) {
+                    // Mark as read khi user nhấn vào conversation cụ thể này
+                    if (myId) {
+                      const conversationUserId = item.userId || item.id;
+                      chatService.markAsRead(myId, myId, conversationUserId);
+                    }
+                    
                     setChatData((prevData) => {
                       const idx = prevData.findIndex(
                         (c) => c.userId === item.userId || c.id === item.id
@@ -219,8 +258,8 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
                     pathname: "/message/message_box",
                     params: {
                       userId: item.userId || item.id,
-                      token,
-                      myId,
+                      token: currentToken || token,
+                      myId: myId,
                       name: item.name,
                     },
                   });
