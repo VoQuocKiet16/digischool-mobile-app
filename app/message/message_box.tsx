@@ -20,6 +20,7 @@ import {
   View,
 } from "react-native";
 import SafeScreen from "../../components/SafeScreen";
+import { useChatContext } from "../../contexts/ChatContext";
 import chatService from "../../services/chat.service";
 import { fonts, responsive, responsiveValues } from "../../utils/responsive";
 
@@ -50,6 +51,7 @@ function formatDateLabel(dateString: string) {
 export default function MessageBoxScreen() {
   // Nhận params từ router
   const { userId, token: paramToken, myId: paramMyId, name } = useLocalSearchParams();
+  const { currentUserId, currentToken } = useChatContext();
 
   const router = useRouter();
   const [messages, setMessages] = useState<any[]>([]);
@@ -60,10 +62,11 @@ export default function MessageBoxScreen() {
   const flatListRef = useRef<FlatList>(null);
   const [selectedImage, setSelectedImage] = useState<any>(null);
   const [imageLoading, setImageLoading] = useState(false);
-  const [token, setToken] = useState<string | null>(paramToken as string || null);
-  const [myId, setMyId] = useState<string | null>(paramMyId as string || null);
+  const [token, setToken] = useState<string | null>(paramToken as string || currentToken);
+  const [myId, setMyId] = useState<string | null>(paramMyId as string || currentUserId);
   const [isReady, setIsReady] = useState(false);
   const [myName, setMyName] = useState<string>('bạn');
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
 
   // Lấy token và myId từ AsyncStorage nếu chưa có
   useEffect(() => {
@@ -139,10 +142,20 @@ export default function MessageBoxScreen() {
         setMessages([]);
         setLoading(false);
       });
-    // Kết nối socket
-    chatService.connect(myId as string, token as string);
-    // Lắng nghe tin nhắn mới
-    chatService.onNewMessage((msg) => {
+    
+    // Lắng nghe tin nhắn mới - sử dụng currentUserId từ context
+    const actualUserId = myId as string;
+    chatService.onNewMessage(actualUserId, (msg) => {
+      // Kiểm tra tin nhắn có thuộc về conversation hiện tại không
+      const isRelevantMessage = (
+        (msg.sender === actualUserId && msg.receiver === userId) ||
+        (msg.sender === userId && msg.receiver === actualUserId)
+      );
+      
+      if (!isRelevantMessage) {
+        return; // Bỏ qua tin nhắn không liên quan
+      }
+
       setMessages((prev) => {
         // Nếu có tin nhắn tạm thời (id undefined, content trùng, sender trùng), replace bằng msg từ server
         const idx = prev.findIndex(
@@ -161,13 +174,12 @@ export default function MessageBoxScreen() {
         return [...prev, msg];
       });
       flatListRef.current?.scrollToEnd({ animated: true });
-      // Nếu là tin nhắn gửi cho mình và chưa read thì gửi markAsRead giống web
-      if (msg.receiver === myId && msg.status !== "read") {
-        chatService.markAsRead(String(myId), String(userId));
-      }
+      // KHÔNG mark as read tự động khi nhận tin nhắn mới
+      // Chỉ mark as read khi user thực sự tương tác với conversation
     });
+    
     return () => {
-      chatService.disconnect();
+      // Không disconnect ở đây vì ChatContext sẽ quản lý
     };
   }, [isReady, userId, token, myId]);
 
@@ -200,9 +212,10 @@ export default function MessageBoxScreen() {
         return updated;
       });
     };
-    chatService.onMessageRead(handleRead);
+    const actualUserId = myId as string;
+    chatService.onMessageRead(actualUserId, handleRead);
     return () => {
-      chatService.offMessageRead(handleRead);
+      chatService.offMessageRead(actualUserId, handleRead);
     };
   }, [myId]);
 
@@ -221,6 +234,10 @@ export default function MessageBoxScreen() {
 
   const handleSend = async () => {
     if (sending) return;
+    
+    // Set user has interacted when they send a message
+    setHasUserInteracted(true);
+    
     setSending(true);
     // Nếu có ảnh, upload trước
     if (selectedImage) {
@@ -269,8 +286,9 @@ export default function MessageBoxScreen() {
             },
             token as string
           );
-          chatService.sendMessageSocket({
-            sender: myId,
+          const actualUserId = myId as string;
+          chatService.sendMessageSocket(actualUserId, {
+            sender: actualUserId,
             receiver: userId,
             content: "",
             mediaUrl: uploadRes.data.url,
@@ -313,8 +331,9 @@ export default function MessageBoxScreen() {
       setSending(false);
       return;
     }
-    chatService.sendMessageSocket({
-      sender: myId,
+    const actualUserId = myId as string;
+    chatService.sendMessageSocket(actualUserId, {
+      sender: actualUserId,
       receiver: userId,
       content: input,
       type: "text",
@@ -441,6 +460,22 @@ export default function MessageBoxScreen() {
       </View>
     );
   };
+
+  // Hàm mark as read khi user thực sự tương tác
+  const markAsReadWhenInteracting = () => {
+    if (hasUserInteracted && myId && userId) {
+      const actualUserId = myId as string;
+      // Chỉ mark as read cho conversation hiện tại
+      chatService.markAsRead(actualUserId, actualUserId, userId as string);
+    }
+  };
+
+  // Mark as read khi user gửi tin nhắn
+  useEffect(() => {
+    if (hasUserInteracted) {
+      markAsReadWhenInteracting();
+    }
+  }, [hasUserInteracted, userId]); // Thêm userId vào dependency để đảm bảo chỉ mark as read cho conversation hiện tại
 
   return (
     <SafeScreen>
