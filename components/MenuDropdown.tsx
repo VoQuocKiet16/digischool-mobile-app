@@ -2,11 +2,11 @@ import { responsiveValues } from '@/utils/responsive';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import {
-    Menu,
-    MenuOption,
-    MenuOptions,
-    MenuTrigger,
-    renderers,
+  Menu,
+  MenuOption,
+  MenuOptions,
+  MenuTrigger,
+  renderers,
 } from 'react-native-popup-menu';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
@@ -70,6 +70,7 @@ export default function MenuDropdown({
               minHeight: responsiveValues.iconSize.xxxxl + responsiveValues.padding.md,
               justifyContent: 'center',
               alignItems: 'center',
+              
             }
           }}
           style={anchorStyle}
@@ -84,7 +85,7 @@ export default function MenuDropdown({
           optionsContainer: {
             backgroundColor: '#29375C',
             borderRadius: responsiveValues.borderRadius.md,
-            padding: responsiveValues.padding.xs,
+            padding: responsiveValues.padding.s,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.25,
@@ -92,6 +93,7 @@ export default function MenuDropdown({
             elevation: 5,
             minWidth: 120,
             maxWidth: 300,
+     
           }
         }}>
           {items.map((item, index) => (
@@ -102,7 +104,7 @@ export default function MenuDropdown({
                 customStyles={{
                   optionWrapper: {
                     padding: responsiveValues.padding.md,
-                    minHeight: responsiveValues.iconSize.xl + responsiveValues.padding.sm,
+                    minHeight: responsiveValues.iconSize.xl + responsiveValues.padding.s,
                     opacity: item.disabled ? 0.5 : 1,
                   }
                 }}
@@ -130,12 +132,12 @@ const styles = StyleSheet.create({
   },
   menuItemText: {
     color: '#fff',
-    fontSize: responsiveValues.fontSize.lg,
+    fontSize: responsiveValues.fontSize.sm,
     fontFamily: 'Baloo2-Medium',
   },
   divider: {
     height: 1,
     backgroundColor: '#4A5568',
-    marginVertical: responsiveValues.padding.xs,
+    marginVertical: responsiveValues.padding.s,
   },
 }); 
