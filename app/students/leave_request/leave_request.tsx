@@ -15,8 +15,8 @@ import HeaderLayout from "../../../components/layout/HeaderLayout";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getStudentSchedule } from "../../../services/schedule.service";
+import { Activity } from "../../../types/schedule.types";
 import { fonts } from "../../../utils/responsive";
-import { Activity } from "../schedule/schedule";
 
 const days = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
 const morningPeriods = ["Tiết 1", "Tiết 2", "Tiết 3", "Tiết 4", "Tiết 5"];
@@ -44,10 +44,18 @@ function mapApiToScheduleData(apiData: any): {
     if (periodIndex >= 0 && periodIndex < 10) {
       let text = "";
       text = lesson.subject?.subjectName || "";
+      
+      // Kiểm tra nếu lesson đã có leave request thì bỏ qua (ẩn lesson)
+      if (lesson.hasStudentLeaveRequest) {
+        // Không thêm lesson này vào schedule để ẩn nó
+        return;
+      }
+      
       schedule[periodIndex][dayIndex] = { 
         text, 
         type: "default",
-        status: lesson.status || "scheduled" // Thêm status từ API
+        status: lesson.status || "scheduled", // Thêm status từ API
+        hasNotification: lesson.hasTestInfo || lesson.hasStudentLeaveRequest, // Thêm hasNotification
       };
       if (lesson._id) {
         lessonIds[periodIndex][dayIndex] = lesson._id;

@@ -15,8 +15,8 @@ import HeaderLayout from "../../../components/layout/HeaderLayout";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getStudentSchedule } from "../../../services/schedule.service";
+import { Activity } from "../../../types/schedule.types";
 import { fonts } from "../../../utils/responsive";
-import { Activity } from "../schedule/schedule";
 
 type PeriodCell = { row: number; col: number };
 

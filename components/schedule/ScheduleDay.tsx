@@ -9,8 +9,8 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { Activity } from "../../app/students/schedule/schedule";
 import { useUserData } from "../../hooks/useUserData";
+import { Activity } from "../../types/schedule.types";
 import { fonts } from "../../utils/responsive";
 import MenuDropdown from "../MenuDropdown";
 import ScheduleSlot from "./ScheduleSlot";

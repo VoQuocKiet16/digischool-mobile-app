@@ -15,8 +15,8 @@ import HeaderLayout from "../../../components/layout/HeaderLayout";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getTeacherSchedule } from "../../../services/schedule.service";
+import { Activity } from "../../../types/schedule.types";
 import { fonts } from "../../../utils/responsive";
-import { Activity } from "../schedule/schedule";
 
 const defaultActivity = (text: string, hasNotification = false): Activity => ({
   text,
@@ -76,11 +76,21 @@ function mapApiToTeacherScheduleData(apiData: any): {
       text = `${lesson.class?.className || ""} - ${
         lesson.subject.subjectName
       }`;
+      
+      // Kiểm tra nếu lesson đã có leave request thì bỏ qua (ẩn lesson)
+      if (lesson.hasTeacherLeaveRequest) {
+        // Không thêm lesson này vào schedule để ẩn nó
+        return;
+      }
+      
       if (text) {
         schedule[periodIndex][dayIndex] = { 
           text, 
           type: "default",
-          status: lesson.status || "scheduled" // Thêm status từ API
+          status: lesson.status || "scheduled", // Thêm status từ API
+          hasNotification: lesson.hasTestInfo || lesson.hasTeacherLeaveRequest || 
+                          lesson.hasSubstituteRequest || lesson.hasSwapRequest || 
+                          lesson.hasMakeupRequest, // Thêm hasNotification
         };
         if (lesson._id) {
           lessonIds[periodIndex][dayIndex] = lesson._id;
