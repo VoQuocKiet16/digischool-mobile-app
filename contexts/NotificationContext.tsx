@@ -15,6 +15,7 @@ interface NotificationContextType {
   notificationsActivity: Notification[];
   notificationsSystem: Notification[];
   hasUnreadNotification: boolean;
+  isLoading: boolean;
   refreshNotifications: () => void;
   refreshNotificationsByType: (type: 'user' | 'activity' | 'system') => void;
   
@@ -49,6 +50,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   const [hasUnreadNotification, setHasUnreadNotification] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [userToken, setUserToken] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   // Toast state
   const [toastVisible, setToastVisible] = useState(false);
@@ -71,17 +73,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       // Nếu đang kết nối hoặc không có user/token, không làm gì
       if (isConnectingRef.current || !currentUserId || !currentToken) {
         return;
-      }
-
-      // Kiểm tra nếu user thay đổi, clear notifications cũ
-      if (userId && userId !== currentUserId) {
-        // Chỉ clear khi có user mới, không clear khi user logout
-        if (currentUserId) {
-          setNotificationsUser([]);
-          setNotificationsActivity([]);
-          setNotificationsSystem([]);
-          setHasUnreadNotification(false);
-        }
       }
 
       // Nếu đã có socket và đang kết nối, không làm gì
@@ -163,12 +154,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       setNotificationsActivity([]);
       setNotificationsSystem([]);
       setHasUnreadNotification(false);
+      setIsInitialized(false);
     }
   }, [userId, notificationsUser.length, notificationsActivity.length, notificationsSystem.length]);
 
   // Tính toán hasUnreadNotification dựa trên tất cả notifications và userId
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !isInitialized) return;
 
     const allNotifications = [
       ...notificationsUser,
@@ -180,7 +172,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       (n) => !n.isReadBy || !n.isReadBy.includes(userId)
     );
     setHasUnreadNotification(hasUnread);
-  }, [notificationsUser, notificationsActivity, notificationsSystem, userId]);
+  }, [notificationsUser, notificationsActivity, notificationsSystem, userId, isInitialized]);
 
   const fetchAllNotifications = async () => {
     try {
@@ -189,35 +181,22 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
         AsyncStorage.getItem("token"),
       ]);
       
-      if (!token || !currentUserId) return;
-      
-      // Kiểm tra nếu user thay đổi, chỉ clear sau khi load notifications mới
-      if (userId && userId !== currentUserId && currentUserId) {
-        // Load notifications mới trước
-        const [user, activity, system] = await Promise.all([
-          getNotifications({ type: "user", token }),
-          getNotifications({ type: "activity", token }),
-          getNotifications({ type: "system", token }),
-        ]);
-        
-        // Sau đó mới clear và set notifications mới
-        setNotificationsUser(user.data || []);
-        setNotificationsActivity(activity.data || []);
-        setNotificationsSystem(system.data || []);
-      } else {
-        // User không thay đổi, load bình thường
-        const [user, activity, system] = await Promise.all([
-          getNotifications({ type: "user", token }),
-          getNotifications({ type: "activity", token }),
-          getNotifications({ type: "system", token }),
-        ]);
-        
-        setNotificationsUser(user.data || []);
-        setNotificationsActivity(activity.data || []);
-        setNotificationsSystem(system.data || []);
+      if (!token || !currentUserId) {
+        return;
       }
+      
+      // Load notifications mới
+      const [user, activity, system] = await Promise.all([
+        getNotifications({ type: "user", token }),
+        getNotifications({ type: "activity", token }),
+        getNotifications({ type: "system", token }),
+      ]);
+      
+      setNotificationsUser(user.data || []);
+      setNotificationsActivity(activity.data || []);
+      setNotificationsSystem(system.data || []);
     } catch (error) {
-      // Handle error silently
+      console.error('Error fetching notifications:', error);
     }
   };
 
@@ -244,9 +223,30 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  // Load notifications khi userId thay đổi
   useEffect(() => {
-    fetchAllNotifications();
-  }, []);
+    if (userId && userToken) {
+      const loadNotificationsForUser = async () => {
+        try {
+          const [user, activity, system] = await Promise.all([
+            getNotifications({ type: "user", token: userToken }),
+            getNotifications({ type: "activity", token: userToken }),
+            getNotifications({ type: "system", token: userToken }),
+          ]);
+          
+          setNotificationsUser(user.data || []);
+          setNotificationsActivity(activity.data || []);
+          setNotificationsSystem(system.data || []);
+          setIsInitialized(true);
+        } catch (error) {
+          console.error('Error loading notifications for user:', error);
+          setIsInitialized(true);
+        }
+      };
+      
+      loadNotificationsForUser();
+    }
+  }, [userId, userToken]);
 
   // Toast functions
   const showToast = (title: string, message: string) => {
@@ -283,6 +283,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
     notificationsActivity,
     notificationsSystem,
     hasUnreadNotification,
+    isLoading: !isInitialized, // Add loading state
     refreshNotifications: fetchAllNotifications,
     refreshNotificationsByType,
     
