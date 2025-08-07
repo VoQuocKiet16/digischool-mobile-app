@@ -1,10 +1,13 @@
 import { useTheme } from '@react-navigation/native';
 import React, { useEffect, useRef } from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '../constants/Colors';
+import { responsive } from '../utils/responsive';
 import Icon from './Icons';
+
+const { width } = Dimensions.get('window');
 
 interface TabItem {
   route: string;
@@ -67,7 +70,7 @@ const TabButton: React.FC<{
             type={item.type} 
             name={item.icon} 
             color={focused ? Colors.white : Colors.primary} 
-            size={focused ? 18 : 24}
+            size={focused ? (responsive.isIPad() ? responsive.iconSize(22) : responsive.iconSize(18)) : (responsive.isIPad() ? responsive.iconSize(42) : responsive.iconSize(24))}
           />
         </View>
         <Animatable.Text
@@ -109,10 +112,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    height: 70,
+    height: responsive.isIPad() ? 80 : 70, // Cao hơn cho iPad
   },
   tabBar: {
-    height: 100,
+    height: responsive.isIPad() ? 110 : 100, // Cao hơn cho iPad
     position: 'absolute',
     bottom: 0,
     left: 0,
@@ -126,10 +129,10 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   btn: {
-    width: 40,
-    height: 40,
-    borderRadius: 25,
-    borderWidth: 4,
+    width: responsive.isIPad() ? 50 : 40, // Lớn hơn cho iPad
+    height: responsive.isIPad() ? 50 : 40, // Lớn hơn cho iPad
+    borderRadius: responsive.isIPad() ? 30 : 25, // Border radius tương ứng
+    borderWidth: responsive.isIPad() ? 5 : 4, // Border dày hơn cho iPad
     borderColor: Colors.white,
     backgroundColor: Colors.white,
     justifyContent: 'center',
@@ -140,14 +143,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.primary,
-    borderRadius: 25,
+    borderRadius: responsive.isIPad() ? 30 : 25, // Border radius tương ứng
   },
   text: {
-    fontSize: 8,
+    fontSize: responsive.isIPad() ? responsive.fontSize(10) : 8, // Font size lớn hơn cho iPad
     textAlign: 'center',
     color: Colors.primary,
     fontWeight: '500',
-    marginTop: 4,
+    marginTop: responsive.isIPad() ? 6 : 4, // Margin lớn hơn cho iPad
   }
 });
 

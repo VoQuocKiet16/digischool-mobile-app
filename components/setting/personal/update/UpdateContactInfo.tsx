@@ -5,8 +5,9 @@ import {
   Text,
   TouchableOpacity,
   View,
+  TextInput,
 } from "react-native";
-import { TextInput } from "react-native-paper";
+// import { TextInput } from "react-native-paper";
 import { UserData } from "../../../../types/user.types";
 import { fonts } from "../../../../utils/responsive";
 

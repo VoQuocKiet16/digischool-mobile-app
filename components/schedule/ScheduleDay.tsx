@@ -10,8 +10,8 @@ import {
   View,
 } from "react-native";
 import { useUserData } from "../../hooks/useUserData";
+import { fonts, responsive } from "../../utils/responsive";
 import { Activity } from "../../types/schedule.types";
-import { fonts } from "../../utils/responsive";
 import MenuDropdown from "../MenuDropdown";
 import ScheduleSlot from "./ScheduleSlot";
 
@@ -139,7 +139,7 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
             <MenuDropdown
               items={menuItems}
               anchorIcon="arrow-drop-down"
-              anchorIconSize={16}
+              anchorIconSize={responsive.isIPad() ? 32 : 24}
               anchorIconColor="#fff"
               anchorStyle={styles.utilityButton}
             />
@@ -314,17 +314,18 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#e0e0e0",
   },
-  utilityButton: {
-    backgroundColor: "#29375C",
-    paddingVertical: 5,
-    paddingHorizontal: 8,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    height: 30,
-  },
+    utilityButton: {
+      backgroundColor: "#29375C",
+      paddingVertical: responsive.isIPad() ? 4 : 4,
+      paddingHorizontal: responsive.isIPad() ? 4 : 6,
+      borderRadius: responsive.isIPad() ? 8 : 8,
+      alignItems: "center",
+      justifyContent: "center",
+      height: responsive.isIPad() ? 25 : 20,
+      width: responsive.isIPad() ? 25 : 20,
+    },
   dayHeaderCell: {
-    height: 40,
+    height: responsive.isIPad() ? 70 : 40,
     justifyContent: "center",
     alignItems: "center",
     borderRightWidth: 1,
