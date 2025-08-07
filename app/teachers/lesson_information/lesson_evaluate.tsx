@@ -6,7 +6,7 @@ import LoadingModal from "@/components/LoadingModal";
 import { lessonEvaluateService } from "@/services/lesson_evaluate.service";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -20,7 +20,7 @@ import {
 import { LessonData, StudentLeaveRequest } from "../../../types/lesson.types";
 import { fonts } from "../../../utils/responsive";
   
-const RANKS = ["A+", "A", "B+", "B"];
+const RANKS = ["A+", "A", "B+", "B", "C"];
 
 const LessonEvaluateTeacherScreen = () => {
   const { lessonId, lessonData: lessonDataParam } = useLocalSearchParams<{ lessonId: string; lessonData: string }>();
@@ -34,9 +34,14 @@ const LessonEvaluateTeacherScreen = () => {
   const [loadingSuccess, setLoadingSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<{
+    lesson?: string;
+    content?: string;
+    comment?: string;
+  }>({});
   const [lessonData, setLessonData] = useState<LessonData | null>(null);
   const [absentStudents, setAbsentStudents] = useState<
-    { student: string; name: string }[]
+    { student: string; name: string; reason: string }[]
   >([]);
   const [oralTests, setOralTests] = useState<
     { student: string; name: string; score: number }[]
@@ -45,6 +50,35 @@ const LessonEvaluateTeacherScreen = () => {
     { student: string; reason: string }[]
   >([]);
   const router = useRouter();
+
+  // Sử dụng useCallback để tránh re-render không cần thiết
+  const handleAbsentStudentsChange = useCallback((students: { student: string; name: string; reason: string }[]) => {
+    setAbsentStudents(students);
+  }, []);
+
+  const handleViolationsChange = useCallback((violations: { student: string; reason: string }[]) => {
+    setViolations(violations);
+  }, []);
+
+  const handleOralTestsChange = useCallback((oralTests: { student: string; name: string; score: number }[]) => {
+    setOralTests(oralTests);
+  }, []);
+
+  // Sử dụng useMemo để tránh tạo array mới mỗi lần render
+  const absentStudentIds = useMemo(() => 
+    absentStudents.map(item => item.student), 
+    [absentStudents]
+  );
+
+  const violationStudentIds = useMemo(() => 
+    violations.map(item => item.student), 
+    [violations]
+  );
+
+  const oralTestStudentIds = useMemo(() => 
+    oralTests.map(item => item.student), 
+    [oralTests]
+  );
 
   // Parse lessonData từ params
   useEffect(() => {
@@ -59,7 +93,7 @@ const LessonEvaluateTeacherScreen = () => {
   }, [lessonDataParam]);
 
   // Lấy danh sách học sinh đã được approved nghỉ phép
-  const getApprovedLeaveStudents = () => {
+  const approvedLeaveStudents = useMemo(() => {
     if (!lessonData?.studentLeaveRequests) {
       return [];
     }
@@ -71,11 +105,20 @@ const LessonEvaluateTeacherScreen = () => {
         name: request.studentId.name,
         reason: request.reason,
       }));
-  };
+  }, [lessonData?.studentLeaveRequests]) as { id: string; name: string; reason: string }[];
+
+  // Học sinh vắng không thể có điểm test hoặc vi phạm
+  const allAbsentStudentIds = useMemo(() => [
+    ...absentStudentIds,
+    ...approvedLeaveStudents.map(student => student.id)
+  ], [absentStudentIds, approvedLeaveStudents]);
 
   const isValid =
     (lesson || "").trim().length > 0 &&
+    (lesson || "").trim().length <= 100 &&
     (content || "").trim().length > 0 &&
+    (content || "").trim().length <= 1000 &&
+    (comment || "").trim().length <= 1000 &&
     (rank || "").trim().length > 0 &&
     checked;
 
@@ -85,15 +128,25 @@ const LessonEvaluateTeacherScreen = () => {
       setShowLoading(true);
       setLoadingSuccess(false);
       setError("");
+      setFieldErrors({});
       try {
         const evaluationData = {
           curriculumLesson: lesson,
           content: content,
           comments: comment,
           rating: rank as "A+" | "A" | "B+" | "B" | "C",
-          absentStudents: absentStudents.map((item) => ({
-            student: item.student,
-          })),
+          absentStudents: absentStudents.map((item) => {
+            // Kiểm tra xem học sinh này có phải là học sinh đã approved nghỉ phép không
+            const approvedStudent = approvedLeaveStudents.find(
+              (approved) => approved.id === item.student
+            );
+            
+            return {
+              student: item.student,
+              isApprovedLeave: !!approvedStudent,
+              reason: approvedStudent?.reason || item.reason || "",
+            };
+          }),
           oralTests: oralTests.map((item) => ({
             student: item.student,
             score: item.score,
@@ -104,22 +157,61 @@ const LessonEvaluateTeacherScreen = () => {
           })),
         };
 
-        await lessonEvaluateService.createTeacherEvaluation(
+        const response = await lessonEvaluateService.createTeacherEvaluation(
           lessonId,
           evaluationData
         );
 
-        setLoadingSuccess(true);
-        setTimeout(() => {
+        // Kiểm tra response theo cấu trúc mới
+        if (response.success) {
+          setLoadingSuccess(true);
+          setTimeout(() => {
+            setShowLoading(false);
+            setLoadingSuccess(false);
+            setIsSubmitting(false);
+            router.back();
+          }, 1000);
+        } else {
+          setError(response.message || "Tạo đánh giá tiết học thất bại!");
           setShowLoading(false);
-          setLoadingSuccess(false);
           setIsSubmitting(false);
-          router.back();
-        }, 1000);
+        }
       } catch (error: any) {
-        setError(
-          error.response?.data?.message || "Tạo đánh giá tiết học thất bại!"
-        );
+        // Xử lý các loại lỗi khác nhau theo backend mới
+        if (error.response?.status === 409) {
+          setError("Tiết học này đã được đánh giá");
+        } else if (error.response?.status === 403) {
+          setError("Bạn không có quyền đánh giá tiết học này");
+        } else if (error.response?.status === 400) {
+          const errorData = error.response?.data;
+          if (errorData?.errors) {
+            const fieldErrors: any = {};
+            const generalErrors: string[] = [];
+            
+            errorData.errors.forEach((err: any) => {
+              if (err.field === "curriculumLesson") {
+                fieldErrors.lesson = err.message;
+              } else if (err.field === "content") {
+                fieldErrors.content = err.message;
+              } else if (err.field === "comments") {
+                fieldErrors.comment = err.message;
+              } else {
+                generalErrors.push(err.message);
+              }
+            });
+            
+            setFieldErrors(fieldErrors);
+            if (generalErrors.length > 0) {
+              setError(generalErrors.join(", "));
+            }
+          } else {
+            setError(errorData?.message || "Dữ liệu không hợp lệ");
+          }
+        } else {
+          setError(
+            error.response?.data?.message || "Tạo đánh giá tiết học thất bại!"
+          );
+        }
         setShowLoading(false);
         setIsSubmitting(false);
       }
@@ -161,6 +253,9 @@ const LessonEvaluateTeacherScreen = () => {
                 value={lesson}
                 onChangeText={setLesson}
               />
+              {fieldErrors.lesson && (
+                <Text style={styles.errorText}>{fieldErrors.lesson}</Text>
+              )}
             </View>
           </View>
           {/* Tên bài, nội dung công việc */}
@@ -177,33 +272,36 @@ const LessonEvaluateTeacherScreen = () => {
                 value={content}
                 onChangeText={setContent}
               />
+              {fieldErrors.content && (
+                <Text style={styles.errorText}>{fieldErrors.content}</Text>
+              )}
             </View>
           </View>
           {/* Học sinh vắng */}
           <View style={[styles.fieldWrap, { marginBottom: 25 }]}>
             <Student_Absent
               lessonId={lessonId || ""}
-              onAbsentStudentsChange={setAbsentStudents}
-              approvedLeaveStudents={getApprovedLeaveStudents()}
-              selectedStudents={absentStudents.map(item => item.student)}
+              onAbsentStudentsChange={handleAbsentStudentsChange}
+              approvedLeaveStudents={approvedLeaveStudents}
+              selectedStudents={absentStudentIds}
             />
           </View>
           {/* Học sinh vi phạm */}
           <View style={[styles.fieldWrap, { marginBottom: 25 }]}>
             <Student_Violates
               lessonId={lessonId || ""}
-              onViolationsChange={setViolations}
-              approvedLeaveStudents={getApprovedLeaveStudents()}
-              selectedStudents={violations.map(item => item.student)}
+              onViolationsChange={handleViolationsChange}
+              approvedLeaveStudents={approvedLeaveStudents}
+              selectedStudents={[...violationStudentIds, ...allAbsentStudentIds]}
             />
           </View>
           {/* Kiểm tra miệng */}
           <View style={[styles.fieldWrap, { marginBottom: 46 }]}>
             <Student_Test
               lessonId={lessonId || ""}
-              onOralTestsChange={setOralTests}
-              approvedLeaveStudents={getApprovedLeaveStudents()}
-              selectedStudents={oralTests.map(item => item.student)}
+              onOralTestsChange={handleOralTestsChange}
+              approvedLeaveStudents={approvedLeaveStudents}
+              selectedStudents={[...oralTestStudentIds, ...allAbsentStudentIds]}
             />
           </View>
           {/* Nhận xét */}
@@ -220,6 +318,9 @@ const LessonEvaluateTeacherScreen = () => {
                 numberOfLines={3}
                 textAlignVertical="top"
               />
+              {fieldErrors.comment && (
+                <Text style={styles.errorText}>{fieldErrors.comment}</Text>
+              )}
             </View>
           </View>
           {/* Xếp loại tiết học */}
@@ -492,6 +593,13 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontFamily: fonts.semiBold,
     fontSize: 18,
+  },
+  errorText: {
+    color: "#E53935",
+    fontSize: 12,
+    fontFamily: fonts.regular,
+    marginTop: 4,
+    marginLeft: 18,
   },
 });
 

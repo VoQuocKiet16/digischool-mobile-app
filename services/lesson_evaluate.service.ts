@@ -37,7 +37,7 @@ export interface StudentsResponse {
 
 export interface AbsentStudent {
   student: string;
-  isExcused?: boolean;
+  isApprovedLeave?: boolean;
   reason?: string;
 }
 
@@ -54,10 +54,8 @@ export interface Violation {
 export interface LessonEvaluationRequest {
   curriculumLesson: string;
   content: string;
-  description?: string;
-  rating: "A+" | "A" | "B+" | "B" | "C";
   comments?: string;
-  evaluationDetails?: any;
+  rating: "A+" | "A" | "B+" | "B" | "C";
   absentStudents?: AbsentStudent[];
   oralTests?: OralTest[];
   violations?: Violation[];
@@ -72,12 +70,11 @@ export const lessonEvaluateService = {
       );
       return response.data.data;
     } catch (error) {
-
       throw error;
     }
   },
 
-  // Tạo đánh giá tiết học
+  // Tạo đánh giá tiết học - cập nhật theo API mới
   createTeacherEvaluation: async (
     lessonId: string,
     data: LessonEvaluationRequest
@@ -89,7 +86,6 @@ export const lessonEvaluateService = {
       );
       return response.data;
     } catch (error) {
- 
       throw error;
     }
   },

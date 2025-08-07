@@ -12,7 +12,7 @@ import LoadingModal from "../../components/LoadingModal";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import SuccessModal from "../../components/notifications_modal/SuccessModal";
 import { useNotificationContext } from "../../contexts/NotificationContext";
-import { setPasswordNewUser } from "../../services/auth.service";
+import { changePassword, setPasswordNewUser } from "../../services/auth.service";
 import { fonts } from "../../utils/responsive";
 
 export default function SetPasswordScreen() {
@@ -87,7 +87,7 @@ export default function SetPasswordScreen() {
       if (isNewUser) {
         await setPasswordNewUser(token, newPassword, confirmPassword);
       } else {
-        // TODO: Gọi API đổi mật khẩu cho user thường
+        await changePassword(currentPassword, newPassword, confirmPassword);
       }
       setLoading(false);
       setShowSuccess(true);
