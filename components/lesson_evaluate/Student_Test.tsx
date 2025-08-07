@@ -1,15 +1,15 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
-    Alert,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import {
-    lessonEvaluateService,
-    Student,
+  lessonEvaluateService,
+  Student,
 } from "../../services/lesson_evaluate.service";
 import { fonts } from "../../utils/responsive";
 import PlusIcon from "../PlusIcon";
@@ -60,8 +60,11 @@ const Student_Test: React.FC<Student_TestProps> = ({
         score: Number(scoreList[index]) || 0,
       }))
       .filter((item) => item.student && item.score > 0);
-    onOralTestsChange?.(oralTests);
-  }, [testList, scoreList, onOralTestsChange]);
+    
+    if (onOralTestsChange) {
+      onOralTestsChange(oralTests);
+    }
+  }, [testList, scoreList]);
 
   const loadStudents = async () => {
     if (!lessonId || lessonId.trim() === "") {

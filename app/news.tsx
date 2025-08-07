@@ -10,7 +10,7 @@ export default function NewsScreen() {
   const [userName, setUserName] = useState("");
   const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const { hasUnreadNotification } = useNotificationContext();
+  const { hasUnreadNotification, isLoading: notificationLoading } = useNotificationContext();
 
   useEffect(() => {
     Promise.all([
@@ -38,7 +38,7 @@ export default function NewsScreen() {
         <Header
           title="Tin tức"
           name={userName ? `GV ${userName}` : "GV Nguyễn Văn A"}
-          hasUnreadNotification={hasUnreadNotification}
+          hasUnreadNotification={!notificationLoading && hasUnreadNotification}
         />
         {/* TODO: Thay bằng component news cho giáo viên nếu có */}
         <NewsFeedScreen />
@@ -61,7 +61,7 @@ export default function NewsScreen() {
       <Header
         title="Tin tức"
         name={userName ? `HS ${userName}` : "HS Nguyễn Văn A"}
-        hasUnreadNotification={hasUnreadNotification}
+        hasUnreadNotification={!notificationLoading && hasUnreadNotification}
       />
       <NewsFeedScreen />
     </View>

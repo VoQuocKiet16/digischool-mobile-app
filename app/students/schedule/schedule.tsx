@@ -14,31 +14,7 @@ import RefreshableScrollView from "../../../components/RefreshableScrollView";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getStudentSchedule } from "../../../services/schedule.service";
-
-export interface Activity {
-  text: string;
-  type: "default" | "user-added" | "user-activity" | "conflict";
-  content?: string;
-  time?: number;
-  remindAt?: string;
-  date?: string;
-  lessonId?: string;
-  subject?: any;
-  teacher?: any;
-  isMakeupLesson?: boolean;
-  lessonText?: string;
-  activityText?: string;
-  activityData?: {
-    content?: string;
-    time?: number;
-    remindAt?: string;
-    date?: string;
-    id?: string;
-  };
-  hasConflict?: boolean;
-  status?: string; // Thêm status để xử lý completed
-  [key: string]: any;
-}
+import { Activity } from "../../../types/schedule.types";
 
 const defaultActivity = (text: string, hasNotification = false): Activity => ({
   text,
@@ -102,6 +78,10 @@ function mapApiToScheduleData(apiData: any): {
     if (periodIndex >= 0 && periodIndex < 10) {
       let text = "";
       text = lesson.subject?.subjectName || "";
+      
+      // Kiểm tra các trường boolean để thêm hasNotification
+      const hasNotification = lesson.hasTestInfo || lesson.hasStudentLeaveRequest;
+      
       schedule[periodIndex][dayIndex] = {
         text,
         type: "default",
@@ -110,6 +90,7 @@ function mapApiToScheduleData(apiData: any): {
         teacher: lesson.teacher,
         isMakeupLesson: lesson.isMakeupLesson || false, // Thêm flag để nhận diện tiết dạy bù
         status: lesson.status || "scheduled", // Thêm status từ API
+        hasNotification: hasNotification, // Thêm hasNotification dựa trên các trường boolean
       };
       if (lesson._id) {
         lessonIds[periodIndex][dayIndex] = lesson._id;
@@ -141,6 +122,7 @@ function mapApiToScheduleData(apiData: any): {
           subject: existingSlot.subject,
           teacher: existingSlot.teacher,
           isMakeupLesson: existingSlot.isMakeupLesson,
+          hasNotification: existingSlot.hasNotification, // Giữ nguyên hasNotification từ lesson
           activityData: {
             content: activity.content,
             time: activity.time,

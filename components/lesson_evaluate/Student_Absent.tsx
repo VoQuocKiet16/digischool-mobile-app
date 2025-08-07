@@ -1,6 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import {
   lessonEvaluateService,
   Student,
@@ -19,7 +19,7 @@ interface ApprovedLeaveStudent {
 interface Student_AbsentProps {
   lessonId: string;
   onAbsentStudentsChange?: (
-    absentStudents: { student: string; name: string }[]
+    absentStudents: { student: string; name: string; reason: string }[]
   ) => void;
   approvedLeaveStudents?: ApprovedLeaveStudent[];
   selectedStudents?: string[];
@@ -33,9 +33,10 @@ const Student_Absent: React.FC<Student_AbsentProps> = ({
 }) => {
   const [showCard, setShowCard] = useState(false);
   const [absentList, setAbsentList] = useState<
-    { student: string; name: string }[]
+    { student: string; name: string; reason: string }[]
   >([]);
   const [dropdownIndex, setDropdownIndex] = useState<number | null>(null);
+  const [isReasonFocused, setIsReasonFocused] = useState<number | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -53,8 +54,21 @@ const Student_Absent: React.FC<Student_AbsentProps> = ({
   }, [approvedLeaveStudents]);
 
   useEffect(() => {
-    onAbsentStudentsChange?.(absentList.filter((item) => item.student));
-  }, [absentList, onAbsentStudentsChange]);
+    // Bao gồm cả học sinh vắng thông thường và học sinh đã approved nghỉ phép
+    const allAbsentStudents = [
+      ...absentList.filter((item) => item.student),
+      ...approvedLeaveStudents.map(student => ({
+        student: student.id,
+        name: student.name,
+        reason: student.reason
+      }))
+    ];
+    
+    // Chỉ gọi callback nếu có thay đổi thực sự
+    if (onAbsentStudentsChange) {
+      onAbsentStudentsChange(allAbsentStudents);
+    }
+  }, [absentList, approvedLeaveStudents]);
 
   const loadStudents = async () => {
     if (!lessonId || lessonId.trim() === "") {
@@ -76,7 +90,7 @@ const Student_Absent: React.FC<Student_AbsentProps> = ({
   };
 
   const handleAddAbsent = () => {
-    setAbsentList([...absentList, { student: "", name: "" }]);
+    setAbsentList([...absentList, { student: "", name: "", reason: "" }]);
   };
 
   const handleRemoveAbsent = (index: number) => {
@@ -89,7 +103,7 @@ const Student_Absent: React.FC<Student_AbsentProps> = ({
     index: number
   ) => {
     const newList = [...absentList];
-    newList[index] = { student: studentId, name: studentName };
+    newList[index] = { student: studentId, name: studentName, reason: "" };
     setAbsentList(newList);
     setDropdownIndex(null);
   };
@@ -100,6 +114,14 @@ const Student_Absent: React.FC<Student_AbsentProps> = ({
     } else {
       setDropdownIndex(index);
     }
+  };
+
+  const handleReasonChange = (index: number, text: string) => {
+    setAbsentList((list) => {
+      const newList = [...list];
+      newList[index].reason = text;
+      return newList;
+    });
   };
 
   // Lọc danh sách học sinh có thể chọn (loại bỏ học sinh đã được chọn và học sinh đã approved nghỉ phép)
@@ -174,21 +196,24 @@ const Student_Absent: React.FC<Student_AbsentProps> = ({
             </View>
           )}
 
-          <View style={styles.studentsContainer}>
+          <View style={styles.studentsList}>
             {absentList.map((item, index) => (
-              <View key={index} style={styles.studentCard}>
-                <View style={styles.studentRow}>
+              <View key={index} style={styles.studentItem}>
+                {/* Student Selection */}
+                <View style={styles.studentHeader}>
                   <TouchableOpacity
                     style={styles.studentSelector}
-                    activeOpacity={0.7}
-                    onPress={() => openDropdown(index)}
+                    onPress={() => {
+                      if (isReasonFocused !== index) openDropdown(index);
+                    }}
+                    disabled={isReasonFocused === index}
                   >
                     <View style={styles.studentInfo}>
                       <MaterialIcons
                         name="person"
                         size={20}
-                        color={item.student ? "#F44336" : "#9E9E9E"}
-                        style={styles.studentIcon}
+                        color={item.student ? "#F44336" : "#999"}
+                        style={{ marginRight: 8 }}
                       />
                       <ThemedText
                         style={[
@@ -200,24 +225,26 @@ const Student_Absent: React.FC<Student_AbsentProps> = ({
                       </ThemedText>
                     </View>
                     <MaterialIcons
-                      name="keyboard-arrow-down"
+                      name={
+                        dropdownIndex === index ? "expand-less" : "expand-more"
+                      }
                       size={20}
-                      color="#9E9E9E"
+                      color="#999"
                     />
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={styles.removeBtn}
+                    style={styles.removeButton}
                     onPress={() => handleRemoveAbsent(index)}
                   >
                     <MaterialIcons
                       name="remove-circle-outline"
-                      size={18}
-                      color="#F44336"
+                      size={20}
+                      color="#FF5252"
                     />
                   </TouchableOpacity>
                 </View>
-
+                {/* Dropdown */}
                 {dropdownIndex === index && (
                   <View style={styles.dropdown}>
                     {getAvailableStudents().length > 0 ? (
@@ -229,15 +256,17 @@ const Student_Absent: React.FC<Student_AbsentProps> = ({
                             handleSelectStudent(student.id, student.name, index)
                           }
                         >
-                          <MaterialIcons
-                            name="person"
-                            size={16}
-                            color="#9E9E9E"
-                            style={{ marginRight: 8 }}
-                          />
-                          <ThemedText style={styles.dropdownItemText}>
+                          <View style={styles.dropdownAvatar}>
+                            <MaterialIcons
+                              name="person"
+                              size={16}
+                              color="#9E9E9E"
+                              style={{ marginRight: 8 }}
+                            />
+                          </View>
+                          <Text style={styles.dropdownItemText}>
                             {student.name}
-                          </ThemedText>
+                          </Text>
                         </TouchableOpacity>
                       ))
                     ) : (
@@ -247,6 +276,23 @@ const Student_Absent: React.FC<Student_AbsentProps> = ({
                         </ThemedText>
                       </View>
                     )}
+                  </View>
+                )}
+
+                {/* Reason Input */}
+                {item.name && (
+                  <View style={styles.reasonSection}>
+                    <TextInput
+                      style={styles.reasonInput}
+                      placeholder="Mô tả chi tiết lý do vắng..."
+                      placeholderTextColor="#999"
+                      value={item.reason}
+                      onChangeText={(text) => handleReasonChange(index, text)}
+                      multiline
+                      numberOfLines={3}
+                      onFocus={() => setIsReasonFocused(index)}
+                      onBlur={() => setIsReasonFocused(null)}
+                    />
                   </View>
                 )}
               </View>
@@ -454,6 +500,47 @@ const styles = StyleSheet.create({
     color: "#9E9E9E",
     fontSize: 14,
     fontFamily: fonts.regular,
+  },
+  reasonSection: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
+  },
+  reasonInput: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 14,
+    fontFamily: fonts.regular,
+    color: "#1a1a1a",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    textAlignVertical: "top",
+    minHeight: 80,
+  },
+  studentItem: {
+    marginBottom: 16,
+    backgroundColor: "#29375C",
+    borderRadius: 16,
+    padding: 12,
+    marginLeft: 10,
+  },
+  studentHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  removeButton: {
+    padding: 4,
+  },
+  dropdownAvatar: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
+  },
+  studentsList: {
+    marginBottom: 16,
   },
 });
 

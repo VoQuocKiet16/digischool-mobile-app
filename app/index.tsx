@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import Header from "../components/Header";
 import { useNotificationContext } from "../contexts/NotificationContext";
-import { responsiveValues } from "../utils/responsive";
 import ScheduleStudentsScreen from "./students/schedule/schedule";
 import ScheduleTeacherScreen from "./teachers/schedule/schedule";
 
@@ -11,7 +10,7 @@ export default function HomeScreen() {
   const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
-  const { hasUnreadNotification } = useNotificationContext();
+  const { hasUnreadNotification, isLoading: notificationLoading } = useNotificationContext();
 
   useEffect(() => {
     Promise.all([
@@ -45,7 +44,7 @@ export default function HomeScreen() {
     <Header
       title="Trang chủ"
       name={userName ? `${rolePrefix} ${userName}` : `${rolePrefix}...`}
-      hasUnreadNotification={hasUnreadNotification}
+      hasUnreadNotification={!notificationLoading && hasUnreadNotification}
     />
   );
 

@@ -18,57 +18,6 @@ import { fonts } from "../../../utils/responsive";
 
 const academicYears = ["2024-2025", "2025-2026"];
 
-function getFirstMonday(date: Date) {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = day === 1 ? 0 : (8 - day) % 7;
-  d.setDate(d.getDate() + diff);
-  return d;
-}
-
-function getWeekRangesByYear(year: string) {
-  const [startYear, endYear] = year.split("-").map(Number);
-  const startDate = getFirstMonday(new Date(startYear, 7, 1));
-  const endDate = new Date(endYear, 4, 31);
-  let current = new Date(startDate);
-  const weeks = [];
-  let weekNumber = 1;
-  while (current <= endDate) {
-    const weekStart = new Date(current);
-    const weekEnd = new Date(current);
-    weekEnd.setDate(weekStart.getDate() + 6);
-    if (weekEnd > endDate) weekEnd.setTime(endDate.getTime());
-    const startDateStr = `${weekStart.getFullYear()}-${(
-      weekStart.getMonth() + 1
-    )
-      .toString()
-      .padStart(2, "0")}-${weekStart.getDate().toString().padStart(2, "0")}`;
-    const endDateStr = `${weekEnd.getFullYear()}-${(weekEnd.getMonth() + 1)
-      .toString()
-      .padStart(2, "0")}-${weekEnd.getDate().toString().padStart(2, "0")}`;
-    weeks.push({
-      start: startDateStr,
-      end: endDateStr,
-      label:
-        `${weekStart.getDate().toString().padStart(2, "0")}/${(
-          weekStart.getMonth() + 1
-        )
-          .toString()
-          .padStart(2, "0")}` +
-        " - " +
-        `${weekEnd.getDate().toString().padStart(2, "0")}/${(
-          weekEnd.getMonth() + 1
-        )
-          .toString()
-          .padStart(2, "0")}`,
-      weekNumber: weekNumber,
-    });
-    current.setDate(current.getDate() + 7);
-    weekNumber++;
-  }
-  return weeks;
-}
-
 export default function MakeupSchedule() {
   const params = useLocalSearchParams();
   const className = params.className as string | undefined;

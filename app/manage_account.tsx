@@ -19,7 +19,7 @@ const CLASSES = [
 export default function ManageAccount() {
   const navigation = useNavigation();
   const router = useRouter();
-  const { hasUnreadNotification } = useNotificationContext();
+  const { hasUnreadNotification, isLoading: notificationLoading } = useNotificationContext();
   const [filterIdx, setFilterIdx] = useState(0);
   const [search, setSearch] = useState("");
   const [showFilter, setShowFilter] = useState(false);
@@ -116,7 +116,7 @@ export default function ManageAccount() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f7f7f7" }}>
-      <Header title="Tài khoản" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} hasUnreadNotification={hasUnreadNotification} />
+      <Header title="Tài khoản" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} hasUnreadNotification={!notificationLoading && hasUnreadNotification} />
       
       {/* Filter chọn Học sinh/Giáo viên */}
       <View style={styles.container}>

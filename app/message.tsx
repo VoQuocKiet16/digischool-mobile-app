@@ -13,7 +13,7 @@ export default function MessageScreen() {
   const [userName, setUserName] = useState("");
   const [myId, setMyId] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const { hasUnreadNotification } = useNotificationContext();
+  const { hasUnreadNotification, isLoading: notificationLoading } = useNotificationContext();
 
   useEffect(() => {
     Promise.all([
@@ -51,7 +51,7 @@ export default function MessageScreen() {
         <Header
           title="Trò chuyện"
           name={userName ? `GV ${userName}` : "GV Nguyễn Văn A"}
-          hasUnreadNotification={hasUnreadNotification}
+          hasUnreadNotification={!notificationLoading && hasUnreadNotification}
         />
         {/* TODO: Thay bằng component chat cho giáo viên nếu có */}
         <MessageListScreen />
@@ -74,7 +74,7 @@ export default function MessageScreen() {
       <Header
         title="Trò chuyện"
         name={userName ? `HS ${userName}` : "HS Nguyễn Văn A"}
-        hasUnreadNotification={hasUnreadNotification}
+        hasUnreadNotification={!notificationLoading && hasUnreadNotification}
       />
       <MessageListScreen />
     </View>

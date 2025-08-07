@@ -14,31 +14,7 @@ import RefreshableScrollView from "../../../components/RefreshableScrollView";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getTeacherSchedule } from "../../../services/schedule.service";
-
-export interface Activity {
-  text: string;
-  type: "default" | "user-added" | "user-activity" | "conflict";
-  content?: string;
-  time?: number;
-  remindAt?: string;
-  date?: string;
-  lessonId?: string;
-  subject?: any;
-  teacher?: any;
-  isMakeupLesson?: boolean;
-  lessonText?: string;
-  activityText?: string;
-  activityData?: {
-    content?: string;
-    time?: number;
-    remindAt?: string;
-    date?: string;
-    id?: string;
-  };
-  hasConflict?: boolean;
-  status?: string; // Thêm status để xử lý completed
-  [key: string]: any;
-}
+import { Activity } from "../../../types/schedule.types";
 
 const defaultActivity = (text: string, hasNotification = false): Activity => ({
   text,
@@ -101,11 +77,18 @@ function mapApiToTeacherScheduleData(apiData: any): {
     if (periodIndex >= 0 && periodIndex < 10) {
       let text = "";
       text = `${lesson.class?.className || ""} - ${lesson.subject?.subjectName}`;
+      
+      // Kiểm tra các trường boolean để thêm hasNotification
+      const hasNotification = lesson.hasTestInfo || lesson.hasTeacherLeaveRequest || 
+                             lesson.hasSubstituteRequest || lesson.hasSwapRequest || 
+                             lesson.hasMakeupRequest;
+      
       if (text) {
         schedule[periodIndex][dayIndex] = {
           text,
           type: "default",
           status: lesson.status || "scheduled", // Thêm status từ API
+          hasNotification: hasNotification, // Thêm hasNotification dựa trên các trường boolean
         };
         if (lesson._id) {
           lessonIds[periodIndex][dayIndex] = lesson._id;
