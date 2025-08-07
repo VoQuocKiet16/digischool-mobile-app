@@ -662,13 +662,13 @@ const styles = StyleSheet.create({
   },
   subjectItem: {
     alignItems: "center",
-    marginRight: responsive.width(4.5), // responsive
-    minWidth: responsive.width(14), // responsive
+    marginRight: responsive.isIPad() ? responsive.width(3) : responsive.width(4.5), // Nhỏ hơn cho iPad
+    minWidth: responsive.isIPad() ? responsive.width(10) : responsive.width(14), // Nhỏ hơn cho iPad
   },
   subjectIconWrap: {
-    width: responsive.width(17),
-    height: responsive.width(17),
-    borderRadius: responsive.width(13),
+    width: responsive.isIPad() ? responsive.width(12) : responsive.width(17), // Nhỏ hơn cho iPad
+    height: responsive.isIPad() ? responsive.width(12) : responsive.width(17), // Nhỏ hơn cho iPad
+    borderRadius: responsive.isIPad() ? responsive.width(9) : responsive.width(13), // Nhỏ hơn cho iPad
     justifyContent: "center",
     alignItems: "center",
     marginBottom: responsive.height(0.6),
@@ -680,11 +680,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#E6E9F0",
   },
   subjectIcon: {
-    width: responsive.width(12),
-    height: responsive.width(12),
+    width: responsive.isIPad() ? responsive.width(8) : responsive.width(12), // Nhỏ hơn cho iPad
+    height: responsive.isIPad() ? responsive.width(8) : responsive.width(12), // Nhỏ hơn cho iPad
   },
   subjectLabel: {
-    fontSize: responsive.fontSize(13),
+    fontSize: responsive.isIPad() ? responsive.fontSize(11) : responsive.fontSize(13), // Nhỏ hơn cho iPad
     color: "#29375C",
     fontWeight: "500",
     marginBottom: responsive.height(0.2),
@@ -694,15 +694,15 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   subjectUnderline: {
-    width: responsive.width(6),
-    height: responsive.height(0.4),
+    width: responsive.isIPad() ? responsive.width(4) : responsive.width(6), // Nhỏ hơn cho iPad
+    height: responsive.isIPad() ? responsive.height(0.3) : responsive.height(0.4), // Nhỏ hơn cho iPad
     backgroundColor: "#29375C",
     borderRadius: 2,
     marginTop: responsive.height(0.2),
   },
   newsCardContainer: {
     width: responsive.cardWidth(75), // 85% chiều rộng màn hình
-    height: responsive.cardHeight(45), // 50% chiều cao màn hình
+    height: responsive.isIPad() ? responsive.cardHeight(45) : responsive.cardHeight(50), // iPad 45%, điện thoại 50%
     marginRight: responsiveValues.padding.lg,
     marginTop: responsiveValues.padding.sm,
   },

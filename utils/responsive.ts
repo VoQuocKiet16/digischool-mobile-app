@@ -77,6 +77,7 @@ export const responsive = {
   isMediumDevice: width >= 375 && width < 414,
   isLargeDevice: width >= 414,
   isTablet: width >= 768,
+  isIPad: () => width >= 768,
 };
 
 // Predefined responsive values

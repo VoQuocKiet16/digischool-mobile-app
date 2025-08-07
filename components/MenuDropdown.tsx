@@ -1,6 +1,6 @@
 import { responsiveValues } from '@/utils/responsive';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import {
   Menu,
   MenuOption,
@@ -11,6 +11,7 @@ import {
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const { Popover } = renderers;
+const { width } = Dimensions.get('window');
 
 interface MenuItem {
   id: string;
