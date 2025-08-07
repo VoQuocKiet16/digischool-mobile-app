@@ -9,7 +9,7 @@ import ManageService, { TeacherRollcallData, WeekDaysResponse } from "../service
 const STATUS = ["Tất cả", "Chưa điểm danh", "Đã điểm danh", "Trễ"];
 
 export default function ManageRollcall() {
-  const { hasUnreadNotification } = useNotificationContext();
+  const { hasUnreadNotification, isLoading: notificationLoading } = useNotificationContext();
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [showDay, setShowDay] = useState(false);
   const [showWeekSelector, setShowWeekSelector] = useState(false);
@@ -193,7 +193,7 @@ export default function ManageRollcall() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f7f7f7" }}>
-      <Header title="Điểm danh" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} hasUnreadNotification={hasUnreadNotification} />
+      <Header title="Điểm danh" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} hasUnreadNotification={!notificationLoading && hasUnreadNotification} />
       
       {/* Filter hàng ngang */}
       <View style={styles.filterRowWrap}>

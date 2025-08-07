@@ -64,8 +64,11 @@ const Student_Violates: React.FC<Student_ViolatesProps> = ({
         student: item.student,
         reason: item.reason,
       }));
-    onViolationsChange?.(violations);
-  }, [violateList, onViolationsChange]);
+    
+    if (onViolationsChange) {
+      onViolationsChange(violations);
+    }
+  }, [violateList]);
 
   const loadStudents = async () => {
     if (!lessonId || lessonId.trim() === "") {

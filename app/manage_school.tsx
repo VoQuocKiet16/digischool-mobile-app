@@ -2,11 +2,11 @@ import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
 import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import Header from "../components/Header";
 import ChartSchoolTopday from "../components/manage/ChartSchoolTopday";
@@ -20,7 +20,7 @@ const FILTERS = ["Toàn trường", "Giáo viên", "Học sinh"];
 const SUB_FILTERS = ["Hôm nay", "Tuần này"];
 
 export default function ManageSchool() {
-  const { hasUnreadNotification } = useNotificationContext();
+  const { hasUnreadNotification, isLoading: notificationLoading } = useNotificationContext();
   const [filter, setFilter] = useState(0);
   const [subFilter, setSubFilter] = useState(0);
   const [userName, setUserName] = useState("");
@@ -53,7 +53,7 @@ export default function ManageSchool() {
       <Header
         title="Quản lý"
         name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"}
-        hasUnreadNotification={hasUnreadNotification}
+        hasUnreadNotification={!notificationLoading && hasUnreadNotification}
       />
 
       <View style={styles.container}>

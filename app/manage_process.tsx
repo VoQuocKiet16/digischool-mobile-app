@@ -2,15 +2,15 @@ import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
 import {
-  Alert,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Alert,
+    Modal,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
 import Svg, { Line, Text as SvgText } from 'react-native-svg';
 import Header from '../components/Header';
@@ -39,7 +39,7 @@ const REQUIRED_LESSONS: { [key: string]: number } = {
 };
 
 export default function ManageProcess() {
-  const { hasUnreadNotification } = useNotificationContext();
+  const { hasUnreadNotification, isLoading: notificationLoading } = useNotificationContext();
   const [block, setBlock] = useState(0);
   const [semester, setSemester] = useState(0);
   const [week, setWeek] = useState(0);
@@ -211,7 +211,7 @@ export default function ManageProcess() {
   return (
     <View style={{ flex: 1, backgroundColor: "#f7f7f7" }}>
       {/* Header */}
-      <Header title="Tiến trình" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} hasUnreadNotification={hasUnreadNotification} />
+      <Header title="Tiến trình" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} hasUnreadNotification={!notificationLoading && hasUnreadNotification} />
       
       {/* Filter lớn */}
       <View style={styles.container}>

@@ -77,13 +77,14 @@ export const responsive = {
   isMediumDevice: width >= 375 && width < 414,
   isLargeDevice: width >= 414,
   isTablet: width >= 768,
+  isIPad: () => width >= 768,
 };
 
 // Predefined responsive values
 export const responsiveValues = {
   // Spacing
   padding: {
-    s: responsive.spacing(-50),
+    s: responsive.spacing(1),
     xs: responsive.spacing(4),
     sm: responsive.spacing(8),
     md: responsive.spacing(16),

@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as DocumentPicker from 'expo-document-picker';
+import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
@@ -20,7 +21,6 @@ import SuccessModal from '../../components/notifications_modal/SuccessModal';
 import { useNotificationContext } from '../../contexts/NotificationContext';
 import manageService from '../../services/manage.service';
 import { fonts } from '../../utils/responsive';
-import { router } from 'expo-router';
 
 // Data cứng cho demo
 const ACCOUNT_TYPES = [
@@ -109,7 +109,7 @@ const SAMPLE_PARENT_DATA = [
 ];
 
 export default function AddAccount() {
-  const { hasUnreadNotification } = useNotificationContext();
+  const { hasUnreadNotification, isLoading: notificationLoading } = useNotificationContext();
   const [userName, setUserName] = useState('');
   
   // Import states

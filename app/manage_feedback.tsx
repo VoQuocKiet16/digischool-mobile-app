@@ -36,7 +36,7 @@ const RATING_OPTIONS = [
 ];
 
 export default function ManageFeedback() {
-  const { hasUnreadNotification } = useNotificationContext();
+  const { hasUnreadNotification, isLoading: notificationLoading } = useNotificationContext();
   const [userName, setUserName] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingModalVisible, setLoadingModalVisible] = useState(false);
@@ -225,7 +225,7 @@ export default function ManageFeedback() {
 
   return (
     <View style={styles.container}>
-      <Header title="Quản lý Feedback" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} hasUnreadNotification={hasUnreadNotification} />
+      <Header title="Quản lý Feedback" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} hasUnreadNotification={!notificationLoading && hasUnreadNotification} />
       
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Stats Section */}
