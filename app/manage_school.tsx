@@ -2,6 +2,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
 import {
+    RefreshControl,
     ScrollView,
     StyleSheet,
     Text,
@@ -24,6 +25,7 @@ export default function ManageSchool() {
   const [filter, setFilter] = useState(0);
   const [subFilter, setSubFilter] = useState(0);
   const [userName, setUserName] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem("userName").then((name) => {
@@ -47,6 +49,15 @@ export default function ManageSchool() {
   const dateStr = `${weekdays[now.getDay()]}, ${pad(now.getDate())}/${pad(
     now.getMonth() + 1
   )}/${now.getFullYear()}`;
+
+  // Refresh function
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    // Simulate refresh delay
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  }, []);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F7F8FA" }}>
@@ -112,6 +123,9 @@ export default function ManageSchool() {
       <ScrollView
         contentContainerStyle={{ paddingBottom: 24 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         {/* Hiển thị chart khi filter là Toàn trường và subFilter là Hôm nay */}
         {filter === 0 && subFilter === 0 && <ChartSchoolTopday />}

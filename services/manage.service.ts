@@ -2,6 +2,92 @@
 import api from './api.config';
 import { getAllSubjects } from './subjects.service';
 
+// ===== INTERFACES CHO THỐNG KÊ =====
+
+export interface DailySchoolStatistics {
+  date: string;
+  total: number;
+  breakdown: {
+    students: number;
+    teachers: number;
+    managers: number;
+  };
+  gradeLevels?: {
+    [key: string]: number;
+  };
+  teacherAttendance?: {
+    total: number;
+    attended: number;
+    absent: number;
+    late: number;
+    attendanceRate: number;
+  };
+}
+
+export interface TeacherAttendanceStatistics {
+  date: string;
+  total: number;
+  attended: number;
+  absent: number;
+  late: number;
+  attendanceRate: number;
+}
+
+export interface StudentChartData {
+  date: string;
+  session: string;
+  periods: {
+    period: number;
+    grade10: number;
+    grade11: number;
+    grade12: number;
+  }[];
+}
+
+export interface WeeklyStatistics {
+  weekNumber: number;
+  academicYear: string;
+  startDate: string;
+  endDate: string;
+  weeklyData: {
+    date: string;
+    dayOfWeek: number;
+    dayName: string;
+    total: number;
+    breakdown: {
+      students: number;
+      teachers: number;
+      managers: number;
+    };
+    gradeLevels: {
+      [key: string]: number;
+    };
+    studentsPresent: number;
+    teacherStats: TeacherAttendanceStatistics;
+  }[];
+}
+
+export interface CompletionRates {
+  weekNumber: number;
+  academicYear: string;
+  period: {
+    startDate: string;
+    endDate: string;
+  };
+  students: {
+    total: number;
+    completed: number;
+    rate: number;
+  };
+  teachers: {
+    total: number;
+    completed: number;
+    rate: number;
+  };
+}
+
+// ===== INTERFACES HIỆN CÓ =====
+
 export interface TeacherRollcallData {
   teacherId: string;
   teacherName: string;
@@ -678,6 +764,121 @@ class ManageService {
     } catch (error: any) {
       throw error;
     }
+  }
+
+  // ===== API THỐNG KÊ =====
+
+  /**
+   * Lấy thống kê sĩ số toàn trường theo ngày
+   */
+  async getDailySchoolStatistics(targetDate?: string): Promise<DailySchoolStatistics> {
+    try {
+      const date = targetDate || new Date().toISOString().split('T')[0];
+      const url = `/api/statistics/daily?date=${date}`;
+      console.log('🌐 Calling API:', url);
+      
+      const response = await api.get(url);
+      console.log('✅ Daily stats response:', response.data);
+      return response.data.data; // Truy cập data bên trong
+    } catch (error) {
+      console.error('❌ Lỗi khi lấy thống kê sĩ số toàn trường:', error);
+      console.error('❌ Error details:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy thống kê điểm danh giáo viên theo ngày
+   */
+  async getTeacherAttendanceStatistics(targetDate?: string): Promise<TeacherAttendanceStatistics> {
+    try {
+      const date = targetDate || new Date().toISOString().split('T')[0];
+      const url = `/api/statistics/teacher-attendance?date=${date}`;
+      console.log('🌐 Calling API:', url);
+      
+      const response = await api.get(url);
+      console.log('✅ Teacher attendance response:', response.data);
+      return response.data.data; // Truy cập data bên trong
+    } catch (error) {
+      console.error('❌ Lỗi khi lấy thống kê điểm danh giáo viên:', error);
+      console.error('❌ Error details:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy dữ liệu biểu đồ học sinh theo buổi
+   */
+  async getStudentChartData(targetDate?: string, session: 'morning' | 'afternoon' = 'morning'): Promise<StudentChartData> {
+    try {
+      const date = targetDate || new Date().toISOString().split('T')[0];
+      const url = `/api/statistics/student-chart?date=${date}&session=${session}`;
+      console.log('🌐 Calling API:', url);
+      
+      const response = await api.get(url);
+      console.log('✅ Student chart response:', response.data);
+      return response.data.data; // Truy cập data bên trong
+    } catch (error) {
+      console.error('❌ Lỗi khi lấy dữ liệu biểu đồ học sinh:', error);
+      console.error('❌ Error details:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy thống kê tuần học
+   */
+  async getWeeklyStatistics(weekNumber: number, academicYearName: string): Promise<WeeklyStatistics> {
+    try {
+      console.log('🌐 Calling weekly API with:', { weekNumber, academicYearName });
+      const response = await api.get(`/api/statistics/weekly?weekNumber=${weekNumber}&academicYear=${academicYearName}`);
+      console.log('✅ Weekly stats response:', response.data);
+      return response.data.data; // Truy cập data bên trong
+    } catch (error) {
+      console.error('❌ Lỗi khi lấy thống kê tuần:', error);
+      console.error('❌ Error details:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy tỷ lệ hoàn thành
+   */
+  async getCompletionRates(weekNumber: number, academicYearName: string): Promise<CompletionRates> {
+    try {
+      console.log('🌐 Calling completion rates API with:', { weekNumber, academicYearName });
+      const response = await api.get(`/api/statistics/completion-rates?weekNumber=${weekNumber}&academicYear=${academicYearName}`);
+      console.log('✅ Completion rates response:', response.data);
+      return response.data.data; // Truy cập data bên trong
+    } catch (error) {
+      console.error('❌ Lỗi khi lấy tỷ lệ hoàn thành:', error);
+      console.error('❌ Error details:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy năm học hiện tại
+   */
+  async getCurrentAcademicYear(): Promise<{ id: string; name: string }> {
+    try {
+      const response = await api.get('/api/academic-years/current');
+      return response.data.data; // Truy cập data bên trong
+    } catch (error) {
+      console.error('Lỗi khi lấy năm học hiện tại:', error);
+      // Fallback data
+      return { id: 'default-year-id', name: '2025-2026' };
+    }
+  }
+
+  /**
+   * Tính tuần hiện tại
+   */
+  getCurrentWeekNumber(): number {
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const days = Math.floor((now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
+    return Math.ceil(days / 7);
   }
 }
 

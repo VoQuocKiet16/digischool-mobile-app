@@ -1,6 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Animated,
   StyleSheet,
   Text,
@@ -8,6 +9,11 @@ import {
   View,
 } from "react-native";
 import Svg, { Rect } from "react-native-svg";
+import manageService, {
+  DailySchoolStatistics,
+  StudentChartData,
+  TeacherAttendanceStatistics
+} from "../../services/manage.service";
 
 export default function ChartSchoolTopday() {
   // State buổi sáng/chiều
@@ -16,34 +22,175 @@ export default function ChartSchoolTopday() {
   );
   const [fadeAnim] = React.useState(new Animated.Value(1));
 
-  // Dữ liệu mẫu
-  const total = 1200;
-  const students = 1100;
-  const teachers = 70;
-  const managers = 30;
-  const checkedIn = 67;
-  const totalTeachers = 70;
+  // State cho dữ liệu API
+  const [dailyStats, setDailyStats] = useState<DailySchoolStatistics | null>(null);
+  const [teacherStats, setTeacherStats] = useState<TeacherAttendanceStatistics | null>(null);
+  const [studentChartData, setStudentChartData] = useState<StudentChartData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Dữ liệu chart (stacked bar)
-  const chartDataMorning = [
-    { k10: 300, k11: 400, k12: 400 },
-    { k10: 320, k11: 390, k12: 390 },
-    { k10: 310, k11: 410, k12: 380 },
-    { k10: 305, k11: 405, k12: 390 },
-    { k10: 315, k11: 395, k12: 390 },
-  ];
-  const chartDataAfternoon = [
-    { k10: 200, k11: 300, k12: 350 },
-    { k10: 220, k11: 290, k12: 340 },
-    { k10: 210, k11: 310, k12: 330 },
-    { k10: 205, k11: 305, k12: 340 },
-    { k10: 215, k11: 295, k12: 340 },
-  ];
+  // Fetch data từ API
+  useEffect(() => {
+    fetchDailyData();
+  }, []);
+
+  const fetchDailyData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('🔄 Fetching daily data...');
+      
+      // Fetch daily school statistics
+      const dailyResponse = await manageService.getDailySchoolStatistics();
+      console.log('📊 Daily stats:', dailyResponse);
+      setDailyStats(dailyResponse);
+
+      // Sử dụng teacherAttendance từ daily stats thay vì gọi API riêng
+      if (dailyResponse.teacherAttendance) {
+        setTeacherStats({
+          date: dailyResponse.date,
+          total: dailyResponse.teacherAttendance.total,
+          attended: dailyResponse.teacherAttendance.attended,
+          absent: dailyResponse.teacherAttendance.absent,
+          late: dailyResponse.teacherAttendance.late,
+          attendanceRate: dailyResponse.teacherAttendance.attendanceRate
+        });
+      } else {
+        // Fallback nếu không có teacherAttendance
+        const teacherResponse = await manageService.getTeacherAttendanceStatistics();
+        console.log('👨‍🏫 Teacher stats:', teacherResponse);
+        setTeacherStats(teacherResponse);
+      }
+
+      // Fetch student chart data
+      const chartResponse = await manageService.getStudentChartData(undefined, session);
+      console.log('📈 Chart data:', chartResponse);
+      setStudentChartData(chartResponse);
+
+    } catch (error) {
+      console.error('❌ Error fetching data:', error);
+      
+      // Fallback data khi API fail
+      const fallbackDailyStats = {
+        date: new Date().toISOString(),
+        total: 1200,
+        breakdown: {
+          students: 1100,
+          teachers: 70,
+          managers: 30
+        },
+        gradeLevels: {
+          grade10: 400,
+          grade11: 350,
+          grade12: 350
+        }
+      };
+      
+      const fallbackTeacherStats = {
+        date: new Date().toISOString(),
+        total: 70,
+        attended: 67,
+        absent: 3,
+        late: 0,
+        attendanceRate: 96
+      };
+      
+      const fallbackChartData = {
+        date: new Date().toISOString(),
+        session: session,
+        periods: [
+          { period: 1, grade10: 300, grade11: 400, grade12: 400 },
+          { period: 2, grade10: 320, grade11: 390, grade12: 390 },
+          { period: 3, grade10: 310, grade11: 410, grade12: 380 },
+          { period: 4, grade10: 305, grade11: 405, grade12: 390 },
+          { period: 5, grade10: 315, grade11: 395, grade12: 390 }
+        ]
+      };
+      
+      console.log('🔄 Using fallback data...');
+      setDailyStats(fallbackDailyStats);
+      setTeacherStats(fallbackTeacherStats);
+      setStudentChartData(fallbackChartData);
+      
+      setError('Sử dụng dữ liệu mẫu (API chưa sẵn sàng)');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch chart data khi session thay đổi
+  useEffect(() => {
+    if (!loading) {
+      fetchStudentChartData();
+    }
+  }, [session]);
+
+  const fetchStudentChartData = async () => {
+    try {
+      const chartResponse = await manageService.getStudentChartData(undefined, session);
+      setStudentChartData(chartResponse);
+    } catch (error) {
+      console.error('Error fetching chart data:', error);
+    }
+  };
+
+  // Sử dụng dữ liệu thực từ API
+  const total = dailyStats?.total || 0;
+  const students = dailyStats?.breakdown?.students || 0;
+  const teachers = dailyStats?.breakdown?.teachers || 0;
+  const managers = dailyStats?.breakdown?.managers || 0;
+  const checkedIn = teacherStats?.attended || 0;
+  const totalTeachers = teacherStats?.total || 0;
+
+  // Debug logging
+  console.log('🔍 UI Data - Total:', total);
+  console.log('🔍 UI Data - Students:', students);
+  console.log('🔍 UI Data - Teachers:', teachers);
+  console.log('🔍 UI Data - Managers:', managers);
+  console.log('🔍 UI Data - Checked in:', checkedIn);
+  console.log('🔍 UI Data - Total teachers:', totalTeachers);
+
+  // Chuyển đổi dữ liệu chart
+  const chartDataMorning = studentChartData?.periods?.slice(0, 5).map(period => ({
+    k10: period.grade10,
+    k11: period.grade11,
+    k12: period.grade12
+  })) || [];
+
+  const chartDataAfternoon = studentChartData?.periods?.slice(5, 10).map(period => ({
+    k10: period.grade10,
+    k11: period.grade11,
+    k12: period.grade12
+  })) || [];
+
+  console.log('🔍 UI Data - Chart data morning:', chartDataMorning);
+  console.log('🔍 UI Data - Chart data afternoon:', chartDataAfternoon);
+
   const chartData =
     session === "morning" ? chartDataMorning : chartDataAfternoon;
   const barColors = ["#4B5B8C", "#F9A825", "#2E8B8B"];
   const barLabels = ["Khối 10", "Khối 11", "Khối 12"];
-  const maxY = 1200;
+  
+  // Tính maxY dựa trên dữ liệu thực tế
+  const maxY = chartData.length > 0 
+    ? Math.max(...chartData.map(bar => bar.k10 + bar.k11 + bar.k12))
+    : 1;
+  
+  console.log('🔍 Chart Debug - Chart data:', chartData);
+  console.log('🔍 Chart Debug - MaxY:', maxY);
+  console.log('🔍 Chart Debug - Chart data length:', chartData.length);
+  
+  // Debug từng bar
+  chartData.forEach((bar, index) => {
+    console.log(`🔍 Chart Debug - Bar ${index}:`, {
+      k10: bar.k10,
+      k11: bar.k11,
+      k12: bar.k12,
+      total: bar.k10 + bar.k11 + bar.k12
+    });
+  });
+  
   const barWidth = 28;
   const barGap = 22;
   const chartHeight = 120;
@@ -76,8 +223,30 @@ export default function ChartSchoolTopday() {
     });
   };
 
+  // Loading state
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#29375C" />
+        <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
+      </View>
+    );
+  }
+
+  // Error state - chỉ hiển thị thông báo nhỏ, không block UI
+  if (error) {
+    console.log('⚠️ Displaying error:', error);
+  }
+
   return (
     <View style={styles.wrap}>
+      {/* Error notification */}
+      {error && (
+        <View style={styles.errorNotification}>
+          <Text style={styles.errorNotificationText}>{error}</Text>
+        </View>
+      )}
+      
       {/* Card 1 */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>
@@ -91,26 +260,26 @@ export default function ChartSchoolTopday() {
             justifyContent: "center",
           }}
         >
-          <Text style={styles.bigNumber}>1.200</Text>
+          <Text style={styles.bigNumber}>{total.toLocaleString()}</Text>
           <Text style={styles.unitText}>người</Text>
         </View>
         <View style={styles.row3}>
           <View style={styles.col3}>
             <Text style={styles.label3}>
               Học sinh{"\n"}
-              <Text style={styles.bold3}>1.100</Text>
+              <Text style={styles.bold3}>{students.toLocaleString()}</Text>
             </Text>
           </View>
           <View style={styles.col3}>
             <Text style={styles.label3}>
               Giáo viên{"\n"}
-              <Text style={styles.bold3}>70</Text>
+              <Text style={styles.bold3}>{teachers.toLocaleString()}</Text>
             </Text>
           </View>
           <View style={styles.col3}>
             <Text style={styles.label3}>
               Quản lý{"\n"}
-              <Text style={styles.bold3}>30</Text>
+              <Text style={styles.bold3}>{managers.toLocaleString()}</Text>
             </Text>
           </View>
         </View>
@@ -136,7 +305,7 @@ export default function ChartSchoolTopday() {
             justifyContent: "center",
           }}
         >
-          <Text style={styles.bigNumber2}>67/70</Text>
+          <Text style={styles.bigNumber2}>{checkedIn}/{totalTeachers}</Text>
           <Text style={styles.unitText}>người</Text>
         </View>
       </View>
@@ -158,9 +327,9 @@ export default function ChartSchoolTopday() {
               height: chartHeight,
             }}
           >
-            {[1200, 900, 600, 300, 0].map((v, idx) => (
+            {[maxY, Math.round(maxY * 0.75), Math.round(maxY * 0.5), Math.round(maxY * 0.25), 0].map((v, idx) => (
               <View
-                key={v}
+                key={`y-axis-${idx}-${v}`}
                 style={{ flexDirection: "row", alignItems: "center" }}
               >
                 <Text style={styles.axisY}>{v}</Text>
@@ -183,7 +352,13 @@ export default function ChartSchoolTopday() {
                 let stack = getBarStack(bar, i);
                 let yOffset = 0;
                 return stack.map((seg, j) => {
-                  const h = (seg.h * chartHeight) / maxY;
+                  // Tính chiều cao dựa trên tỷ lệ thực tế với scale factor
+                  const totalValue = bar.k10 + bar.k11 + bar.k12;
+                  const segmentRatio = totalValue > 0 ? seg.h / totalValue : 0;
+                  
+                  // Scale factor để giảm chiều cao tổng thể
+                  const scaleFactor = 0.85; // Giảm 15% chiều cao
+                  const h = (totalValue * chartHeight * scaleFactor) / maxY * segmentRatio;
                   const y = chartHeight - yOffset - h;
                   yOffset += h;
                   return (
@@ -210,7 +385,7 @@ export default function ChartSchoolTopday() {
               }}
             >
               {[1, 2, 3, 4, 5].map((i) => (
-                <Text key={i} style={styles.axisX}>{`Tiết ${i}`}</Text>
+                <Text key={`period-${i}`} style={styles.axisX}>{`Tiết ${i}`}</Text>
               ))}
             </View>
             {/* Mũi tên phải */}
@@ -361,7 +536,6 @@ const styles = StyleSheet.create({
   chartWrap: {
     flexDirection: "row",
     alignItems: "flex-start",
-    // backgroundColor: '#FFFFFF',
     borderRadius: 16,
     paddingVertical: 8,
     paddingLeft: 0,
@@ -387,6 +561,56 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 3,
     marginRight: 6,
+  },
+  // Loading và Error styles
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 50,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#29375C',
+    fontFamily: 'Baloo2-Medium',
+  },
+  errorContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#FF6B6B',
+    fontFamily: 'Baloo2-Medium',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  retryButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: '#29375C',
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontFamily: 'Baloo2-Medium',
+  },
+  errorNotification: {
+    backgroundColor: '#FFF3CD',
+    borderColor: '#FFEAA7',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    marginHorizontal: 12,
+  },
+  errorNotificationText: {
+    color: '#856404',
+    fontSize: 14,
+    fontFamily: 'Baloo2-Medium',
+    textAlign: 'center',
   },
 });
 
