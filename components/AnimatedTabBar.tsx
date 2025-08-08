@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     height: responsive.isIPad() ? 80 : 70, // Cao hơn cho iPad
   },
   tabBar: {
-    height: responsive.isIPad() ? 110 : 100, // Cao hơn cho iPad
+    height: responsive.isIPad() ? 110 : 60, // Cao hơn cho iPad
     position: 'absolute',
     bottom: 0,
     left: 0,
