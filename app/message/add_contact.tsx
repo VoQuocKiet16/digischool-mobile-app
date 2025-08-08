@@ -148,7 +148,7 @@ export default function AddContactScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F6F8FB",
+    backgroundColor: "#F7F7F7",
     paddingHorizontal: 0,
     paddingTop: 0,
     justifyContent: "space-between",
