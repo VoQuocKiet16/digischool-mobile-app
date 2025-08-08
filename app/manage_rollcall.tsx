@@ -1,7 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Header from "../components/Header";
 import { useNotificationContext } from "../contexts/NotificationContext";
 import ManageService, { TeacherRollcallData, WeekDaysResponse } from "../services/manage.service";
@@ -319,7 +319,7 @@ export default function ManageRollcall() {
         
         {loading ? (
           <View style={styles.emptyStateContainer}>
-            <MaterialIcons name="hourglass-empty" size={48} color="#29375C" style={{marginBottom: 12}} />
+            <ActivityIndicator size="large" color="#29375C" style={{marginBottom: 12}} />
             <Text style={styles.emptyStateTitle}>Đang tải dữ liệu...</Text>
           </View>
         ) : rollcallData.length > 0 ? (
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     color: '#29375C',
     fontFamily: "Baloo2-SemiBold",
-    fontSize: 18,
+    fontSize: 14,
     marginBottom: 8,
   },
   emptyStateSubtitle: {

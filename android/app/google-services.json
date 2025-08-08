@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "574477302253",
+    "project_id": "digischool-349c6",
+    "storage_bucket": "digischool-349c6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:574477302253:android:49985e46034215da444fe4",
+        "android_client_info": {
+          "package_name": "com.kietvo123.digischool"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDwNMccC1s9OCCawXXq-BF3dqRMCeSoof0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
