@@ -2,15 +2,16 @@ import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import {
-    Alert,
-    FlatList,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
 import Header from "../components/Header";
 import LoadingModal from "../components/LoadingModal";
@@ -290,7 +291,8 @@ export default function ManageFeedback() {
           
           {loading ? (
             <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Đang tải...</Text>
+              <ActivityIndicator size="large" color="#29375C" style={{marginBottom: 12}} />
+              <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
             </View>
           ) : feedbacks.length === 0 ? (
             <View style={styles.emptyContainer}>
@@ -610,12 +612,14 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     alignItems: "center",
-    padding: 40,
+    paddingTop: 100,
+    backgroundColor: "#f7f7f7",
   },
   loadingText: {
-    fontSize: 16,
-    fontFamily: "Baloo2-Medium",
-    color: "#7B859C",
+    color: '#29375C',
+    fontFamily: "Baloo2-SemiBold",
+    fontSize: 14,
+    marginBottom: 8,
   },
   emptyContainer: {
     alignItems: "center",

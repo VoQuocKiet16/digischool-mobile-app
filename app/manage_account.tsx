@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from "react";
-import { Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Header from "../components/Header";
 import { useNotificationContext } from "../contexts/NotificationContext";
 import ManageService, { AccountData, AccountsResponse } from "../services/manage.service";
@@ -170,6 +170,7 @@ export default function ManageAccount() {
       >
         {loading ? (
           <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#29375C" />
             <Text style={styles.loadingText}>Đang tải danh sách tài khoản...</Text>
           </View>
         ) : accounts.length === 0 ? (
@@ -601,7 +602,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   loadingText: {
-    fontSize: 18,
+    fontSize: 14,
     color: '#29375C',
     fontFamily: 'Baloo2-SemiBold',
   },
