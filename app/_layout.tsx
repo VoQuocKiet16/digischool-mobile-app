@@ -29,6 +29,7 @@ import { UserProvider, useUserContext } from "../contexts/UserContext";
 import { useSessionCheck } from "../hooks/useSessionCheck";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
+// import { useFirebaseMessaging } from "@/hooks/useFirebaseMessaging"; // dành cho chạy trên device (push notification)
 import { fonts } from "@/utils/responsive";
 
 
@@ -48,6 +49,7 @@ function RootLayoutContent() {
   const { toastVisible, toastTitle, toastMessage, hideToast } = useNotificationContext();
 
   useSessionCheck();
+  // useFirebaseMessaging(); // TẠM ẨN để chạy Expo Go, dành cho chạy trên device (push notification)
   
   const studentTabs = [
     {

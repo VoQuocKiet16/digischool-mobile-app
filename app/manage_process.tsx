@@ -2,15 +2,16 @@ import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
 import {
-    Alert,
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
 import Svg, { Line, Text as SvgText } from 'react-native-svg';
 import Header from '../components/Header';
@@ -429,7 +430,7 @@ export default function ManageProcess() {
       {/* Bảng thống kê tiết dạy */}
       {loading ? (
         <View style={styles.loadingContainer}>
-          <MaterialIcons name="hourglass-empty" size={48} color="#29375C" />
+          <ActivityIndicator size="large" color="#29375C" style={{marginBottom: 12}} />
           <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
         </View>
       ) : classesByGrade.length === 0 ? (
@@ -850,16 +851,15 @@ const styles = StyleSheet.create({
     fontFamily: "Baloo2-Medium",
   },
   loadingContainer: {
-    flex: 1,
-    marginTop: 100,
     alignItems: 'center',
+    paddingTop: 100,
     backgroundColor: '#f7f7f7'
   },
   loadingText: {
     marginTop: 10,
-    fontSize: 16,
+    fontSize: 14,
     color: '#29375C',
-    fontFamily: fonts.medium,
+    fontFamily: 'Baloo2-SemiBold',
   },
   emptyContainer: {
     flex: 1,
