@@ -308,7 +308,7 @@ export default function LoginScreen() {
               styles.loginButton,
               isValid
                 ? { backgroundColor: "#29375C" }
-                : { backgroundColor: "#29375C", opacity: 0.3 },
+                : { backgroundColor: "rgba(41,55,92,0.3)" },
             ]}
             disabled={!isValid || loading}
             onPress={handleLogin}
@@ -352,12 +352,11 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1.5,
-    borderColor: "#29375C",
-    borderRadius: 18,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(41,55,92,0.2)",
     paddingHorizontal: 16,
     marginBottom: 8,
-    backgroundColor: "#fff",
     height: 58,
   },
   inputIcon: {
