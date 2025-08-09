@@ -1,6 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getMessaging, getToken } from '@react-native-firebase/messaging';
 import { API_ENDPOINTS } from "../constants/api.constants";
 import api from "./api.config";
+import { unregisterDeviceToken } from "./push_token.service";
 
 export const login = async (email: string, password: string) => {
   try {
@@ -20,7 +22,24 @@ export const login = async (email: string, password: string) => {
 
 export const logout = async () => {
   try {
-    // Clear all session data first to avoid authorization errors
+    // Unregister FCM token trước khi xoá session
+    const [userId, authToken] = await Promise.all([
+      AsyncStorage.getItem("userId"),
+      AsyncStorage.getItem("token"),
+    ]);
+    try {
+      if (userId && authToken) {
+        const token = await getToken(getMessaging());
+        if (token) {
+          await unregisterDeviceToken({ userId, fcmToken: token }, authToken);
+        }
+      }
+    } catch (e) {
+      // Không chặn logout nếu unregister lỗi
+      console.warn('unregisterDeviceToken failed (ignored):', e?.toString?.() || e);
+    }
+
+    // Clear all session data
     await AsyncStorage.multiRemove([
       "token", 
       "userId", 
@@ -37,7 +56,7 @@ export const logout = async () => {
     const response = await api.post(API_ENDPOINTS.AUTH.LOGOUT);
     return response.data;
   } catch (error: any) {
-    // If there's an error sending logout request, still ensure local data is cleared
+    // Ensure local data is cleared if any error
     await AsyncStorage.multiRemove([
       "token", 
       "userId", 

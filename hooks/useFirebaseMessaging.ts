@@ -1,3 +1,4 @@
+import { useUserContext } from '@/contexts/UserContext';
 import { registerDeviceToken } from '@/services/push_token.service';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -27,21 +28,24 @@ async function requestUserPermission() {
   return true;
 }
 
-async function fetchAndRegisterFcmToken() {
+async function fetchAndRegisterFcmTokenForUser(userId?: string | null) {
   try {
+    if (!userId) {
+      // Thử lấy từ AsyncStorage nếu chưa có
+      userId = await AsyncStorage.getItem('userId');
+    }
+    if (!userId) return;
+
+    const [authToken] = await Promise.all([
+      AsyncStorage.getItem('token'),
+    ]);
+    if (!authToken) return;
+
     const messagingInstance = getMessaging();
     const token = await getToken(messagingInstance);
     if (token) {
       console.log('FCM Token:', token);
-      const [userId, authToken] = await Promise.all([
-        AsyncStorage.getItem('userId'),
-        AsyncStorage.getItem('token'),
-      ]);
-      if (userId && authToken) {
-        await registerDeviceToken({ userId, fcmToken: token, platform: Platform.OS as 'android' | 'ios' }, authToken);
-      }
-    } else {
-      console.log('Không lấy được FCM token');
+      await registerDeviceToken({ userId, fcmToken: token, platform: Platform.OS as 'android' | 'ios' }, authToken);
     }
   } catch (error) {
     console.error('Lỗi lấy/đăng ký FCM token:', error);
@@ -49,11 +53,14 @@ async function fetchAndRegisterFcmToken() {
 }
 
 export function useFirebaseMessaging() {
+  const { userData } = useUserContext();
+  const derivedUserId = userData?._id || userData?.id || null;
+
   useEffect(() => {
     (async () => {
       const granted = await requestUserPermission();
       if (granted) {
-        await fetchAndRegisterFcmToken();
+        await fetchAndRegisterFcmTokenForUser(derivedUserId);
       }
     })();
 
@@ -62,10 +69,8 @@ export function useFirebaseMessaging() {
     // Cập nhật token khi FCM refresh
     const unsubscribeTokenRefresh = onTokenRefresh(messagingInstance, async (newToken) => {
       console.log('FCM token refreshed:', newToken);
-      const [userId, authToken] = await Promise.all([
-        AsyncStorage.getItem('userId'),
-        AsyncStorage.getItem('token'),
-      ]);
+      const userId = derivedUserId || (await AsyncStorage.getItem('userId'));
+      const authToken = await AsyncStorage.getItem('token');
       if (userId && authToken) {
         await registerDeviceToken({ userId, fcmToken: newToken, platform: Platform.OS as 'android' | 'ios' }, authToken);
       }
@@ -75,25 +80,18 @@ export function useFirebaseMessaging() {
     const unsubscribeOnMessage = onMessage(messagingInstance, async remoteMessage => {
       const title = remoteMessage?.notification?.title || 'Thông báo mới';
       const body = remoteMessage?.notification?.body || '';
-      try {
-        // Fallback: Alert nếu không có toast
-        Alert.alert(title, body);
-      } catch {
-        Alert.alert(title, body);
-      }
+      Alert.alert(title, body);
     });
 
     // Opened from background
     const unsubscribeOnOpened = onNotificationOpenedApp(messagingInstance, (remoteMessage) => {
       console.log('Mở từ background:', remoteMessage?.notification);
-      // TODO: Điều hướng theo data nếu cần
     });
 
     // Opened from quit state
     getInitialNotification(messagingInstance).then((remoteMessage) => {
       if (remoteMessage) {
         console.log('Mở từ trạng thái tắt hẳn:', remoteMessage?.notification);
-        // TODO: Điều hướng theo data nếu cần
       }
     });
 
@@ -102,5 +100,6 @@ export function useFirebaseMessaging() {
       unsubscribeOnOpened();
       unsubscribeTokenRefresh();
     };
-  }, []);
+  // Re-run khi user thay đổi để đảm bảo token được gán đúng chủ sở hữu
+  }, [derivedUserId]);
 } 

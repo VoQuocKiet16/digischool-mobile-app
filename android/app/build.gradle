@@ -88,9 +88,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.kietvo123.digischool'
+    namespace 'com.gdevx.digischool'
     defaultConfig {
-        applicationId 'com.kietvo123.digischool'
+        applicationId 'com.gdevx.digischool'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
