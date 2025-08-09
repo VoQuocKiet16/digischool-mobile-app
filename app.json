@@ -15,7 +15,7 @@
         "foregroundImage": "./assets/images/app-digi-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.kietvo123.digischool"
+      "package": "com.gdevx.digischool"
     },
     "web": {
       "bundler": "metro",
