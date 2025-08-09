@@ -1,8 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getMessaging, getToken } from '@react-native-firebase/messaging';
 import { API_ENDPOINTS } from "../constants/api.constants";
 import api from "./api.config";
-import { unregisterDeviceToken } from "./push_token.service";
+// import { getMessaging, getToken } from '@react-native-firebase/messaging'; // [ẨN TẠM] bật lại khi build native
 
 export const login = async (email: string, password: string) => {
   try {
@@ -22,22 +21,27 @@ export const login = async (email: string, password: string) => {
 
 export const logout = async () => {
   try {
-    // Unregister FCM token trước khi xoá session
+    // Unregister FCM token trước khi xoá session (ẨN khi chạy Expo Go)
     const [userId, authToken] = await Promise.all([
       AsyncStorage.getItem("userId"),
       AsyncStorage.getItem("token"),
     ]);
-    try {
-      if (userId && authToken) {
-        const token = await getToken(getMessaging());
-        if (token) {
-          await unregisterDeviceToken({ userId, fcmToken: token }, authToken);
-        }
-      }
-    } catch (e) {
-      // Không chặn logout nếu unregister lỗi
-      console.warn('unregisterDeviceToken failed (ignored):', e?.toString?.() || e);
-    }
+
+    // [ẨN TẠM] RNFirebase - bật lại khi build native/Dev Client
+    // try {
+    //   if (userId && authToken) {
+    //     // Cách 1: import động an toàn trên web/Expo Go
+    //     const messagingMod = await import('@react-native-firebase/messaging').catch(() => null as any);
+    //     if (messagingMod && messagingMod.getMessaging && messagingMod.getToken) {
+    //       const token = await messagingMod.getToken(messagingMod.getMessaging());
+    //       if (token) {
+    //         await unregisterDeviceToken({ userId, fcmToken: token }, authToken);
+    //       }
+    //     }
+    //   }
+    // } catch (e) {
+    //   console.warn('unregisterDeviceToken failed (ignored):', e?.toString?.() || e);
+    // }
 
     // Clear all session data
     await AsyncStorage.multiRemove([
