@@ -28,6 +28,13 @@ interface NotificationContextType {
   toastVisible: boolean;
   toastTitle: string;
   toastMessage: string;
+
+  // Optimistic updates
+  optimisticMarkNotificationAsRead: (id: string) => void;
+  optimisticMarkAllAsRead: () => void;
+
+  // TTL metadata
+  lastFetchedAt: number | null;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -61,6 +68,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   const [socket, setSocket] = useState<Socket | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const isConnectingRef = useRef(false);
+  const [lastFetchedAt, setLastFetchedAt] = useState<number | null>(null);
 
   // Tạo socket connection
   const createSocket = useCallback(async () => {
@@ -195,6 +203,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       setNotificationsUser(user.data || []);
       setNotificationsActivity(activity.data || []);
       setNotificationsSystem(system.data || []);
+      setLastFetchedAt(Date.now());
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
@@ -218,6 +227,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
           setNotificationsSystem(response.data || []);
           break;
       }
+      setLastFetchedAt(Date.now());
     } catch (error) {
       console.error(`❌ Error fetching ${type} notifications:`, error);
     }
@@ -277,6 +287,31 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
     createSocket();
   };
 
+  const optimisticMarkNotificationAsRead = (id: string) => {
+    if (!userId) return;
+    const mark = (list: Notification[]) => list.map(n => {
+      if (n._id !== id) return n;
+      const isReadBy = Array.isArray(n.isReadBy) ? n.isReadBy : [];
+      if (isReadBy.includes(userId)) return n;
+      return { ...n, isReadBy: [...isReadBy, userId] } as Notification;
+    });
+    setNotificationsUser(prev => mark(prev));
+    setNotificationsActivity(prev => mark(prev));
+    setNotificationsSystem(prev => mark(prev));
+  };
+
+  const optimisticMarkAllAsRead = () => {
+    if (!userId) return;
+    const markAll = (list: Notification[]) => list.map(n => {
+      const isReadBy = Array.isArray(n.isReadBy) ? n.isReadBy : [];
+      if (isReadBy.includes(userId)) return n;
+      return { ...n, isReadBy: [...isReadBy, userId] } as Notification;
+    });
+    setNotificationsUser(prev => markAll(prev));
+    setNotificationsActivity(prev => markAll(prev));
+    setNotificationsSystem(prev => markAll(prev));
+  };
+
   const value: NotificationContextType = {
     // Notification list by type
     notificationsUser,
@@ -296,6 +331,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
     toastVisible,
     toastTitle,
     toastMessage,
+
+    // Optimistic updates
+    optimisticMarkNotificationAsRead,
+    optimisticMarkAllAsRead,
+
+    // TTL metadata
+    lastFetchedAt,
   };
 
   return (

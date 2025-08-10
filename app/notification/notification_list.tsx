@@ -66,6 +66,9 @@ export default function NotificationListScreen() {
     notificationsSystem,
     refreshNotifications,
     refreshNotificationsByType,
+    optimisticMarkNotificationAsRead,
+    optimisticMarkAllAsRead,
+    lastFetchedAt,
   } = useNotificationContext();
 
   // Lấy userId và role từ AsyncStorage
@@ -90,6 +93,13 @@ export default function NotificationListScreen() {
     setLoading(true);
     setError("");
     try {
+      // TTL: 3 phút
+      const staleTimeMs = 3 * 60 * 1000;
+      const isFresh = lastFetchedAt && Date.now() - lastFetchedAt < staleTimeMs;
+      if (isFresh) {
+        setLoading(false);
+        return;
+      }
       await refreshNotifications();
     } catch (err) {
       setError("Không thể tải thông báo");
@@ -156,7 +166,10 @@ export default function NotificationListScreen() {
     try {
       const token = await AsyncStorage.getItem("token");
       if (!token) return;
+      // Optimistic update
+      optimisticMarkAllAsRead();
       await markAllNotificationsAsRead(token);
+      // Revalidate nền
       fetchAllNotifications();
     } catch {}
   };
@@ -165,12 +178,16 @@ export default function NotificationListScreen() {
     try {
       const token = await AsyncStorage.getItem("token");
       if (token) {
-        await markNotificationAsRead(item._id, token);
-        // Refresh notifications sau khi đánh dấu đã đọc
-        refreshNotificationsByType(tab as 'user' | 'activity' | 'system');
+        // Optimistic mark-as-read
+        optimisticMarkNotificationAsRead(item._id);
+        // Gọi API nền
+        markNotificationAsRead(item._id, token).catch(() => {
+          // Nếu lỗi, refetch để đồng bộ lại
+          refreshNotificationsByType(tab as 'user' | 'activity' | 'system');
+        });
       }
     } catch (err) {
-      alert("Lỗi khi đánh dấu thông báo đã đọc");
+      // Bỏ qua, sẽ refetch sau
     }
     router.push({
       pathname: "/notification/notification_detail",

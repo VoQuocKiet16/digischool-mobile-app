@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useChatCache } from "../../contexts/ChatCacheContext";
 import { useChatContext } from "../../contexts/ChatContext";
 import chatService from "../../services/chat.service";
 import { fonts } from "../../utils/responsive";
@@ -24,6 +25,7 @@ type Props = {
 
 export default function MessageListScreen({ token = "demo-token" }: Props) {
   const { currentUserId, currentToken } = useChatContext();
+  const { getConversations, setConversations } = useChatCache();
   const [search, setSearch] = useState("");
   const [chatData, setChatData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,20 +37,36 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
   useEffect(() => {
     if (currentUserId) {
       setMyId(currentUserId);
+      // Đọc cache hội thoại trước để hiển thị ngay
+      const cached = getConversations(currentUserId);
+      if (cached?.items) {
+        setChatData(cached.items);
+        setLoading(false);
+      }
     } else {
-      AsyncStorage.getItem("userId").then((id) => setMyId(id ?? undefined));
+      AsyncStorage.getItem("userId").then((id) => {
+        const uid = id ?? undefined;
+        setMyId(uid);
+        if (uid) {
+          const cached = getConversations(uid);
+          if (cached?.items) {
+            setChatData(cached.items);
+            setLoading(false);
+          }
+        }
+      });
     }
   }, [currentUserId]);
 
   // Tách fetchConversations ra ngoài để có thể gọi lại
   const fetchConversations = async () => {
-    setLoading(true);
     setError("");
     try {
       const actualToken = currentToken || token;
       const res = await chatService.getConversations(actualToken);
       if (res.success) {
         setChatData(res.data);
+        if (myId) setConversations(myId, res.data);
       } else {
         setError(res.message || "Lỗi không xác định");
         setChatData([]);
@@ -62,7 +80,22 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
   };
 
   useEffect(() => {
-    fetchConversations();
+    // Revalidate nền khi token/flag đổi
+    // TTL: 20 giây
+    const tryRevalidate = async () => {
+      if (myId) {
+        const cached = getConversations(myId);
+        const staleTimeMs = 20 * 1000;
+        const isFresh = cached && Date.now() - cached.updatedAt < staleTimeMs;
+        if (isFresh) {
+          setLoading(false);
+          return;
+        }
+      }
+      fetchConversations();
+    };
+    tryRevalidate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentToken, token, refreshFlag]);
 
   useEffect(() => {
@@ -92,6 +125,7 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
           ...prevData.slice(0, idx),
           ...prevData.slice(idx + 1),
         ];
+        if (myId) setConversations(myId, newData);
         return newData;
       });
     };
@@ -99,7 +133,6 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
     const handleMessageRead = (data: any) => {
       // Khi có tin nhắn được mark as read, reset unreadCount cho conversation đó
       setChatData((prevData) => {
-        // Tìm conversation dựa trên data.from (người gửi tin nhắn đã được đọc)
         const idx = prevData.findIndex(
           (item) => item.userId === data.from || item.id === data.from
         );
@@ -110,6 +143,7 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
             ...prevData.slice(0, idx),
             ...prevData.slice(idx + 1),
           ];
+          if (myId) setConversations(myId, newData);
           return newData;
         }
         return prevData;
@@ -251,6 +285,7 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
                         ...prevData.slice(0, idx),
                         ...prevData.slice(idx + 1),
                       ];
+                      if (myId) setConversations(myId, newData);
                       return newData;
                     });
                   }

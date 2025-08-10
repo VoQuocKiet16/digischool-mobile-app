@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import MenuDropdown from "../../components/MenuDropdown";
+import { useNewsCache } from "../../contexts/NewsCacheContext";
 import {
   favoriteNews,
   getAllNews,
@@ -47,6 +48,7 @@ export default function NewsFeedScreen() {
       icon: require("../../assets/images/all.png"),
     },
   ]);
+  const { getCache, setCache } = useNewsCache();
 
   useEffect(() => {
     AsyncStorage.getItem("userId").then(setUserId);
@@ -109,84 +111,143 @@ export default function NewsFeedScreen() {
 
   // Load tin tức ban đầu
   useEffect(() => {
+    const keyTab: "news" | "favorite" = tab;
+    const keySubject = selectedSubject || "all";
+
+    // 1) Đọc cache trước để hiển thị ngay
+    const cached = getCache(keyTab, keySubject);
+    if (cached && cached.items?.length) {
+      setNewsList(cached.items);
+      setInitialLoading(false);
+      setHasInitialized(true);
+    }
+
+    // 2) Revalidate nền (TTL: 10 phút)
     const fetchInitialNews = async () => {
-      setInitialLoading(true);
+      const staleTimeMs = 10 * 60 * 1000;
+      const isFresh = cached && Date.now() - cached.updatedAt < staleTimeMs;
+      if (isFresh) {
+        setInitialLoading(false);
+        setHasInitialized(true);
+        return;
+      }
+
       setError(null);
-      const res = await getAllNews();
-      if (res.success) {
-        setNewsList(res.data || []);
+      if (keyTab === "favorite") {
+        const res = await getFavoriteNews();
+        if (res.success) {
+          let filteredData = res.data || [];
+          if (keySubject !== "all") {
+            const subjectObj = subjects.find((s) => s.key === keySubject || s.id === keySubject);
+            if (subjectObj?.id) {
+              filteredData = filteredData.filter((news: any) => news.subject === subjectObj.id || news.subject === subjectObj.key);
+            }
+          }
+          setNewsList(filteredData);
+          setCache(keyTab, keySubject, filteredData);
+        } else {
+          setError(res.message || "Lỗi không xác định");
+        }
       } else {
-        setError(res.message || "Lỗi không xác định");
+        if (keySubject === "all") {
+          const res = await getAllNews();
+          if (res.success) {
+            setNewsList(res.data || []);
+            setCache(keyTab, keySubject, res.data || []);
+          } else {
+            setError(res.message || "Lỗi không xác định");
+          }
+        } else {
+          const subjectObj = subjects.find((s) => s.key === keySubject || s.id === keySubject);
+          if (subjectObj?.id) {
+            const res = await getNewsBySubject(subjectObj.id);
+            if (res.success) {
+              setNewsList(res.data || []);
+              setCache(keyTab, keySubject, res.data || []);
+            } else {
+              setError(res.message || "Lỗi không xác định");
+            }
+          } else {
+            setNewsList([]);
+            setCache(keyTab, keySubject, []);
+          }
+        }
       }
       setInitialLoading(false);
       setHasInitialized(true);
     };
+
     fetchInitialNews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Khi chọn subject hoặc tab, gọi API filter
+  // Khi chọn subject hoặc tab, gọi API filter, ưu tiên cache trước
   useEffect(() => {
-    // Chỉ chạy khi đã khởi tạo xong
     if (!hasInitialized) return;
-    
-    // Kiểm tra xem filter có thay đổi không
     if (currentFilter.tab === tab && currentFilter.subject === selectedSubject) return;
-    
-    // Cập nhật filter hiện tại
     setCurrentFilter({ tab, subject: selectedSubject });
-    
+
+    const keyTab: "news" | "favorite" = tab;
+    const keySubject = selectedSubject || "all";
+
+    const cached = getCache(keyTab, keySubject);
+    if (cached) {
+      setNewsList(cached.items);
+    }
+
     const fetchNews = async () => {
-      setLoading(true);
+      const staleTimeMs = 10 * 60 * 1000;
+      const isFresh = cached && Date.now() - cached.updatedAt < staleTimeMs;
+      if (isFresh) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(!cached); // nếu có cache thì không hiển thị loading nặng
       setError(null);
-      
+
       if (tab === "favorite") {
-        // Tab yêu thích: lấy tất cả tin yêu thích và filter theo subject ở client-side
         const res = await getFavoriteNews();
         if (res.success) {
           let filteredData = res.data || [];
-          
-          // Filter theo subject nếu không phải "all"
           if (selectedSubject !== "all") {
-            const subjectObj = subjects.find(
-              (s) => s.key === selectedSubject || s.id === selectedSubject
-            );
+            const subjectObj = subjects.find((s) => s.key === selectedSubject || s.id === selectedSubject);
             if (subjectObj?.id) {
               filteredData = filteredData.filter((news: any) => 
                 news.subject === subjectObj.id || news.subject === subjectObj.key
               );
             }
           }
-          
           setNewsList(filteredData);
+          setCache(keyTab, keySubject, filteredData);
         } else {
           setError(res.message || "Lỗi không xác định");
         }
       } else {
-        // Tab tin tức: gọi API theo subject
         if (selectedSubject === "all") {
           const res = await getAllNews();
           if (res.success) {
             setNewsList(res.data || []);
+            setCache(keyTab, keySubject, res.data || []);
           } else {
             setError(res.message || "Lỗi không xác định");
           }
         } else {
-          const subjectObj = subjects.find(
-            (s) => s.key === selectedSubject || s.id === selectedSubject
-          );
+          const subjectObj = subjects.find((s) => s.key === selectedSubject || s.id === selectedSubject);
           if (subjectObj?.id) {
             const res = await getNewsBySubject(subjectObj.id);
             if (res.success) {
               setNewsList(res.data || []);
+              setCache(keyTab, keySubject, res.data || []);
             } else {
               setError(res.message || "Lỗi không xác định");
             }
           } else {
             setNewsList([]);
+            setCache(keyTab, keySubject, []);
           }
         }
       }
-      
       setLoading(false);
     };
     fetchNews();

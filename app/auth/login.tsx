@@ -34,8 +34,7 @@ export default function LoginScreen() {
     setLoading(true);
     setError("");
     try {
-      console.log("Starting login process...");
-      
+
       // Clear any existing session data before login
       await AsyncStorage.multiRemove([
         "token", 
@@ -56,13 +55,10 @@ export default function LoginScreen() {
         "userSubjects"
       ]);
 
-      console.log("Session data cleared, calling login API...");
       const res = await login(email, password);
-      console.log("Login response:", res);
       
       const token = res.data?.token || res.data?.tempToken;
       if (res.success && token) {
-        console.log("Login successful, token received");
         
         if (
           res.data?.redirectTo === "set-password" &&
@@ -178,15 +174,12 @@ export default function LoginScreen() {
               }
               setUserData(userResponse.data);
               
-              console.log("User data saved, reconnecting socket...");
               // Reconnect socket với user mới
               reconnectSocket();
               
-              console.log("Navigating to home...");
               router.replace("/");
             }
           } catch (error) {
-            console.log("Error getting user data:", error);
             if (res.data?.user?.role) {
               await AsyncStorage.setItem(
                 "role",
@@ -203,11 +196,9 @@ export default function LoginScreen() {
           }
         }
       } else {
-        console.log("Login failed:", res);
         setError(API_ERROR_MESSAGES.INVALID_CREDENTIALS);
       }
     } catch (err: any) {
-      console.log("Login error:", err);
       setError(err?.message || API_ERROR_MESSAGES.UNKNOWN_ERROR);
     } finally {
       setLoading(false);

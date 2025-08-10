@@ -13,6 +13,7 @@ import {
 import RefreshableScrollView from "../../../components/RefreshableScrollView";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
+import { buildScheduleKey, useScheduleCache } from "../../../contexts/ScheduleCacheContext";
 import { getStudentSchedule } from "../../../services/schedule.service";
 import { Activity } from "../../../types/schedule.types";
 
@@ -177,6 +178,7 @@ export default function ScheduleStudentsScreen() {
     start: string;
     end: string;
   } | null>(null);
+  const { getCache, setCache } = useScheduleCache();
 
   // State để lưu danh sách năm học và tuần có sẵn
   const [availableYears, setAvailableYears] = useState<string[]>([]);
@@ -200,6 +202,23 @@ export default function ScheduleStudentsScreen() {
         className = userClassStr;
       }
 
+      // Đọc cache trước
+      const cacheKey = buildScheduleKey({ role: "student", userKey: className, academicYear: year, weekNumber });
+      const cached = getCache(cacheKey);
+      if (cached) {
+        setScheduleData(cached.schedule as any);
+        setLessonIds(cached.lessonIds);
+        setDateRange(cached.dateRange || null);
+      }
+
+      // TTL: 45 phút
+      const staleTimeMs = 45 * 60 * 1000;
+      const isFresh = cached && Date.now() - cached.updatedAt < staleTimeMs;
+      if (isFresh) {
+        setLoading(false);
+        return;
+      }
+
       const data = await getStudentSchedule({
         className,
         academicYear: year,
@@ -219,8 +238,11 @@ export default function ScheduleStudentsScreen() {
       // Lấy startDate và endDate từ response
       const startDate = data?.data?.weeklySchedule?.startDate;
       const endDate = data?.data?.weeklySchedule?.endDate;
-      if (startDate && endDate)
-        setDateRange({ start: startDate, end: endDate });
+      const nextDateRange = startDate && endDate ? { start: startDate, end: endDate } : null;
+      if (nextDateRange) setDateRange(nextDateRange);
+
+      // Cập nhật cache
+      setCache(cacheKey, { schedule, lessonIds: newLessonIds, dateRange: nextDateRange });
 
       // Cập nhật năm học và tuần từ response nếu có
       if (responseYear && !availableYears.includes(responseYear)) {
@@ -231,7 +253,8 @@ export default function ScheduleStudentsScreen() {
       }
     } catch (err) {
       setError("Lỗi tải thời khóa biểu");
-      setScheduleData(initialScheduleData);
+      // Không overwrite dữ liệu nếu đã có cache
+      if (!scheduleData?.length) setScheduleData(initialScheduleData);
     } finally {
       setLoading(false);
     }
