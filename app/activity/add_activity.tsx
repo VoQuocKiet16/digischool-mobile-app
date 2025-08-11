@@ -16,7 +16,7 @@ import HeaderLayout from "../../components/layout/HeaderLayout";
 import LoadingModal from "../../components/LoadingModal";
 import RemindPicker from "../../components/RemindPicker";
 import { createActivity } from "../../services/activity.service";
-import { responsive, responsiveValues, fonts } from "../../utils/responsive";
+import { fonts } from "../../utils/responsive";
 
 const REMIND_OPTIONS = [
   "Trước 10 phút",

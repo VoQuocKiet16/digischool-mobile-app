@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import Header from "../components/Header";
 import { useNotificationContext } from "../contexts/NotificationContext";
-import chatService from "../services/chat.service";
 import { responsiveValues } from "../utils/responsive";
 import MessageListScreen from "./message/message_list";
 
@@ -29,12 +28,6 @@ export default function MessageScreen() {
       setLoading(false);
     });
   }, []);
-
-  useEffect(() => {
-    if (myId && token) {
-      chatService.connect(myId, token);
-    }
-  }, [myId, token]);
 
   if (loading) {
     return (

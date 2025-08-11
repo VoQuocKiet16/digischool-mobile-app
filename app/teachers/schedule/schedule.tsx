@@ -1,8 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Modal,
   StyleSheet,
@@ -13,8 +15,8 @@ import {
 import RefreshableScrollView from "../../../components/RefreshableScrollView";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
-import { buildScheduleKey, useScheduleCache } from "../../../contexts/ScheduleCacheContext";
 import { getTeacherSchedule } from "../../../services/schedule.service";
+import { buildScheduleKey, useScheduleStore } from "../../../stores/schedule.store";
 import { Activity } from "../../../types/schedule.types";
 
 const defaultActivity = (text: string, hasNotification = false): Activity => ({
@@ -155,18 +157,27 @@ export default function ScheduleTeachersScreen() {
     start: string;
     end: string;
   } | null>(null);
+  const yearRef = useRef(year);
+  const weekNumberRef = useRef(weekNumber);
 
   const days = defaultDays;
-  const { getCache, setCache } = useScheduleCache();
+  const getCache = useScheduleStore((s) => s.getCache);
+  const setCache = useScheduleStore((s) => s.setCache);
 
-  const fetchSchedule = async () => {
+  // Update refs khi year hoặc weekNumber thay đổi
+  useEffect(() => {
+    yearRef.current = year;
+    weekNumberRef.current = weekNumber;
+  }, [year, weekNumber]);
+
+  const fetchSchedule = useCallback(async (forceRefresh = false) => {
     setLoading(true);
     setError("");
     try {
       const teacherId = (await AsyncStorage.getItem("userTeacherId")) || "";
 
       // Đọc cache trước
-      const cacheKey = buildScheduleKey({ role: "teacher", userKey: teacherId, academicYear: year, weekNumber });
+      const cacheKey = buildScheduleKey({ role: "teacher", userKey: teacherId, academicYear: yearRef.current, weekNumber: weekNumberRef.current });
       const cached = getCache(cacheKey);
       if (cached) {
         setScheduleData(cached.schedule as any);
@@ -174,18 +185,20 @@ export default function ScheduleTeachersScreen() {
         setDateRange(cached.dateRange || null);
       }
 
-      // TTL: 45 phút
-      const staleTimeMs = 45 * 60 * 1000;
-      const isFresh = cached && Date.now() - cached.updatedAt < staleTimeMs;
-      if (isFresh) {
-        setLoading(false);
-        return;
+      // TTL: 45 phút - chỉ áp dụng khi không force refresh
+      if (!forceRefresh) {
+        const staleTimeMs = 45 * 60 * 1000;
+        const isFresh = cached && Date.now() - cached.updatedAt < staleTimeMs;
+        if (isFresh) {
+          setLoading(false);
+          return;
+        }
       }
 
       const data = await getTeacherSchedule({
         teacherId,
-        academicYear: year,
-        weekNumber,
+        academicYear: yearRef.current,
+        weekNumber: weekNumberRef.current,
       });
 
       const {
@@ -220,11 +233,65 @@ export default function ScheduleTeachersScreen() {
     } finally {
       setLoading(false);
     }
+  }, [getCache, setCache]); // Chỉ phụ thuộc vào getCache và setCache
+
+  // Handler cho pull-to-refresh
+  const handleRefresh = async () => {
+    await fetchSchedule(true); // Force refresh bỏ qua TTL
   };
 
   useEffect(() => {
     fetchSchedule();
-  }, [year, weekNumber]);
+  }, [fetchSchedule]);
+
+  // Tự động refresh khi màn hình được focus (sau khi thêm hoạt động)
+  useFocusEffect(
+    React.useCallback(() => {
+      // Force refresh bỏ qua TTL
+      const refreshData = async () => {
+        try {
+          const teacherId = (await AsyncStorage.getItem("userTeacherId")) || "";
+          
+          const cacheKey = buildScheduleKey({ role: "teacher", userKey: teacherId, academicYear: yearRef.current, weekNumber: weekNumberRef.current });
+          
+          // Clear cache để force refresh
+          const clearCache = useScheduleStore.getState().clearCache;
+          clearCache(cacheKey);
+          
+          // Gọi API để lấy data mới
+          const data = await getTeacherSchedule({
+            teacherId,
+            academicYear: yearRef.current,
+            weekNumber: weekNumberRef.current,
+          });
+
+          const {
+            schedule,
+            lessonIds: newLessonIds,
+            academicYear: responseYear,
+            weekNumber: responseWeek,
+          } = mapApiToTeacherScheduleData(data);
+
+          setScheduleData(schedule);
+          setLessonIds(newLessonIds);
+
+          // Lấy startDate và endDate từ response
+          const startDate = data?.data?.startDate;
+          const endDate = data?.data?.endDate;
+          const nextDateRange = startDate && endDate ? { start: startDate, end: endDate } : null;
+          if (nextDateRange) setDateRange(nextDateRange);
+
+          // Cập nhật cache với data mới
+          setCache(cacheKey, { schedule, lessonIds: newLessonIds, dateRange: nextDateRange });
+
+        } catch (err) {
+          Alert.alert('🔄 Teacher Schedule: Error refreshing data', (err as Error).message);
+        }
+      };
+      
+      refreshData();
+    }, [fetchSchedule])
+  );
 
   const handleAddActivity = (
     dayIndex: number,
@@ -319,7 +386,7 @@ export default function ScheduleTeachersScreen() {
           contentContainerStyle={{ paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
           bounces={true}
-          onRefresh={fetchSchedule}
+          onRefresh={handleRefresh}
         >
           <View style={{ flex: 1 }}>
             <ScheduleDay

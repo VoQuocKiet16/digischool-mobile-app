@@ -432,9 +432,6 @@ export default function LeaveRequestScreen() {
                 const lessonIdsSelected = selected.map(
                   ({ lessonId }) => lessonId
                 );
-                console.log("Selected slots:", selected);
-                console.log("Subjects:", subjects);
-                console.log("Lesson IDs:", lessonIdsSelected);
                 router.push({
                   pathname: "/students/leave_request/leave_request_info",
                   params: {

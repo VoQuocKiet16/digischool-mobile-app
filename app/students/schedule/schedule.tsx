@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -13,8 +14,8 @@ import {
 import RefreshableScrollView from "../../../components/RefreshableScrollView";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
-import { buildScheduleKey, useScheduleCache } from "../../../contexts/ScheduleCacheContext";
 import { getStudentSchedule } from "../../../services/schedule.service";
+import { buildScheduleKey, useScheduleStore } from "../../../stores/schedule.store";
 import { Activity } from "../../../types/schedule.types";
 
 const defaultActivity = (text: string, hasNotification = false): Activity => ({
@@ -178,7 +179,10 @@ export default function ScheduleStudentsScreen() {
     start: string;
     end: string;
   } | null>(null);
-  const { getCache, setCache } = useScheduleCache();
+  const yearRef = useRef(year);
+  const weekNumberRef = useRef(weekNumber);
+  const getCache = useScheduleStore((s) => s.getCache);
+  const setCache = useScheduleStore((s) => s.setCache);
 
   // State để lưu danh sách năm học và tuần có sẵn
   const [availableYears, setAvailableYears] = useState<string[]>([]);
@@ -186,7 +190,13 @@ export default function ScheduleStudentsScreen() {
 
   const days = defaultDays;
 
-  const fetchSchedule = async () => {
+  // Update refs khi year hoặc weekNumber thay đổi
+  useEffect(() => {
+    yearRef.current = year;
+    weekNumberRef.current = weekNumber;
+  }, [year, weekNumber]);
+
+  const fetchSchedule = useCallback(async (forceRefresh = false) => {
     setLoading(true);
     setError("");
     try {
@@ -203,7 +213,7 @@ export default function ScheduleStudentsScreen() {
       }
 
       // Đọc cache trước
-      const cacheKey = buildScheduleKey({ role: "student", userKey: className, academicYear: year, weekNumber });
+      const cacheKey = buildScheduleKey({ role: "student", userKey: className, academicYear: yearRef.current, weekNumber: weekNumberRef.current });
       const cached = getCache(cacheKey);
       if (cached) {
         setScheduleData(cached.schedule as any);
@@ -211,18 +221,20 @@ export default function ScheduleStudentsScreen() {
         setDateRange(cached.dateRange || null);
       }
 
-      // TTL: 45 phút
-      const staleTimeMs = 45 * 60 * 1000;
-      const isFresh = cached && Date.now() - cached.updatedAt < staleTimeMs;
-      if (isFresh) {
-        setLoading(false);
-        return;
+      // TTL: 45 phút - chỉ áp dụng khi không force refresh
+      if (!forceRefresh) {
+        const staleTimeMs = 45 * 60 * 1000;
+        const isFresh = cached && Date.now() - cached.updatedAt < staleTimeMs;
+        if (isFresh) {
+          setLoading(false);
+          return;
+        }
       }
 
       const data = await getStudentSchedule({
         className,
-        academicYear: year,
-        weekNumber,
+        academicYear: yearRef.current,
+        weekNumber: weekNumberRef.current,
       });
 
       const {
@@ -258,11 +270,74 @@ export default function ScheduleStudentsScreen() {
     } finally {
       setLoading(false);
     }
+  }, [getCache, setCache]); // Chỉ phụ thuộc vào getCache và setCache
+
+  // Handler cho pull-to-refresh
+  const handleRefresh = async () => {
+    await fetchSchedule(true); // Force refresh bỏ qua TTL
   };
 
   useEffect(() => {
     fetchSchedule();
-  }, [year, weekNumber]);
+  }, [fetchSchedule]);
+
+  // Tự động refresh khi màn hình được focus (sau khi thêm hoạt động)
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('🔄 Student Schedule: Screen focused, refreshing...');
+      // Force refresh bỏ qua TTL
+      const refreshData = async () => {
+        try {
+          const userClassStr = (await AsyncStorage.getItem("userClass")) || "";
+          let className = "";
+          try {
+            const userClassObj = JSON.parse(userClassStr);
+            className = userClassObj.className || userClassObj.id || "";
+          } catch (parseError) {
+            className = userClassStr;
+          }
+
+          const cacheKey = buildScheduleKey({ role: "student", userKey: className, academicYear: yearRef.current, weekNumber: weekNumberRef.current });
+          
+          // Clear cache để force refresh
+          const clearCache = useScheduleStore.getState().clearCache;
+          clearCache(cacheKey);
+          
+          // Gọi API để lấy data mới
+          const data = await getStudentSchedule({
+            className,
+            academicYear: yearRef.current,
+            weekNumber: weekNumberRef.current,
+          });
+
+          const {
+            schedule,
+            lessonIds: newLessonIds,
+            academicYear: responseYear,
+            weekNumber: responseWeek,
+          } = mapApiToScheduleData(data);
+
+          setScheduleData(schedule);
+          setLessonIds(newLessonIds);
+
+          // Lấy startDate và endDate từ response
+          const startDate = data?.data?.weeklySchedule?.startDate;
+          const endDate = data?.data?.weeklySchedule?.endDate;
+          const nextDateRange = startDate && endDate ? { start: startDate, end: endDate } : null;
+          if (nextDateRange) setDateRange(nextDateRange);
+
+          // Cập nhật cache với data mới
+          setCache(cacheKey, { schedule, lessonIds: newLessonIds, dateRange: nextDateRange });
+
+          console.log('🔄 Student Schedule: Data refreshed successfully');
+        } catch (error) {
+          console.error('🔄 Student Schedule: Error refreshing data:', error);
+        }
+      };
+      
+      refreshData();
+    }, [fetchSchedule])
+  );
 
   const handleAddActivity = (
     dayIndex: number,
@@ -353,11 +428,11 @@ export default function ScheduleStudentsScreen() {
         </View>
       ) : (
         <RefreshableScrollView
+          onRefresh={handleRefresh}
           style={{ flex: 1 }}
           contentContainerStyle={{ paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
           bounces={true}
-          onRefresh={fetchSchedule}
         >
           <View style={{ flex: 1 }}>
             <ScheduleDay

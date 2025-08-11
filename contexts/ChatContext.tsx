@@ -24,6 +24,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         setCurrentUserId(userId);
         setCurrentToken(token);
         // Kết nối chat cho user này
+        console.log(`ChatContext: Connecting chat for user ${userId}`);
         chatService.connect(userId, token);
       }
     })();
@@ -32,16 +33,19 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const connectChat = (userId: string, token: string) => {
     // Nếu đang có user khác kết nối, disconnect trước
     if (currentUserId && currentUserId !== userId) {
+      console.log(`ChatContext: Disconnecting previous user ${currentUserId} and connecting new user ${userId}`);
       chatService.disconnect(currentUserId);
     }
     
     setCurrentUserId(userId);
     setCurrentToken(token);
+    console.log(`ChatContext: Connecting chat for user ${userId}`);
     chatService.connect(userId, token);
   };
 
   const disconnectChat = () => {
     if (currentUserId) {
+      console.log(`ChatContext: Disconnecting chat for user ${currentUserId}`);
       chatService.disconnect(currentUserId);
       setCurrentUserId(null);
       setCurrentToken(null);

@@ -69,7 +69,6 @@ export default function ManageRollcall() {
         await loadRollcallData(currentDate);
 
       } catch (error) {
-        console.error('Lỗi khi khởi tạo dữ liệu:', error);
         Alert.alert('Lỗi', 'Không thể tải dữ liệu. Vui lòng thử lại.');
       } finally {
         setLoading(false);
@@ -89,7 +88,6 @@ export default function ManageRollcall() {
       setShowWeekSelector(false);
       setShowDay(true); // Hiển thị dropdown chọn ngày
     } catch (error) {
-      console.error('Lỗi khi load week days:', error);
       Alert.alert('Lỗi', 'Không thể tải dữ liệu tuần. Vui lòng thử lại.');
     } finally {
       setLoading(false);
@@ -102,7 +100,6 @@ export default function ManageRollcall() {
       const subjectsList = await ManageService.getSubjects();
       setSubjects(["Tất cả", ...subjectsList]);
     } catch (error) {
-      console.error('Lỗi khi load subjects:', error);
       // Giữ nguyên danh sách mặc định nếu API lỗi
     }
   };
@@ -127,7 +124,6 @@ export default function ManageRollcall() {
       const data = await ManageService.getTeacherRollcall(convertedDate, filters);
       setRollcallData(data.rollcalls);
     } catch (error) {
-      console.error('Lỗi khi load rollcall data:', error);
       Alert.alert('Lỗi', 'Không thể tải dữ liệu điểm danh. Vui lòng thử lại.');
       setRollcallData([]); // Reset data nếu lỗi
     } finally {

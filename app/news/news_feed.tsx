@@ -14,7 +14,6 @@ import {
 } from "react-native";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import MenuDropdown from "../../components/MenuDropdown";
-import { useNewsCache } from "../../contexts/NewsCacheContext";
 import {
   favoriteNews,
   getAllNews,
@@ -23,6 +22,7 @@ import {
   unfavoriteNews,
 } from "../../services/news.service";
 import { getAllSubjects } from "../../services/subjects.service";
+import { useNewsStore, type NewsStoreState } from "../../stores/news.store";
 import { fonts, responsive, responsiveValues } from "../../utils/responsive";
 
 const { width, height } = Dimensions.get('window');
@@ -48,7 +48,8 @@ export default function NewsFeedScreen() {
       icon: require("../../assets/images/all.png"),
     },
   ]);
-  const { getCache, setCache } = useNewsCache();
+  const getCache = useNewsStore((s: NewsStoreState) => s.getCache);
+  const setCache = useNewsStore((s: NewsStoreState) => s.setCache);
 
   useEffect(() => {
     AsyncStorage.getItem("userId").then(setUserId);

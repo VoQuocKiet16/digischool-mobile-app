@@ -21,8 +21,8 @@ import {
   View,
 } from "react-native";
 import SafeScreen from "../../components/SafeScreen";
-import { useChatCache } from "../../contexts/ChatCacheContext";
 import { useChatContext } from "../../contexts/ChatContext";
+import { useChatState } from "../../hooks/useChatState";
 import chatService from "../../services/chat.service";
 import { fonts, responsive, responsiveValues } from "../../utils/responsive";
 
@@ -70,7 +70,12 @@ export default function MessageBoxScreen() {
   const [myName, setMyName] = useState<string>('bạn');
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
-  const { getMessages, setMessages: setMessagesCache } = useChatCache();
+  const {
+    getMessages,
+    setMessages: setMessagesCache,
+    invalidateMessages,
+    invalidateConversations,
+  } = useChatState();
 
   // Lấy token và myId từ AsyncStorage nếu chưa có
   useEffect(() => {
@@ -181,6 +186,8 @@ export default function MessageBoxScreen() {
         );
         const next = idx !== -1 ? (() => { const arr = [...prev]; arr[idx] = { ...msg }; return arr; })() : [...prev, msg];
         setMessagesCache(userId as string, next);
+        // Invalidate cache để đảm bảo data luôn fresh
+        invalidateMessages(userId as string);
         return next;
       });
       flatListRef.current?.scrollToEnd({ animated: true });
@@ -310,6 +317,8 @@ export default function MessageBoxScreen() {
             avatar: null,
           };
           setMessages((prev) => { const next = [...prev, tempMsg]; setMessagesCache(userId as string, next); return next; });
+          // Invalidate cache để đảm bảo data luôn fresh
+          invalidateMessages(userId as string);
           await chatService.sendMessageAPI(
             {
               receiver: userId,
@@ -328,6 +337,8 @@ export default function MessageBoxScreen() {
             type: "image",
           });
           setSelectedImage(null);
+          // Invalidate conversation cache để cập nhật conversation list
+          invalidateConversations();
           // Scroll xuống tin nhắn cuối cùng sau khi gửi
           setTimeout(() => {
             flatListRef.current?.scrollToEnd({ animated: true });
@@ -362,6 +373,8 @@ export default function MessageBoxScreen() {
       avatar: null,
     };
     setMessages((prev) => { const next = [...prev, tempMsg]; setMessagesCache(userId as string, next); return next; });
+    // Invalidate cache để đảm bảo data luôn fresh
+    invalidateMessages(userId as string);
     const res = await chatService.sendMessageAPI(data, token as string);
     if (!res.success) {
       Alert.alert("Lỗi gửi tin nhắn", res.message || "Gửi tin nhắn thất bại");
@@ -377,6 +390,8 @@ export default function MessageBoxScreen() {
     });
     setInput("");
     setSending(false);
+    // Invalidate conversation cache để cập nhật conversation list
+    invalidateConversations();
     // Scroll xuống tin nhắn cuối cùng sau khi gửi
     setTimeout(() => {
       flatListRef.current?.scrollToEnd({ animated: true });

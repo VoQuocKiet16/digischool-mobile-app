@@ -13,8 +13,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useChatCache } from "../../contexts/ChatCacheContext";
 import { useChatContext } from "../../contexts/ChatContext";
+import { useChatState } from "../../hooks/useChatState";
 import chatService from "../../services/chat.service";
 import { fonts } from "../../utils/responsive";
 
@@ -25,7 +25,14 @@ type Props = {
 
 export default function MessageListScreen({ token = "demo-token" }: Props) {
   const { currentUserId, currentToken } = useChatContext();
-  const { getConversations, setConversations } = useChatCache();
+  const {
+    isConnected,
+    getConversations,
+    setConversations,
+    updateConversationWithMessage,
+    markConversationAsRead,
+    invalidateConversations,
+  } = useChatState();
   const [search, setSearch] = useState("");
   const [chatData, setChatData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,12 +107,16 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
 
   useEffect(() => {
     const handleNewMessage = (msg: any) => {
+      // Sử dụng hook để update conversation
+      updateConversationWithMessage(msg);
+      
       setChatData((prevData) => {
         const otherUserId = msg.sender === myId ? msg.receiver : msg.sender;
         const idx = prevData.findIndex(
           (item) => item.userId === otherUserId || item.id === otherUserId
         );
         if (idx === -1) {
+          // Nếu không tìm thấy conversation, refresh toàn bộ danh sách
           fetchConversations();
           return prevData;
         }
@@ -125,12 +136,19 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
           ...prevData.slice(0, idx),
           ...prevData.slice(idx + 1),
         ];
-        if (myId) setConversations(myId, newData);
+        if (myId) {
+          setConversations(myId, newData);
+          // Invalidate cache để đảm bảo data luôn fresh
+          invalidateConversations();
+        }
         return newData;
       });
     };
     
     const handleMessageRead = (data: any) => {
+      // Sử dụng hook để mark conversation as read
+      markConversationAsRead(data.from);
+      
       // Khi có tin nhắn được mark as read, reset unreadCount cho conversation đó
       setChatData((prevData) => {
         const idx = prevData.findIndex(
@@ -143,7 +161,11 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
             ...prevData.slice(0, idx),
             ...prevData.slice(idx + 1),
           ];
-          if (myId) setConversations(myId, newData);
+          if (myId) {
+            setConversations(myId, newData);
+            // Invalidate cache để đảm bảo data luôn fresh
+            invalidateConversations();
+          }
           return newData;
         }
         return prevData;
