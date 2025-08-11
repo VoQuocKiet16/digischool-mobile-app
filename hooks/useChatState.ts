@@ -14,6 +14,12 @@ export const useChatState = () => {
   const getMessages = useChatStore((s) => s.getMessages);
   const setMessages = useChatStore((s) => s.setMessages);
   const clearCache = useChatStore((s) => s.clearCache);
+  
+  // Thêm methods mới cho persistent storage
+  const loadConversationsFromStorage = useChatStore((s) => s.loadConversationsFromStorage);
+  const saveConversationsToStorage = useChatStore((s) => s.saveConversationsToStorage);
+  const loadMessagesFromStorage = useChatStore((s) => s.loadMessagesFromStorage);
+  const saveMessagesToStorage = useChatStore((s) => s.saveMessagesToStorage);
 
   // Kiểm tra connection status
   useEffect(() => {
@@ -109,5 +115,10 @@ export const useChatState = () => {
     invalidateAllChat,
     updateConversationWithMessage,
     markConversationAsRead,
+    // Export các methods mới
+    loadConversationsFromStorage,
+    saveConversationsToStorage,
+    loadMessagesFromStorage,
+    saveMessagesToStorage,
   };
 }; 

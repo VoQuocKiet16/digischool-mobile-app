@@ -127,7 +127,7 @@ export default function TeacherLeaveRequestInfoScreen() {
                     lesson: { day: string; period: number; subject: string },
                     idx: number
                   ) => (
-                    <View key={idx} style={styles.lessonTagCard}>
+                    <View key={`lesson-${idx}`} style={styles.lessonTagCard}>
                       <Text
                         style={styles.lessonTagTextCard}
                       >{`${lesson.day} - Tiết ${lesson.period} - ${lesson.subject}`}</Text>

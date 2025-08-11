@@ -4,6 +4,8 @@ export interface ScheduleCacheEntry {
   schedule: any[][];
   lessonIds: string[][];
   dateRange?: { start: string; end: string } | null;
+  availableYears?: string[];
+  availableWeeks?: number[];
   updatedAt: number;
 }
 

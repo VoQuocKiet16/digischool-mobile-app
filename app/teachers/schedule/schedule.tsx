@@ -4,13 +4,12 @@ import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Modal,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import RefreshableScrollView from "../../../components/RefreshableScrollView";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
@@ -183,6 +182,8 @@ export default function ScheduleTeachersScreen() {
         setScheduleData(cached.schedule as any);
         setLessonIds(cached.lessonIds);
         setDateRange(cached.dateRange || null);
+        setAvailableYears(cached.availableYears || []);
+        setAvailableWeeks(cached.availableWeeks || []);
       }
 
       // TTL: 45 phút - chỉ áp dụng khi không force refresh
@@ -217,14 +218,28 @@ export default function ScheduleTeachersScreen() {
       const nextDateRange = startDate && endDate ? { start: startDate, end: endDate } : null;
       if (nextDateRange) setDateRange(nextDateRange);
 
-      // Cập nhật cache
-      setCache(cacheKey, { schedule, lessonIds: newLessonIds, dateRange: nextDateRange });
+      // Lấy availableYears và availableWeeks từ response trước khi lưu cache
+      const years = data?.data?.availableYears || [];
+      const weeks = data?.data?.availableWeeks || [];
+      
+      // Cập nhật state
+      if (Array.isArray(years) && years.length > 0) setAvailableYears(years);
+      if (Array.isArray(weeks) && weeks.length > 0) setAvailableWeeks(weeks);
+
+      // Cập nhật cache với dữ liệu mới
+      setCache(cacheKey, { 
+        schedule, 
+        lessonIds: newLessonIds, 
+        dateRange: nextDateRange,
+        availableYears: years,
+        availableWeeks: weeks
+      });
 
       // Cập nhật năm học và tuần từ response nếu có
-      if (responseYear && !availableYears.includes(responseYear)) {
+      if (responseYear && !years.includes(responseYear)) {
         setAvailableYears((prev) => [...prev, responseYear]);
       }
-      if (responseWeek && !availableWeeks.includes(responseWeek)) {
+      if (responseWeek && !weeks.includes(responseWeek)) {
         setAvailableWeeks((prev) => [...prev, responseWeek]);
       }
     } catch (err) {
@@ -247,49 +262,44 @@ export default function ScheduleTeachersScreen() {
   // Tự động refresh khi màn hình được focus (sau khi thêm hoạt động)
   useFocusEffect(
     React.useCallback(() => {
-      // Force refresh bỏ qua TTL
-      const refreshData = async () => {
+      console.log('🔄 Teacher Schedule: Screen focused, checking if refresh needed...');
+      
+      const checkAndRefreshIfNeeded = async () => {
         try {
           const teacherId = (await AsyncStorage.getItem("userTeacherId")) || "";
           
           const cacheKey = buildScheduleKey({ role: "teacher", userKey: teacherId, academicYear: yearRef.current, weekNumber: weekNumberRef.current });
           
-          // Clear cache để force refresh
-          const clearCache = useScheduleStore.getState().clearCache;
-          clearCache(cacheKey);
+          // Kiểm tra cache hiện tại
+          const cached = getCache(cacheKey);
           
-          // Gọi API để lấy data mới
-          const data = await getTeacherSchedule({
-            teacherId,
-            academicYear: yearRef.current,
-            weekNumber: weekNumberRef.current,
-          });
-
-          const {
-            schedule,
-            lessonIds: newLessonIds,
-            academicYear: responseYear,
-            weekNumber: responseWeek,
-          } = mapApiToTeacherScheduleData(data);
-
-          setScheduleData(schedule);
-          setLessonIds(newLessonIds);
-
-          // Lấy startDate và endDate từ response
-          const startDate = data?.data?.startDate;
-          const endDate = data?.data?.endDate;
-          const nextDateRange = startDate && endDate ? { start: startDate, end: endDate } : null;
-          if (nextDateRange) setDateRange(nextDateRange);
-
-          // Cập nhật cache với data mới
-          setCache(cacheKey, { schedule, lessonIds: newLessonIds, dateRange: nextDateRange });
-
+          if (cached) {
+            // Luôn load dữ liệu từ cache trước để hiển thị ngay lập tức
+            console.log('🔄 Teacher Schedule: Loading data from cache...');
+            setScheduleData(cached.schedule as any);
+            setLessonIds(cached.lessonIds);
+            setDateRange(cached.dateRange || null);
+            setAvailableYears(cached.availableYears || []);
+            setAvailableWeeks(cached.availableWeeks || []);
+            
+            // Kiểm tra xem cache có còn fresh không
+            if (Date.now() - cached.updatedAt > 45 * 60 * 1000) {
+              console.log('🔄 Teacher Schedule: Cache expired, refreshing in background...');
+              // Refresh trong background, không block UI
+              fetchSchedule(true);
+            } else {
+              console.log('🔄 Teacher Schedule: Cache still fresh, no refresh needed');
+            }
+          } else {
+            console.log('🔄 Teacher Schedule: No cache found, fetching from API...');
+            await fetchSchedule(true);
+          }
         } catch (err) {
-          Alert.alert('🔄 Teacher Schedule: Error refreshing data', (err as Error).message);
+          console.error('🔄 Teacher Schedule: Error checking refresh:', err);
         }
       };
       
-      refreshData();
+      checkAndRefreshIfNeeded();
     }, [fetchSchedule])
   );
 
@@ -418,7 +428,7 @@ export default function ScheduleTeachersScreen() {
             {availableYears.length > 0 ? (
               availableYears.map((y) => (
                 <TouchableOpacity
-                  key={y}
+                  key={`year-${y}`}
                   style={styles.modalItem}
                   onPress={() => handleSelectYear(y)}
                 >
