@@ -22,6 +22,7 @@ import {
   unfavoriteNews,
 } from "../../services/news.service";
 import { getAllSubjects } from "../../services/subjects.service";
+import { useNewsStore, type NewsStoreState } from "../../stores/news.store";
 import { fonts, responsive, responsiveValues } from "../../utils/responsive";
 
 const { width, height } = Dimensions.get('window');
@@ -47,6 +48,11 @@ export default function NewsFeedScreen() {
       icon: require("../../assets/images/all.png"),
     },
   ]);
+  const getCache = useNewsStore((s: NewsStoreState) => s.getCache);
+  const setCache = useNewsStore((s: NewsStoreState) => s.setCache);
+  // Thêm methods mới cho persistent storage
+  const loadNewsFromStorage = useNewsStore((s: NewsStoreState) => s.loadNewsFromStorage);
+  const saveNewsToStorage = useNewsStore((s: NewsStoreState) => s.saveNewsToStorage);
 
   useEffect(() => {
     AsyncStorage.getItem("userId").then(setUserId);
@@ -107,90 +113,284 @@ export default function NewsFeedScreen() {
     fetchSubjects();
   }, []);
 
-  // Load tin tức ban đầu
+  // Bước 1: Load tin tức từ persistent storage trước (hiển thị ngay)
   useEffect(() => {
-    const fetchInitialNews = async () => {
-      setInitialLoading(true);
-      setError(null);
-      const res = await getAllNews();
-      if (res.success) {
-        setNewsList(res.data || []);
-      } else {
-        setError(res.message || "Lỗi không xác định");
-      }
-      setInitialLoading(false);
-      setHasInitialized(true);
-    };
-    fetchInitialNews();
-  }, []);
+    const loadInitialNews = async () => {
+      const keyTab: "news" | "favorite" = tab;
+      const keySubject = selectedSubject || "all";
 
-  // Khi chọn subject hoặc tab, gọi API filter
-  useEffect(() => {
-    // Chỉ chạy khi đã khởi tạo xong
-    if (!hasInitialized) return;
-    
-    // Kiểm tra xem filter có thay đổi không
-    if (currentFilter.tab === tab && currentFilter.subject === selectedSubject) return;
-    
-    // Cập nhật filter hiện tại
-    setCurrentFilter({ tab, subject: selectedSubject });
-    
-    const fetchNews = async () => {
-      setLoading(true);
-      setError(null);
-      
-      if (tab === "favorite") {
-        // Tab yêu thích: lấy tất cả tin yêu thích và filter theo subject ở client-side
+      // Đọc từ persistent storage trước để hiển thị ngay
+      const storedNews = await loadNewsFromStorage(keyTab, keySubject);
+      if (storedNews && storedNews.length > 0) {
+        console.log('🚀 Loaded news from storage, displaying immediately');
+        setNewsList(storedNews);
+        setInitialLoading(false);
+        setHasInitialized(true);
+        return;
+      }
+
+      // Nếu không có storage, kiểm tra RAM cache
+      const cached = getCache(keyTab, keySubject);
+      if (cached && cached.items?.length) {
+        console.log('🚀 Loaded news from RAM cache');
+        setNewsList(cached.items);
+        setInitialLoading(false);
+        setHasInitialized(true);
+        return;
+      }
+
+      // Nếu không có cache, gọi API
+      console.log('🔄 No cached news, fetching from API');
+      fetchInitialNewsFromAPI();
+    };
+
+    loadInitialNews();
+  }, [tab, selectedSubject, loadNewsFromStorage, getCache]);
+
+  // Tách fetch news ra ngoài để có thể gọi lại
+  const fetchInitialNewsFromAPI = async () => {
+    const keyTab: "news" | "favorite" = tab;
+    const keySubject = selectedSubject || "all";
+
+    setError(null);
+    try {
+      if (keyTab === "favorite") {
         const res = await getFavoriteNews();
         if (res.success) {
           let filteredData = res.data || [];
-          
-          // Filter theo subject nếu không phải "all"
+          if (keySubject !== "all") {
+            const subjectObj = subjects.find((s) => s.key === keySubject || s.id === keySubject);
+            if (subjectObj?.id) {
+              filteredData = filteredData.filter((news: any) => news.subject === subjectObj.id || news.subject === subjectObj.key);
+            }
+          }
+          setNewsList(filteredData);
+          setCache(keyTab, keySubject, filteredData);
+          // Lưu vào persistent storage
+          await saveNewsToStorage(keyTab, keySubject, filteredData);
+        } else {
+          setError(res.message || "Lỗi không xác định");
+        }
+      } else {
+        if (keySubject === "all") {
+          const res = await getAllNews();
+          if (res.success) {
+            setNewsList(res.data || []);
+            setCache(keyTab, keySubject, res.data || []);
+            // Lưu vào persistent storage
+            await saveNewsToStorage(keyTab, keySubject, res.data || []);
+          } else {
+            setError(res.message || "Lỗi không xác định");
+          }
+        } else {
+          const subjectObj = subjects.find((s) => s.key === keySubject || s.id === keySubject);
+          if (subjectObj?.id) {
+            const res = await getNewsBySubject(subjectObj.id);
+            if (res.success) {
+              setNewsList(res.data || []);
+              setCache(keyTab, keySubject, res.data || []);
+              // Lưu vào persistent storage
+              await saveNewsToStorage(keyTab, keySubject, res.data || []);
+            } else {
+              setError(res.message || "Lỗi không xác định");
+            }
+          } else {
+            setNewsList([]);
+            setCache(keyTab, keySubject, []);
+            // Lưu vào persistent storage
+            await saveNewsToStorage(keyTab, keySubject, []);
+          }
+        }
+      }
+    } catch (error) {
+      setError("Lỗi kết nối server");
+    } finally {
+      setInitialLoading(false);
+      setHasInitialized(true);
+    }
+  };
+
+  // Bước 2: Sync với API (background, không block UI)
+  useEffect(() => {
+    if (!hasInitialized) return;
+
+    const syncWithAPI = async () => {
+      const keyTab: "news" | "favorite" = tab;
+      const keySubject = selectedSubject || "all";
+
+      const cached = getCache(keyTab, keySubject);
+      const staleTimeMs = 10 * 60 * 1000; // 10 phút
+      const isFresh = cached && Date.now() - cached.updatedAt < staleTimeMs;
+      
+      if (!isFresh) {
+        console.log('🔄 News cache stale, syncing with API in background');
+        // Sync ngầm, không hiển thị loading
+        fetchNewsFromAPI(false);
+      } else {
+        console.log('✅ News cache still fresh, no API call needed');
+      }
+    };
+
+    // Chỉ sync sau khi đã load initial data
+    if (hasInitialized) {
+      syncWithAPI();
+    }
+  }, [tab, selectedSubject, hasInitialized, getCache, saveNewsToStorage]);
+
+  // Khi chọn subject hoặc tab, gọi API filter, ưu tiên cache trước
+  useEffect(() => {
+    if (!hasInitialized) return;
+    if (currentFilter.tab === tab && currentFilter.subject === selectedSubject) return;
+    setCurrentFilter({ tab, subject: selectedSubject });
+
+    const keyTab: "news" | "favorite" = tab;
+    const keySubject = selectedSubject || "all";
+
+    const cached = getCache(keyTab, keySubject);
+    if (cached) {
+      setNewsList(cached.items);
+    }
+
+    const fetchNews = async () => {
+      const staleTimeMs = 10 * 60 * 1000;
+      const isFresh = cached && Date.now() - cached.updatedAt < staleTimeMs;
+      if (isFresh) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(!cached); // nếu có cache thì không hiển thị loading nặng
+      setError(null);
+
+      try {
+        if (tab === "favorite") {
+          const res = await getFavoriteNews();
+          if (res.success) {
+            let filteredData = res.data || [];
+            if (selectedSubject !== "all") {
+              const subjectObj = subjects.find((s) => s.key === selectedSubject || s.id === selectedSubject);
+              if (subjectObj?.id) {
+                filteredData = filteredData.filter((news: any) => 
+                  news.subject === subjectObj.id || news.subject === subjectObj.key
+                );
+              }
+            }
+            setNewsList(filteredData);
+            setCache(keyTab, keySubject, filteredData);
+            // Lưu vào persistent storage
+            await saveNewsToStorage(keyTab, keySubject, filteredData);
+          } else {
+            setError(res.message || "Lỗi không xác định");
+          }
+        } else {
+          if (selectedSubject === "all") {
+            const res = await getAllNews();
+            if (res.success) {
+              setNewsList(res.data || []);
+              setCache(keyTab, keySubject, res.data || []);
+              // Lưu vào persistent storage
+              await saveNewsToStorage(keyTab, keySubject, res.data || []);
+            } else {
+              setError(res.message || "Lỗi không xác định");
+            }
+          } else {
+            const subjectObj = subjects.find((s) => s.key === selectedSubject || s.id === selectedSubject);
+            if (subjectObj?.id) {
+              const res = await getNewsBySubject(subjectObj.id);
+              if (res.success) {
+                setNewsList(res.data || []);
+                setCache(keyTab, keySubject, res.data || []);
+                // Lưu vào persistent storage
+                await saveNewsToStorage(keyTab, keySubject, res.data || []);
+              } else {
+                setError(res.message || "Lỗi không xác định");
+              }
+            } else {
+              setNewsList([]);
+              setCache(keyTab, keySubject, []);
+              // Lưu vào persistent storage
+              await saveNewsToStorage(keyTab, keySubject, []);
+            }
+          }
+        }
+      } catch (error) {
+        setError("Lỗi kết nối server");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchNews();
+  }, [selectedSubject, tab, subjects, hasInitialized, currentFilter, saveNewsToStorage]);
+
+  // Tách fetch news ra ngoài để có thể gọi lại
+  const fetchNewsFromAPI = async (showLoading = true) => {
+    const keyTab: "news" | "favorite" = tab;
+    const keySubject = selectedSubject || "all";
+
+    if (showLoading) {
+      setLoading(true);
+      setError(null);
+    }
+
+    try {
+      if (tab === "favorite") {
+        const res = await getFavoriteNews();
+        if (res.success) {
+          let filteredData = res.data || [];
           if (selectedSubject !== "all") {
-            const subjectObj = subjects.find(
-              (s) => s.key === selectedSubject || s.id === selectedSubject
-            );
+            const subjectObj = subjects.find((s) => s.key === selectedSubject || s.id === selectedSubject);
             if (subjectObj?.id) {
               filteredData = filteredData.filter((news: any) => 
                 news.subject === subjectObj.id || news.subject === subjectObj.key
               );
             }
           }
-          
           setNewsList(filteredData);
+          setCache(keyTab, keySubject, filteredData);
+          // Lưu vào persistent storage
+          await saveNewsToStorage(keyTab, keySubject, filteredData);
         } else {
           setError(res.message || "Lỗi không xác định");
         }
       } else {
-        // Tab tin tức: gọi API theo subject
         if (selectedSubject === "all") {
           const res = await getAllNews();
           if (res.success) {
             setNewsList(res.data || []);
+            setCache(keyTab, keySubject, res.data || []);
+            // Lưu vào persistent storage
+            await saveNewsToStorage(keyTab, keySubject, res.data || []);
           } else {
             setError(res.message || "Lỗi không xác định");
           }
         } else {
-          const subjectObj = subjects.find(
-            (s) => s.key === selectedSubject || s.id === selectedSubject
-          );
+          const subjectObj = subjects.find((s) => s.key === selectedSubject || s.id === selectedSubject);
           if (subjectObj?.id) {
             const res = await getNewsBySubject(subjectObj.id);
             if (res.success) {
               setNewsList(res.data || []);
+              setCache(keyTab, keySubject, res.data || []);
+              // Lưu vào persistent storage
+              await saveNewsToStorage(keyTab, keySubject, res.data || []);
             } else {
               setError(res.message || "Lỗi không xác định");
             }
           } else {
             setNewsList([]);
+            setCache(keyTab, keySubject, []);
+            // Lưu vào persistent storage
+            await saveNewsToStorage(keyTab, keySubject, []);
           }
         }
       }
-      
-      setLoading(false);
-    };
-    fetchNews();
-  }, [selectedSubject, tab, subjects, hasInitialized, currentFilter]);
+    } catch (error) {
+      setError("Lỗi kết nối server");
+    } finally {
+      if (showLoading) {
+        setLoading(false);
+      }
+    }
+  };
 
   const [showMenu, setShowMenu] = useState(false);
 

@@ -84,7 +84,7 @@ const DetailAccount: React.FC = () => {
       const convertedData = convertToUserData(data);
       setUserData(convertedData);
     } catch (error) {
-      console.error('Lỗi khi load thông tin tài khoản:', error);
+
       Alert.alert('Lỗi', 'Không thể tải thông tin tài khoản. Vui lòng thử lại.');
     } finally {
       setLoading(false);

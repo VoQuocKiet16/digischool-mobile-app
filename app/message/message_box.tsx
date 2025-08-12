@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -21,6 +22,7 @@ import {
 } from "react-native";
 import SafeScreen from "../../components/SafeScreen";
 import { useChatContext } from "../../contexts/ChatContext";
+import { useChatState } from "../../hooks/useChatState";
 import chatService from "../../services/chat.service";
 import { fonts, responsive, responsiveValues } from "../../utils/responsive";
 
@@ -68,6 +70,15 @@ export default function MessageBoxScreen() {
   const [myName, setMyName] = useState<string>('bạn');
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const {
+    getMessages,
+    setMessages: setMessagesCache,
+    invalidateMessages,
+    invalidateConversations,
+    // Thêm methods mới cho persistent storage
+    loadMessagesFromStorage,
+    saveMessagesToStorage,
+  } = useChatState();
 
   // Lấy token và myId từ AsyncStorage nếu chưa có
   useEffect(() => {
@@ -94,71 +105,109 @@ export default function MessageBoxScreen() {
     });
   }, []);
 
-  // Reset imageLoading khi selectedImage thay đổi
-  useEffect(() => {
-    if (selectedImage) {
-      setImageLoading(true);
-      // Fallback: Sau 3 giây nếu vẫn chưa load xong thì tắt loading
-      const timeout = setTimeout(() => setImageLoading(false), 3000);
-      return () => clearTimeout(timeout);
-    }
-    else setImageLoading(false);
-  }, [selectedImage]);
-
-  // Lấy lịch sử chat và kết nối socket
+  // Bước 1: Load messages từ persistent storage trước (hiển thị ngay)
   useEffect(() => {
     if (!isReady) return; // Chờ lấy xong token/myId
-    if (
-      typeof userId !== 'string' || !userId.trim() ||
-      typeof token !== 'string' || !token.trim() ||
-      typeof myId !== 'string' || !myId.trim()
-    ) {
-      setLoading(false);
-      setError("Thiếu thông tin người dùng hoặc token");
-      return;
-    }
+
+    const loadInitialMessages = async () => {
+      // Đọc từ persistent storage trước để hiển thị ngay
+      const storedMessages = await loadMessagesFromStorage(userId as string);
+      if (storedMessages && storedMessages.length > 0) {
+        console.log('🚀 Loaded messages from storage, displaying immediately');
+        const sorted = storedMessages.sort((a: any, b: any) => {
+          const timeA = new Date(a.createdAt || a.time || 0).getTime();
+          const timeB = new Date(b.createdAt || b.time || 0).getTime();
+          return timeA - timeB;
+        });
+        setMessages(sorted);
+        setLoading(false);
+        return;
+      }
+
+      // Nếu không có storage, kiểm tra RAM cache
+      const cached = getMessages(userId as string);
+      if (cached?.items && cached.items.length > 0) {
+        console.log('🚀 Loaded messages from RAM cache');
+        setMessages(cached.items);
+        setLoading(false);
+        return;
+      }
+
+      // Nếu không có cache, gọi API
+      console.log('🔄 No cached messages, fetching from API');
+      fetchMessagesFromAPI();
+    };
+
+    loadInitialMessages();
+  }, [isReady, userId, getMessages, loadMessagesFromStorage]);
+
+  // Tách fetch messages ra ngoài để có thể gọi lại
+  const fetchMessagesFromAPI = async () => {
     setLoading(true);
     setError("");
-    chatService
-      .getMessagesWith(userId as string, token as string)
-      .then((res) => {
-        if (res.success) {
-          // Lọc bỏ tin nhắn rỗng (không có content và mediaUrl)
-          const filtered = (res.data || []).filter((msg: any) => !!msg.content || !!msg.mediaUrl);
-          // Sắp xếp theo thời gian tăng dần (cũ nhất lên đầu)
-          const sorted = filtered.sort((a: any, b: any) => {
-            const timeA = new Date(a.createdAt || a.time || 0).getTime();
-            const timeB = new Date(b.createdAt || b.time || 0).getTime();
-            return timeA - timeB;
-          });
-          setMessages(sorted);
-        } else {
-          setError(res.message || "Lỗi không xác định");
-          setMessages([]);
-        }
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError("Lỗi kết nối server");
-        setMessages([]);
-        setLoading(false);
-      });
     
-    // Lắng nghe tin nhắn mới - sử dụng currentUserId từ context
+    try {
+      const res = await chatService.getMessagesWith(userId as string, token as string);
+      if (res.success) {
+        const filtered = (res.data || []).filter((msg: any) => !!msg.content || !!msg.mediaUrl);
+        const sorted = filtered.sort((a: any, b: any) => {
+          const timeA = new Date(a.createdAt || a.time || 0).getTime();
+          const timeB = new Date(b.createdAt || b.time || 0).getTime();
+          return timeA - timeB;
+        });
+        setMessages(sorted);
+        setMessagesCache(userId as string, sorted);
+        // Lưu vào persistent storage
+        await saveMessagesToStorage(userId as string, sorted);
+      } else {
+        setError(res.message || "Lỗi không xác định");
+        if (!messages.length) setMessages([]);
+      }
+    } catch (err) {
+      setError("Lỗi kết nối server");
+      if (!messages.length) setMessages([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Bước 2: Sync với API (background, không block UI)
+  useEffect(() => {
+    if (!isReady) return;
+
+    const syncWithAPI = async () => {
+      const cached = getMessages(userId as string);
+      const staleTimeMs = 45 * 60 * 1000; // 45 phút
+      const isFresh = cached && Date.now() - cached.updatedAt < staleTimeMs;
+      
+      if (!isFresh) {
+        console.log('🔄 Messages cache stale, syncing with API in background');
+        // Sync ngầm, không hiển thị loading
+        fetchMessagesFromAPI();
+      } else {
+        console.log('✅ Messages cache still fresh, no API call needed');
+      }
+    };
+
+    // Chỉ sync sau khi đã load initial data
+    if (messages.length > 0) {
+      syncWithAPI();
+    }
+  }, [isReady, userId, token, myId, getMessages, saveMessagesToStorage]);
+
+  // Lắng nghe tin nhắn mới
+  useEffect(() => {
+    if (!isReady) return;
+
     const actualUserId = myId as string;
     chatService.onNewMessage(actualUserId, (msg) => {
-      // Kiểm tra tin nhắn có thuộc về conversation hiện tại không
       const isRelevantMessage = (
         (msg.sender === actualUserId && msg.receiver === userId) ||
         (msg.sender === userId && msg.receiver === actualUserId)
       );
+      if (!isRelevantMessage) return;
       
-      if (!isRelevantMessage) {
-        return; // Bỏ qua tin nhắn không liên quan
-      }
-
       setMessages((prev) => {
-        // Nếu có tin nhắn tạm thời (id undefined, content trùng, sender trùng), replace bằng msg từ server
         const idx = prev.findIndex(
           (m) =>
             !m._id &&
@@ -167,22 +216,23 @@ export default function MessageBoxScreen() {
             m.receiver === msg.receiver &&
             (!m.mediaUrl || m.mediaUrl === msg.mediaUrl)
         );
-        if (idx !== -1) {
-          const newArr = [...prev];
-          newArr[idx] = { ...msg };
-          return newArr;
-        }
-        return [...prev, msg];
+        const next = idx !== -1 ? (() => { const arr = [...prev]; arr[idx] = { ...msg }; return arr; })() : [...prev, msg];
+        setMessagesCache(userId as string, next);
+        
+        // Lưu vào persistent storage
+        saveMessagesToStorage(userId as string, next);
+        
+        // Invalidate cache để đảm bảo data luôn fresh
+        invalidateMessages(userId as string);
+        return next;
       });
       flatListRef.current?.scrollToEnd({ animated: true });
-      // KHÔNG mark as read tự động khi nhận tin nhắn mới
-      // Chỉ mark as read khi user thực sự tương tác với conversation
     });
     
     return () => {
-      // Không disconnect ở đây vì ChatContext sẽ quản lý
+      // ChatContext quản lý lifecycle socket
     };
-  }, [isReady, userId, token, myId]);
+  }, [isReady, userId, token, myId, setMessagesCache, saveMessagesToStorage, invalidateMessages]);
 
   useEffect(() => {
     if (error) {
@@ -302,7 +352,9 @@ export default function MessageBoxScreen() {
             status: "sending",
             avatar: null,
           };
-          setMessages((prev) => [...prev, tempMsg]);
+          setMessages((prev) => { const next = [...prev, tempMsg]; setMessagesCache(userId as string, next); return next; });
+          // Invalidate cache để đảm bảo data luôn fresh
+          invalidateMessages(userId as string);
           await chatService.sendMessageAPI(
             {
               receiver: userId,
@@ -321,6 +373,8 @@ export default function MessageBoxScreen() {
             type: "image",
           });
           setSelectedImage(null);
+          // Invalidate conversation cache để cập nhật conversation list
+          invalidateConversations();
           // Scroll xuống tin nhắn cuối cùng sau khi gửi
           setTimeout(() => {
             flatListRef.current?.scrollToEnd({ animated: true });
@@ -354,7 +408,9 @@ export default function MessageBoxScreen() {
       status: "sending",
       avatar: null,
     };
-    setMessages((prev) => [...prev, tempMsg]);
+    setMessages((prev) => { const next = [...prev, tempMsg]; setMessagesCache(userId as string, next); return next; });
+    // Invalidate cache để đảm bảo data luôn fresh
+    invalidateMessages(userId as string);
     const res = await chatService.sendMessageAPI(data, token as string);
     if (!res.success) {
       Alert.alert("Lỗi gửi tin nhắn", res.message || "Gửi tin nhắn thất bại");
@@ -370,6 +426,8 @@ export default function MessageBoxScreen() {
     });
     setInput("");
     setSending(false);
+    // Invalidate conversation cache để cập nhật conversation list
+    invalidateConversations();
     // Scroll xuống tin nhắn cuối cùng sau khi gửi
     setTimeout(() => {
       flatListRef.current?.scrollToEnd({ animated: true });
@@ -510,6 +568,15 @@ export default function MessageBoxScreen() {
       markAsReadWhenInteracting();
     }
   }, [hasUserInteracted, userId]); // Thêm userId vào dependency để đảm bảo chỉ mark as read cho conversation hiện tại
+
+  // Mark as read khi màn hình box focus trở lại
+  useFocusEffect(
+    React.useCallback(() => {
+      if (myId && userId) {
+        chatService.markAsRead(myId as string, myId as string, userId as string);
+      }
+    }, [myId, userId])
+  );
 
   return (
     <SafeScreen>

@@ -232,7 +232,7 @@ export default function LeaveRequestInfoScreen() {
                   />
                 </View>
                 {lessonsByDayArr.map(([key, value], idx) => (
-                  <View key={idx} style={styles.dayBlock}>
+                  <View key={`day-${idx}`} style={styles.dayBlock}>
                     <View style={styles.dayRow}>
                       <MaterialIcons
                         name="calendar-month"
@@ -242,14 +242,8 @@ export default function LeaveRequestInfoScreen() {
                       />
                       <Text style={styles.dayText}>{key}</Text>
                     </View>
-                    {value.lessons.map((lesson, i) => (
-                      <View
-                        key={i}
-                        style={[
-                          styles.lessonTagCard,
-                          i !== value.lessons.length - 1 && { marginBottom: 8 },
-                        ]}
-                      >
+                    {value.lessons.map((lesson: any, i: number) => (
+                          <View key={`lesson-${idx}-${i}`} style={styles.lessonTagCard}>
                         <Text style={styles.lessonTagTextCard}>{lesson}</Text>
                       </View>
                     ))}

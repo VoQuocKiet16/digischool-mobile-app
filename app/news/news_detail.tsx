@@ -17,6 +17,7 @@ import {
   getNewsDetail,
   unfavoriteNews,
 } from "../../services/news.service";
+import { useNewsStore } from "../../stores/news.store";
 import { fonts, responsiveValues } from "../../utils/responsive";
 
 export default function NewsDetailScreen() {
@@ -28,6 +29,9 @@ export default function NewsDetailScreen() {
   const [favorite, setFavorite] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const screenWidth = Dimensions.get("window").width;
+
+  // Sử dụng news store để truy cập persistent storage
+  const { loadNewsFromStorage, updateNewsInStorage } = useNewsStore();
 
   // Hàm formatRelativeTime giống news_feed.tsx
   function formatRelativeTime(dateString: string) {
@@ -45,36 +49,123 @@ export default function NewsDetailScreen() {
     const fetchDetail = async () => {
       setLoading(true);
       setError(null);
-      const res = await getNewsDetail(id as string);
-      if (res.success) {
-        setNews(res.data);
-        // Kiểm tra userId trong mảng favorites
-        const userId = await AsyncStorage.getItem("userId");
-        const favArr = Array.isArray(res.data.favorites)
-          ? res.data.favorites
-          : [];
-        setFavorite(
-          userId ? favArr.map(String).includes(String(userId)) : false
-        );
-      } else {
-        setError(res.message || "Lỗi không xác định");
+
+      try {
+        // Bước 1: Thử tìm news trong persistent storage trước
+        let foundNews = null;
+        const tabs: ("news" | "favorite")[] = ['news', 'favorite'];
+        const subjects = ['all']; // Có thể mở rộng thêm subjects khác
+
+        for (const tab of tabs) {
+          for (const subject of subjects) {
+            const storedNews = await loadNewsFromStorage(tab, subject);
+            if (storedNews) {
+              const found = storedNews.find(item => item._id === id || item.id === id);
+              if (found) {
+                foundNews = found;
+                console.log('🚀 Found news in storage, displaying immediately');
+                break;
+              }
+            }
+          }
+          if (foundNews) break;
+        }
+
+        if (foundNews) {
+          setNews(foundNews);
+          // Kiểm tra userId trong mảng favorites
+          const userId = await AsyncStorage.getItem("userId");
+          const favArr = Array.isArray(foundNews.favorites)
+            ? foundNews.favorites
+            : [];
+          setFavorite(
+            userId ? favArr.map(String).includes(String(userId)) : false
+          );
+          setLoading(false);
+          return;
+        }
+
+        // Bước 2: Nếu không có trong storage, gọi API
+        console.log('🔄 News not found in storage, fetching from API');
+        const res = await getNewsDetail(id as string);
+        if (res.success) {
+          setNews(res.data);
+          // Kiểm tra userId trong mảng favorites
+          const userId = await AsyncStorage.getItem("userId");
+          const favArr = Array.isArray(res.data.favorites)
+            ? res.data.favorites
+            : [];
+          setFavorite(
+            userId ? favArr.map(String).includes(String(userId)) : false
+          );
+        } else {
+          setError(res.message || "Lỗi không xác định");
+        }
+      } catch (error) {
+        console.error('Error fetching news detail:', error);
+        setError("Lỗi kết nối server");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
-    fetchDetail();
-  }, [id]);
+
+    if (id) {
+      fetchDetail();
+    }
+  }, [id, loadNewsFromStorage]);
 
   const handleToggleFavorite = async () => {
     if (!news || favoriteLoading) return;
+    
     setFavoriteLoading(true);
-    if (favorite) {
-      const res = await unfavoriteNews(news._id || news.id);
-      if (res.success) setFavorite(false);
-    } else {
-      const res = await favoriteNews(news._id || news.id);
-      if (res.success) setFavorite(true);
+    try {
+      if (favorite) {
+        const res = await unfavoriteNews(news._id || news.id);
+        if (res.success) {
+          setFavorite(false);
+          // Cập nhật news trong storage
+          const updatedNews = {
+            ...news,
+            favorites: news.favorites.filter(async (favId: string) => favId !== await AsyncStorage.getItem("userId"))
+          };
+          setNews(updatedNews);
+          
+          // Cập nhật trong persistent storage
+          const tabs: ("news" | "favorite")[] = ['news', 'favorite'];
+          const subjects = ['all'];
+          for (const tab of tabs) {
+            for (const subject of subjects) {
+              await updateNewsInStorage(tab, subject, news._id || news.id, updatedNews);
+            }
+          }
+        }
+      } else {
+        const res = await favoriteNews(news._id || news.id);
+        if (res.success) {
+          setFavorite(true);
+          // Cập nhật news trong storage
+          const userId = await AsyncStorage.getItem("userId");
+          const updatedNews = {
+            ...news,
+            favorites: [...(news.favorites || []), userId]
+          };
+          setNews(updatedNews);
+          
+          // Cập nhật trong persistent storage
+          const tabs: ("news" | "favorite")[] = ['news', 'favorite'];
+          const subjects = ['all'];
+          for (const tab of tabs) {
+            for (const subject of subjects) {
+              await updateNewsInStorage(tab, subject, news._id || news.id, updatedNews);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    } finally {
+      setFavoriteLoading(false);
     }
-    setFavoriteLoading(false);
   };
 
   if (loading)

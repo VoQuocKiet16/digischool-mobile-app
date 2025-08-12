@@ -123,6 +123,7 @@ export default function LeaveRequestScreen() {
         } = mapApiToScheduleData(data);
         setScheduleData(schedule);
         setLessonIds(newLessonIds);
+        
         // Lấy availableYears, availableWeeks từ response nếu có
         const years =
           data?.data?.availableYears ||
@@ -134,6 +135,7 @@ export default function LeaveRequestScreen() {
           data?.data?.weeklySchedule?.availableWeeks ||
           [];
         if (Array.isArray(weeks) && weeks.length > 0) setAvailableWeeks(weeks);
+        
         // Cập nhật năm học và tuần từ response nếu có
         if (responseYear && responseYear !== year) {
           setYear(responseYear);
@@ -312,19 +314,11 @@ export default function LeaveRequestScreen() {
                   (availableYears.length > 0 ? availableYears : [year]).map(
                     (y) => (
                       <TouchableOpacity
-                        key={y}
-                        style={{ paddingVertical: 12, paddingHorizontal: 8 }}
+                        key={`year-${y}`}
+                        style={styles.modalItem}
                         onPress={() => handleSelectYear(y)}
                       >
-                        <Text
-                          style={{
-                            fontSize: 16,
-                            color: "#3A546D",
-                            textAlign: "center",
-                          }}
-                        >
-                          {y}
-                        </Text>
+                        <Text style={styles.modalItemText}>{y}</Text>
                       </TouchableOpacity>
                     )
                   )
@@ -372,8 +366,8 @@ export default function LeaveRequestScreen() {
                     : [weekNumber]
                   ).map((week) => (
                     <TouchableOpacity
-                      key={week}
-                      style={{ paddingVertical: 12, paddingHorizontal: 8 }}
+                      key={`week-${week}`}
+                      style={styles.modalItem}
                       onPress={() =>
                         handleSelectWeek({
                           weekNumber: week,
@@ -432,9 +426,6 @@ export default function LeaveRequestScreen() {
                 const lessonIdsSelected = selected.map(
                   ({ lessonId }) => lessonId
                 );
-                console.log("Selected slots:", selected);
-                console.log("Subjects:", subjects);
-                console.log("Lesson IDs:", lessonIdsSelected);
                 router.push({
                   pathname: "/students/leave_request/leave_request_info",
                   params: {
@@ -520,5 +511,14 @@ const styles = StyleSheet.create({
   buttonContainer: {
     paddingHorizontal: 16,
     paddingBottom: 16,
+  },
+  modalItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+  },
+  modalItemText: {
+    fontSize: 16,
+    color: "#3A546D",
+    textAlign: "center",
   },
 });

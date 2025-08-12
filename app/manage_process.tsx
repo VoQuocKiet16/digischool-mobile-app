@@ -86,7 +86,6 @@ export default function ManageProcess() {
       setLoading(true);
       await loadTeachingProgress();
     } catch (error) {
-      console.error('Lỗi khi load dữ liệu ban đầu:', error);
       Alert.alert('Lỗi', 'Không thể tải dữ liệu. Vui lòng thử lại.');
     } finally {
       setLoading(false);
@@ -128,7 +127,6 @@ export default function ManageProcess() {
         setTableData([]);
       }
     } catch (error) {
-      console.error('Lỗi khi load teaching progress:', error);
       // Reset data khi có lỗi
       setClassesByGrade([]);
       setTableData([]);
@@ -150,7 +148,6 @@ export default function ManageProcess() {
       const requirements = await ManageService.getLessonRequirements(gradeLevel, semesterNumber, academicYear);
       setConfigData(requirements);
     } catch (error) {
-      console.error('Lỗi khi load lesson requirements:', error);
       // Sử dụng cấu hình mặc định
       setConfigData(REQUIRED_LESSONS);
     } finally {
@@ -178,7 +175,6 @@ export default function ManageProcess() {
       Alert.alert('Thành công', 'Đã lưu cấu hình thành công');
       setShowConfigModal(false);
     } catch (error) {
-      console.error('Lỗi khi lưu cấu hình:', error);
       Alert.alert('Lỗi', 'Không thể lưu cấu hình. Vui lòng thử lại.');
     } finally {
       setLoading(false);

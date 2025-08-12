@@ -148,12 +148,12 @@ export default function NotificationCreateScreen() {
               if (gradeRes.success) setGrades(gradeRes.data.map((g: number) => `Khối ${g}`));
               if (classRes.success) setClasses(classRes.data);
             } catch (error) {
-              console.error("Error loading dropdown data:", error);
+      
             }
           }
         }
       } catch (error) {
-        console.error("Error getting user data:", error);
+     
         setUserRole("teacher");
       } finally {
         setIsLoading(false);
