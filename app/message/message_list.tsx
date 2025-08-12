@@ -57,6 +57,10 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
           setChatData(storedConversations);
           setLoading(false);
           setIsInitialLoad(false);
+        } else {
+          // Nếu không có data từ storage, set loading = false để hiển thị empty state
+          setLoading(false);
+          setIsInitialLoad(false);
         }
       } else {
         AsyncStorage.getItem("userId").then(async (id) => {
@@ -70,7 +74,15 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
               setChatData(storedConversations);
               setLoading(false);
               setIsInitialLoad(false);
+            } else {
+              // Nếu không có data từ storage, set loading = false để hiển thị empty state
+              setLoading(false);
+              setIsInitialLoad(false);
             }
+          } else {
+            // Nếu không có userId, set loading = false để hiển thị empty state
+            setLoading(false);
+            setIsInitialLoad(false);
           }
         });
       }
@@ -79,6 +91,19 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
     loadInitialData();
   }, [currentUserId, loadConversationsFromStorage]);
 
+  // Fallback: Đảm bảo loading không bị stuck quá 5 giây
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (isInitialLoad) {
+        console.log('⚠️ Loading timeout, forcing reset');
+        setLoading(false);
+        setIsInitialLoad(false);
+      }
+    }, 5000);
+
+    return () => clearTimeout(timeout);
+  }, [isInitialLoad]);
+
   // Bước 2: Kiểm tra RAM cache (nếu có)
   useEffect(() => {
     if (currentUserId && isInitialLoad) {
@@ -86,6 +111,10 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
       if (cached?.items && cached.items.length > 0) {
         console.log('🚀 Loaded conversations from RAM cache');
         setChatData(cached.items);
+        setLoading(false);
+        setIsInitialLoad(false);
+      } else if (isInitialLoad) {
+        // Nếu không có cache và vẫn đang initial load, set loading = false
         setLoading(false);
         setIsInitialLoad(false);
       }
@@ -115,6 +144,7 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
         if (!chatData.length) setChatData([]);
       }
     } catch (e) {
+      console.error('Error fetching conversations:', e);
       setError("Lỗi kết nối server");
       if (!chatData.length) setChatData([]);
     } finally {
@@ -141,11 +171,11 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
       }
     };
 
-    // Chỉ sync sau khi đã load initial data
-    if (!isInitialLoad) {
+    // Chỉ sync sau khi đã load initial data và có myId
+    if (!isInitialLoad && myId) {
       syncWithAPI();
     }
-  }, [currentToken, token, refreshFlag, myId, isInitialLoad]);
+  }, [myId, isInitialLoad]); // Loại bỏ currentToken, token, refreshFlag để tránh trigger liên tục
 
   useEffect(() => {
     const handleNewMessage = (msg: any) => {
@@ -230,7 +260,14 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
     }
   }, [error]);
 
-  if (!myId) return <ActivityIndicator style={{ marginTop: 40 }} />;
+  if (!myId) {
+    return (
+      <View style={{ marginTop: 40, alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#29375C" />
+        <Text style={{ marginTop: 10, color: "#A0A0A0" }}>Đang tải thông tin người dùng...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -268,8 +305,11 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
         </TouchableOpacity>
       </View>
       
-      {loading && isInitialLoad ? (
-        <ActivityIndicator style={{ marginTop: 40 }} />
+      {loading ? (
+        <View style={{ marginTop: 40, alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#29375C" />
+          <Text style={{ marginTop: 10, color: "#A0A0A0" }}>Đang tải tin nhắn...</Text>
+        </View>
       ) : error ? (
         <Text style={{ color: "red", textAlign: "center", marginTop: 40 }}>
           {error}
@@ -412,7 +452,7 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
             setRefreshFlag(prev => prev + 1);
             fetchConversations(true);
           }}
-          refreshing={loading && !isInitialLoad}
+          refreshing={loading}
         />
       )}
     </View>

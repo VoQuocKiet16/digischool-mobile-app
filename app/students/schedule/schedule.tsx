@@ -15,6 +15,7 @@ import RefreshableScrollView from "../../../components/RefreshableScrollView";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getAvailableAcademicYearsAndWeeks, getStudentSchedule } from "../../../services/schedule.service";
+import { buildScheduleKey, useScheduleStore } from "../../../stores/schedule.store";
 import { Activity } from "../../../types/schedule.types";
 
 const defaultActivity = (text: string, hasNotification = false): Activity => ({
@@ -226,7 +227,7 @@ export default function ScheduleStudentsScreen() {
     }
   };
 
-  const fetchSchedule = async () => {
+  const fetchSchedule = useCallback(async (forceRefresh = false) => {
     setLoading(true);
     setError("");
     try {
@@ -325,7 +326,7 @@ export default function ScheduleStudentsScreen() {
     } finally {
       setLoading(false);
     }
-  }, [getCache, setCache]); // Chỉ phụ thuộc vào getCache và setCache
+  }, []); // Không cần dependency array vì sử dụng refs và store functions
 
   // Handler cho pull-to-refresh
   const handleRefresh = async () => {
@@ -338,7 +339,7 @@ export default function ScheduleStudentsScreen() {
 
   useEffect(() => {
     fetchSchedule();
-  }, [fetchSchedule]);
+  }, []); // fetchSchedule được wrap trong useCallback với empty dependency array
 
   // Tự động refresh khi màn hình được focus (sau khi thêm hoạt động)
   useFocusEffect(
@@ -388,7 +389,7 @@ export default function ScheduleStudentsScreen() {
       };
       
       checkAndRefreshIfNeeded();
-    }, [fetchSchedule])
+    }, []) // Không cần dependency array
   );
 
   const handleAddActivity = (
