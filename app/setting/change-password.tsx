@@ -258,7 +258,7 @@ const ChangePassword: React.FC = () => {
             
             router.replace("/auth/login");
           } catch (err) {
-            console.error("Logout error:", err);
+
           }
         }}
         title="Thành công"

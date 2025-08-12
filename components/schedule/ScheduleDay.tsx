@@ -10,8 +10,8 @@ import {
   View,
 } from "react-native";
 import { useUserData } from "../../hooks/useUserData";
-import { fonts, responsive } from "../../utils/responsive";
 import { Activity } from "../../types/schedule.types";
+import { fonts, responsive } from "../../utils/responsive";
 import MenuDropdown from "../MenuDropdown";
 import ScheduleSlot from "./ScheduleSlot";
 
@@ -149,7 +149,7 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
         <View style={{ width: 0.1, height: 22, backgroundColor: "#f7f7f7" }} />
         {days.map((day, idx) => (
           <TouchableOpacity
-            key={idx}
+            key={`day-header-${idx}`}
             style={[
               styles.dayHeaderCell,
               { width: colWidth },
@@ -203,7 +203,7 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
 
       {/* Các hàng tiết */}
       {periods.map((period, periodIndex) => (
-        <View key={periodIndex} style={styles.row}>
+        <View key={`period-${periodIndex}`} style={styles.row}>
           <View style={[styles.periodCell, { width: colWidth }]}>
             <Text style={styles.periodText}>{period}</Text>
           </View>
@@ -217,7 +217,7 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
             if (slotData === null) {
               return (
                 <View
-                  key={dayIndex}
+                  key={`slot-${periodIndex}-${dayIndex}-null`}
                   style={[styles.slotWrapper, { width: colWidth }]}
                 />
               );
@@ -243,7 +243,7 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
             if (hideNullSlot && (!slotData.text || slotData.text === "")) {
               return (
                 <View
-                  key={dayIndex}
+                  key={`slot-${periodIndex}-${dayIndex}-empty`}
                   style={[styles.slotWrapper, { width: colWidth }]}
                 ></View>
               );
@@ -256,14 +256,14 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
             ) {
               return (
                 <View
-                  key={dayIndex}
+                  key={`slot-${periodIndex}-${dayIndex}-swap`}
                   style={[styles.slotWrapper, { width: colWidth }]}
                 />
               );
             }
             return (
               <View
-                key={dayIndex}
+                key={`slot-${periodIndex}-${dayIndex}`}
                 style={[
                   styles.slotWrapper,
                   { width: colWidth },

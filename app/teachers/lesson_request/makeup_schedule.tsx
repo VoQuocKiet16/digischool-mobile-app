@@ -361,7 +361,7 @@ export default function MakeupSchedule() {
               {availableYears.length > 0 ? (
                 availableYears.map((y) => (
                   <TouchableOpacity
-                    key={y}
+                    key={`year-${y}`}
                     style={styles.modalItem}
                     onPress={() => handleSelectYear(y)}
                   >

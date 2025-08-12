@@ -1,4 +1,5 @@
 import { MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -13,13 +14,17 @@ import {
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import PlusIcon from "../../components/PlusIcon";
 import { getMyNews } from "../../services/news.service";
-import { responsive, responsiveValues, fonts } from "../../utils/responsive";
+import { useNewsStore } from "../../stores/news.store";
+import { fonts } from "../../utils/responsive";
 
 export default function ManageNewsScreen() {
   const [news, setNews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  // Sử dụng news store để truy cập persistent storage
+  const { loadNewsFromStorage, saveNewsToStorage } = useNewsStore();
 
   // Thêm hàm formatRelativeTime
   function formatRelativeTime(dateString: string) {
@@ -37,16 +42,47 @@ export default function ManageNewsScreen() {
     const fetchNews = async () => {
       setLoading(true);
       setError(null);
-      const res = await getMyNews();
-      if (res.success) {
-        setNews(res.data || []);
-      } else {
-        setError(res.message || "Lỗi không xác định");
+
+      try {
+        // Bước 1: Thử load từ persistent storage trước
+        const storedNews = await loadNewsFromStorage('news', 'all');
+        if (storedNews && storedNews.length > 0) {
+          // Lọc chỉ lấy news của giáo viên hiện tại
+          const userId = await AsyncStorage.getItem("userId");
+          const teacherNews = storedNews.filter(item => 
+            item.createdBy?._id === userId || item.createdBy?.id === userId
+          );
+          
+          if (teacherNews.length > 0) {
+            console.log('🚀 Loaded teacher news from storage, displaying immediately');
+            setNews(teacherNews);
+            setLoading(false);
+            return;
+          }
+        }
+
+        // Bước 2: Nếu không có trong storage, gọi API
+        console.log('🔄 No teacher news in storage, fetching from API');
+        const res = await getMyNews();
+        if (res.success) {
+          const newsData = res.data || [];
+          setNews(newsData);
+          
+          // Lưu vào persistent storage
+          await saveNewsToStorage('news', 'all', newsData);
+        } else {
+          setError(res.message || "Lỗi không xác định");
+        }
+      } catch (error) {
+        console.error('Error fetching teacher news:', error);
+        setError("Lỗi kết nối server");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
+
     fetchNews();
-  }, []);
+  }, [loadNewsFromStorage, saveNewsToStorage]);
 
   return (
     <HeaderLayout

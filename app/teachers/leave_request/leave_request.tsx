@@ -332,19 +332,11 @@ export default function TeacherLeaveRequestScreen() {
                   (availableYears.length > 0 ? availableYears : [year]).map(
                     (y) => (
                       <TouchableOpacity
-                        key={y}
-                        style={{ paddingVertical: 12, paddingHorizontal: 8 }}
+                        key={`year-${y}`}
+                        style={styles.modalItem}
                         onPress={() => handleSelectYear(y)}
                       >
-                        <Text
-                          style={{
-                            fontSize: 16,
-                            color: "#3A546D",
-                            textAlign: "center",
-                          }}
-                        >
-                          {y}
-                        </Text>
+                        <Text style={styles.modalItemText}>{y}</Text>
                       </TouchableOpacity>
                     )
                   )
@@ -392,8 +384,8 @@ export default function TeacherLeaveRequestScreen() {
                     : [weekNumber]
                   ).map((week) => (
                     <TouchableOpacity
-                      key={week}
-                      style={{ paddingVertical: 12, paddingHorizontal: 8 }}
+                      key={`week-${week}`}
+                      style={styles.modalItem}
                       onPress={() =>
                         handleSelectWeek({
                           weekNumber: week,
@@ -401,13 +393,7 @@ export default function TeacherLeaveRequestScreen() {
                         })
                       }
                     >
-                      <Text
-                        style={{
-                          fontSize: 16,
-                          color: "#3A546D",
-                          textAlign: "center",
-                        }}
-                      >{`Tuần ${week}`}</Text>
+                      <Text style={styles.modalItemText}>{`Tuần ${week}`}</Text>
                     </TouchableOpacity>
                   ))
                 ) : (
@@ -545,5 +531,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 16,
     backgroundColor: "#f7f7f7",
+  },
+  modalItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+  },
+  modalItemText: {
+    fontSize: 16,
+    color: "#3A546D",
+    textAlign: "center",
   },
 });

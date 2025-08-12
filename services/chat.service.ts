@@ -12,9 +12,11 @@ class ChatService {
   connect(userId: string, token: string) {
     // Nếu đã có socket cho userId này, không tạo mới
     if (this.sockets.has(userId)) {
+      console.log(`Socket already exists for user ${userId}, skipping connection`);
       return;
     }
 
+    console.log(`Creating new socket connection for user ${userId}`);
     const socket = io(SOCKET_URL, {
       transports: ["websocket"],
       auth: { token: `Bearer ${token}` },
@@ -25,6 +27,8 @@ class ChatService {
 
     socket.on("connect", () => {
       console.log(`Socket connected for user ${userId}`);
+      // Emit join event sau khi connect thành công
+      socket.emit("join", userId);
     });
 
     socket.on("disconnect", () => {
@@ -35,7 +39,14 @@ class ChatService {
       console.log(`Socket reconnecting for user ${userId}`);
     });
 
+    socket.on("reconnect", () => {
+      console.log(`Socket reconnected for user ${userId}`);
+      // Emit join event sau khi reconnect
+      socket.emit("join", userId);
+    });
+
     socket.on("new_message", (msg: any) => {
+      console.log(`New message received for user ${userId}:`, msg);
       // Chỉ gọi callback cho user này
       const callbacks = this.messageCallbacks.get(userId);
       if (callbacks) {
@@ -51,7 +62,6 @@ class ChatService {
       }
     });
 
-    socket.emit("join", userId);
     this.sockets.set(userId, socket);
   }
 

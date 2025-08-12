@@ -89,7 +89,7 @@ export default function ManageFeedback() {
         const statsResponse = await manageService.getFeedbackStats();
         setStats(statsResponse);
       } catch (error) {
-        console.log("Không thể load stats:", error);
+
       }
     } catch (error: any) {
       Alert.alert("Lỗi", "Không thể tải dữ liệu feedback. Vui lòng thử lại.");

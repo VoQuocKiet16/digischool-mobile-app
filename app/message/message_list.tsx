@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { useChatContext } from "../../contexts/ChatContext";
+import { useChatState } from "../../hooks/useChatState";
 import chatService from "../../services/chat.service";
 import { fonts } from "../../utils/responsive";
 
@@ -24,56 +25,141 @@ type Props = {
 
 export default function MessageListScreen({ token = "demo-token" }: Props) {
   const { currentUserId, currentToken } = useChatContext();
+  const {
+    isConnected,
+    getConversations,
+    setConversations,
+    updateConversationWithMessage,
+    markConversationAsRead,
+    invalidateConversations,
+    // Thêm methods mới cho persistent storage
+    loadConversationsFromStorage,
+    saveConversationsToStorage,
+  } = useChatState();
   const [search, setSearch] = useState("");
   const [chatData, setChatData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [myId, setMyId] = useState<string | undefined>(currentUserId || undefined);
   const [refreshFlag, setRefreshFlag] = useState(0);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const router = useRouter();
 
+  // Bước 1: Load data từ persistent storage trước (hiển thị ngay)
   useEffect(() => {
-    if (currentUserId) {
-      setMyId(currentUserId);
-    } else {
-      AsyncStorage.getItem("userId").then((id) => setMyId(id ?? undefined));
+    const loadInitialData = async () => {
+      if (currentUserId) {
+        setMyId(currentUserId);
+        // Đọc từ persistent storage trước để hiển thị ngay
+        const storedConversations = await loadConversationsFromStorage(currentUserId);
+        if (storedConversations && storedConversations.length > 0) {
+          console.log('🚀 Loaded conversations from storage, displaying immediately');
+          setChatData(storedConversations);
+          setLoading(false);
+          setIsInitialLoad(false);
+        }
+      } else {
+        AsyncStorage.getItem("userId").then(async (id) => {
+          const uid = id ?? undefined;
+          setMyId(uid);
+          if (uid) {
+            // Đọc từ persistent storage trước
+            const storedConversations = await loadConversationsFromStorage(uid);
+            if (storedConversations && storedConversations.length > 0) {
+              console.log('🚀 Loaded conversations from storage, displaying immediately');
+              setChatData(storedConversations);
+              setLoading(false);
+              setIsInitialLoad(false);
+            }
+          }
+        });
+      }
+    };
+
+    loadInitialData();
+  }, [currentUserId, loadConversationsFromStorage]);
+
+  // Bước 2: Kiểm tra RAM cache (nếu có)
+  useEffect(() => {
+    if (currentUserId && isInitialLoad) {
+      const cached = getConversations(currentUserId);
+      if (cached?.items && cached.items.length > 0) {
+        console.log('🚀 Loaded conversations from RAM cache');
+        setChatData(cached.items);
+        setLoading(false);
+        setIsInitialLoad(false);
+      }
     }
-  }, [currentUserId]);
+  }, [currentUserId, getConversations, isInitialLoad]);
 
   // Tách fetchConversations ra ngoài để có thể gọi lại
-  const fetchConversations = async () => {
-    setLoading(true);
-    setError("");
+  const fetchConversations = async (showLoading = true) => {
+    if (showLoading) {
+      setError("");
+      setLoading(true);
+    }
+    
     try {
       const actualToken = currentToken || token;
       const res = await chatService.getConversations(actualToken);
       if (res.success) {
+        console.log('🔄 Fetched fresh conversations from API');
         setChatData(res.data);
+        if (myId) {
+          setConversations(myId, res.data);
+          // Lưu vào persistent storage
+          await saveConversationsToStorage(myId, res.data);
+        }
       } else {
         setError(res.message || "Lỗi không xác định");
-        setChatData([]);
+        if (!chatData.length) setChatData([]);
       }
     } catch (e) {
       setError("Lỗi kết nối server");
-      setChatData([]);
+      if (!chatData.length) setChatData([]);
     } finally {
       setLoading(false);
+      setIsInitialLoad(false);
     }
   };
 
+  // Bước 3: Sync với API (background, không block UI)
   useEffect(() => {
-    fetchConversations();
-  }, [currentToken, token, refreshFlag]);
+    const syncWithAPI = async () => {
+      if (myId && !isInitialLoad) {
+        const cached = getConversations(myId);
+        const staleTimeMs = 20 * 1000; // 20 giây
+        const isFresh = cached && Date.now() - cached.updatedAt < staleTimeMs;
+        
+        if (!isFresh) {
+          console.log('🔄 Cache stale, syncing with API in background');
+          // Sync ngầm, không hiển thị loading
+          fetchConversations(false);
+        } else {
+          console.log('✅ Cache still fresh, no API call needed');
+        }
+      }
+    };
+
+    // Chỉ sync sau khi đã load initial data
+    if (!isInitialLoad) {
+      syncWithAPI();
+    }
+  }, [currentToken, token, refreshFlag, myId, isInitialLoad]);
 
   useEffect(() => {
     const handleNewMessage = (msg: any) => {
+      // Sử dụng hook để update conversation
+      updateConversationWithMessage(msg);
+      
       setChatData((prevData) => {
         const otherUserId = msg.sender === myId ? msg.receiver : msg.sender;
         const idx = prevData.findIndex(
           (item) => item.userId === otherUserId || item.id === otherUserId
         );
         if (idx === -1) {
-          fetchConversations();
+          // Nếu không tìm thấy conversation, refresh toàn bộ danh sách
+          fetchConversations(false);
           return prevData;
         }
         // Chỉ tăng unreadCount nếu mình là người nhận
@@ -92,14 +178,21 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
           ...prevData.slice(0, idx),
           ...prevData.slice(idx + 1),
         ];
+        if (myId) {
+          setConversations(myId, newData);
+          // Invalidate cache để đảm bảo data luôn fresh
+          invalidateConversations();
+        }
         return newData;
       });
     };
     
     const handleMessageRead = (data: any) => {
+      // Sử dụng hook để mark conversation as read
+      markConversationAsRead(data.from);
+      
       // Khi có tin nhắn được mark as read, reset unreadCount cho conversation đó
       setChatData((prevData) => {
-        // Tìm conversation dựa trên data.from (người gửi tin nhắn đã được đọc)
         const idx = prevData.findIndex(
           (item) => item.userId === data.from || item.id === data.from
         );
@@ -110,6 +203,11 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
             ...prevData.slice(0, idx),
             ...prevData.slice(idx + 1),
           ];
+          if (myId) {
+            setConversations(myId, newData);
+            // Invalidate cache để đảm bảo data luôn fresh
+            invalidateConversations();
+          }
           return newData;
         }
         return prevData;
@@ -169,7 +267,8 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
           />
         </TouchableOpacity>
       </View>
-      {loading ? (
+      
+      {loading && isInitialLoad ? (
         <ActivityIndicator style={{ marginTop: 40 }} />
       ) : error ? (
         <Text style={{ color: "red", textAlign: "center", marginTop: 40 }}>
@@ -251,6 +350,7 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
                         ...prevData.slice(0, idx),
                         ...prevData.slice(idx + 1),
                       ];
+                      if (myId) setConversations(myId, newData);
                       return newData;
                     });
                   }
@@ -308,6 +408,11 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
           }}
           contentContainerStyle={{ paddingBottom: 80 }}
           showsVerticalScrollIndicator={false}
+          onRefresh={() => {
+            setRefreshFlag(prev => prev + 1);
+            fetchConversations(true);
+          }}
+          refreshing={loading && !isInitialLoad}
         />
       )}
     </View>
