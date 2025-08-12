@@ -14,8 +14,7 @@ import {
 import RefreshableScrollView from "../../../components/RefreshableScrollView";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
-import { getStudentSchedule } from "../../../services/schedule.service";
-import { buildScheduleKey, useScheduleStore } from "../../../stores/schedule.store";
+import { getAvailableAcademicYearsAndWeeks, getStudentSchedule } from "../../../services/schedule.service";
 import { Activity } from "../../../types/schedule.types";
 
 const defaultActivity = (text: string, hasNotification = false): Activity => ({
@@ -189,14 +188,45 @@ export default function ScheduleStudentsScreen() {
   const [availableWeeks, setAvailableWeeks] = useState<number[]>([]);
 
   const days = defaultDays;
+  
+  // Function để lấy danh sách năm học và tuần có sẵn
+  const fetchAvailableData = async () => {
+    try {
+      const response = await getAvailableAcademicYearsAndWeeks();
+      if (response.success && response.data) {
+        const { availableAcademicYears, currentAcademicYear } = response.data;
+        
+        // Lấy danh sách năm học
+        const years = availableAcademicYears.map((year: any) => year.name);
+        setAvailableYears(years);
+        
+        // Nếu có năm học hiện tại, set làm mặc định
+        if (currentAcademicYear && years.includes(currentAcademicYear.name)) {
+          setYear(currentAcademicYear.name);
+          
+          // Lấy tuần đầu tiên có sẵn của năm học hiện tại
+          const currentYearData = availableAcademicYears.find((year: any) => year.name === currentAcademicYear.name);
+          if (currentYearData && currentYearData.weekNumbers.length > 0) {
+            setWeekNumber(currentYearData.weekNumbers[0]);
+            setAvailableWeeks(currentYearData.weekNumbers);
+          }
+        } else if (years.length > 0) {
+          // Nếu không có năm học hiện tại, dùng năm đầu tiên có sẵn
+          setYear(years[0]);
+          const firstYearData = availableAcademicYears.find((year: any) => year.name === years[0]);
+          if (firstYearData && firstYearData.weekNumbers.length > 0) {
+            setWeekNumber(firstYearData.weekNumbers[0]);
+            setAvailableWeeks(firstYearData.weekNumbers);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching available data:", err);
+      // Fallback: giữ nguyên giá trị mặc định
+    }
+  };
 
-  // Update refs khi year hoặc weekNumber thay đổi
-  useEffect(() => {
-    yearRef.current = year;
-    weekNumberRef.current = weekNumber;
-  }, [year, weekNumber]);
-
-  const fetchSchedule = useCallback(async (forceRefresh = false) => {
+  const fetchSchedule = async () => {
     setLoading(true);
     setError("");
     try {
@@ -271,13 +301,22 @@ export default function ScheduleStudentsScreen() {
         availableYears: years,
         availableWeeks: weeks
       });
-
-      // Cập nhật năm học và tuần từ response nếu có
-      if (responseYear && !years.includes(responseYear)) {
-        setAvailableYears((prev) => [...prev, responseYear]);
-      }
-      if (responseWeek && !weeks.includes(responseWeek)) {
-        setAvailableWeeks((prev) => [...prev, responseWeek]);
+      
+      // Cập nhật danh sách tuần có sẵn cho năm học hiện tại
+      if (responseYear) {
+        try {
+          const availableData = await getAvailableAcademicYearsAndWeeks();
+          if (availableData.success && availableData.data) {
+            const currentYearData = availableData.data.availableAcademicYears.find(
+              (yearData: any) => yearData.name === responseYear
+            );
+            if (currentYearData) {
+              setAvailableWeeks(currentYearData.weekNumbers);
+            }
+          }
+        } catch (err) {
+          console.error("Error updating available weeks:", err);
+        }
       }
     } catch (err) {
       setError("Lỗi tải thời khóa biểu");
@@ -292,6 +331,10 @@ export default function ScheduleStudentsScreen() {
   const handleRefresh = async () => {
     await fetchSchedule(true); // Force refresh bỏ qua TTL
   };
+
+  useEffect(() => {
+    fetchAvailableData();
+  }, []);
 
   useEffect(() => {
     fetchSchedule();
@@ -392,9 +435,29 @@ export default function ScheduleStudentsScreen() {
 
   // Modal chọn năm học
   const handleChangeYear = () => setShowYearModal(true);
-  const handleSelectYear = (selected: string) => {
+  const handleSelectYear = async (selected: string) => {
     setYear(selected);
     setWeekNumber(1); // Đổi năm thì về tuần đầu tiên
+    
+    // Cập nhật danh sách tuần có sẵn cho năm học mới
+    try {
+      const availableData = await getAvailableAcademicYearsAndWeeks();
+      if (availableData.success && availableData.data) {
+        const selectedYearData = availableData.data.availableAcademicYears.find(
+          (yearData: any) => yearData.name === selected
+        );
+        if (selectedYearData) {
+          setAvailableWeeks(selectedYearData.weekNumbers);
+          // Set tuần đầu tiên có sẵn
+          if (selectedYearData.weekNumbers.length > 0) {
+            setWeekNumber(selectedYearData.weekNumbers[0]);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error updating weeks for new year:", err);
+    }
+    
     setShowYearModal(false);
   };
 
@@ -475,6 +538,7 @@ export default function ScheduleStudentsScreen() {
           onPressOut={() => setShowYearModal(false)}
         >
           <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Chọn năm học</Text>
             {availableYears.length > 0 ? (
               availableYears.map((y) => (
                 <TouchableOpacity
@@ -486,7 +550,10 @@ export default function ScheduleStudentsScreen() {
                 </TouchableOpacity>
               ))
             ) : (
-              <Text style={styles.modalItemText}>Không có dữ liệu</Text>
+              <View style={styles.noDataContainer}>
+                <Text style={styles.noDataText}>Không có dữ liệu năm học</Text>
+                <Text style={styles.noDataSubText}>Vui lòng thử lại sau</Text>
+              </View>
             )}
           </View>
         </TouchableOpacity>
@@ -504,6 +571,7 @@ export default function ScheduleStudentsScreen() {
           onPressOut={() => setShowWeekModal(false)}
         >
           <View style={[styles.modalContent, { maxHeight: 400 }]}>
+            <Text style={styles.modalTitle}>Chọn tuần</Text>
             {availableWeeks.length > 0 ? (
               <FlatList
                 data={availableWeeks.map((week) => ({
@@ -521,7 +589,10 @@ export default function ScheduleStudentsScreen() {
                 )}
               />
             ) : (
-              <Text style={styles.modalItemText}>Không có dữ liệu</Text>
+              <View style={styles.noDataContainer}>
+                <Text style={styles.noDataText}>Không có dữ liệu tuần</Text>
+                <Text style={styles.noDataSubText}>Vui lòng chọn năm học khác</Text>
+              </View>
             )}
           </View>
         </TouchableOpacity>
@@ -548,6 +619,13 @@ const styles = StyleSheet.create({
     maxHeight: 200,
     elevation: 5,
   },
+  modalTitle: {
+    fontSize: 18,
+    color: "#29375C",
+    fontFamily: "Baloo2-Bold",
+    textAlign: "center",
+    marginBottom: 16,
+  },
   modalItem: {
     paddingVertical: 12,
     paddingHorizontal: 8,
@@ -555,6 +633,21 @@ const styles = StyleSheet.create({
   modalItemText: {
     fontSize: 16,
     color: "#3A546D",
+    textAlign: "center",
+  },
+  noDataContainer: {
+    alignItems: "center",
+    paddingVertical: 20,
+  },
+  noDataText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  noDataSubText: {
+    fontSize: 14,
+    color: "#999",
     textAlign: "center",
   },
 });

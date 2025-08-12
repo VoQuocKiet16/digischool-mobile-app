@@ -16,7 +16,7 @@ import { fonts } from "../../../utils/responsive";
 
 const QUESTIONS = [
   "Giáo viên có giải thích bài học một cách dễ hiểu và rõ ràng không?",
-  "Giáo viên có thân thiện và tận trong học sinh trong suốt giờ học không?",
+  "Giáo viên có thân thiện và tôn trọng học sinh trong suốt giờ học không?",
   "Giáo viên có khuyến khích học trò nêu thắc mắc và hợp tác không?",
 ];
 
