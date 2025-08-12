@@ -82,3 +82,13 @@ export const completeLesson = async (lessonId: string): Promise<any> => {
     throw error;
   }
 };
+
+export const getAvailableAcademicYearsAndWeeks = async () => {
+  try {
+    const response = await api.get("/api/schedules/available-academic-years-weeks");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching available academic years and weeks:", error);
+    throw error;
+  }
+};

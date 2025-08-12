@@ -69,7 +69,7 @@ export default function AddContactScreen() {
           <View style={styles.fieldWrap}>
             <View style={styles.outlineInputBox}>
               <Text style={styles.floatingLabel}>
-                Thông tin tìm kkiếm
+                Thông tin tìm kiếm
               </Text>
               <TextInput
                 style={styles.inputTextOutline}
