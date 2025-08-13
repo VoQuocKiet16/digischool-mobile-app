@@ -310,6 +310,35 @@ export default function ScheduleTeachersScreen() {
       
       const checkAndRefreshIfNeeded = async () => {
         try {
+          // Kiểm tra xem có cần refresh TKB không
+          const scheduleRefreshStr = await AsyncStorage.getItem('scheduleNeedsRefresh');
+          if (scheduleRefreshStr) {
+            try {
+              const refreshData = JSON.parse(scheduleRefreshStr);
+              console.log('🔄 Found schedule refresh notification:', refreshData);
+              
+              // Kiểm tra xem update có thuộc tuần hiện tại không
+              if (dateRange?.start && dateRange?.end) {
+                const startDate = new Date(dateRange.start);
+                const endDate = new Date(dateRange.end);
+                const activityDate = new Date(refreshData.data.date);
+                
+                if (activityDate >= startDate && activityDate <= endDate) {
+                  console.log('🔄 Refresh notification belongs to current week, refreshing schedule...');
+                  // Refresh TKB để hiển thị hoạt động mới
+                  await fetchSchedule(true);
+                  
+                  // Xóa notification đã xử lý
+                  await AsyncStorage.removeItem('scheduleNeedsRefresh');
+                  console.log('🔄 Schedule refreshed and notification removed');
+                }
+              }
+            } catch (parseError) {
+              console.error('Error parsing schedule refresh notification:', parseError);
+              await AsyncStorage.removeItem('scheduleNeedsRefresh');
+            }
+          }
+          
           const teacherId = (await AsyncStorage.getItem("userTeacherId")) || "";
           
           const cacheKey = buildScheduleKey({ role: "teacher", userKey: teacherId, academicYear: yearRef.current, weekNumber: weekNumberRef.current });
@@ -344,7 +373,7 @@ export default function ScheduleTeachersScreen() {
       };
       
       checkAndRefreshIfNeeded();
-    }, [fetchSchedule])
+    }, [dateRange]) // Chỉ cần dateRange
   );
 
   const handleAddActivity = (

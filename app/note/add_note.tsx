@@ -17,7 +17,7 @@ import LoadingModal from "../../components/LoadingModal";
 import RemindPicker from "../../components/RemindPicker";
 import { createNote } from "../../services/note_lesson.service";
 import { getLessonSubtitle } from "../../utils/lessonSubtitle";
-import { responsive, responsiveValues, fonts } from "../../utils/responsive";
+import { fonts } from "../../utils/responsive";
 
 const REMIND_OPTIONS = [
   "Trước 10 phút",
@@ -29,6 +29,10 @@ const REMIND_OPTIONS = [
 const ITEM_HEIGHT = 36;
 const PADDING_COUNT = 2;
 
+// Giới hạn ký tự
+const TITLE_MAX_LENGTH = 50;
+const CONTENT_MAX_LENGTH = 200;
+
 const AddNoteScreen = () => {
   const [title, setTitle] = useState("");
   const [note, setNote] = useState("");
@@ -36,6 +40,8 @@ const AddNoteScreen = () => {
   const [remindTime, setRemindTime] = useState(REMIND_OPTIONS[2]);
   const [showLoading, setShowLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [titleError, setTitleError] = useState("");
+  const [contentError, setContentError] = useState("");
   const { lessonId, lessonData: lessonDataParam } = useLocalSearchParams<{
     lessonId: string;
     lessonData?: string;
@@ -43,7 +49,44 @@ const AddNoteScreen = () => {
   const lessonData = lessonDataParam ? JSON.parse(lessonDataParam) : null;
   const [loading, setLoading] = useState(false);
 
-  const isValid = title.trim() && note.trim();
+  // Validation functions
+  const validateTitle = (text: string) => {
+    if (text.trim().length === 0) {
+      setTitleError("Tiêu đề không được để trống");
+      return false;
+    }
+    if (text.length > TITLE_MAX_LENGTH) {
+      setTitleError(`Tiêu đề không được vượt quá ${TITLE_MAX_LENGTH} ký tự`);
+      return false;
+    }
+    setTitleError("");
+    return true;
+  };
+
+  const validateContent = (text: string) => {
+    if (text.trim().length === 0) {
+      setContentError("Nội dung không được để trống");
+      return false;
+    }
+    if (text.length > CONTENT_MAX_LENGTH) {
+      setContentError(`Nội dung không được vượt quá ${CONTENT_MAX_LENGTH} ký tự`);
+      return false;
+    }
+    setContentError("");
+    return true;
+  };
+
+  const handleTitleChange = (text: string) => {
+    setTitle(text);
+    if (titleError) validateTitle(text);
+  };
+
+  const handleContentChange = (text: string) => {
+    setNote(text);
+    if (contentError) validateContent(text);
+  };
+
+  const isValid = title.trim() && note.trim() && !titleError && !contentError;
 
   return (
     <HeaderLayout
@@ -64,23 +107,33 @@ const AddNoteScreen = () => {
             <View style={styles.container}>
               {/* Tiêu đề ghi chú */}
               <View style={styles.fieldWrap}>
-                <View style={styles.outlineInputBox}>
+                <View style={[styles.outlineInputBox, titleError && styles.inputError]}>
                   <Text style={styles.floatingLabel}>
                     Tiêu đề ghi chú <Text style={styles.required}>*</Text>
                   </Text>
                   <TextInput
                     style={styles.inputTextOutline}
                     value={title}
-                    onChangeText={setTitle}
+                    onChangeText={handleTitleChange}
+                    onBlur={() => validateTitle(title)}
                     placeholder="Nhập tiêu đề ghi chú"
                     placeholderTextColor="#9CA3AF"
+                    maxLength={TITLE_MAX_LENGTH}
                   />
+                  <View style={styles.characterCount}>
+                    <Text style={styles.characterCountText}>
+                      {title.length}/{TITLE_MAX_LENGTH}
+                    </Text>
+                  </View>
                 </View>
+                {titleError ? (
+                  <Text style={styles.errorText}>{titleError}</Text>
+                ) : null}
               </View>
 
               {/* Ghi chú */}
               <View style={styles.fieldWrap}>
-                <View style={styles.outlineInputBox}>
+                <View style={[styles.outlineInputBox, contentError && styles.inputError]}>
                   <Text style={styles.floatingLabel}>
                     Ghi chú <Text style={styles.required}>*</Text>
                   </Text>
@@ -90,12 +143,22 @@ const AddNoteScreen = () => {
                       { minHeight: 48, marginBottom: 20 },
                     ]}
                     value={note}
-                    onChangeText={setNote}
+                    onChangeText={handleContentChange}
+                    onBlur={() => validateContent(note)}
                     placeholder="Nhập nội dung ghi chú"
                     placeholderTextColor="#9CA3AF"
                     multiline={true}
+                    maxLength={CONTENT_MAX_LENGTH}
                   />
+                  <View style={styles.characterCount}>
+                    <Text style={styles.characterCountText}>
+                      {note.length}/{CONTENT_MAX_LENGTH}
+                    </Text>
+                  </View>
                 </View>
+                {contentError ? (
+                  <Text style={styles.errorText}>{contentError}</Text>
+                ) : null}
               </View>
 
               {/* Nhắc nhở */}
@@ -117,6 +180,14 @@ const AddNoteScreen = () => {
                 ]}
                 disabled={!isValid || loading}
                 onPress={async () => {
+                  // Validate trước khi submit
+                  const isTitleValid = validateTitle(title);
+                  const isContentValid = validateContent(note);
+                  
+                  if (!isTitleValid || !isContentValid) {
+                    return;
+                  }
+
                   if (!lessonId) return;
                   setLoading(true);
                   setShowLoading(true);
@@ -189,6 +260,9 @@ const styles = StyleSheet.create({
     marginRight: 15,
     position: "relative",
   },
+  inputError: {
+    borderColor: "#E53935",
+  },
   floatingLabel: {
     position: "absolute",
     top: -16,
@@ -210,6 +284,24 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginLeft: 2,
     marginTop: -2,
+  },
+  characterCount: {
+    position: "absolute",
+    bottom: 8,
+    right: 15,
+  },
+  characterCountText: {
+    color: "#9CA3AF",
+    fontSize: 12,
+    fontFamily: fonts.regular,
+  },
+  errorText: {
+    color: "#E53935",
+    fontSize: 12,
+    fontFamily: fonts.regular,
+    marginLeft: 15,
+    marginTop: -20,
+    marginBottom: 5,
   },
   saveBtn: {
     backgroundColor: "#29375C",
