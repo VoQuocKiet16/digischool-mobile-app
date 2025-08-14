@@ -43,7 +43,8 @@ function truncateText(text: string, maxLength = 90) {
   
   // Loại bỏ HTML tags
   const stripHtml = (html: string) => {
-    return html.replace(/<[^>]*>/g, '');
+    // Loại bỏ thẻ HTML và &nbsp;
+    return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
   };
   
   const cleanText = stripHtml(text);
