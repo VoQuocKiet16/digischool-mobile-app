@@ -3,6 +3,8 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   Image,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,7 +14,6 @@ import {
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import LoadingModal from "../../components/LoadingModal";
 import UpdateContactInfo from "../../components/setting/personal/update/UpdateContactInfo";
-import UpdateProfileInfo from "../../components/setting/personal/update/UpdateProfileInfo";
 import { useUserData } from "../../hooks/useUserData";
 import { updatePersonalInfo } from "../../services/auth.service";
 import { fonts } from "../../utils/responsive";
@@ -37,11 +38,6 @@ export default function UpdatePersonal() {
   }, [userData]);
   
   // Form data state
-  const [profileData, setProfileData] = useState({
-    name: "",
-    dateOfBirth: "",
-    gender: ""
-  });
   const [contactData, setContactData] = useState({
     phone: "",
     address: ""
@@ -58,12 +54,6 @@ export default function UpdatePersonal() {
   };
 
   const handleSave = async () => {
-    // Validate required fields
-    if (!profileData.name.trim()) {
-      alert("Vui lòng nhập họ và tên!");
-      return;
-    }
-
     setShowLoading(true);
     setLoadingSuccess(false);
     setError("");
@@ -72,9 +62,6 @@ export default function UpdatePersonal() {
       // Prepare data for API
       const updateData: any = {};
       
-      if (profileData.name.trim()) updateData.name = profileData.name.trim();
-      if (profileData.dateOfBirth) updateData.dateOfBirth = profileData.dateOfBirth;
-      if (profileData.gender) updateData.gender = profileData.gender;
       if (contactData.phone.trim()) updateData.phone = contactData.phone.trim();
       if (contactData.address.trim()) updateData.address = contactData.address.trim();
 
@@ -99,29 +86,34 @@ export default function UpdatePersonal() {
 
   return (
     <HeaderLayout title="Thông tin cá nhân" onBack={() => router.back()}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.avatarBox}>
-          <Image source={avatar} style={styles.avatar} />
-          <TouchableOpacity
-            style={styles.cameraIcon}
-            onPress={handleChangeAvatar}
-          >
-            <Ionicons name="camera-outline" size={20} color="#fff" />
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.avatarBox}>
+            <Image source={avatar} style={styles.avatar} />
+            <TouchableOpacity
+              style={styles.cameraIcon}
+              onPress={handleChangeAvatar}
+            >
+              <Ionicons name="camera-outline" size={20} color="#fff" />
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.role}>{role}</Text>
+          <UpdateContactInfo 
+            userData={userData} 
+            onDataChange={setContactData}
+          />
+          <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
+            <Text style={styles.saveBtnText}>Lưu thay đổi</Text>
           </TouchableOpacity>
-        </View>
-        <Text style={styles.role}>{role}</Text>
-        <UpdateProfileInfo 
-          userData={userData} 
-          onDataChange={setProfileData}
-        />
-        <UpdateContactInfo 
-          userData={userData} 
-          onDataChange={setContactData}
-        />
-        <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-          <Text style={styles.saveBtnText}>Lưu thay đổi</Text>
-        </TouchableOpacity>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
       
       <LoadingModal
         visible={showLoading}
@@ -181,7 +173,7 @@ const styles = StyleSheet.create({
   },
   saveBtn: {
     backgroundColor: "#29375C",
-    borderRadius: 12,
+    borderRadius: 20,
     paddingVertical: 15,
     paddingHorizontal: 130,
     alignItems: "center",

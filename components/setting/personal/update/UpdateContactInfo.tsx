@@ -1,11 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
+  ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
-  TextInput,
 } from "react-native";
 // import { TextInput } from "react-native-paper";
 import { UserData } from "../../../../types/user.types";
@@ -57,7 +58,12 @@ export default function UpdateContactInfo({ userData, onDataChange }: UpdateCont
         />
       </TouchableOpacity>
       {showInfo && (
-        <>
+        <ScrollView 
+          style={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingBottom: 20 }}
+        >
           {/* Số điện thoại */}
           <View style={styles.fieldWrap}>
             <View style={styles.outlineInputBox}>
@@ -65,10 +71,16 @@ export default function UpdateContactInfo({ userData, onDataChange }: UpdateCont
               <TextInput
                 style={styles.inputTextOutline}
                 value={phone}
-                onChangeText={setPhone}
+                onChangeText={(text) => {
+                  // Giới hạn 10 ký tự cho số điện thoại
+                  if (text.length <= 10) {
+                    setPhone(text);
+                  }
+                }}
                 placeholder="Nhập số điện thoại"
                 placeholderTextColor="#7a869a"
                 keyboardType="phone-pad"
+                maxLength={10}
               />
             </View>
           </View>
@@ -91,15 +103,24 @@ export default function UpdateContactInfo({ userData, onDataChange }: UpdateCont
             <View style={styles.outlineInputBox}>
               <Text style={styles.floatingLabel}>Địa chỉ</Text>
               <TextInput
-                style={styles.inputTextOutline}
+                style={[styles.inputTextOutline, styles.addressInput]}
                 value={address}
                 onChangeText={setAddress}
                 placeholder="Nhập địa chỉ"
                 placeholderTextColor="#7a869a"
+                multiline={true}
+                numberOfLines={3}
+                textAlignVertical="top"
+                maxLength={255}
               />
+              <View style={styles.characterCount}>
+                <Text style={styles.characterCountText}>
+                  {address.length}/255
+                </Text>
+              </View>
             </View>
           </View>
-        </>
+        </ScrollView>
       )}
     </View>
   );
@@ -114,6 +135,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
     marginLeft: 10,
     marginBottom: 20,
+    flex: 1,
   },
   headerRow: {
     flexDirection: "row",
@@ -160,6 +182,25 @@ const styles = StyleSheet.create({
   inputTextOutline: {
     fontSize: 16,
     color: "#29375C",
+    fontFamily: fonts.semiBold,
+  },
+  addressInput: {
+    minHeight: 100, // Minimum height for multiline input
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  characterCount: {
+    position: "absolute",
+    bottom: 10,
+    right: 10,
+    borderRadius: 5,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+  },
+  characterCountText: {
+    color: "#29375C",
+    fontSize: 12,
     fontFamily: fonts.semiBold,
   },
 });

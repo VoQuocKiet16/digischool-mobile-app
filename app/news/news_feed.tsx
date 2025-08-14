@@ -840,7 +840,7 @@ const styles = StyleSheet.create({
   tabBtn: {
     flex: 1,
     backgroundColor: "#E6E9F0",
-    borderRadius: responsiveValues.borderRadius.xxxl,
+    borderRadius: 24,
     paddingVertical: responsiveValues.padding.sm,
     marginHorizontal: 5,
     alignItems: "center",
@@ -908,7 +908,7 @@ const styles = StyleSheet.create({
   },
   newsCard: {
     backgroundColor: "#fff",
-    borderRadius: responsiveValues.borderRadius.xxxl,
+    borderRadius: 30,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 2,
@@ -933,6 +933,8 @@ const styles = StyleSheet.create({
   },
   bookmarkBtn: {
     position: "absolute",
+    marginTop: 10,
+    marginRight: 10,
     top: responsiveValues.padding.sm,
     right: responsiveValues.padding.sm,
     backgroundColor: "rgba(37,52,93,0.7)",

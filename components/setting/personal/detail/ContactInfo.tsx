@@ -35,14 +35,14 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ userData }) => {
           </View>
           <View style={styles.item}>
             <Text style={styles.label}>Email</Text>
-            <Text style={styles.value} numberOfLines={1} ellipsizeMode="tail">
+            <Text style={styles.emailValue} numberOfLines={2} ellipsizeMode="tail">
               {userData?.email || "Chưa cập nhật"}
             </Text>
             <View style={styles.underline} />
           </View>
           <View style={styles.item}>
             <Text style={styles.label}>Địa chỉ</Text>
-            <Text style={styles.value}>
+            <Text style={styles.addressValue} numberOfLines={50} ellipsizeMode="tail">
               {userData?.address || "Chưa cập nhật"}
             </Text>
             <View style={styles.underline} />
@@ -89,6 +89,7 @@ const styles = StyleSheet.create({
     color: "#29375C",
     fontSize: 18,
     fontFamily: fonts.semiBold,
+    marginBottom: 4,
   },
   value: {
     color: "#A3A7AC",
@@ -98,6 +99,22 @@ const styles = StyleSheet.create({
     top: 5,
     fontFamily: fonts.semiBold,
     maxWidth: 200,
+  },
+  emailValue: {
+    color: "#A3A7AC",
+    fontSize: 18,
+    fontFamily: fonts.semiBold,
+    textAlign: "right",
+    flexWrap: "wrap",
+    maxWidth: "100%",
+  },
+  addressValue: {
+    color: "#A3A7AC",
+    fontSize: 18,
+    fontFamily: fonts.semiBold,
+    textAlign: "right",
+    flexWrap: "wrap",
+    maxWidth: "100%",
   },
   underline: {
     height: 3,

@@ -4,14 +4,32 @@ import api from "./api.config";
 // import { getMessaging, getToken } from '@react-native-firebase/messaging'; // [ẨN TẠM] bật lại khi build native
 
 export const login = async (email: string, password: string) => {
+  const ACCESS_DENIED = { message: "Tài khoản không có quyền truy cập", success: false };
   try {
     const response = await api.post(API_ENDPOINTS.AUTH.LOGIN, {
       email,
       password,
     });
+
+    // Kiểm tra quyền truy cập cho tài khoản "parent"
+    const userRole = response?.data?.data?.user?.role;
+    if (response?.data?.success && userRole) {
+      const userRoles: string[] = Array.isArray(userRole) ? userRole : [userRole];
+      if (userRoles.includes("parent")) {
+        throw ACCESS_DENIED;
+      }
+    }
+
     // Không lưu token vào AsyncStorage ở đây nữa, để xử lý ở login.tsx
     return response.data;
   } catch (error: any) {
+    // Nếu là lỗi không có quyền truy cập thì trả về luôn object ACCESS_DENIED
+    if (
+      error?.message === ACCESS_DENIED.message ||
+      error?.response?.data?.message === ACCESS_DENIED.message
+    ) {
+      throw ACCESS_DENIED;
+    }
     if (error.response && error.response.data) {
       throw error.response.data;
     }
