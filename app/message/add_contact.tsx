@@ -23,6 +23,7 @@ export default function AddContactScreen() {
   const [searchResult, setSearchResult] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [token, setToken] = useState<string | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
   const slideAnim = useRef(new Animated.Value(200)).current; // Giá trị khởi đầu ở dưới
   const prevResultLength = useRef(0);
 
@@ -47,6 +48,7 @@ export default function AddContactScreen() {
     if (!username.trim() || !token) return;
     Keyboard.dismiss(); // Tắt bàn phím khi tìm kiếm
     setLoading(true);
+    setHasSearched(true);
     const res = await chatService.searchUsers(username.trim(), token);
     if (res.success) {
       setSearchResult(res.data);
@@ -74,7 +76,13 @@ export default function AddContactScreen() {
               <TextInput
                 style={styles.inputTextOutline}
                 value={username}
-                onChangeText={setUsername}
+                onChangeText={(text) => {
+                  setUsername(text);
+                  if (hasSearched) {
+                    setHasSearched(false);
+                    setSearchResult([]);
+                  }
+                }}
                 placeholder="Nhập email tìm kiếm"
                 placeholderTextColor="#9CA3AF"
                 editable={!loading}
@@ -83,6 +91,12 @@ export default function AddContactScreen() {
                 multiline={false}
               />
             </View>
+            {/* Thông báo không tìm thấy tài khoản */}
+            {hasSearched && searchResult.length === 0 && !loading && (
+              <Text style={styles.errorText}>
+                Không tìm thấy tài khoản
+              </Text>
+            )}
           </View>
           <TouchableOpacity
             style={[
@@ -206,7 +220,7 @@ const styles = StyleSheet.create({
     marginTop: 32,
     paddingHorizontal: 0,
     paddingTop: 24,
-    paddingBottom: 250,
+    paddingBottom: 0,
   },
   listTitle: {
     color: "#fff",
@@ -305,5 +319,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: fonts.medium,
     lineHeight: 18,
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginTop: 8,   
+    marginLeft: 25,   
+    marginRight: 15,
   },
 });

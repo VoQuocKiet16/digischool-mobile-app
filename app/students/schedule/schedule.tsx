@@ -219,13 +219,11 @@ export default function ScheduleStudentsScreen() {
         }
       }
     } catch (err) {
-      console.error("Error fetching available data:", err);
       // Fallback: giữ nguyên giá trị mặc định
     }
   };
 
   const fetchSchedule = useCallback(async (forceRefresh = false) => {
-    console.log('🔄 Fetching schedule from API - Year:', yearRef.current, 'Week:', weekNumberRef.current);
     setLoading(true);
     setError("");
     try {
@@ -241,8 +239,6 @@ export default function ScheduleStudentsScreen() {
         className = userClassStr;
       }
 
-      console.log('📚 Fetching schedule for class:', className);
-
       const data = await getStudentSchedule({
         className,
         academicYear: yearRef.current,
@@ -255,8 +251,6 @@ export default function ScheduleStudentsScreen() {
         academicYear: responseYear,
         weekNumber: responseWeek,
       } = mapApiToScheduleData(data);
-
-      console.log('📅 Schedule loaded - Lessons:', newLessonIds.flat().filter(id => id).length);
 
       setScheduleData(schedule);
       setLessonIds(newLessonIds);
@@ -288,11 +282,9 @@ export default function ScheduleStudentsScreen() {
             }
           }
         } catch (err) {
-          console.error("Error updating available weeks:", err);
         }
       }
     } catch (err) {
-      console.error('💥 Error fetching schedule:', err);
       setError("Lỗi tải thời khóa biểu");
       setScheduleData(initialScheduleData);
     } finally {
@@ -377,6 +369,17 @@ export default function ScheduleStudentsScreen() {
       : scheduleData.slice(5, 10);
   const periods = session === "Buổi sáng" ? morningPeriods : afternoonPeriods;
 
+  // Debug: Log cấu trúc dữ liệu
+  console.log('🔍 DEBUG SCHEDULE DATA STRUCTURE:');
+  console.log('📊 scheduleData length:', scheduleData.length);
+  console.log('📊 scheduleData structure:', scheduleData);
+  console.log('🌅 session:', session);
+  console.log('📊 displayedData length:', displayedData.length);
+  console.log('📊 displayedData structure:', displayedData);
+  console.log('📊 periods:', periods);
+  console.log('📊 lessonIds length:', lessonIds.length);
+  console.log('📊 lessonIds structure:', lessonIds);
+
   // Modal chọn năm học
   const handleChangeYear = () => setShowYearModal(true);
   const handleSelectYear = async (selected: string) => {
@@ -455,6 +458,7 @@ export default function ScheduleStudentsScreen() {
               periods={periods}
               days={days}
               scheduleData={displayedData}
+              fullScheduleData={scheduleData}
               onAddActivity={handleAddActivity}
               onSlotPress={handleSlotDetail}
               currentDayIndex={currentDayIndex}
