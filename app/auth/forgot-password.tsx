@@ -12,7 +12,7 @@ import LoadingModal from "../../components/LoadingModal";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import SuccessModal from "../../components/notifications_modal/SuccessModal";
 import { forgotPassword } from "../../services/auth.service";
-import { responsive, responsiveValues, fonts } from "../../utils/responsive";
+import { fonts } from "../../utils/responsive";
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -36,7 +36,10 @@ export default function ForgotPasswordScreen() {
         setError("Có lỗi xảy ra. Vui lòng thử lại.");
       }
     } catch (err: any) {
-      if (err?.errors?.email) {
+      // Xử lý lỗi từ backend với cấu trúc {error: {message: "..."}, success: false}
+      if (err?.error?.message) {
+        setError(err.error.message);
+      } else if (err?.errors?.email) {
         setError(err.errors.email);
       } else if (err?.message) {
         setError(err.message);

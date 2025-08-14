@@ -2,7 +2,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, Linking, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import ConfirmLogoutModal from "../../components/notifications_modal/ConfirmLogoutModal";
 import RefreshableScrollView from "../../components/RefreshableScrollView";
@@ -69,6 +69,34 @@ const Setting: React.FC = () => {
     }
 
     return "Người dùng";
+  };
+
+  const handleOpenPrivacyPolicy = async () => {
+    const url = "https://docs.google.com/document/d/1YQs1vYYApk9q7J3h2U8Xclbr2o3h0cQMxVXGQixoIdE/edit?usp=sharing";
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        console.log("Không thể mở link này");
+      }
+    } catch (error) {
+      console.log("Lỗi khi mở link:", error);
+    }
+  };
+
+  const handleOpenUserGuide = async () => {
+    const url = "https://docs.google.com/document/d/14YtJRNZ4G4fvrvdHi6tWH6TQQmIt1YT0dKdbw6qm5mI/edit?usp=sharing";
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        console.log("Không thể mở link này");
+      }
+    } catch (error) {
+      console.log("Lỗi khi mở link:", error);
+    }
   };
 
   return (
@@ -146,7 +174,10 @@ const Setting: React.FC = () => {
               style={styles.menuArrow}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={handleOpenPrivacyPolicy}
+          >
             <View style={styles.menuIcon}>
               <MaterialCommunityIcons
                 name="shield-lock-outline"
@@ -162,7 +193,7 @@ const Setting: React.FC = () => {
               style={styles.menuArrow}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity style={styles.menuItem} onPress={handleOpenUserGuide}>
             <View style={styles.menuIcon}>
               <Ionicons name="book-outline" size={28} color="#FFFFFF" />
             </View>

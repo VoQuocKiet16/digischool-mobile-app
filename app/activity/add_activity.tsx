@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -27,6 +28,10 @@ const REMIND_OPTIONS = [
 ];
 const ITEM_HEIGHT = 36;
 const PADDING_COUNT = 2;
+
+// Giới hạn ký tự
+const TITLE_MAX_LENGTH = 50;
+const DETAIL_MAX_LENGTH = 200;
 
 // Danh sách tiết học mẫu (có thể lấy từ backend hoặc constants)
 const TIME_SLOTS = [
@@ -77,12 +82,70 @@ const AddActivityScreen = () => {
   const [remindTime, setRemindTime] = useState(REMIND_OPTIONS[2]);
   const [showLoading, setShowLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [titleError, setTitleError] = useState("");
+  const [detailError, setDetailError] = useState("");
   const { periodIndex, date } = useLocalSearchParams();
   const [loading, setLoading] = useState(false);
-  const isValid = title.trim() && detail.trim();
+
+  // Validation functions
+  const validateTitle = (text: string) => {
+    if (text.trim().length === 0) {
+      setTitleError("Tiêu đề không được để trống");
+      return false;
+    }
+    if (text.length > TITLE_MAX_LENGTH) {
+      setTitleError(`Tiêu đề không được vượt quá ${TITLE_MAX_LENGTH} ký tự`);
+      return false;
+    }
+    setTitleError("");
+    return true;
+  };
+
+  const validateDetail = (text: string) => {
+    if (text.trim().length === 0) {
+      setDetailError("Chi tiết không được để trống");
+      return false;
+    }
+    if (text.length > DETAIL_MAX_LENGTH) {
+      setDetailError(`Chi tiết không được vượt quá ${DETAIL_MAX_LENGTH} ký tự`);
+      return false;
+    }
+    setDetailError("");
+    return true;
+  };
+
+  const handleTitleChange = (text: string) => {
+    setTitle(text);
+    if (titleError) validateTitle(text);
+  };
+
+  const handleDetailChange = (text: string) => {
+    setDetail(text);
+    if (detailError) validateDetail(text);
+  };
+
+  const isValid = title.trim() && detail.trim() && !titleError && !detailError;
   const dateParam = Array.isArray(date) ? date[0] : date;
   const period = periodIndex ? Number(periodIndex) + 1 : undefined;
   const subtitle = getActivitySubtitle({ date: dateParam, period });
+
+  // Function để thông báo TKB cần refresh
+  const notifyScheduleRefresh = async (activityData: any) => {
+    try {
+      // Lưu thông tin hoạt động mới để TKB có thể detect
+      const scheduleUpdate = {
+        type: 'new_activity',
+        data: activityData,
+        timestamp: Date.now(),
+        needsRefresh: true
+      };
+      
+      await AsyncStorage.setItem('scheduleNeedsRefresh', JSON.stringify(scheduleUpdate));
+      console.log('📝 Schedule refresh notification saved:', scheduleUpdate);
+    } catch (error) {
+      console.error('Error saving schedule refresh notification:', error);
+    }
+  };
 
   return (
     <HeaderLayout
@@ -103,22 +166,32 @@ const AddActivityScreen = () => {
             <View style={styles.container}>
               {/* Tiêu đề hoạt động */}
               <View style={styles.fieldWrap}>
-                <View style={styles.outlineInputBox}>
+                <View style={[styles.outlineInputBox, titleError && styles.inputError]}>
                   <Text style={styles.floatingLabel}>
                     Tiêu đề hoạt động <Text style={styles.required}>*</Text>
                   </Text>
                   <TextInput
                     style={styles.inputTextOutline}
                     value={title}
-                    onChangeText={setTitle}
+                    onChangeText={handleTitleChange}
+                    onBlur={() => validateTitle(title)}
                     placeholder="Nhập tiêu đề hoạt động"
                     placeholderTextColor="#9CA3AF"
+                    maxLength={TITLE_MAX_LENGTH}
                   />
+                  <View style={styles.characterCount}>
+                    <Text style={styles.characterCountText}>
+                      {title.length}/{TITLE_MAX_LENGTH}
+                    </Text>
+                  </View>
                 </View>
+                {titleError ? (
+                  <Text style={styles.errorText}>{titleError}</Text>
+                ) : null}
               </View>
               {/* Chi tiết */}
               <View style={styles.fieldWrap}>
-                <View style={styles.outlineInputBox}>
+                <View style={[styles.outlineInputBox, detailError && styles.inputError]}>
                   <Text style={styles.floatingLabel}>
                     Chi tiết <Text style={styles.required}>*</Text>
                   </Text>
@@ -128,12 +201,22 @@ const AddActivityScreen = () => {
                       { minHeight: 48, marginBottom: 20 },
                     ]}
                     value={detail}
-                    onChangeText={setDetail}
+                    onChangeText={handleDetailChange}
+                    onBlur={() => validateDetail(detail)}
                     placeholder="Nhập nội dung hoạt động"
                     placeholderTextColor="#9CA3AF"
                     multiline={true}
+                    maxLength={DETAIL_MAX_LENGTH}
                   />
+                  <View style={styles.characterCount}>
+                    <Text style={styles.characterCountText}>
+                      {detail.length}/{DETAIL_MAX_LENGTH}
+                    </Text>
+                  </View>
                 </View>
+                {detailError ? (
+                  <Text style={styles.errorText}>{detailError}</Text>
+                ) : null}
               </View>
               {/* Nhắc nhở */}
               <RemindPicker
@@ -153,6 +236,14 @@ const AddActivityScreen = () => {
                 ]}
                 disabled={!isValid || loading}
                 onPress={async () => {
+                  // Validate trước khi submit
+                  const isTitleValid = validateTitle(title);
+                  const isDetailValid = validateDetail(detail);
+                  
+                  if (!isTitleValid || !isDetailValid) {
+                    return;
+                  }
+
                   if (!periodIndex || !date) return;
                   setLoading(true);
                   setShowLoading(true);
@@ -165,18 +256,33 @@ const AddActivityScreen = () => {
                   if (remind) {
                     reqBody.remindMinutes = Number(remindTime.match(/\d+/)?.[0]);
                   }
-                  const res = await createActivity(reqBody);
-                  setLoading(false);
-                  if (res.success) {
-                    setShowSuccess(true);
-                    setTimeout(() => {
+                  
+                  try {
+                    const res = await createActivity(reqBody);
+                    if (res.success) {
+                      // Thông báo TKB cần refresh
+                      await notifyScheduleRefresh({
+                        ...reqBody,
+                        _id: res.data?._id,
+                        createdAt: new Date().toISOString()
+                      });
+                      
+                      setShowSuccess(true);
+                      setTimeout(() => {
+                        setShowLoading(false);
+                        setShowSuccess(false);
+                        router.back();
+                      }, 1200);
+                    } else {
                       setShowLoading(false);
-                      setShowSuccess(false);
-                      router.back();
-                    }, 1200);
-                  } else {
+                      alert(res.message || "Tạo hoạt động thất bại");
+                    }
+                  } catch (error) {
+                    console.error('Error creating activity:', error);
                     setShowLoading(false);
-                    alert(res.message || "Tạo hoạt động thất bại");
+                    alert("Có lỗi xảy ra khi tạo hoạt động");
+                  } finally {
+                    setLoading(false);
                   }
                 }}
               >
@@ -227,6 +333,9 @@ const styles = StyleSheet.create({
     marginRight: 15,
     position: "relative",
   },
+  inputError: {
+    borderColor: "#E53935",
+  },
   floatingLabel: {
     position: "absolute",
     top: -16,
@@ -248,6 +357,24 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginLeft: 2,
     marginTop: -2,
+  },
+  characterCount: {
+    position: "absolute",
+    bottom: 0,
+    right: 15,
+  },
+  characterCountText: {
+    color: "#9CA3AF",
+    fontSize: 12,
+    fontFamily: fonts.regular,
+  },
+  errorText: {
+    color: "#E53935",
+    fontSize: 12,
+    fontFamily: fonts.regular,
+    marginLeft: 15,
+    marginTop: -20,
+    marginBottom: 5,
   },
   saveBtn: {
     backgroundColor: "#29375C",

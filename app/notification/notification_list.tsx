@@ -40,12 +40,13 @@ function timeAgo(dateString: string): string {
 
 function truncateText(text: string, maxLength = 90) {
   if (!text) return "";
-  
+
   // Loại bỏ HTML tags
   const stripHtml = (html: string) => {
-    return html.replace(/<[^>]*>/g, '');
+    // Loại bỏ thẻ HTML và &nbsp;
+    return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ");
   };
-  
+
   const cleanText = stripHtml(text);
   if (cleanText.length <= maxLength) return cleanText;
   return cleanText.slice(0, maxLength) + "...";
@@ -57,9 +58,9 @@ export default function NotificationListScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
   const router = useRouter();
-  
+
   const {
     notificationsUser,
     notificationsActivity,
@@ -76,13 +77,14 @@ export default function NotificationListScreen() {
     const getUserData = async () => {
       const id = await AsyncStorage.getItem("userId");
       setUserId(id);
-      
+
       // Lấy role
       const roleData = await AsyncStorage.getItem("role");
+      console.log("roleData", roleData);
       if (roleData) {
         const roles = JSON.parse(roleData);
         if (Array.isArray(roles) && roles.length > 0) {
-          setUserRole(roles[0]);
+          setUserRoles(roles);
         }
       }
     };
@@ -93,13 +95,6 @@ export default function NotificationListScreen() {
     setLoading(true);
     setError("");
     try {
-      // TTL: 3 phút
-      const staleTimeMs = 3 * 60 * 1000;
-      const isFresh = lastFetchedAt && Date.now() - lastFetchedAt < staleTimeMs;
-      if (isFresh) {
-        setLoading(false);
-        return;
-      }
       await refreshNotifications();
     } catch (err) {
       setError("Không thể tải thông báo");
@@ -119,10 +114,12 @@ export default function NotificationListScreen() {
   );
 
   const safeUserId = userId || "";
-  
+
   // Kiểm tra xem user có quyền tạo notification không
-  const canCreateNotification = userRole === "teacher" || userRole === "homeroom_teacher" || userRole === "manager";
-  
+  const canCreateNotification = userRoles.some(role => 
+    role === "homeroom_teacher" || role === "manager"
+  );
+
   const unreadCounts = {
     user: notificationsUser.filter(
       (n) => !n.isReadBy || !n.isReadBy.includes(safeUserId)
@@ -183,7 +180,7 @@ export default function NotificationListScreen() {
         // Gọi API nền
         markNotificationAsRead(item._id, token).catch(() => {
           // Nếu lỗi, refetch để đồng bộ lại
-          refreshNotificationsByType(tab as 'user' | 'activity' | 'system');
+          refreshNotificationsByType(tab as "user" | "activity" | "system");
         });
       }
     } catch (err) {
@@ -210,10 +207,18 @@ export default function NotificationListScreen() {
     <HeaderLayout
       title="Thông báo"
       onBack={() => router.push("/")}
-      rightIcon={canCreateNotification ? <MaterialIcons name="add" size={30} color="#29375C" /> : undefined}
-      onRightIconPress={canCreateNotification ? () => {
-        router.push("/notification/notification_create");
-      } : undefined}
+      rightIcon={
+        canCreateNotification ? (
+          <MaterialIcons name="add" size={30} color="#29375C" />
+        ) : undefined
+      }
+      onRightIconPress={
+        canCreateNotification
+          ? () => {
+              router.push("/notification/notification_create");
+            }
+          : undefined
+      }
     >
       <View style={styles.tabsRow}>
         {TABS.map((t) => (
