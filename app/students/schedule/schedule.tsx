@@ -15,7 +15,6 @@ import RefreshableScrollView from "../../../components/RefreshableScrollView";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
 import { getAvailableAcademicYearsAndWeeks, getStudentSchedule } from "../../../services/schedule.service";
-import { buildScheduleKey, useScheduleStore } from "../../../stores/schedule.store";
 import { Activity } from "../../../types/schedule.types";
 
 const defaultActivity = (text: string, hasNotification = false): Activity => ({
@@ -181,8 +180,6 @@ export default function ScheduleStudentsScreen() {
   } | null>(null);
   const yearRef = useRef(year);
   const weekNumberRef = useRef(weekNumber);
-  const getCache = useScheduleStore((s) => s.getCache);
-  const setCache = useScheduleStore((s) => s.setCache);
 
   // State để lưu danh sách năm học và tuần có sẵn
   const [availableYears, setAvailableYears] = useState<string[]>([]);
@@ -228,6 +225,7 @@ export default function ScheduleStudentsScreen() {
   };
 
   const fetchSchedule = useCallback(async (forceRefresh = false) => {
+    console.log('🔄 Fetching schedule from API - Year:', yearRef.current, 'Week:', weekNumberRef.current);
     setLoading(true);
     setError("");
     try {
@@ -243,26 +241,7 @@ export default function ScheduleStudentsScreen() {
         className = userClassStr;
       }
 
-      // Đọc cache trước
-      const cacheKey = buildScheduleKey({ role: "student", userKey: className, academicYear: yearRef.current, weekNumber: weekNumberRef.current });
-      const cached = getCache(cacheKey);
-      if (cached) {
-        setScheduleData(cached.schedule as any);
-        setLessonIds(cached.lessonIds);
-        setDateRange(cached.dateRange || null);
-        setAvailableYears(cached.availableYears || []);
-        setAvailableWeeks(cached.availableWeeks || []);
-      }
-
-      // TTL: 45 phút - chỉ áp dụng khi không force refresh
-      if (!forceRefresh) {
-        const staleTimeMs = 45 * 60 * 1000;
-        const isFresh = cached && Date.now() - cached.updatedAt < staleTimeMs;
-        if (isFresh) {
-          setLoading(false);
-          return;
-        }
-      }
+      console.log('📚 Fetching schedule for class:', className);
 
       const data = await getStudentSchedule({
         className,
@@ -277,6 +256,8 @@ export default function ScheduleStudentsScreen() {
         weekNumber: responseWeek,
       } = mapApiToScheduleData(data);
 
+      console.log('📅 Schedule loaded - Lessons:', newLessonIds.flat().filter(id => id).length);
+
       setScheduleData(schedule);
       setLessonIds(newLessonIds);
 
@@ -286,7 +267,7 @@ export default function ScheduleStudentsScreen() {
       const nextDateRange = startDate && endDate ? { start: startDate, end: endDate } : null;
       if (nextDateRange) setDateRange(nextDateRange);
 
-      // Lấy availableYears và availableWeeks từ response trước khi lưu cache
+      // Lấy availableYears và availableWeeks từ response
       const years = data?.data?.availableYears || data?.data?.weeklySchedule?.availableYears || [];
       const weeks = data?.data?.availableWeeks || data?.data?.weeklySchedule?.availableWeeks || [];
       
@@ -294,15 +275,6 @@ export default function ScheduleStudentsScreen() {
       if (Array.isArray(years) && years.length > 0) setAvailableYears(years);
       if (Array.isArray(weeks) && weeks.length > 0) setAvailableWeeks(weeks);
 
-      // Cập nhật cache với dữ liệu mới
-      setCache(cacheKey, { 
-        schedule, 
-        lessonIds: newLessonIds, 
-        dateRange: nextDateRange,
-        availableYears: years,
-        availableWeeks: weeks
-      });
-      
       // Cập nhật danh sách tuần có sẵn cho năm học hiện tại
       if (responseYear) {
         try {
@@ -320,9 +292,9 @@ export default function ScheduleStudentsScreen() {
         }
       }
     } catch (err) {
+      console.error('💥 Error fetching schedule:', err);
       setError("Lỗi tải thời khóa biểu");
-      // Không overwrite dữ liệu nếu đã có cache
-      if (!scheduleData?.length) setScheduleData(initialScheduleData);
+      setScheduleData(initialScheduleData);
     } finally {
       setLoading(false);
     }
@@ -330,7 +302,7 @@ export default function ScheduleStudentsScreen() {
 
   // Handler cho pull-to-refresh
   const handleRefresh = async () => {
-    await fetchSchedule(true); // Force refresh bỏ qua TTL
+    await fetchSchedule(true); // Force refresh
   };
 
   useEffect(() => {
@@ -344,81 +316,23 @@ export default function ScheduleStudentsScreen() {
   // Tự động refresh khi màn hình được focus (sau khi thêm hoạt động)
   useFocusEffect(
     React.useCallback(() => {
-      console.log('🔄 Student Schedule: Screen focused, checking if refresh needed...');
+      console.log('🔄 Student Schedule: Screen focused, refreshing schedule...');
       
-      const checkAndRefreshIfNeeded = async () => {
+      const refreshSchedule = async () => {
         try {
-          // Kiểm tra xem có cần refresh TKB không
-          const scheduleRefreshStr = await AsyncStorage.getItem('scheduleNeedsRefresh');
-          if (scheduleRefreshStr) {
-            try {
-              const refreshData = JSON.parse(scheduleRefreshStr);
-              console.log('🔄 Found schedule refresh notification:', refreshData);
-              
-              // Kiểm tra xem update có thuộc tuần hiện tại không
-              if (dateRange?.start && dateRange?.end) {
-                const startDate = new Date(dateRange.start);
-                const endDate = new Date(dateRange.end);
-                const activityDate = new Date(refreshData.data.date);
-                
-                if (activityDate >= startDate && activityDate <= endDate) {
-                  console.log('🔄 Refresh notification belongs to current week, refreshing schedule...');
-                  // Refresh TKB để hiển thị hoạt động mới
-                  await fetchSchedule(true);
-                  
-                  // Xóa notification đã xử lý
-                  await AsyncStorage.removeItem('scheduleNeedsRefresh');
-                  console.log('🔄 Schedule refreshed and notification removed');
-                }
-              }
-            } catch (parseError) {
-              console.error('Error parsing schedule refresh notification:', parseError);
-              await AsyncStorage.removeItem('scheduleNeedsRefresh');
-            }
-          }
+          // Luôn refresh schedule khi màn hình được focus để đảm bảo dữ liệu mới nhất
+          await fetchSchedule(true);
           
-          const userClassStr = (await AsyncStorage.getItem("userClass")) || "";
-          let className = "";
-          try {
-            const userClassObj = JSON.parse(userClassStr);
-            className = userClassObj.className || userClassObj.id || "";
-          } catch (parseError) {
-            className = userClassStr;
-          }
-
-          const cacheKey = buildScheduleKey({ role: "student", userKey: className, academicYear: yearRef.current, weekNumber: weekNumberRef.current });
-          
-          // Kiểm tra cache hiện tại
-          const cached = getCache(cacheKey);
-          
-          if (cached) {
-            // Luôn load dữ liệu từ cache trước để hiển thị ngay lập tức
-            console.log('🔄 Student Schedule: Loading data from cache...');
-            setScheduleData(cached.schedule as any);
-            setLessonIds(cached.lessonIds);
-            setDateRange(cached.dateRange || null);
-            setAvailableYears(cached.availableYears || []);
-            setAvailableWeeks(cached.availableWeeks || []);
-            
-            // Kiểm tra xem cache có còn fresh không
-            if (Date.now() - cached.updatedAt > 45 * 60 * 1000) {
-              console.log('🔄 Student Schedule: Cache expired, refreshing in background...');
-              // Refresh trong background, không block UI
-              fetchSchedule(true);
-            } else {
-              console.log('🔄 Student Schedule: Cache still fresh, no refresh needed');
-            }
-          } else {
-            console.log('🔄 Student Schedule: No cache found, fetching from API...');
-            await fetchSchedule(true);
-          }
+          // Xóa notification đã xử lý nếu có
+          await AsyncStorage.removeItem('scheduleNeedsRefresh');
+          console.log('🔄 Schedule refreshed from API');
         } catch (error) {
-          console.error('🔄 Student Schedule: Error checking refresh:', error);
+          console.error('🔄 Student Schedule: Error refreshing:', error);
         }
       };
       
-      checkAndRefreshIfNeeded();
-    }, [dateRange]) // Chỉ cần dateRange
+      refreshSchedule();
+    }, []) // Không cần dependency
   );
 
   const handleAddActivity = (

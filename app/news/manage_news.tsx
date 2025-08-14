@@ -14,7 +14,6 @@ import {
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import PlusIcon from "../../components/PlusIcon";
 import { getMyNews } from "../../services/news.service";
-import { useNewsStore } from "../../stores/news.store";
 import { fonts } from "../../utils/responsive";
 
 export default function ManageNewsScreen() {
@@ -22,9 +21,6 @@ export default function ManageNewsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-
-  // Sử dụng news store để truy cập persistent storage
-  const { loadNewsFromStorage, saveNewsToStorage } = useNewsStore();
 
   // Thêm hàm formatRelativeTime
   function formatRelativeTime(dateString: string) {
@@ -45,11 +41,12 @@ export default function ManageNewsScreen() {
 
       try {
         // Bước 1: Thử load từ persistent storage trước
-        const storedNews = await loadNewsFromStorage('news', 'all');
-        if (storedNews && storedNews.length > 0) {
+        const storedNews = await AsyncStorage.getItem("news");
+        if (storedNews) {
+          const parsedNews = JSON.parse(storedNews);
           // Lọc chỉ lấy news của giáo viên hiện tại
           const userId = await AsyncStorage.getItem("userId");
-          const teacherNews = storedNews.filter(item => 
+          const teacherNews = parsedNews.filter((item: any) => 
             item.createdBy?._id === userId || item.createdBy?.id === userId
           );
           
@@ -69,7 +66,7 @@ export default function ManageNewsScreen() {
           setNews(newsData);
           
           // Lưu vào persistent storage
-          await saveNewsToStorage('news', 'all', newsData);
+          await AsyncStorage.setItem("news", JSON.stringify(newsData));
         } else {
           setError(res.message || "Lỗi không xác định");
         }
@@ -82,7 +79,7 @@ export default function ManageNewsScreen() {
     };
 
     fetchNews();
-  }, [loadNewsFromStorage, saveNewsToStorage]);
+  }, []);
 
   return (
     <HeaderLayout

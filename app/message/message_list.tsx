@@ -14,7 +14,6 @@ import {
   View,
 } from "react-native";
 import { useChatContext } from "../../contexts/ChatContext";
-import { useChatState } from "../../hooks/useChatState";
 import chatService from "../../services/chat.service";
 import { fonts } from "../../utils/responsive";
 
@@ -25,17 +24,6 @@ type Props = {
 
 export default function MessageListScreen({ token = "demo-token" }: Props) {
   const { currentUserId, currentToken } = useChatContext();
-  const {
-    isConnected,
-    getConversations,
-    setConversations,
-    updateConversationWithMessage,
-    markConversationAsRead,
-    invalidateConversations,
-    // Thêm methods mới cho persistent storage
-    loadConversationsFromStorage,
-    saveConversationsToStorage,
-  } = useChatState();
   const [search, setSearch] = useState("");
   const [chatData, setChatData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,10 +39,10 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
       if (currentUserId) {
         setMyId(currentUserId);
         // Đọc từ persistent storage trước để hiển thị ngay
-        const storedConversations = await loadConversationsFromStorage(currentUserId);
-        if (storedConversations && storedConversations.length > 0) {
+        const storedConversations = await AsyncStorage.getItem(`conversations_${currentUserId}`);
+        if (storedConversations) {
           console.log('🚀 Loaded conversations from storage, displaying immediately');
-          setChatData(storedConversations);
+          setChatData(JSON.parse(storedConversations));
           setLoading(false);
           setIsInitialLoad(false);
         } else {
@@ -68,10 +56,10 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
           setMyId(uid);
           if (uid) {
             // Đọc từ persistent storage trước
-            const storedConversations = await loadConversationsFromStorage(uid);
-            if (storedConversations && storedConversations.length > 0) {
+            const storedConversations = await AsyncStorage.getItem(`conversations_${uid}`);
+            if (storedConversations) {
               console.log('🚀 Loaded conversations from storage, displaying immediately');
-              setChatData(storedConversations);
+              setChatData(JSON.parse(storedConversations));
               setLoading(false);
               setIsInitialLoad(false);
             } else {
@@ -89,7 +77,7 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
     };
 
     loadInitialData();
-  }, [currentUserId, loadConversationsFromStorage]);
+  }, [currentUserId]);
 
   // Fallback: Đảm bảo loading không bị stuck quá 5 giây
   useEffect(() => {
@@ -107,19 +95,11 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
   // Bước 2: Kiểm tra RAM cache (nếu có)
   useEffect(() => {
     if (currentUserId && isInitialLoad) {
-      const cached = getConversations(currentUserId);
-      if (cached?.items && cached.items.length > 0) {
-        console.log('🚀 Loaded conversations from RAM cache');
-        setChatData(cached.items);
-        setLoading(false);
-        setIsInitialLoad(false);
-      } else if (isInitialLoad) {
-        // Nếu không có cache và vẫn đang initial load, set loading = false
-        setLoading(false);
-        setIsInitialLoad(false);
-      }
+      // Không có cache nên không cần kiểm tra
+      setLoading(false);
+      setIsInitialLoad(false);
     }
-  }, [currentUserId, getConversations, isInitialLoad]);
+  }, [currentUserId, isInitialLoad]);
 
   // Tách fetchConversations ra ngoài để có thể gọi lại
   const fetchConversations = async (showLoading = true) => {
@@ -135,9 +115,7 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
         console.log('🔄 Fetched fresh conversations from API');
         setChatData(res.data);
         if (myId) {
-          setConversations(myId, res.data);
-          // Lưu vào persistent storage
-          await saveConversationsToStorage(myId, res.data);
+          await AsyncStorage.setItem(`conversations_${myId}`, JSON.stringify(res.data));
         }
       } else {
         setError(res.message || "Lỗi không xác định");
@@ -157,17 +135,9 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
   useEffect(() => {
     const syncWithAPI = async () => {
       if (myId && !isInitialLoad) {
-        const cached = getConversations(myId);
-        const staleTimeMs = 20 * 1000; // 20 giây
-        const isFresh = cached && Date.now() - cached.updatedAt < staleTimeMs;
-        
-        if (!isFresh) {
-          console.log('🔄 Cache stale, syncing with API in background');
-          // Sync ngầm, không hiển thị loading
-          fetchConversations(false);
-        } else {
-          console.log('✅ Cache still fresh, no API call needed');
-        }
+        console.log('🔄 Syncing with API in background');
+        // Sync ngầm, không hiển thị loading
+        fetchConversations(false);
       }
     };
 
@@ -180,7 +150,7 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
   useEffect(() => {
     const handleNewMessage = (msg: any) => {
       // Sử dụng hook để update conversation
-      updateConversationWithMessage(msg);
+      // Không có useChatState nên không có updateConversationWithMessage
       
       setChatData((prevData) => {
         const otherUserId = msg.sender === myId ? msg.receiver : msg.sender;
@@ -209,9 +179,8 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
           ...prevData.slice(idx + 1),
         ];
         if (myId) {
-          setConversations(myId, newData);
+          AsyncStorage.setItem(`conversations_${myId}`, JSON.stringify(newData));
           // Invalidate cache để đảm bảo data luôn fresh
-          invalidateConversations();
         }
         return newData;
       });
@@ -219,7 +188,7 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
     
     const handleMessageRead = (data: any) => {
       // Sử dụng hook để mark conversation as read
-      markConversationAsRead(data.from);
+      // Không có useChatState nên không có markConversationAsRead
       
       // Khi có tin nhắn được mark as read, reset unreadCount cho conversation đó
       setChatData((prevData) => {
@@ -234,9 +203,8 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
             ...prevData.slice(idx + 1),
           ];
           if (myId) {
-            setConversations(myId, newData);
+            AsyncStorage.setItem(`conversations_${myId}`, JSON.stringify(newData));
             // Invalidate cache để đảm bảo data luôn fresh
-            invalidateConversations();
           }
           return newData;
         }
@@ -390,7 +358,9 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
                         ...prevData.slice(0, idx),
                         ...prevData.slice(idx + 1),
                       ];
-                      if (myId) setConversations(myId, newData);
+                      if (myId) {
+                        AsyncStorage.setItem(`conversations_${myId}`, JSON.stringify(newData));
+                      }
                       return newData;
                     });
                   }

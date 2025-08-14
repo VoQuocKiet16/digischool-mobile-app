@@ -17,7 +17,6 @@ import {
   getNewsDetail,
   unfavoriteNews,
 } from "../../services/news.service";
-import { useNewsStore } from "../../stores/news.store";
 import { fonts, responsiveValues } from "../../utils/responsive";
 
 export default function NewsDetailScreen() {
@@ -30,8 +29,11 @@ export default function NewsDetailScreen() {
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const screenWidth = Dimensions.get("window").width;
 
-  // Sử dụng news store để truy cập persistent storage
-  const { loadNewsFromStorage, updateNewsInStorage } = useNewsStore();
+  const [myName, setMyName] = useState<string>('bạn');
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  // Lấy token và myId từ AsyncStorage nếu chưa có
 
   // Hàm formatRelativeTime giống news_feed.tsx
   function formatRelativeTime(dateString: string) {
@@ -58,9 +60,10 @@ export default function NewsDetailScreen() {
 
         for (const tab of tabs) {
           for (const subject of subjects) {
-            const storedNews = await loadNewsFromStorage(tab, subject);
+            const storedNews = await AsyncStorage.getItem(`${tab}-${subject}`);
             if (storedNews) {
-              const found = storedNews.find(item => item._id === id || item.id === id);
+              const parsedNews = JSON.parse(storedNews);
+              const found = parsedNews.find((item: any) => item._id === id || item.id === id);
               if (found) {
                 foundNews = found;
                 console.log('🚀 Found news in storage, displaying immediately');
@@ -112,7 +115,7 @@ export default function NewsDetailScreen() {
     if (id) {
       fetchDetail();
     }
-  }, [id, loadNewsFromStorage]);
+  }, [id]);
 
   const handleToggleFavorite = async () => {
     if (!news || favoriteLoading) return;
@@ -131,13 +134,8 @@ export default function NewsDetailScreen() {
           setNews(updatedNews);
           
           // Cập nhật trong persistent storage
-          const tabs: ("news" | "favorite")[] = ['news', 'favorite'];
-          const subjects = ['all'];
-          for (const tab of tabs) {
-            for (const subject of subjects) {
-              await updateNewsInStorage(tab, subject, news._id || news.id, updatedNews);
-            }
-          }
+          await AsyncStorage.setItem(`news-all`, JSON.stringify(updatedNews));
+          await AsyncStorage.setItem(`favorite-all`, JSON.stringify(updatedNews));
         }
       } else {
         const res = await favoriteNews(news._id || news.id);
@@ -152,13 +150,8 @@ export default function NewsDetailScreen() {
           setNews(updatedNews);
           
           // Cập nhật trong persistent storage
-          const tabs: ("news" | "favorite")[] = ['news', 'favorite'];
-          const subjects = ['all'];
-          for (const tab of tabs) {
-            for (const subject of subjects) {
-              await updateNewsInStorage(tab, subject, news._id || news.id, updatedNews);
-            }
-          }
+          await AsyncStorage.setItem(`news-all`, JSON.stringify(updatedNews));
+          await AsyncStorage.setItem(`favorite-all`, JSON.stringify(updatedNews));
         }
       }
     } catch (error) {

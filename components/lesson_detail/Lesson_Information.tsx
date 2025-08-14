@@ -406,7 +406,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
             <ThemedText type="subtitle" style={styles.headerText}>
               Thông tin kiểm tra
             </ThemedText>
-            {role === "teacher" && (
+            {role === "teacher" && !isCompleted && (
               <>
                 <View style={{ flex: 1 }} />
                 <TouchableOpacity

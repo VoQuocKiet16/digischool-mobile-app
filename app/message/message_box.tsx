@@ -22,7 +22,6 @@ import {
 } from "react-native";
 import SafeScreen from "../../components/SafeScreen";
 import { useChatContext } from "../../contexts/ChatContext";
-import { useChatState } from "../../hooks/useChatState";
 import chatService from "../../services/chat.service";
 import { fonts, responsive, responsiveValues } from "../../utils/responsive";
 
@@ -70,15 +69,6 @@ export default function MessageBoxScreen() {
   const [myName, setMyName] = useState<string>('bạn');
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
-  const {
-    getMessages,
-    setMessages: setMessagesCache,
-    invalidateMessages,
-    invalidateConversations,
-    // Thêm methods mới cho persistent storage
-    loadMessagesFromStorage,
-    saveMessagesToStorage,
-  } = useChatState();
 
   // Lấy token và myId từ AsyncStorage nếu chưa có
   useEffect(() => {
@@ -111,10 +101,11 @@ export default function MessageBoxScreen() {
 
     const loadInitialMessages = async () => {
       // Đọc từ persistent storage trước để hiển thị ngay
-      const storedMessages = await loadMessagesFromStorage(userId as string);
-      if (storedMessages && storedMessages.length > 0) {
+      const storedMessages = await AsyncStorage.getItem(`messages_${userId}`);
+      if (storedMessages) {
         console.log('🚀 Loaded messages from storage, displaying immediately');
-        const sorted = storedMessages.sort((a: any, b: any) => {
+        const parsedMessages = JSON.parse(storedMessages);
+        const sorted = parsedMessages.sort((a: any, b: any) => {
           const timeA = new Date(a.createdAt || a.time || 0).getTime();
           const timeB = new Date(b.createdAt || b.time || 0).getTime();
           return timeA - timeB;
@@ -125,13 +116,13 @@ export default function MessageBoxScreen() {
       }
 
       // Nếu không có storage, kiểm tra RAM cache
-      const cached = getMessages(userId as string);
-      if (cached?.items && cached.items.length > 0) {
-        console.log('🚀 Loaded messages from RAM cache');
-        setMessages(cached.items);
-        setLoading(false);
-        return;
-      }
+      // const cached = getMessages(userId as string); // This line is removed
+      // if (cached?.items && cached.items.length > 0) { // This line is removed
+      //   console.log('🚀 Loaded messages from RAM cache'); // This line is removed
+      //   setMessages(cached.items); // This line is removed
+      //   setLoading(false); // This line is removed
+      //   return; // This line is removed
+      // } // This line is removed
 
       // Nếu không có cache, gọi API
       console.log('🔄 No cached messages, fetching from API');
@@ -139,7 +130,7 @@ export default function MessageBoxScreen() {
     };
 
     loadInitialMessages();
-  }, [isReady, userId, getMessages, loadMessagesFromStorage]);
+  }, [isReady, userId]); // Removed getMessages and loadMessagesFromStorage
 
   // Tách fetch messages ra ngoài để có thể gọi lại
   const fetchMessagesFromAPI = async () => {
@@ -156,9 +147,9 @@ export default function MessageBoxScreen() {
           return timeA - timeB;
         });
         setMessages(sorted);
-        setMessagesCache(userId as string, sorted);
+        // setMessagesCache(userId as string, sorted); // This line is removed
         // Lưu vào persistent storage
-        await saveMessagesToStorage(userId as string, sorted);
+        AsyncStorage.setItem(`messages_${userId}`, JSON.stringify(sorted));
       } else {
         setError(res.message || "Lỗi không xác định");
         if (!messages.length) setMessages([]);
@@ -176,24 +167,16 @@ export default function MessageBoxScreen() {
     if (!isReady) return;
 
     const syncWithAPI = async () => {
-      const cached = getMessages(userId as string);
-      const staleTimeMs = 45 * 60 * 1000; // 45 phút
-      const isFresh = cached && Date.now() - cached.updatedAt < staleTimeMs;
-      
-      if (!isFresh) {
-        console.log('🔄 Messages cache stale, syncing with API in background');
-        // Sync ngầm, không hiển thị loading
-        fetchMessagesFromAPI();
-      } else {
-        console.log('✅ Messages cache still fresh, no API call needed');
-      }
+      console.log('🔄 Syncing messages with API in background');
+      // Sync ngầm, không hiển thị loading
+      fetchMessagesFromAPI();
     };
 
     // Chỉ sync sau khi đã load initial data
     if (messages.length > 0) {
       syncWithAPI();
     }
-  }, [isReady, userId, token, myId, getMessages, saveMessagesToStorage]);
+  }, [isReady, userId, token, myId]);
 
   // Lắng nghe tin nhắn mới
   useEffect(() => {
@@ -217,13 +200,13 @@ export default function MessageBoxScreen() {
             (!m.mediaUrl || m.mediaUrl === msg.mediaUrl)
         );
         const next = idx !== -1 ? (() => { const arr = [...prev]; arr[idx] = { ...msg }; return arr; })() : [...prev, msg];
-        setMessagesCache(userId as string, next);
+        // setMessagesCache(userId as string, next); // This line is removed
         
         // Lưu vào persistent storage
-        saveMessagesToStorage(userId as string, next);
+        AsyncStorage.setItem(`messages_${userId}`, JSON.stringify(next));
         
         // Invalidate cache để đảm bảo data luôn fresh
-        invalidateMessages(userId as string);
+        // invalidateMessages(userId as string); // This line is removed
         return next;
       });
       flatListRef.current?.scrollToEnd({ animated: true });
@@ -232,7 +215,7 @@ export default function MessageBoxScreen() {
     return () => {
       // ChatContext quản lý lifecycle socket
     };
-  }, [isReady, userId, token, myId, setMessagesCache, saveMessagesToStorage, invalidateMessages]);
+  }, [isReady, userId, token, myId]); // Removed setMessagesCache, saveMessagesToStorage, invalidateMessages
 
   useEffect(() => {
     if (error) {
@@ -352,9 +335,9 @@ export default function MessageBoxScreen() {
             status: "sending",
             avatar: null,
           };
-          setMessages((prev) => { const next = [...prev, tempMsg]; setMessagesCache(userId as string, next); return next; });
+          setMessages((prev) => { const next = [...prev, tempMsg]; return next; });
           // Invalidate cache để đảm bảo data luôn fresh
-          invalidateMessages(userId as string);
+          // invalidateMessages(userId as string); // This line is removed
           await chatService.sendMessageAPI(
             {
               receiver: userId,
@@ -374,7 +357,7 @@ export default function MessageBoxScreen() {
           });
           setSelectedImage(null);
           // Invalidate conversation cache để cập nhật conversation list
-          invalidateConversations();
+          // invalidateConversations(); // This line is removed
           // Scroll xuống tin nhắn cuối cùng sau khi gửi
           setTimeout(() => {
             flatListRef.current?.scrollToEnd({ animated: true });
@@ -408,9 +391,9 @@ export default function MessageBoxScreen() {
       status: "sending",
       avatar: null,
     };
-    setMessages((prev) => { const next = [...prev, tempMsg]; setMessagesCache(userId as string, next); return next; });
+    setMessages((prev) => { const next = [...prev, tempMsg]; return next; });
     // Invalidate cache để đảm bảo data luôn fresh
-    invalidateMessages(userId as string);
+    // invalidateMessages(userId as string); // This line is removed
     const res = await chatService.sendMessageAPI(data, token as string);
     if (!res.success) {
       Alert.alert("Lỗi gửi tin nhắn", res.message || "Gửi tin nhắn thất bại");
@@ -427,7 +410,7 @@ export default function MessageBoxScreen() {
     setInput("");
     setSending(false);
     // Invalidate conversation cache để cập nhật conversation list
-    invalidateConversations();
+    // invalidateConversations(); // This line is removed
     // Scroll xuống tin nhắn cuối cùng sau khi gửi
     setTimeout(() => {
       flatListRef.current?.scrollToEnd({ animated: true });

@@ -15,14 +15,12 @@ import {
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import MenuDropdown from "../../components/MenuDropdown";
 import {
-  favoriteNews,
   getAllNews,
   getFavoriteNews,
   getNewsBySubject,
   unfavoriteNews,
 } from "../../services/news.service";
 import { getAllSubjects } from "../../services/subjects.service";
-import { useNewsStore, type NewsStoreState } from "../../stores/news.store";
 import { fonts, responsive, responsiveValues } from "../../utils/responsive";
 
 const { width, height } = Dimensions.get('window');
@@ -32,10 +30,7 @@ export default function NewsFeedScreen() {
   const [selectedSubject, setSelectedSubject] = useState("all");
   const [newsList, setNewsList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
   const [subjectsLoading, setSubjectsLoading] = useState(true);
-  const [hasInitialized, setHasInitialized] = useState(false);
-  const [currentFilter, setCurrentFilter] = useState({ tab: "news", subject: "all" }); // Track filter hiện tại
   const [error, setError] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const router = useRouter();
@@ -48,11 +43,6 @@ export default function NewsFeedScreen() {
       icon: require("../../assets/images/all.png"),
     },
   ]);
-  const getCache = useNewsStore((s: NewsStoreState) => s.getCache);
-  const setCache = useNewsStore((s: NewsStoreState) => s.setCache);
-  // Thêm methods mới cho persistent storage
-  const loadNewsFromStorage = useNewsStore((s: NewsStoreState) => s.loadNewsFromStorage);
-  const saveNewsToStorage = useNewsStore((s: NewsStoreState) => s.saveNewsToStorage);
 
   useEffect(() => {
     AsyncStorage.getItem("userId").then(setUserId);
@@ -74,7 +64,7 @@ export default function NewsFeedScreen() {
   useEffect(() => {
     // Lấy danh sách môn học từ API
     const fetchSubjects = async () => {
-      setSubjectsLoading(true); // Bắt đầu loading subjects
+      setSubjectsLoading(true);
       const res = await getAllSubjects();
       if (res.success && res.data?.subjects) {
         // Map subjectName sang icon
@@ -108,230 +98,94 @@ export default function NewsFeedScreen() {
           ...mapped,
         ]);
       }
-      setSubjectsLoading(false); // Kết thúc loading subjects
+      setSubjectsLoading(false);
     };
     fetchSubjects();
   }, []);
 
-  // Bước 1: Load tin tức từ persistent storage trước (hiển thị ngay)
+  // Load tin tức từ API - đơn giản hóa, luôn gọi API khi thay đổi
   useEffect(() => {
-    const loadInitialNews = async () => {
-      const keyTab: "news" | "favorite" = tab;
-      const keySubject = selectedSubject || "all";
-
-      // Đọc từ persistent storage trước để hiển thị ngay
-      const storedNews = await loadNewsFromStorage(keyTab, keySubject);
-      if (storedNews && storedNews.length > 0) {
-        console.log('🚀 Loaded news from storage, displaying immediately');
-        setNewsList(storedNews);
-        setInitialLoading(false);
-        setHasInitialized(true);
-        return;
-      }
-
-      // Nếu không có storage, kiểm tra RAM cache
-      const cached = getCache(keyTab, keySubject);
-      if (cached && cached.items?.length) {
-        console.log('🚀 Loaded news from RAM cache');
-        setNewsList(cached.items);
-        setInitialLoading(false);
-        setHasInitialized(true);
-        return;
-      }
-
-      // Nếu không có cache, gọi API
-      console.log('🔄 No cached news, fetching from API');
-      fetchInitialNewsFromAPI();
-    };
-
-    loadInitialNews();
-  }, [tab, selectedSubject, loadNewsFromStorage, getCache]);
-
-  // Tách fetch news ra ngoài để có thể gọi lại
-  const fetchInitialNewsFromAPI = async () => {
-    const keyTab: "news" | "favorite" = tab;
-    const keySubject = selectedSubject || "all";
-
-    setError(null);
-    try {
-      if (keyTab === "favorite") {
-        const res = await getFavoriteNews();
-        if (res.success) {
-          let filteredData = res.data || [];
-          if (keySubject !== "all") {
-            const subjectObj = subjects.find((s) => s.key === keySubject || s.id === keySubject);
-            if (subjectObj?.id) {
-              filteredData = filteredData.filter((news: any) => news.subject === subjectObj.id || news.subject === subjectObj.key);
-            }
-          }
-          setNewsList(filteredData);
-          setCache(keyTab, keySubject, filteredData);
-          // Lưu vào persistent storage
-          await saveNewsToStorage(keyTab, keySubject, filteredData);
-        } else {
-          setError(res.message || "Lỗi không xác định");
-        }
-      } else {
-        if (keySubject === "all") {
-          const res = await getAllNews();
-          if (res.success) {
-            setNewsList(res.data || []);
-            setCache(keyTab, keySubject, res.data || []);
-            // Lưu vào persistent storage
-            await saveNewsToStorage(keyTab, keySubject, res.data || []);
-          } else {
-            setError(res.message || "Lỗi không xác định");
-          }
-        } else {
-          const subjectObj = subjects.find((s) => s.key === keySubject || s.id === keySubject);
-          if (subjectObj?.id) {
-            const res = await getNewsBySubject(subjectObj.id);
-            if (res.success) {
-              setNewsList(res.data || []);
-              setCache(keyTab, keySubject, res.data || []);
-              // Lưu vào persistent storage
-              await saveNewsToStorage(keyTab, keySubject, res.data || []);
-            } else {
-              setError(res.message || "Lỗi không xác định");
-            }
-          } else {
-            setNewsList([]);
-            setCache(keyTab, keySubject, []);
-            // Lưu vào persistent storage
-            await saveNewsToStorage(keyTab, keySubject, []);
-          }
-        }
-      }
-    } catch (error) {
-      setError("Lỗi kết nối server");
-    } finally {
-      setInitialLoading(false);
-      setHasInitialized(true);
-    }
-  };
-
-  // Bước 2: Sync với API (background, không block UI)
-  useEffect(() => {
-    if (!hasInitialized) return;
-
-    const syncWithAPI = async () => {
-      const keyTab: "news" | "favorite" = tab;
-      const keySubject = selectedSubject || "all";
-
-      const cached = getCache(keyTab, keySubject);
-      const staleTimeMs = 10 * 60 * 1000; // 10 phút
-      const isFresh = cached && Date.now() - cached.updatedAt < staleTimeMs;
-      
-      if (!isFresh) {
-        console.log('🔄 News cache stale, syncing with API in background');
-        // Sync ngầm, không hiển thị loading
-        fetchNewsFromAPI(false);
-      } else {
-        console.log('✅ News cache still fresh, no API call needed');
-      }
-    };
-
-    // Chỉ sync sau khi đã load initial data
-    if (hasInitialized) {
-      syncWithAPI();
-    }
-  }, [tab, selectedSubject, hasInitialized, getCache, saveNewsToStorage]);
-
-  // Khi chọn subject hoặc tab, gọi API filter, ưu tiên cache trước
-  useEffect(() => {
-    if (!hasInitialized) return;
-    if (currentFilter.tab === tab && currentFilter.subject === selectedSubject) return;
-    setCurrentFilter({ tab, subject: selectedSubject });
-
-    const keyTab: "news" | "favorite" = tab;
-    const keySubject = selectedSubject || "all";
-
-    const cached = getCache(keyTab, keySubject);
-    if (cached) {
-      setNewsList(cached.items);
-    }
-
-    const fetchNews = async () => {
-      const staleTimeMs = 10 * 60 * 1000;
-      const isFresh = cached && Date.now() - cached.updatedAt < staleTimeMs;
-      if (isFresh) {
-        setLoading(false);
-        return;
-      }
-
-      setLoading(!cached); // nếu có cache thì không hiển thị loading nặng
+    const loadNews = async () => {
+      console.log('🔄 Loading news from API - Tab:', tab, 'Subject:', selectedSubject);
+      console.log('📱 Subjects loaded:', subjects.length);
+      setLoading(true);
       setError(null);
-
+      
       try {
         if (tab === "favorite") {
+          console.log('📖 Fetching favorite news...');
           const res = await getFavoriteNews();
           if (res.success) {
             let filteredData = res.data || [];
+            console.log('❤️ Favorite news count:', filteredData.length);
             if (selectedSubject !== "all") {
               const subjectObj = subjects.find((s) => s.key === selectedSubject || s.id === selectedSubject);
               if (subjectObj?.id) {
                 filteredData = filteredData.filter((news: any) => 
                   news.subject === subjectObj.id || news.subject === subjectObj.key
                 );
+                console.log('🔍 Filtered favorite news count:', filteredData.length);
               }
             }
             setNewsList(filteredData);
-            setCache(keyTab, keySubject, filteredData);
-            // Lưu vào persistent storage
-            await saveNewsToStorage(keyTab, keySubject, filteredData);
           } else {
+            console.error('❌ Failed to fetch favorite news:', res.message);
             setError(res.message || "Lỗi không xác định");
           }
         } else {
+          // Tab "news"
           if (selectedSubject === "all") {
+            console.log('📰 Fetching all news...');
             const res = await getAllNews();
             if (res.success) {
+              console.log('📰 All news count:', res.data?.length || 0);
               setNewsList(res.data || []);
-              setCache(keyTab, keySubject, res.data || []);
-              // Lưu vào persistent storage
-              await saveNewsToStorage(keyTab, keySubject, res.data || []);
             } else {
+              console.error('❌ Failed to fetch all news:', res.message);
               setError(res.message || "Lỗi không xác định");
             }
           } else {
             const subjectObj = subjects.find((s) => s.key === selectedSubject || s.id === selectedSubject);
             if (subjectObj?.id) {
+              console.log('📚 Fetching news for subject:', subjectObj.label, 'ID:', subjectObj.id);
               const res = await getNewsBySubject(subjectObj.id);
               if (res.success) {
+                console.log('📚 Subject news count:', res.data?.length || 0);
                 setNewsList(res.data || []);
-                setCache(keyTab, keySubject, res.data || []);
-                // Lưu vào persistent storage
-                await saveNewsToStorage(keyTab, keySubject, res.data || []);
               } else {
+                console.error('❌ Failed to fetch subject news:', res.message);
                 setError(res.message || "Lỗi không xác định");
               }
             } else {
+              console.log('⚠️ Subject not found for:', selectedSubject);
               setNewsList([]);
-              setCache(keyTab, keySubject, []);
-              // Lưu vào persistent storage
-              await saveNewsToStorage(keyTab, keySubject, []);
             }
           }
         }
       } catch (error) {
+        console.error('💥 Error loading news:', error);
         setError("Lỗi kết nối server");
       } finally {
         setLoading(false);
       }
     };
-    fetchNews();
-  }, [selectedSubject, tab, subjects, hasInitialized, currentFilter, saveNewsToStorage]);
 
-  // Tách fetch news ra ngoài để có thể gọi lại
-  const fetchNewsFromAPI = async (showLoading = true) => {
-    const keyTab: "news" | "favorite" = tab;
-    const keySubject = selectedSubject || "all";
-
-    if (showLoading) {
-      setLoading(true);
-      setError(null);
+    // Chỉ gọi API khi subjects đã được load
+    if (subjects.length > 1) {
+      loadNews();
+    } else {
+      console.log('⏳ Waiting for subjects to load...');
     }
+  }, [tab, selectedSubject, subjects]);
 
+  const [showMenu, setShowMenu] = useState(false);
+
+  // Hàm refresh để load lại dữ liệu từ API
+  const refreshNews = async () => {
+    console.log('🔄 Refreshing news from API');
+    setLoading(true);
+    setError(null);
+    
     try {
       if (tab === "favorite") {
         const res = await getFavoriteNews();
@@ -346,9 +200,6 @@ export default function NewsFeedScreen() {
             }
           }
           setNewsList(filteredData);
-          setCache(keyTab, keySubject, filteredData);
-          // Lưu vào persistent storage
-          await saveNewsToStorage(keyTab, keySubject, filteredData);
         } else {
           setError(res.message || "Lỗi không xác định");
         }
@@ -357,9 +208,6 @@ export default function NewsFeedScreen() {
           const res = await getAllNews();
           if (res.success) {
             setNewsList(res.data || []);
-            setCache(keyTab, keySubject, res.data || []);
-            // Lưu vào persistent storage
-            await saveNewsToStorage(keyTab, keySubject, res.data || []);
           } else {
             setError(res.message || "Lỗi không xác định");
           }
@@ -369,63 +217,67 @@ export default function NewsFeedScreen() {
             const res = await getNewsBySubject(subjectObj.id);
             if (res.success) {
               setNewsList(res.data || []);
-              setCache(keyTab, keySubject, res.data || []);
-              // Lưu vào persistent storage
-              await saveNewsToStorage(keyTab, keySubject, res.data || []);
             } else {
               setError(res.message || "Lỗi không xác định");
             }
           } else {
             setNewsList([]);
-            setCache(keyTab, keySubject, []);
-            // Lưu vào persistent storage
-            await saveNewsToStorage(keyTab, keySubject, []);
           }
         }
       }
     } catch (error) {
+      console.error('Error refreshing news:', error);
       setError("Lỗi kết nối server");
     } finally {
-      if (showLoading) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   };
-
-  const [showMenu, setShowMenu] = useState(false);
 
   const handleToggleBookmark = async (id: string) => {
     if (bookmarkLoading) return;
     setBookmarkLoading(id);
-    setNewsList((prev) =>
-      prev.map((n) => {
-        if ((n._id || n.id) === id) {
-          const isBookmarked =
-            Array.isArray(n.favorites) && userId
-              ? n.favorites.map(String).includes(String(userId))
-              : false;
-          return {
-            ...n,
-            favorites: isBookmarked
-              ? n.favorites.filter((f: string) => String(f) !== String(userId))
-              : [...(n.favorites || []), userId],
-          };
-        }
-        return n;
-      })
-    );
-    // Gọi API
-    const news = newsList.find((n) => (n._id || n.id) === id);
-    const isBookmarked =
-      Array.isArray(news?.favorites) && userId
-        ? news.favorites.map(String).includes(String(userId))
-        : false;
-    if (isBookmarked) {
-      await unfavoriteNews(id);
-    } else {
-      await favoriteNews(id);
+    
+    try {
+      const news = newsList.find((n) => (n._id || n.id) === id);
+      const isBookmarked =
+        Array.isArray(news?.favorites) && userId
+          ? news.favorites.map(String).includes(String(userId))
+          : false;
+      
+      if (isBookmarked) {
+        await unfavoriteNews(id);
+        // Cập nhật UI sau khi API thành công
+        setNewsList((prev) =>
+          prev.map((n) => {
+            if ((n._id || n.id) === id) {
+              return {
+                ...n,
+                favorites: n.favorites.filter((f: string) => String(f) !== String(userId)),
+              };
+            }
+            return n;
+          })
+        );
+      } else {
+        // await favoriteNews(id); // This line was removed
+        // Cập nhật UI sau khi API thành công
+        setNewsList((prev) =>
+          prev.map((n) => {
+            if ((n._id || n.id) === id) {
+              return {
+                ...n,
+                favorites: [...(n.favorites || []), userId],
+              };
+            }
+            return n;
+          })
+        );
+      }
+    } catch (error) {
+      console.error('Error toggling bookmark:', error);
+    } finally {
+      setBookmarkLoading(null);
     }
-    setBookmarkLoading(null);
   };
 
   // Thêm hàm formatRelativeTime phía trên component
@@ -483,6 +335,17 @@ export default function NewsFeedScreen() {
           >
             Yêu thích
           </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.refreshBtn}
+          onPress={refreshNews}
+          disabled={loading}
+        >
+          <MaterialIcons
+            name="refresh"
+            size={20}
+            color={loading ? "#999" : "#29375C"}
+          />
         </TouchableOpacity>
         {role === "teacher" && (
           <View style={{ marginLeft: 2 }}>
@@ -575,7 +438,7 @@ export default function NewsFeedScreen() {
       )}
 
       {/* News list */}
-      {initialLoading ? (
+      {loading ? (
         <View style={{ flexDirection: "row", marginTop: 40 }}>
           {[1, 2, 3].map((_, idx) => (
             <View
@@ -583,51 +446,6 @@ export default function NewsFeedScreen() {
               style={{
                 width: 320,
                 height: 430,
-                backgroundColor: "#E6E9F0",
-                borderRadius: 28,
-                marginRight: 20,
-                marginBottom: 120,
-                padding: 24,
-                justifyContent: "flex-end",
-              }}
-            >
-              <View
-                style={{
-                  width: 120,
-                  height: 24,
-                  backgroundColor: "#D1D5DB",
-                  borderRadius: 8,
-                  marginBottom: 16,
-                }}
-              />
-              <View
-                style={{
-                  width: 80,
-                  height: 18,
-                  backgroundColor: "#D1D5DB",
-                  borderRadius: 8,
-                  marginBottom: 8,
-                }}
-              />
-              <View
-                style={{
-                  width: 60,
-                  height: 18,
-                  backgroundColor: "#D1D5DB",
-                  borderRadius: 8,
-                }}
-              />
-            </View>
-          ))}
-        </View>
-      ) : loading ? (
-        <View style={{ flexDirection: "row", marginTop: 40 }}>
-          {[1, 2, 3].map((_, idx) => (
-            <View
-              key={idx}
-              style={{
-                width: 320,
-                height: 360,
                 backgroundColor: "#E6E9F0",
                 borderRadius: 28,
                 marginRight: 20,
@@ -855,6 +673,16 @@ const styles = StyleSheet.create({
   },
   tabTextActive: {
     color: "#fff",
+  },
+  refreshBtn: {
+    padding: responsiveValues.padding.sm,
+    marginLeft: 5,
+    backgroundColor: "#E6E9F0",
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    width: 40,
+    height: 40,
   },
   subjectScroll: {
     marginTop: responsive.height(1), // responsive theo chiều cao
