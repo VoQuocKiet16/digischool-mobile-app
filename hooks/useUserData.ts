@@ -9,57 +9,6 @@ export const useUserData = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadUserDataFromStorage = useCallback(async () => {
-    try {
-      const userName = await AsyncStorage.getItem("userName");
-      const userEmail = await AsyncStorage.getItem("userEmail");
-      const userPhone = await AsyncStorage.getItem("userPhone");
-      const userAddress = await AsyncStorage.getItem("userAddress");
-      const userDateOfBirth = await AsyncStorage.getItem("userDateOfBirth");
-      const userGender = await AsyncStorage.getItem("userGender");
-      const userStudentId = await AsyncStorage.getItem("userStudentId");
-      const userTeacherId = await AsyncStorage.getItem("userTeacherId");
-      const userManagerId = await AsyncStorage.getItem("userManagerId");
-      const userClassString = await AsyncStorage.getItem("userClass");
-      const userSubjectsString = await AsyncStorage.getItem("userSubjects");
-      const userRoleInfoString = await AsyncStorage.getItem("userRoleInfo");
-
-      if (userName) {
-        const roleInfo = userRoleInfoString
-          ? JSON.parse(userRoleInfoString)
-          : {};
-
-        const userFromStorage: UserData = {
-          name: userName,
-          email: userEmail || "",
-          phone: userPhone,
-          address: userAddress,
-          dateOfBirth: userDateOfBirth,
-          gender: userGender,
-          studentId: userStudentId,
-          teacherId: userTeacherId,
-          managerId: userManagerId,
-          class: userClassString ? JSON.parse(userClassString) : null,
-          subject: userSubjectsString ? JSON.parse(userSubjectsString) : null,
-          roleInfo: roleInfo,
-        };
-        setUserData(userFromStorage);
-        setError(null);
-        
-        // Luôn gọi API để cập nhật dữ liệu mới nhất
-        fetchUserData();
-      } else {
-        // Nếu không có dữ liệu trong AsyncStorage, gọi API
-        await fetchUserData();
-      }
-    } catch (err) {
-      // Nếu có lỗi khi đọc từ AsyncStorage, gọi API
-      await fetchUserData();
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   const fetchUserData = useCallback(async () => {
     try {
       setLoading(true);
@@ -92,15 +41,62 @@ export const useUserData = () => {
 
         // Cập nhật AsyncStorage với dữ liệu mới
         await updateAsyncStorage(response.data);
+        setLoading(false);
+      } else {
+        // Nếu API không thành công, thử dùng dữ liệu từ storage
+        await fallbackToStorageData();
+      }
+    } catch (err: any) {
+      // Nếu có lỗi API, thử dùng dữ liệu từ storage
+      await fallbackToStorageData();
+    }
+  }, []);
+
+  const fallbackToStorageData = async () => {
+    try {
+      const userName = await AsyncStorage.getItem("userName");
+      if (userName) {
+        const userEmail = await AsyncStorage.getItem("userEmail");
+        const userPhone = await AsyncStorage.getItem("userPhone");
+        const userAddress = await AsyncStorage.getItem("userAddress");
+        const userDateOfBirth = await AsyncStorage.getItem("userDateOfBirth");
+        const userGender = await AsyncStorage.getItem("userGender");
+        const userStudentId = await AsyncStorage.getItem("userStudentId");
+        const userTeacherId = await AsyncStorage.getItem("userTeacherId");
+        const userManagerId = await AsyncStorage.getItem("userManagerId");
+        const userClassString = await AsyncStorage.getItem("userClass");
+        const userSubjectsString = await AsyncStorage.getItem("userSubjects");
+        const userRoleInfoString = await AsyncStorage.getItem("userRoleInfo");
+
+        const roleInfo = userRoleInfoString
+          ? JSON.parse(userRoleInfoString)
+          : {};
+
+        const userFromStorage: UserData = {
+          name: userName,
+          email: userEmail || "",
+          phone: userPhone,
+          address: userAddress,
+          dateOfBirth: userDateOfBirth,
+          gender: userGender,
+          studentId: userStudentId,
+          teacherId: userTeacherId,
+          managerId: userManagerId,
+          class: userClassString ? JSON.parse(userClassString) : null,
+          subject: userSubjectsString ? JSON.parse(userSubjectsString) : null,
+          roleInfo: roleInfo,
+        };
+        setUserData(userFromStorage);
+        setError(null);
       } else {
         setError("Không thể tải thông tin người dùng");
       }
-    } catch (err: any) {
-      setError(err?.message || "Không thể tải thông tin người dùng");
+    } catch (storageErr) {
+      setError("Không thể tải thông tin người dùng");
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   const updateAsyncStorage = async (data: any) => {
     try {
@@ -156,14 +152,14 @@ export const useUserData = () => {
 
   // Load dữ liệu khi component mount
   useEffect(() => {
-    loadUserDataFromStorage();
-  }, [loadUserDataFromStorage]);
+    fetchUserData();
+  }, [fetchUserData]);
 
   // Reload dữ liệu khi focus vào trang (khi quay lại từ trang khác)
   useFocusEffect(
     useCallback(() => {
-      loadUserDataFromStorage();
-    }, [loadUserDataFromStorage])
+      fetchUserData();
+    }, [fetchUserData])
   );
 
 
@@ -172,6 +168,5 @@ export const useUserData = () => {
     loading,
     error,
     refreshUserData,
-    loadUserDataFromStorage,
   };
 };

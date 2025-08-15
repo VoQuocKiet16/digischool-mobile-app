@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -14,7 +15,6 @@ import {
 } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import LoadingModal from "../../components/LoadingModal";
-import ConfirmDeleteModal from "../../components/notifications_modal/ConfirmDeleteModal";
 import RemindPicker from "../../components/RemindPicker";
 import { deleteNote, updateNote } from "../../services/note_lesson.service";
 import { getLessonSubtitle } from "../../utils/lessonSubtitle";
@@ -67,7 +67,6 @@ const DetailNoteScreen = () => {
   const [showLoading, setShowLoading] = useState(false);
   const [loadingSuccess, setLoadingSuccess] = useState(false);
   const [error, setError] = useState("");
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [titleError, setTitleError] = useState("");
@@ -157,30 +156,39 @@ const DetailNoteScreen = () => {
   };
 
   const handleDelete = () => {
-    setShowDeleteModal(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!id) return;
-    setIsDeleting(true);
-    setShowLoading(true);
-    setError("");
-    try {
-      const res = await deleteNote(id);
-      setShowDeleteModal(false);
-      setShowLoading(false);
-      setIsDeleting(false);
-      if (res.success) {
-        router.back();
-      } else {
-        setError(res.message || "Xoá ghi chú thất bại!");
-      }
-    } catch (e) {
-      setShowDeleteModal(false);
-      setShowLoading(false);
-      setIsDeleting(false);
-      setError("Xoá ghi chú thất bại!");
-    }
+    Alert.alert(
+      "Xác nhận xóa",
+      "Bạn có chắc chắn muốn xóa ghi chú này?",
+      [
+        {
+          text: "Hủy",
+          style: "cancel",
+        },
+        {
+          text: "Xóa",
+          onPress: async () => {
+            if (!id) return;
+            setIsDeleting(true);
+            setShowLoading(true);
+            setError("");
+            try {
+              const res = await deleteNote(id);
+              setShowLoading(false);
+              setIsDeleting(false);
+              if (res.success) {
+                router.back();
+              } else {
+                setError(res.message || "Xoá ghi chú thất bại!");
+              }
+            } catch (e) {
+              setShowLoading(false);
+              setIsDeleting(false);
+              setError("Xoá ghi chú thất bại!");
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -313,13 +321,6 @@ const DetailNoteScreen = () => {
                     : "Đang cập nhật ghi chú..."
                 }
                 success={loadingSuccess}
-              />
-              <ConfirmDeleteModal
-                visible={showDeleteModal}
-                onCancel={() => setShowDeleteModal(false)}
-                onConfirm={confirmDelete}
-                title="Xác nhận xóa?"
-                message={`Xóa bỏ sẽ không thể hoàn lại được!\nBạn chắc chắn muốn xóa bỏ?`}
               />
             </View>
           </ScrollView>

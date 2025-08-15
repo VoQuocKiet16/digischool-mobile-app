@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -11,12 +12,12 @@ import {
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  View
+  View,
 } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import LoadingModal from "../../components/LoadingModal";
-import ConfirmDeleteModal from "../../components/notifications_modal/ConfirmDeleteModal";
 import RemindPicker from "../../components/RemindPicker";
+import ToastNotification from "../../components/ToastNotification";
 import { deleteActivity, updateActivity } from "../../services/activity.service";
 import { fonts } from "../../utils/responsive";
 
@@ -111,7 +112,6 @@ const DetailActivityScreen = () => {
   const [loadingSuccess, setLoadingSuccess] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [error, setError] = useState("");
   const [titleError, setTitleError] = useState("");
   const [detailError, setDetailError] = useState("");
@@ -234,40 +234,50 @@ const DetailActivityScreen = () => {
   };
 
   const handleDelete = () => {
-    setShowDeleteModal(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!id) {
-      setError("Không tìm thấy id hoạt động!");
-      return;
-    }
-    setIsDeleting(true);
-    setShowLoading(true);
-    setError("");
-    try {
-      const res = await deleteActivity(id);
-      setShowDeleteModal(false);
-      setShowLoading(false);
-      setIsDeleting(false);
-      if (res.success) {
-        // Thông báo TKB cần refresh
-        await notifyScheduleRefresh('delete', {
-          _id: id,
-          date: dateParam,
-          period: periodParam
-        });
-        
-        router.back();
-      } else {
-        setError(res.message || "Xoá hoạt động thất bại!");
-      }
-    } catch (e) {
-      setShowDeleteModal(false);
-      setShowLoading(false);
-      setIsDeleting(false);
-      setError("Xoá hoạt động thất bại!");
-    }
+    Alert.alert(
+      "Xác nhận xóa",
+      "Bạn có chắc chắn muốn xóa hoạt động này?",
+      [
+        {
+          text: "Hủy",
+          style: "cancel",
+        },
+        {
+          text: "Xóa",
+          style: "destructive",
+          onPress: async () => {
+            if (!id) {
+              setError("Không tìm thấy id hoạt động!");
+              return;
+            }
+            setIsDeleting(true);
+            setShowLoading(true);
+            setError("");
+            try {
+              const res = await deleteActivity(id);
+              setShowLoading(false);
+              setIsDeleting(false);
+              if (res.success) {
+                // Thông báo TKB cần refresh
+                await notifyScheduleRefresh('delete', {
+                  _id: id,
+                  date: dateParam,
+                  period: periodParam
+                });
+                
+                router.back();
+              } else {
+                setError(res.message || "Xoá hoạt động thất bại!");
+              }
+            } catch (e) {
+              setShowLoading(false);
+              setIsDeleting(false);
+              setError("Xoá hoạt động thất bại!");
+            }
+          },
+        },
+      ],
+    );
   };
 
   const subtitle = getActivitySubtitle({ date: dateParam, period });
@@ -401,12 +411,11 @@ const DetailActivityScreen = () => {
                 }
                 success={loadingSuccess}
               />
-              <ConfirmDeleteModal
-                visible={showDeleteModal}
-                onCancel={() => setShowDeleteModal(false)}
-                onConfirm={confirmDelete}
-                title="Xác nhận xóa?"
-                message={`Xóa bỏ sẽ không thể hoàn lại được!\nBạn chắc chắn muốn xóa bỏ?`}
+              <ToastNotification
+                visible={!!error}
+                title="Lỗi"
+                message={error}
+                onClose={() => setError("")}
               />
             </View>
           </ScrollView>
