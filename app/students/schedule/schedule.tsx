@@ -3,18 +3,18 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Modal,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    Modal,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import RefreshableScrollView from "../../../components/RefreshableScrollView";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
-import { getAvailableAcademicYearsAndWeeks, getStudentSchedule } from "../../../services/schedule.service";
+import { getAvailableAcademicYearsAndWeeks, getCurrentWeek, getStudentSchedule } from "../../../services/schedule.service";
 import { Activity } from "../../../types/schedule.types";
 
 const defaultActivity = (text: string, hasNotification = false): Activity => ({
@@ -184,22 +184,47 @@ export default function ScheduleStudentsScreen() {
   // State để lưu danh sách năm học và tuần có sẵn
   const [availableYears, setAvailableYears] = useState<string[]>([]);
   const [availableWeeks, setAvailableWeeks] = useState<number[]>([]);
+  
+  // Flag để tránh gọi API trùng lặp
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const days = defaultDays;
   
-  // Function để lấy danh sách năm học và tuần có sẵn
+  // Function để lấy danh sách năm học và tuần có sẵn, đồng thời xác định tuần hiện tại
   const fetchAvailableData = async () => {
     try {
-      const response = await getAvailableAcademicYearsAndWeeks();
-      if (response.success && response.data) {
-        const { availableAcademicYears, currentAcademicYear } = response.data;
+      // Gọi 2 API song song để tối ưu thời gian
+      const [currentWeekResponse, availableWeeksResponse] = await Promise.all([
+        getCurrentWeek(),
+        getAvailableAcademicYearsAndWeeks()
+      ]);
+      
+      if (currentWeekResponse.success && availableWeeksResponse.success) {
+        const { academicYear, weekNumber } = currentWeekResponse.data;
+        const { availableAcademicYears, currentAcademicYear } = availableWeeksResponse.data;
         
         // Lấy danh sách năm học
         const years = availableAcademicYears.map((year: any) => year.name);
         setAvailableYears(years);
         
-        // Nếu có năm học hiện tại, set làm mặc định
-        if (currentAcademicYear && years.includes(currentAcademicYear.name)) {
+        // Sử dụng thông tin tuần hiện tại từ API mới
+        if (academicYear && weekNumber) {
+          setYear(academicYear);
+          setWeekNumber(weekNumber);
+          
+          // Cập nhật refs để fetchSchedule sử dụng
+          yearRef.current = academicYear;
+          weekNumberRef.current = weekNumber;
+          
+          // Lấy danh sách tuần có sẵn cho năm học hiện tại
+          const currentYearData = availableAcademicYears.find(
+            (year: any) => year.name === academicYear
+          );
+          if (currentYearData) {
+            setAvailableWeeks(currentYearData.weekNumbers);
+          }
+        } else if (currentAcademicYear && years.includes(currentAcademicYear.name)) {
+          // Fallback: nếu không có currentWeek, dùng currentAcademicYear
           setYear(currentAcademicYear.name);
           
           // Lấy tuần đầu tiên có sẵn của năm học hiện tại
@@ -209,7 +234,7 @@ export default function ScheduleStudentsScreen() {
             setAvailableWeeks(currentYearData.weekNumbers);
           }
         } else if (years.length > 0) {
-          // Nếu không có năm học hiện tại, dùng năm đầu tiên có sẵn
+          // Fallback cuối cùng: dùng năm đầu tiên có sẵn
           setYear(years[0]);
           const firstYearData = availableAcademicYears.find((year: any) => year.name === years[0]);
           if (firstYearData && firstYearData.weekNumbers.length > 0) {
@@ -219,13 +244,11 @@ export default function ScheduleStudentsScreen() {
         }
       }
     } catch (err) {
-      console.error("Error fetching available data:", err);
       // Fallback: giữ nguyên giá trị mặc định
     }
   };
 
   const fetchSchedule = useCallback(async (forceRefresh = false) => {
-    console.log('🔄 Fetching schedule from API - Year:', yearRef.current, 'Week:', weekNumberRef.current);
     setLoading(true);
     setError("");
     try {
@@ -241,8 +264,6 @@ export default function ScheduleStudentsScreen() {
         className = userClassStr;
       }
 
-      console.log('📚 Fetching schedule for class:', className);
-
       const data = await getStudentSchedule({
         className,
         academicYear: yearRef.current,
@@ -255,8 +276,6 @@ export default function ScheduleStudentsScreen() {
         academicYear: responseYear,
         weekNumber: responseWeek,
       } = mapApiToScheduleData(data);
-
-      console.log('📅 Schedule loaded - Lessons:', newLessonIds.flat().filter(id => id).length);
 
       setScheduleData(schedule);
       setLessonIds(newLessonIds);
@@ -288,11 +307,9 @@ export default function ScheduleStudentsScreen() {
             }
           }
         } catch (err) {
-          console.error("Error updating available weeks:", err);
         }
       }
     } catch (err) {
-      console.error('💥 Error fetching schedule:', err);
       setError("Lỗi tải thời khóa biểu");
       setScheduleData(initialScheduleData);
     } finally {
@@ -306,12 +323,19 @@ export default function ScheduleStudentsScreen() {
   };
 
   useEffect(() => {
-    fetchAvailableData();
-  }, []);
-
-  useEffect(() => {
-    fetchSchedule();
-  }, []); // fetchSchedule được wrap trong useCallback với empty dependency array
+    const initializeSchedule = async () => {
+      if (isInitialized) return; // Tránh gọi lại nếu đã khởi tạo
+      
+      // 1. Đầu tiên lấy thông tin năm học và tuần hiện tại
+      await fetchAvailableData();
+      // 2. Sau đó mới fetch schedule với tuần đã được xác định
+      await fetchSchedule();
+      
+      setIsInitialized(true);
+    };
+    
+    initializeSchedule();
+  }, [isInitialized]); // Chỉ chạy khi isInitialized thay đổi
 
   // Tự động refresh khi màn hình được focus (sau khi thêm hoạt động)
   useFocusEffect(
@@ -320,7 +344,7 @@ export default function ScheduleStudentsScreen() {
       
       const refreshSchedule = async () => {
         try {
-          // Luôn refresh schedule khi màn hình được focus để đảm bảo dữ liệu mới nhất
+          // Chỉ refresh schedule, không gọi lại fetchAvailableData
           await fetchSchedule(true);
           
           // Xóa notification đã xử lý nếu có
@@ -377,11 +401,22 @@ export default function ScheduleStudentsScreen() {
       : scheduleData.slice(5, 10);
   const periods = session === "Buổi sáng" ? morningPeriods : afternoonPeriods;
 
+  // Debug: Log cấu trúc dữ liệu
+  console.log('🔍 DEBUG SCHEDULE DATA STRUCTURE:');
+  console.log('📊 scheduleData length:', scheduleData.length);
+  console.log('📊 scheduleData structure:', scheduleData);
+  console.log('🌅 session:', session);
+  console.log('📊 displayedData length:', displayedData.length);
+  console.log('📊 displayedData structure:', displayedData);
+  console.log('📊 periods:', periods);
+  console.log('📊 lessonIds length:', lessonIds.length);
+  console.log('📊 lessonIds structure:', lessonIds);
+
   // Modal chọn năm học
   const handleChangeYear = () => setShowYearModal(true);
   const handleSelectYear = async (selected: string) => {
     setYear(selected);
-    setWeekNumber(1); // Đổi năm thì về tuần đầu tiên
+    yearRef.current = selected; // Cập nhật ref
     
     // Cập nhật danh sách tuần có sẵn cho năm học mới
     try {
@@ -394,10 +429,15 @@ export default function ScheduleStudentsScreen() {
           setAvailableWeeks(selectedYearData.weekNumbers);
           // Set tuần đầu tiên có sẵn
           if (selectedYearData.weekNumbers.length > 0) {
-            setWeekNumber(selectedYearData.weekNumbers[0]);
+            const firstWeek = selectedYearData.weekNumbers[0];
+            setWeekNumber(firstWeek);
+            weekNumberRef.current = firstWeek; // Cập nhật ref
           }
         }
       }
+      
+      // Load TKB mới cho năm học và tuần đã chọn
+      await fetchSchedule(true);
     } catch (err) {
       console.error("Error updating weeks for new year:", err);
     }
@@ -407,12 +447,20 @@ export default function ScheduleStudentsScreen() {
 
   // Modal chọn tuần
   const handleChangeWeek = () => setShowWeekModal(true);
-  const handleSelectWeek = (selected: {
+  const handleSelectWeek = async (selected: {
     weekNumber: number;
     label: string;
   }) => {
     setWeekNumber(selected.weekNumber);
+    weekNumberRef.current = selected.weekNumber; // Cập nhật ref
     setShowWeekModal(false);
+    
+    // Load TKB mới cho tuần đã chọn
+    try {
+      await fetchSchedule(true);
+    } catch (error) {
+      console.error('Error loading schedule for selected week:', error);
+    }
   };
 
   // Chuyển buổi sáng/chiều
@@ -455,6 +503,7 @@ export default function ScheduleStudentsScreen() {
               periods={periods}
               days={days}
               scheduleData={displayedData}
+              fullScheduleData={scheduleData}
               onAddActivity={handleAddActivity}
               onSlotPress={handleSlotDetail}
               currentDayIndex={currentDayIndex}

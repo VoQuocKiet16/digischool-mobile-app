@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Alert,
   Modal,
   StyleSheet,
   Text,
@@ -10,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { useUserData } from "../../hooks/useUserData";
+import { PDFService } from "../../services/pdfService";
 import { Activity } from "../../types/schedule.types";
 import { fonts, responsive } from "../../utils/responsive";
 import MenuDropdown from "../MenuDropdown";
@@ -30,6 +32,8 @@ interface ScheduleDayProps {
     lessonId?: string
   ) => void;
   scheduleData: (Activity | null)[][];
+  // Thêm prop để nhận toàn bộ dữ liệu
+  fullScheduleData?: (Activity | null)[][];
   selectedSlots?: { row: number; col: number }[];
   onSelectSlot?: (dayIndex: number, periodIndex: number) => void;
   cellStatusData?: ("taught" | "current" | "exchangeable" | "default")[][];
@@ -38,7 +42,7 @@ interface ScheduleDayProps {
   hideNullSlot?: boolean;
   isSwapLesson?: boolean;
   dateRange?: { start: string; end: string } | null;
-  showUtilityButton?: boolean; // Thêm prop này, mặc định false
+  showUtilityButton?: boolean;
 }
 
 const DAY_COL_WIDTH = 90;
@@ -78,6 +82,7 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
   onAddActivity,
   onSlotPress,
   scheduleData,
+  fullScheduleData,
   selectedSlots = [],
   onSelectSlot,
   cellStatusData,
@@ -86,7 +91,7 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
   hideNullSlot = false,
   isSwapLesson = false,
   dateRange,
-  showUtilityButton = false, // default false
+  showUtilityButton = false,
 }) => {
   const [currentDay, setCurrentDay] = useState(getTodayIndex());
   const currentDayIndex =
@@ -108,8 +113,59 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
     }
   };
 
-  const handleExportSchedule = () => {
-    alert("Chức năng xuất TKB!");
+  const handleExportSchedule = async () => {
+    try {
+      Alert.alert(
+        "Xuất TKB",
+        "Chọn hành động",
+        [
+          {
+            text: "Hủy",
+            style: "cancel",
+          },
+          {
+            text: "Xuất Dạng Bảng",
+            onPress: async () => {            
+              const exportData = {
+                periods: ["Tiết 1", "Tiết 2", "Tiết 3", "Tiết 4", "Tiết 5", "Tiết 6", "Tiết 7", "Tiết 8", "Tiết 9", "Tiết 10"],
+                days,
+                scheduleData: fullScheduleData || scheduleData,
+                dateRange,
+              };
+              
+              // Tạo PDF trực tiếp trên thiết bị
+              const localFilePath = await PDFService.generateSchedulePDF(exportData, 'table');
+              
+              if (localFilePath) {
+                Alert.alert(
+                  "Thành công!",
+                  "TKB đã được xuất ra file PDF\nFile đã được lưu vào thiết bị",
+                  [
+                    { text: "OK" },
+                    {
+                      text: "Mở file",
+                      onPress: async () => {
+                        await PDFService.openPDF(localFilePath);
+                      },
+                    },
+                    {
+                      text: "Chia sẻ",
+                      onPress: async () => {
+                        await PDFService.openPDF(localFilePath);
+                      },
+                    },
+                  ]
+                );
+              } else {
+                Alert.alert("Lỗi", "Không thể tạo PDF. Vui lòng thử lại!");
+              }
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      Alert.alert("Lỗi", "Có lỗi xảy ra khi xuất TKB. Vui lòng thử lại!");
+    }
   };
 
   const menuItems = [

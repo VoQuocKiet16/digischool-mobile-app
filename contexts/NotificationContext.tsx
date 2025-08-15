@@ -3,8 +3,8 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import { io, Socket } from "socket.io-client";
 import { baseURL } from "../services/api.config";
 import {
-    getNotifications,
-    Notification,
+  getNotifications,
+  Notification,
 } from "../services/notification.service";
 
 const SOCKET_URL = `${baseURL}/`;
