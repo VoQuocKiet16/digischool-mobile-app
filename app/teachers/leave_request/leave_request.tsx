@@ -280,6 +280,7 @@ export default function TeacherLeaveRequestScreen() {
         cell.session === session &&
         cell.week === weekNumber
     );
+    
     if (isExist) {
       setSelected(
         selected.filter(
@@ -293,12 +294,16 @@ export default function TeacherLeaveRequestScreen() {
         )
       );
     } else {
+      // Tính toán đúng index trong toàn bộ schedule
+      const actualPeriodIndex = session === "Buổi sáng" ? periodIndex : periodIndex + 5;
+      const lessonId = lessonIds[actualPeriodIndex][dayIndex] || "";
+      
       setSelected([
         ...selected,
         {
           row: periodIndex,
           col: dayIndex,
-          lessonId: lessonIds[periodIndex][dayIndex] || "",
+          lessonId,
           session,
           week: weekNumber,
         },
@@ -375,7 +380,7 @@ export default function TeacherLeaveRequestScreen() {
                 )}
                 onSelectSlot={handleSelectSlot}
                 onSlotPress={handleSelectSlot}
-                hideNullSlot={true}
+                hideNullSlot={false}
                 showUtilityButton={false}
               />
             </ScrollView>
@@ -402,11 +407,23 @@ export default function TeacherLeaveRequestScreen() {
             onPress={() => {
               if (selected.length > 0) {
                 const subjects = selected.map(
-                  ({ row, col }) => displayedData[row][col]?.text || ""
+                  ({ row, col, session: slotSession }) => {
+                    // Tính toán đúng index trong toàn bộ schedule
+                    const actualPeriodIndex = slotSession === "Buổi sáng" ? row : row + 5;
+                    const subjectName = scheduleData[actualPeriodIndex][col]?.text || "";
+                    return subjectName;
+                  }
                 );
+                
                 const lessonIdsSelected = selected.map(
-                  ({ row, col }) => lessonIds[row][col]
+                  ({ row, col, session: slotSession }) => {
+                    // Tính toán đúng index trong toàn bộ lessonIds
+                    const actualPeriodIndex = slotSession === "Buổi sáng" ? row : row + 5;
+                    const lessonId = lessonIds[actualPeriodIndex][col] || "";
+                    return lessonId;
+                  }
                 );
+                
                 router.push({
                   pathname: "/teachers/leave_request/leave_request_info",
                   params: {

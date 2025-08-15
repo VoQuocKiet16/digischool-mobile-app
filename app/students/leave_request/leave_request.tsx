@@ -2,13 +2,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import HeaderLayout from "../../../components/layout/HeaderLayout";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
@@ -260,6 +260,7 @@ export default function LeaveRequestScreen() {
         cell.session === session &&
         cell.week === weekNumber
     );
+    
     if (isExist) {
       setSelected(
         selected.filter(
@@ -275,13 +276,14 @@ export default function LeaveRequestScreen() {
     } else {
       // Tính toán đúng index trong toàn bộ schedule
       const actualPeriodIndex = session === "Buổi sáng" ? periodIndex : periodIndex + 5;
+      const lessonId = lessonIds[actualPeriodIndex][dayIndex] || "";
       
       setSelected([
         ...selected,
         {
           row: periodIndex,
           col: dayIndex,
-          lessonId: lessonIds[actualPeriodIndex][dayIndex] || "",
+          lessonId,
           session,
           week: weekNumber,
         },
@@ -358,7 +360,7 @@ export default function LeaveRequestScreen() {
                 )}
                 onSelectSlot={handleSelectSlot}
                 onSlotPress={handleSelectSlot}
-                hideNullSlot={true}
+                hideNullSlot={false}
               />
             </ScrollView>
           )}
@@ -383,12 +385,20 @@ export default function LeaveRequestScreen() {
             disabled={selected.length === 0}
             onPress={() => {
               if (selected.length > 0) {
+                
                 const subjects = selected.map(
-                  ({ row, col }) => displayedData[row][col]?.text || ""
+                  ({ row, col, session: slotSession }) => {
+                    // Tính toán đúng index trong toàn bộ schedule
+                    const actualPeriodIndex = slotSession === "Buổi sáng" ? row : row + 5;
+                    const subjectName = scheduleData[actualPeriodIndex][col]?.text || "";
+                    return subjectName;
+                  }
                 );
+                
                 const lessonIdsSelected = selected.map(
                   ({ lessonId }) => lessonId
                 );
+                
                 router.push({
                   pathname: "/students/leave_request/leave_request_info",
                   params: {

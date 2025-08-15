@@ -63,12 +63,15 @@ export default function LeaveRequestInfoScreen() {
   }
 
   const lessonsByDay: Record<string, { date: string; lessons: string[] }> = {};
+  
   selectedSlots.forEach((slot: any, idx: number) => {
     const day = days[slot.col];
     const date = slot.date || slot.scheduledDate || "";
     const key = date ? `${day} | ${formatDate(date)}` : day;
     if (!lessonsByDay[key]) lessonsByDay[key] = { date, lessons: [] };
-    lessonsByDay[key].lessons.push(subjects[idx]);
+    // Sử dụng subjects array đã được truyền từ trang trước
+    const subjectName = subjects[idx] || "";
+    lessonsByDay[key].lessons.push(subjectName);
   });
   const lessonsByDayArr = Object.entries(lessonsByDay);
 

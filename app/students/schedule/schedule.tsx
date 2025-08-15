@@ -401,16 +401,6 @@ export default function ScheduleStudentsScreen() {
       : scheduleData.slice(5, 10);
   const periods = session === "Buổi sáng" ? morningPeriods : afternoonPeriods;
 
-  // Debug: Log cấu trúc dữ liệu
-  console.log('🔍 DEBUG SCHEDULE DATA STRUCTURE:');
-  console.log('📊 scheduleData length:', scheduleData.length);
-  console.log('📊 scheduleData structure:', scheduleData);
-  console.log('🌅 session:', session);
-  console.log('📊 displayedData length:', displayedData.length);
-  console.log('📊 displayedData structure:', displayedData);
-  console.log('📊 periods:', periods);
-  console.log('📊 lessonIds length:', lessonIds.length);
-  console.log('📊 lessonIds structure:', lessonIds);
 
   // Modal chọn năm học
   const handleChangeYear = () => setShowYearModal(true);
