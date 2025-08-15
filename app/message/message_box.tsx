@@ -1,13 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
+import * as DocumentPicker from "expo-document-picker";
+import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from 'expo-linear-gradient';
+import * as MediaLibrary from "expo-media-library";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import * as Sharing from "expo-sharing";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   FlatList,
   Image,
   Keyboard,
@@ -63,6 +68,14 @@ export default function MessageBoxScreen() {
   const flatListRef = useRef<FlatList>(null);
   const [selectedImage, setSelectedImage] = useState<any>(null);
   const [imageLoading, setImageLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<any>(null);
+  const [fileLoading, setFileLoading] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState<any>(null);
+  const [showImageViewer, setShowImageViewer] = useState(false);
+  const [selectedImageForViewer, setSelectedImageForViewer] = useState<any>(null);
+  const [imageViewerOpacity] = useState(new Animated.Value(0));
+  const [imageViewerScale] = useState(new Animated.Value(0.8));
   const [token, setToken] = useState<string | null>(paramToken as string || currentToken);
   const [myId, setMyId] = useState<string | null>(paramMyId as string || currentUserId);
   const [isReady, setIsReady] = useState(false);
@@ -103,7 +116,6 @@ export default function MessageBoxScreen() {
       // Đọc từ persistent storage trước để hiển thị ngay
       const storedMessages = await AsyncStorage.getItem(`messages_${userId}`);
       if (storedMessages) {
-        console.log('🚀 Loaded messages from storage, displaying immediately');
         const parsedMessages = JSON.parse(storedMessages);
         const sorted = parsedMessages.sort((a: any, b: any) => {
           const timeA = new Date(a.createdAt || a.time || 0).getTime();
@@ -118,14 +130,12 @@ export default function MessageBoxScreen() {
       // Nếu không có storage, kiểm tra RAM cache
       // const cached = getMessages(userId as string); // This line is removed
       // if (cached?.items && cached.items.length > 0) { // This line is removed
-      //   console.log('🚀 Loaded messages from RAM cache'); // This line is removed
       //   setMessages(cached.items); // This line is removed
       //   setLoading(false); // This line is removed
       //   return; // This line is removed
       // } // This line is removed
 
       // Nếu không có cache, gọi API
-      console.log('🔄 No cached messages, fetching from API');
       fetchMessagesFromAPI();
     };
 
@@ -167,7 +177,6 @@ export default function MessageBoxScreen() {
     if (!isReady) return;
 
     const syncWithAPI = async () => {
-      console.log('🔄 Syncing messages with API in background');
       // Sync ngầm, không hiển thị loading
       fetchMessagesFromAPI();
     };
@@ -291,6 +300,196 @@ export default function MessageBoxScreen() {
     }
   };
 
+  const handlePickFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: '*/*', // Cho phép chọn tất cả loại file
+        copyToCacheDirectory: true,
+      });
+      
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        setFileLoading(true);
+        setSelectedFile(asset);
+        
+        // Reset fileLoading sau khi file được set thành công
+        setTimeout(() => {
+          setFileLoading(false);
+        }, 100);
+      }
+    } catch (error) {
+      console.error('❌ Lỗi khi chọn file:', error);
+      Alert.alert('Lỗi', 'Không thể chọn file');
+    }
+  };
+
+  // Hàm xử lý long press vào media
+  const handleLongPressMedia = (media: any) => {
+    setSelectedMedia(media);
+    setShowMenu(true);
+  };
+
+  // Hàm xử lý bấm vào ảnh để xem
+  const handlePressImage = (image: any) => {
+    setSelectedImageForViewer(image);
+    setShowImageViewer(true);
+    
+    // Reset animation values
+    imageViewerOpacity.setValue(0);
+    imageViewerScale.setValue(0.8);
+    
+    // Animate in
+    Animated.parallel([
+      Animated.timing(imageViewerOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(imageViewerScale, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  // Hàm đóng image viewer với animation
+  const closeImageViewer = () => {
+    Animated.parallel([
+      Animated.timing(imageViewerOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(imageViewerScale, {
+        toValue: 0.8,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowImageViewer(false);
+      setSelectedImageForViewer(null);
+    });
+  };
+
+  // Hàm xử lý bấm vào file để mở
+  const handlePressFile = async (file: any) => {
+    try {
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (!isAvailable) {
+        Alert.alert('Lỗi', 'Chia sẻ không khả dụng trên thiết bị này');
+        return;
+      }
+
+      await Sharing.shareAsync(file.mediaUrl);
+    } catch (error) {
+      console.error('❌ Lỗi khi mở file:', error);
+      Alert.alert('Lỗi', 'Không thể mở file');
+    }
+  };
+
+  // Hàm tải file về máy
+  const handleDownloadFile = async () => {
+    if (!selectedMedia) return;
+    
+    try {
+      setShowMenu(false);
+      
+      // Kiểm tra quyền truy cập media library
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Quyền truy cập', 'Cần quyền truy cập để tải file về máy');
+        return;
+      }
+
+      // Tải file từ URL
+      const fileName = selectedMedia.content || 'file';
+      const fileExtension = selectedMedia.mediaUrl.split('.').pop() || '';
+      const localFileName = `${fileName}.${fileExtension}`;
+      
+      const downloadResumable = FileSystem.createDownloadResumable(
+        selectedMedia.mediaUrl,
+        FileSystem.documentDirectory + localFileName
+      );
+
+      const result = await downloadResumable.downloadAsync();
+      if (!result) {
+        throw new Error('Download failed');
+      }
+      
+      // Lưu vào media library
+      const asset = await MediaLibrary.createAssetAsync(result.uri);
+      await MediaLibrary.createAlbumAsync('Downloads', asset, false);
+      
+      Alert.alert('Thành công', 'File đã được tải về máy');
+      
+    } catch (error) {
+      console.error('❌ Lỗi khi tải file:', error);
+      Alert.alert('Lỗi', 'Không thể tải file về máy');
+    }
+  };
+
+  // Hàm tải hình ảnh về máy
+  const handleDownloadImage = async () => {
+    if (!selectedMedia) return;
+    
+    try {
+      setShowMenu(false);
+      
+      // Kiểm tra quyền truy cập media library
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Quyền truy cập', 'Cần quyền truy cập để tải ảnh về máy');
+        return;
+      }
+
+      // Tải ảnh từ URL
+      const fileName = `image_${Date.now()}.jpg`;
+      const localFileName = FileSystem.documentDirectory + fileName;
+      
+      const downloadResumable = FileSystem.createDownloadResumable(
+        selectedMedia.mediaUrl,
+        localFileName
+      );
+
+      const result = await downloadResumable.downloadAsync();
+      if (!result) {
+        throw new Error('Download failed');
+      }
+      
+      // Lưu vào media library
+      const asset = await MediaLibrary.createAssetAsync(result.uri);
+      await MediaLibrary.createAlbumAsync('Downloads', asset, false);
+      
+      Alert.alert('Thành công', 'Ảnh đã được tải về máy');
+      
+    } catch (error) {
+      console.error('❌ Lỗi khi tải ảnh:', error);
+      Alert.alert('Lỗi', 'Không thể tải ảnh về máy');
+    }
+  };
+
+  // Hàm chia sẻ media
+  const handleShareMedia = async () => {
+    if (!selectedMedia) return;
+    
+    try {
+      setShowMenu(false);
+      
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (!isAvailable) {
+        Alert.alert('Lỗi', 'Chia sẻ không khả dụng trên thiết bị này');
+        return;
+      }
+
+      await Sharing.shareAsync(selectedMedia.mediaUrl);
+      
+    } catch (error) {
+      console.error('❌ Lỗi khi chia sẻ:', error);
+      Alert.alert('Lỗi', 'Không thể chia sẻ media');
+    }
+  };
+
   const handleSend = async () => {
     if (sending) return;
     
@@ -367,6 +566,75 @@ export default function MessageBoxScreen() {
         }
       } catch (err) {
         Alert.alert("Lỗi gửi ảnh", "Không gửi được ảnh");
+      }
+      setSending(false);
+      return;
+    }
+
+    // Nếu có file, upload trước
+    if (selectedFile) {
+      setFileLoading(true); // Set loading khi bắt đầu gửi
+      
+      const localUri = selectedFile.uri;
+      const filename = selectedFile.name || localUri.split("/").pop();
+      const fileObj = {
+        uri: localUri,
+        name: filename,
+        type: selectedFile.mimeType || 'application/octet-stream',
+      };
+      
+      try {
+        const uploadRes = await chatService.uploadMedia(
+          fileObj,
+          token as string
+        );
+        
+        if (uploadRes.success && uploadRes.data.url) {
+          // Thêm tin nhắn tạm thời vào messages
+          const tempMsg = {
+            sender: myId,
+            receiver: userId,
+            content: filename || "File",
+            mediaUrl: uploadRes.data.url,
+            type: "file",
+            createdAt: new Date().toISOString(),
+            status: "sending",
+            avatar: null,
+          };
+          setMessages((prev) => { const next = [...prev, tempMsg]; return next; });
+          // Invalidate cache để đảm bảo data luôn fresh
+          // invalidateMessages(userId as string); // This line is removed
+          await chatService.sendMessageAPI(
+            {
+              receiver: userId,
+              content: filename || "File",
+              mediaUrl: uploadRes.data.url,
+              type: "file",
+            },
+            token as string
+          );
+          const actualUserId = myId as string;
+          chatService.sendMessageSocket(actualUserId, {
+            sender: actualUserId,
+            receiver: userId,
+            content: filename || "File",
+            mediaUrl: uploadRes.data.url,
+            type: "file",
+          });
+          setSelectedFile(null);
+          setFileLoading(false);
+          // Invalidate conversation cache để cập nhật conversation list
+          // invalidateConversations(); // This line is removed
+          // Scroll xuống tin nhắn cuối cùng sau khi gửi
+          setTimeout(() => {
+            flatListRef.current?.scrollToEnd({ animated: true });
+          }, 100);
+        } else {
+          Alert.alert("Lỗi gửi file", uploadRes.message || "Không gửi được file");
+        }
+      } catch (err) {
+        console.error('❌ Lỗi exception khi upload file:', err);
+        Alert.alert("Lỗi gửi file", "Không gửi được file");
       }
       setSending(false);
       return;
@@ -455,22 +723,43 @@ export default function MessageBoxScreen() {
         {isMe && (
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'flex-end', marginBottom: 8, width: '100%' }}>
             <View style={{ flexShrink: 1, flexGrow: 1, maxWidth: '90%', alignItems: 'flex-end' }}>
-              <LinearGradient
-                colors={["#29375C", "#29375C"]}
-                start={{ x: 0, y: 1 }}
-                end={{ x: 1, y: 1 }}
-                style={[styles.bubble, styles.bubbleMe]}
-              >
-                {item.mediaUrl && item.type === "image" ? (
-                  <Image
-                    source={{ uri: item.mediaUrl }}
-                    style={{
-                      width: 180,
-                      height: 180,
-                      borderRadius: 12,
-                      marginBottom: 4,
-                    }}
-                  />
+                             <LinearGradient
+                 colors={["#29375C", "#29375C"]}
+                 start={{ x: 0, y: 1 }}
+                 end={{ x: 1, y: 1 }}
+                 style={[styles.bubble, styles.bubbleMe]}
+               >
+                 {item.mediaUrl && item.type === "image" ? (
+                   <TouchableOpacity
+                     onPress={() => handlePressImage(item)}
+                     onLongPress={() => handleLongPressMedia(item)}
+                     activeOpacity={0.8}
+                   >
+                     <Image
+                       source={{ uri: item.mediaUrl }}
+                       style={{
+                         width: 180,
+                         height: 180,
+                         borderRadius: 12,
+                         marginBottom: 4,
+                       }}
+                     />
+                   </TouchableOpacity>
+                                                  ) : item.mediaUrl && item.type === "file" ? (
+                    <TouchableOpacity
+                      onPress={() => handlePressFile(item)}
+                      onLongPress={() => handleLongPressMedia(item)}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.fileMessageContainer}>
+                        <Ionicons name="document" size={32} color="#fff" />
+                        <Text style={[styles.messageText, { color: '#fff', marginLeft: 8 }]} numberOfLines={1}>
+                          {(item.content || "File").length > 20 
+                            ? (item.content || "File").substring(0, 20) + "..." 
+                            : (item.content || "File")}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
                 ) : (
                   <Text style={[styles.messageText, { color: '#fff' }]}> {(item.content || "").replace(/^[\s\n]+|[\s\n]+$/g, "")}</Text>
                 )}
@@ -509,17 +798,38 @@ export default function MessageBoxScreen() {
               <View style={styles.avatar} />
             )}
             <View style={{ flexShrink: 1, flexGrow: 1, maxWidth: '90%', alignItems: 'flex-start' }}>
-              <View style={[styles.bubble, styles.bubbleOther]}>
-                {item.mediaUrl && item.type === "image" ? (
-                  <Image
-                    source={{ uri: item.mediaUrl }}
-                    style={{
-                      width: 180,
-                      height: 180,
-                      borderRadius: 12,
-                      marginBottom: 4,
-                    }}
-                  />
+                             <View style={[styles.bubble, styles.bubbleOther]}>
+                 {item.mediaUrl && item.type === "image" ? (
+                   <TouchableOpacity
+                     onPress={() => handlePressImage(item)}
+                     onLongPress={() => handleLongPressMedia(item)}
+                     activeOpacity={0.8}
+                   >
+                     <Image
+                       source={{ uri: item.mediaUrl }}
+                       style={{
+                         width: 180,
+                         height: 180,
+                         borderRadius: 12,
+                         marginBottom: 4,
+                       }}
+                     />
+                   </TouchableOpacity>
+                                                  ) : item.mediaUrl && item.type === "file" ? (
+                    <TouchableOpacity
+                      onPress={() => handlePressFile(item)}
+                      onLongPress={() => handleLongPressMedia(item)}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.fileMessageContainer}>
+                        <Ionicons name="document" size={32} color="#fff" />
+                        <Text style={[styles.messageText, styles.textOther, { marginLeft: 8 }]} numberOfLines={1}>
+                          {(item.content || "File").length > 20 
+                            ? (item.content || "File").substring(0, 20) + "..." 
+                            : (item.content || "File")}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
                 ) : (
                   <Text style={[styles.messageText, styles.textOther]}>
                     {(item.content || "").replace(/^[\s\n]+|[\s\n]+$/g, "")}
@@ -658,7 +968,7 @@ export default function MessageBoxScreen() {
                 />
               )}
             </View>
-            {/* Preview ảnh đã chọn (nếu có) và input gửi tin nhắn */}
+            {/* Preview ảnh và file đã chọn (nếu có) và input gửi tin nhắn */}
             <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
               <View style={styles.inputContainer}>
                 {selectedImage && (
@@ -693,13 +1003,46 @@ export default function MessageBoxScreen() {
                     </TouchableOpacity>
                   </View>
                 )}
+                {selectedFile && (
+                  <View style={styles.filePreviewContainer}>
+                    {fileLoading ? (
+                      <View style={{ padding: 20, alignItems: 'center', justifyContent: 'center' }}>
+                        <ActivityIndicator size="large" color="#29375C" />
+                      </View>
+                    ) : (
+                      <View style={styles.fileInfo}>
+                        <Ionicons name="document" size={40} color="#29375C" />
+                        <View style={styles.fileDetails}>
+                                                     <Text style={styles.fileName} numberOfLines={1}>
+                             {(selectedFile.name || 'File').length > 20 
+                               ? (selectedFile.name || 'File').substring(0, 20) + "..." 
+                               : (selectedFile.name || 'File')}
+                           </Text>
+                          <Text style={styles.fileSize}>
+                            {selectedFile.size ? `${(selectedFile.size / 1024).toFixed(1)} KB` : 'Unknown size'}
+                          </Text>
+                        </View>
+                      </View>
+                    )}
+                    <TouchableOpacity
+                      onPress={() => {
+                        setSelectedFile(null);
+                        setFileLoading(false);
+                      }}
+                      style={{ marginLeft: 16 }}
+                    >
+                      <Ionicons name="close-circle" size={28} color="red" />
+                    </TouchableOpacity>
+                  </View>
+                )}
                 <View style={styles.inputRow}>
-                  <Ionicons
-                    name="happy-outline"
-                    size={24}
-                    color="#29375C"
+                  <TouchableOpacity
+                    onPress={handlePickFile}
+                    disabled={sending}
                     style={{ marginHorizontal: 8 }}
-                  />
+                  >
+                    <Ionicons name="document-outline" size={24} color="#29375C" />
+                  </TouchableOpacity>
                   <TouchableOpacity
                     onPress={handlePickImage}
                     disabled={sending}
@@ -735,13 +1078,91 @@ export default function MessageBoxScreen() {
                   </TouchableOpacity>
                 </View>
               </View>
-            </TouchableWithoutFeedback>
+                         </TouchableWithoutFeedback>
+           </View>
+         </KeyboardAvoidingView>
+       </View>
+       
+               {/* Menu popup khi long press media */}
+        {showMenu && selectedMedia && (
+          <View style={styles.menuOverlay}>
+            <TouchableOpacity
+              style={styles.menuBackground}
+              onPress={() => setShowMenu(false)}
+              activeOpacity={1}
+            />
+            <View style={styles.menuContainer}>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => {
+                  if (selectedMedia.type === "image") {
+                    handleDownloadImage();
+                  } else if (selectedMedia.type === "file") {
+                    handleDownloadFile();
+                  }
+                }}
+              >
+                <Ionicons name="download-outline" size={24} color="#29375C" />
+                <Text style={styles.menuItemText}>Tải về máy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={handleShareMedia}
+              >
+                <Ionicons name="share-outline" size={24} color="#29375C" />
+                <Text style={styles.menuItemText}>Chia sẻ</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => setShowMenu(false)}
+              >
+                <Ionicons name="close-outline" size={24} color="#A0A0A0" />
+                <Text style={[styles.menuItemText, { color: '#A0A0A0' }]}>Hủy</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </KeyboardAvoidingView>
-      </View>
-    </SafeScreen>
-  );
-}
+        )}
+
+        {/* Modal xem ảnh */}
+        {showImageViewer && selectedImageForViewer && (
+          <Animated.View 
+            style={[
+              styles.imageViewerOverlay,
+              {
+                opacity: imageViewerOpacity,
+              }
+            ]}
+          >
+            <TouchableOpacity
+              style={styles.imageViewerBackground}
+              onPress={closeImageViewer}
+              activeOpacity={1}
+            />
+            <Animated.View 
+              style={[
+                styles.imageViewerContainer,
+                {
+                  transform: [{ scale: imageViewerScale }],
+                }
+              ]}
+            >
+              <TouchableOpacity
+                style={styles.imageViewerCloseButton}
+                onPress={closeImageViewer}
+              >
+                <Ionicons name="close-circle" size={32} color="#000" />
+              </TouchableOpacity>
+              <Image
+                source={{ uri: selectedImageForViewer.mediaUrl }}
+                style={styles.imageViewerImage}
+                resizeMode="contain"
+              />
+            </Animated.View>
+          </Animated.View>
+        )}
+      </SafeScreen>
+   );
+ }
 
 const styles = StyleSheet.create({
   header: {
@@ -863,5 +1284,118 @@ const styles = StyleSheet.create({
     padding: 20,
     elevation: 2,
     alignSelf: "stretch",
+  },
+  filePreviewContainer: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 20,
+    elevation: 2,
+    alignSelf: "stretch",
+  },
+  fileInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  fileDetails: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  fileName: {
+    fontSize: responsiveValues.fontSize.md,
+    color: "#29375C",
+    fontFamily: fonts.medium,
+    marginBottom: 4,
+  },
+  fileSize: {
+    fontSize: responsiveValues.fontSize.sm,
+    color: "#A0A0A0",
+    fontFamily: fonts.regular,
+  },
+  fileMessageContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: responsiveValues.padding.xs,
+    maxWidth: "100%",
+    flexShrink: 1,
+  },
+  menuOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000,
+  },
+  menuBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  menuContainer: {
+    position: 'absolute',
+    bottom: 100,
+    left: 20,
+    right: 20,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    paddingVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  menuItemText: {
+    fontSize: responsiveValues.fontSize.md,
+    color: '#29375C',
+    fontFamily: fonts.medium,
+    marginLeft: 12,
+  },
+  imageViewerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1001,
+  },
+  imageViewerBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+  },
+  imageViewerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    // Đảm bảo transform hoạt động mượt mà
+    backfaceVisibility: 'hidden',
+  },
+  imageViewerCloseButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 1002,
+  },
+  imageViewerImage: {
+    width: '100%',
+    height: '100%',
   },
 });
