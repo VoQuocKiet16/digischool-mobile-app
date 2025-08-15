@@ -1,3 +1,4 @@
+import { MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -38,12 +39,14 @@ export default function TeacherLeaveRequestInfoScreen() {
   const [showLoading, setShowLoading] = useState(false);
   const [loadingSuccess, setLoadingSuccess] = useState(false);
 
-  // Hiển thị danh sách tiết xin nghỉ
-  const lessons = selectedSlots.map((slot: any, idx: number) => ({
-    day: days[slot.col],
-    period: slot.row + 1,
-    subject: subjects[idx] || "",
-  }));
+  // Hiển thị danh sách tiết xin nghỉ theo ngày
+  const lessonsByDay: Record<string, { lessons: string[] }> = {};
+  selectedSlots.forEach((slot: any, idx: number) => {
+    const day = days[slot.col];
+    if (!lessonsByDay[day]) lessonsByDay[day] = { lessons: [] };
+    lessonsByDay[day].lessons.push(subjects[idx] || "");
+  });
+  const lessonsByDayArr = Object.entries(lessonsByDay);
 
   const handleNext = () => {
     if (reason.trim()) {
@@ -121,19 +124,41 @@ export default function TeacherLeaveRequestInfoScreen() {
                   <View style={styles.cardHeaderBar} />
                   <Text style={styles.cardTitle}>Tiết dạy xin nghỉ</Text>
                   <View style={{ flex: 1 }} />
+                  <MaterialIcons
+                    name="edit"
+                    size={22}
+                    color="#29345C"
+                    style={styles.editIcon}
+                    onPress={() => {
+                      router.push({
+                        pathname: "/teachers/leave_request/leave_request",
+                        params: {
+                          selectedSlots: JSON.stringify(selectedSlots),
+                          lessonIds: JSON.stringify(lessonIds),
+                          reason,
+                        },
+                      });
+                    }}
+                  />
                 </View>
-                {lessons.map(
-                  (
-                    lesson: { day: string; period: number; subject: string },
-                    idx: number
-                  ) => (
-                    <View key={`lesson-${idx}`} style={styles.lessonTagCard}>
-                      <Text
-                        style={styles.lessonTagTextCard}
-                      >{`${lesson.day} - Tiết ${lesson.period} - ${lesson.subject}`}</Text>
+                {lessonsByDayArr.map(([day, { lessons }], dayIdx) => (
+                  <View key={`day-${dayIdx}`} style={styles.dayBlock}>
+                    <View style={styles.dayRow}>
+                      <MaterialIcons
+                        name="calendar-month"
+                        size={18}
+                        color="#29375C"
+                        style={{ marginRight: 8 }}
+                      />
+                      <Text style={styles.dayText}>{day}</Text>
                     </View>
-                  )
-                )}
+                    {lessons.map((subject, lessonIdx) => (
+                      <View key={`lesson-${dayIdx}-${lessonIdx}`} style={styles.lessonTagCard}>
+                        <Text style={styles.lessonTagTextCard}>{subject}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ))}
               </View>
               <View style={styles.confirmInputBox}>
                 <Text style={styles.confirmLabel}>Lý do xin nghỉ dạy</Text>
@@ -270,5 +295,26 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginLeft: 2,
     marginTop: -2,
+  },
+  editIcon: {
+    marginLeft: 8,
+    marginRight: 2,
+    backgroundColor: "#e6eef2",
+    borderRadius: 100,
+    padding: 10,
+  },
+  dayBlock: {
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  dayRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  dayText: {
+    color: "#29375C",
+    fontFamily: fonts.semiBold,
+    fontSize: 16,
   },
 });
