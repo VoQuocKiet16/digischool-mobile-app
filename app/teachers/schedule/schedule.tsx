@@ -460,6 +460,7 @@ export default function ScheduleTeachersScreen() {
               periods={periods}
               days={days}
               scheduleData={displayedData}
+              fullScheduleData={scheduleData}
               onAddActivity={handleAddActivity}
               onSlotPress={handleSlotDetail}
               currentDayIndex={currentDayIndex}
