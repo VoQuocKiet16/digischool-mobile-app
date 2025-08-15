@@ -2,14 +2,14 @@ import { useUserContext } from '@/contexts/UserContext';
 import { registerDeviceToken } from '@/services/push_token.service';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
-  AuthorizationStatus,
-  getInitialNotification,
-  getMessaging,
-  getToken,
-  onMessage,
-  onNotificationOpenedApp,
-  onTokenRefresh,
-  requestPermission,
+    AuthorizationStatus,
+    getInitialNotification,
+    getMessaging,
+    getToken,
+    onMessage,
+    onNotificationOpenedApp,
+    onTokenRefresh,
+    requestPermission,
 } from '@react-native-firebase/messaging';
 import { useEffect } from 'react';
 import { Alert, Platform } from 'react-native';
