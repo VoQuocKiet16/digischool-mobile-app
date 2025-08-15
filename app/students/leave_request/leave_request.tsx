@@ -2,19 +2,18 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Modal,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from "react-native";
 import HeaderLayout from "../../../components/layout/HeaderLayout";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
 import ScheduleHeader from "../../../components/schedule/ScheduleHeader";
-import { getStudentSchedule } from "../../../services/schedule.service";
+import { getAvailableAcademicYearsAndWeeks, getCurrentWeek, getStudentSchedule } from "../../../services/schedule.service";
 import { Activity } from "../../../types/schedule.types";
 import { fonts } from "../../../utils/responsive";
 
@@ -92,73 +91,149 @@ export default function LeaveRequestScreen() {
   const [weekNumber, setWeekNumber] = useState(1);
   const [availableYears, setAvailableYears] = useState<string[]>([]);
   const [availableWeeks, setAvailableWeeks] = useState<number[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Bắt đầu với loading = true
   const [error, setError] = useState("");
   const [showYearModal, setShowYearModal] = useState(false);
   const [showWeekModal, setShowWeekModal] = useState(false);
+  
+  // Flag để tránh gọi API trùng lặp
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Function để lấy danh sách năm học và tuần có sẵn, đồng thời xác định tuần hiện tại
+  const fetchAvailableData = async () => {
+    setLoading(true); // Bắt đầu loading
+    try {
+      // Gọi 2 API song song để tối ưu thời gian
+      const [currentWeekResponse, availableWeeksResponse] = await Promise.all([
+        getCurrentWeek(),
+        getAvailableAcademicYearsAndWeeks()
+      ]);
+      
+      if (currentWeekResponse.success && availableWeeksResponse.success) {
+        const { academicYear, weekNumber: currentWeekNumber } = currentWeekResponse.data;
+        const { availableAcademicYears, currentAcademicYear } = availableWeeksResponse.data;
+        
+        // Lấy danh sách năm học
+        const years = availableAcademicYears.map((year: any) => year.name);
+        setAvailableYears(years);
+        
+        // Sử dụng thông tin tuần hiện tại từ API mới
+        if (academicYear && currentWeekNumber) {
+          setYear(academicYear);
+          setWeekNumber(currentWeekNumber);
+          
+          // Lấy danh sách tuần có sẵn cho năm học hiện tại
+          const currentYearData = availableAcademicYears.find(
+            (year: any) => year.name === academicYear
+          );
+          if (currentYearData) {
+            setAvailableWeeks(currentYearData.weekNumbers);
+          }
+        } else if (currentAcademicYear && years.includes(currentAcademicYear.name)) {
+          // Fallback: nếu không có currentWeek, dùng currentAcademicYear
+          setYear(currentAcademicYear.name);
+          
+          // Lấy tuần đầu tiên có sẵn của năm học hiện tại
+          const currentYearData = availableAcademicYears.find((year: any) => year.name === currentAcademicYear.name);
+          if (currentYearData && currentYearData.weekNumbers.length > 0) {
+            setWeekNumber(currentYearData.weekNumbers[0]);
+            setAvailableWeeks(currentYearData.weekNumbers);
+          }
+        } else if (years.length > 0) {
+          // Fallback cuối cùng: dùng năm đầu tiên có sẵn
+          setYear(years[0]);
+          const firstYearData = availableAcademicYears.find((year: any) => year.name === years[0]);
+          if (firstYearData && firstYearData.weekNumbers.length > 0) {
+            setWeekNumber(firstYearData.weekNumbers[0]);
+            setAvailableWeeks(firstYearData.weekNumbers);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching available data:", err);
+      // Fallback: giữ nguyên giá trị mặc định
+    }
+  };
+
+  const fetchSchedule = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const userClassStr = (await AsyncStorage.getItem("userClass")) || "";
+      let className = "";
+      try {
+        const userClassObj = JSON.parse(userClassStr);
+        className = userClassObj.className || userClassObj.id || "";
+      } catch (parseError) {
+        className = userClassStr;
+      }
+      const data = await getStudentSchedule({
+        className,
+        academicYear: year,
+        weekNumber,
+      });
+      const {
+        schedule,
+        lessonIds: newLessonIds,
+        academicYear: responseYear,
+        weekNumber: responseWeek,
+      } = mapApiToScheduleData(data);
+      setScheduleData(schedule);
+      setLessonIds(newLessonIds);
+      
+      // Lấy availableYears, availableWeeks từ response nếu có
+      const years =
+        data?.data?.availableYears ||
+        data?.data?.weeklySchedule?.availableYears ||
+        [];
+      if (Array.isArray(years) && years.length > 0) setAvailableYears(years);
+      const weeks =
+        data?.data?.availableWeeks ||
+        data?.data?.weeklySchedule?.availableWeeks ||
+        [];
+      if (Array.isArray(weeks) && weeks.length > 0) setAvailableWeeks(weeks);
+      
+      // Cập nhật năm học và tuần từ response nếu có
+      if (responseYear && responseYear !== year) {
+        setYear(responseYear);
+      }
+      if (responseWeek && responseWeek !== weekNumber) {
+        setWeekNumber(responseWeek);
+      }
+    } catch (err) {
+      setError("Lỗi tải thời khoá biểu");
+      setScheduleData(
+        Array.from({ length: 10 }, () =>
+          Array.from({ length: 7 }, () => ({ text: "", type: "user-added" }))
+        )
+      );
+      setLessonIds(
+        Array.from({ length: 10 }, () => Array.from({ length: 7 }, () => ""))
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchSchedule = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const userClassStr = (await AsyncStorage.getItem("userClass")) || "";
-        let className = "";
-        try {
-          const userClassObj = JSON.parse(userClassStr);
-          className = userClassObj.className || userClassObj.id || "";
-        } catch (parseError) {
-          className = userClassStr;
-        }
-        const data = await getStudentSchedule({
-          className,
-          academicYear: year,
-          weekNumber,
-        });
-        const {
-          schedule,
-          lessonIds: newLessonIds,
-          academicYear: responseYear,
-          weekNumber: responseWeek,
-        } = mapApiToScheduleData(data);
-        setScheduleData(schedule);
-        setLessonIds(newLessonIds);
-        
-        // Lấy availableYears, availableWeeks từ response nếu có
-        const years =
-          data?.data?.availableYears ||
-          data?.data?.weeklySchedule?.availableYears ||
-          [];
-        if (Array.isArray(years) && years.length > 0) setAvailableYears(years);
-        const weeks =
-          data?.data?.availableWeeks ||
-          data?.data?.weeklySchedule?.availableWeeks ||
-          [];
-        if (Array.isArray(weeks) && weeks.length > 0) setAvailableWeeks(weeks);
-        
-        // Cập nhật năm học và tuần từ response nếu có
-        if (responseYear && responseYear !== year) {
-          setYear(responseYear);
-        }
-        if (responseWeek && responseWeek !== weekNumber) {
-          setWeekNumber(responseWeek);
-        }
-      } catch (err) {
-        setError("Lỗi tải thời khoá biểu");
-        setScheduleData(
-          Array.from({ length: 10 }, () =>
-            Array.from({ length: 7 }, () => ({ text: "", type: "user-added" }))
-          )
-        );
-        setLessonIds(
-          Array.from({ length: 10 }, () => Array.from({ length: 7 }, () => ""))
-        );
-      } finally {
-        setLoading(false);
-      }
+    const initializeSchedule = async () => {
+      if (isInitialized) return; // Tránh gọi lại nếu đã khởi tạo
+      
+      // 1. Đầu tiên lấy thông tin năm học và tuần hiện tại
+      await fetchAvailableData();
+      
+      setIsInitialized(true);
     };
-    fetchSchedule();
-  }, [year, weekNumber]);
+    
+    initializeSchedule();
+  }, [isInitialized]); // Chỉ chạy khi isInitialized thay đổi
+
+  // Tự động fetch schedule khi year hoặc weekNumber thay đổi
+  useEffect(() => {
+    if (isInitialized && year && weekNumber) {
+      fetchSchedule();
+    }
+  }, [year, weekNumber, isInitialized]);
 
   // Modal chọn năm học/tuần học
   const handleChangeYear = () => setShowYearModal(true);
@@ -248,8 +323,9 @@ export default function LeaveRequestScreen() {
             onPressTitle={() =>
               setSession(session === "Buổi sáng" ? "Buổi chiều" : "Buổi sáng")
             }
-            onChangeYear={handleChangeYear}
-            onChangeDateRange={handleChangeWeek}
+            // Không cho phép thay đổi năm học và tuần
+            onChangeYear={undefined}
+            onChangeDateRange={undefined}
           />
           {loading ? (
             <ActivityIndicator
@@ -286,120 +362,7 @@ export default function LeaveRequestScreen() {
               />
             </ScrollView>
           )}
-          {/* Modal chọn năm học */}
-          <Modal visible={showYearModal} transparent animationType="fade">
-            <TouchableOpacity
-              style={{
-                flex: 1,
-                backgroundColor: "rgba(0,0,0,0.2)",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-              activeOpacity={1}
-              onPressOut={() => setShowYearModal(false)}
-            >
-              <View
-                style={{
-                  backgroundColor: "#fff",
-                  borderRadius: 12,
-                  padding: 16,
-                  minWidth: 120,
-                  maxWidth: 200,
-                  minHeight: 80,
-                  maxHeight: 200,
-                  elevation: 5,
-                }}
-              >
-                {availableYears.length > 0 || year ? (
-                  (availableYears.length > 0 ? availableYears : [year]).map(
-                    (y) => (
-                      <TouchableOpacity
-                        key={`year-${y}`}
-                        style={styles.modalItem}
-                        onPress={() => handleSelectYear(y)}
-                      >
-                        <Text style={styles.modalItemText}>{y}</Text>
-                      </TouchableOpacity>
-                    )
-                  )
-                ) : (
-                  <Text
-                    style={{
-                      fontSize: 16,
-                      color: "#3A546D",
-                      textAlign: "center",
-                    }}
-                  >
-                    Không có dữ liệu
-                  </Text>
-                )}
-              </View>
-            </TouchableOpacity>
-          </Modal>
-          {/* Modal chọn tuần */}
-          <Modal visible={showWeekModal} transparent animationType="fade">
-            <TouchableOpacity
-              style={{
-                flex: 1,
-                backgroundColor: "rgba(0,0,0,0.2)",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-              activeOpacity={1}
-              onPressOut={() => setShowWeekModal(false)}
-            >
-              <View
-                style={{
-                  backgroundColor: "#fff",
-                  borderRadius: 12,
-                  padding: 16,
-                  minWidth: 120,
-                  maxWidth: 200,
-                  minHeight: 80,
-                  maxHeight: 400,
-                  elevation: 5,
-                }}
-              >
-                {availableWeeks.length > 0 || weekNumber ? (
-                  (availableWeeks.length > 0
-                    ? availableWeeks
-                    : [weekNumber]
-                  ).map((week) => (
-                    <TouchableOpacity
-                      key={`week-${week}`}
-                      style={styles.modalItem}
-                      onPress={() =>
-                        handleSelectWeek({
-                          weekNumber: week,
-                          label: `Tuần ${week}`,
-                        })
-                      }
-                    >
-                      <Text
-                        style={{
-                          fontSize: 16,
-                          color: "#3A546D",
-                          textAlign: "center",
-                        }}
-                      >
-                        {`Tuần ${week}`}
-                      </Text>
-                    </TouchableOpacity>
-                  ))
-                ) : (
-                  <Text
-                    style={{
-                      fontSize: 16,
-                      color: "#3A546D",
-                      textAlign: "center",
-                    }}
-                  >
-                    Không có dữ liệu
-                  </Text>
-                )}
-              </View>
-            </TouchableOpacity>
-          </Modal>
+          {/* Không hiển thị modal chọn năm học và tuần */}
           <View style={styles.legendRow}>
             <View style={styles.legendItem}>
               <View style={styles.legendBox} />
