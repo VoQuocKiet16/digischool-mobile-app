@@ -3,13 +3,13 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Modal,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import RefreshableScrollView from "../../../components/RefreshableScrollView";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
@@ -101,6 +101,7 @@ function mapApiToScheduleData(apiData: any): {
 
   // Map các hoạt động cá nhân vào slot và xử lý xung đột
   const activities = apiData?.data?.studentPersonalActivities || [];
+  
   activities.forEach((activity: any) => {
     const date = new Date(activity.date);
     const startDate = new Date(apiData?.data?.weeklySchedule?.startDate);
@@ -108,12 +109,12 @@ function mapApiToScheduleData(apiData: any): {
       (date.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)
     );
     const periodIndex = (activity.period || 1) - 1;
+    
     if (periodIndex >= 0 && periodIndex < 10 && dayIndex >= 0 && dayIndex < 7) {
       const existingSlot = schedule[periodIndex][dayIndex];
       
       // Kiểm tra xung đột: nếu slot đã có môn học
       if (existingSlot && existingSlot.type === "default" && existingSlot.text) {
-        // Tạo slot xung đột với thông tin cả môn học và hoạt động
         schedule[periodIndex][dayIndex] = {
           text: `${existingSlot.text} + ${activity.title}`,
           type: "conflict", // Loại slot mới để xử lý xung đột
@@ -134,7 +135,6 @@ function mapApiToScheduleData(apiData: any): {
           hasConflict: true, // Flag để UI biết có xung đột
         };
       } else {
-        // Không có xung đột, thêm hoạt động bình thường
         schedule[periodIndex][dayIndex] = {
           text: activity.title,
           type: "user-activity",
@@ -286,6 +286,12 @@ export default function ScheduleStudentsScreen() {
       const nextDateRange = startDate && endDate ? { start: startDate, end: endDate } : null;
       if (nextDateRange) setDateRange(nextDateRange);
 
+      // Load hoạt động cá nhân từ AsyncStorage và merge vào schedule
+      if (startDate && !forceRefresh) {
+        // Bỏ logic merge hoạt động cá nhân từ AsyncStorage - chỉ lấy từ API
+        // Hoạt động cá nhân sẽ được xử lý trực tiếp từ API response
+      }
+
       // Lấy availableYears và availableWeeks từ response
       const years = data?.data?.availableYears || data?.data?.weeklySchedule?.availableYears || [];
       const weeks = data?.data?.availableWeeks || data?.data?.weeklySchedule?.availableWeeks || [];
@@ -309,6 +315,7 @@ export default function ScheduleStudentsScreen() {
         } catch (err) {
         }
       }
+
     } catch (err) {
       setError("Lỗi tải thời khóa biểu");
       setScheduleData(initialScheduleData);
@@ -340,7 +347,6 @@ export default function ScheduleStudentsScreen() {
   // Tự động refresh khi màn hình được focus (sau khi thêm hoạt động)
   useFocusEffect(
     React.useCallback(() => {
-      console.log('🔄 Student Schedule: Screen focused, refreshing schedule...');
       
       const refreshSchedule = async () => {
         try {
@@ -349,7 +355,6 @@ export default function ScheduleStudentsScreen() {
           
           // Xóa notification đã xử lý nếu có
           await AsyncStorage.removeItem('scheduleNeedsRefresh');
-          console.log('🔄 Schedule refreshed from API');
         } catch (error) {
           console.error('🔄 Student Schedule: Error refreshing:', error);
         }

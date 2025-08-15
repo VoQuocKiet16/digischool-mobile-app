@@ -162,6 +162,36 @@ const DetailActivityScreen = () => {
   // Function để thông báo TKB cần refresh
   const notifyScheduleRefresh = async (type: 'update' | 'delete', activityData?: any) => {
     try {
+      // Cập nhật AsyncStorage personalActivities
+      const existingActivitiesStr = await AsyncStorage.getItem('personalActivities');
+      let existingActivities = [];
+      
+      if (existingActivitiesStr) {
+        try {
+          existingActivities = JSON.parse(existingActivitiesStr);
+        } catch (parseError) {
+          console.error('Error parsing existing activities:', parseError);
+        }
+      }
+      
+      let updatedActivities = [...existingActivities];
+      
+      if (type === 'delete') {
+        // Xóa hoạt động khỏi danh sách
+        updatedActivities = existingActivities.filter((activity: any) => 
+          activity._id !== activityData._id
+        );
+      } else if (type === 'update') {
+        // Cập nhật hoạt động trong danh sách
+        updatedActivities = existingActivities.map((activity: any) => 
+          activity._id === activityData._id ? { ...activity, ...activityData } : activity
+        );
+      }
+      
+      // Lưu danh sách đã cập nhật
+      await AsyncStorage.setItem('personalActivities', JSON.stringify(updatedActivities));
+      
+      // Lưu thông báo TKB cần refresh
       const scheduleUpdate = {
         type: type === 'update' ? 'updated_activity' : 'deleted_activity',
         data: activityData || { _id: id, date: dateParam, period: periodParam },
@@ -170,9 +200,9 @@ const DetailActivityScreen = () => {
       };
       
       await AsyncStorage.setItem('scheduleNeedsRefresh', JSON.stringify(scheduleUpdate));
-      console.log('📝 Schedule refresh notification saved:', scheduleUpdate);
+      console.log('📝 Personal activities updated and schedule refresh notification saved:', scheduleUpdate);
     } catch (error) {
-      console.error('Error saving schedule refresh notification:', error);
+      console.error('Error updating personal activities or schedule refresh notification:', error);
     }
   };
 
