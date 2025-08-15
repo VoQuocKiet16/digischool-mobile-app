@@ -44,6 +44,7 @@ interface ScheduleDayProps {
   dateRange?: { start: string; end: string } | null;
   showUtilityButton?: boolean;
   userType?: "student" | "teacher"; // Thêm prop để phân biệt user type
+  hidePastSlots?: boolean; // Thêm prop để ẩn slot ở quá khứ (chỉ dùng trong leave request)
 }
 
 const DAY_COL_WIDTH = 90;
@@ -94,6 +95,7 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
   dateRange,
   showUtilityButton = false,
   userType,
+  hidePastSlots,
 }) => {
   const [currentDay, setCurrentDay] = useState(getTodayIndex());
   const currentDayIndex =
@@ -298,7 +300,15 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
               slotText = "Thêm";
             }
             const isCurrentDay = currentDayIndex === dayIndex;
-            if (hideNullSlot && (!slotData.text || slotData.text === "")) {
+            
+            // Kiểm tra xem slot có ở quá khứ không (chỉ khi hidePastSlots = true)
+            const isPastSlot = hidePastSlots && currentDayIndex !== undefined && dayIndex < currentDayIndex;
+            
+            // Ẩn slot nếu: 1) hideNullSlot và không có text, hoặc 2) slot ở quá khứ (chỉ khi hidePastSlots = true)
+            if (
+              (hideNullSlot && (!slotData.text || slotData.text === "")) ||
+              isPastSlot
+            ) {
               return (
                 <View
                   key={`slot-${periodIndex}-${dayIndex}-empty`}
