@@ -83,6 +83,19 @@ export const completeLesson = async (lessonId: string): Promise<any> => {
   }
 };
 
+export const getCurrentWeek = async (date?: string) => {
+  try {
+    const url = date 
+      ? `/api/schedules/current-week?date=${date}`
+      : "/api/schedules/current-week";
+    const response = await api.get(url);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching current week:", error);
+    throw error;
+  }
+};
+
 export const getAvailableAcademicYearsAndWeeks = async () => {
   try {
     const response = await api.get("/api/schedules/available-academic-years-weeks");
