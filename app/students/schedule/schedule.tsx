@@ -509,6 +509,7 @@ export default function ScheduleStudentsScreen() {
               }
               dateRange={dateRange}
               showUtilityButton={true}
+              userType="student"
             />
           </View>
         </RefreshableScrollView>

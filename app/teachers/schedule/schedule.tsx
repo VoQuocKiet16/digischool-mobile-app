@@ -504,6 +504,7 @@ export default function ScheduleTeachersScreen() {
               }
               dateRange={dateRange}
               showUtilityButton={true}
+              userType="teacher"
             />
           </View>
         </RefreshableScrollView>

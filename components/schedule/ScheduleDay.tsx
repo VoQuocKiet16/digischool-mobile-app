@@ -43,6 +43,7 @@ interface ScheduleDayProps {
   isSwapLesson?: boolean;
   dateRange?: { start: string; end: string } | null;
   showUtilityButton?: boolean;
+  userType?: "student" | "teacher"; // Thêm prop để phân biệt user type
 }
 
 const DAY_COL_WIDTH = 90;
@@ -92,6 +93,7 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
   isSwapLesson = false,
   dateRange,
   showUtilityButton = false,
+  userType,
 }) => {
   const [currentDay, setCurrentDay] = useState(getTodayIndex());
   const currentDayIndex =
@@ -345,6 +347,7 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
                   type={slotData.type}
                   slotData={slotData}
                   isSwapLesson={isSwapLesson}
+                  userType={userType}
                 />
               </View>
             );

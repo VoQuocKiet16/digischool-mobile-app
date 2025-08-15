@@ -30,6 +30,7 @@ interface ScheduleSlotProps {
   type?: string;
   slotData?: any;
   isSwapLesson?: boolean;
+  userType?: "student" | "teacher"; // Thêm prop để phân biệt user type
 }
 
 const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
@@ -48,6 +49,7 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
   type,
   slotData,
   isSwapLesson = false,
+  userType,
 }) => {
   const router = useRouter();
   const [showConflictModal, setShowConflictModal] = useState(false);
@@ -96,11 +98,19 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
   const handleViewLesson = () => {
     setShowConflictModal(false);
     if (slotData?.lessonId) {
-      // Chuyển đến chi tiết môn học
-      router.push({
-        pathname: "/students/lesson_information/lesson_detail",
-        params: { lessonId: slotData.lessonId },
-      });
+      // Chuyển đến chi tiết môn học dựa trên userType
+      if (userType === "teacher") {
+        router.push({
+          pathname: "/teachers/lesson_information/lesson_detail",
+          params: { lessonId: slotData.lessonId },
+        });
+      } else {
+        // Mặc định là student
+        router.push({
+          pathname: "/students/lesson_information/lesson_detail",
+          params: { lessonId: slotData.lessonId },
+        });
+      }
     }
   };
 
