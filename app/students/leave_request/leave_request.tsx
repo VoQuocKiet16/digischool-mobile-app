@@ -360,7 +360,8 @@ export default function LeaveRequestScreen() {
                 )}
                 onSelectSlot={handleSelectSlot}
                 onSlotPress={handleSelectSlot}
-                hideNullSlot={false}
+                hideNullSlot={true}
+                hidePastSlots={true}
               />
             </ScrollView>
           )}

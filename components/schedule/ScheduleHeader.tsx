@@ -1,7 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { responsive, responsiveValues, fonts } from "../../utils/responsive";
+import React, { useState } from "react";
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { fonts } from "../../utils/responsive";
 
 interface ScheduleHeaderProps {
   title: string;
@@ -20,6 +20,8 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
   onChangeYear,
   onChangeDateRange,
 }) => {
+  const [showColorLegend, setShowColorLegend] = useState(false);
+
   return (
     <View style={styles.header}>
       <View style={styles.titleContainer}>
@@ -63,7 +65,64 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
           <Text style={styles.pickerText}>{year}</Text>
           <MaterialIcons name="arrow-drop-down" size={24} color="#FFFFFF" />
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.infoButton}
+          onPress={() => setShowColorLegend(true)}
+        >
+          <MaterialIcons name="info" size={20} color="#29375C" />
+        </TouchableOpacity>
       </View>
+
+      {/* Modal chú thích màu sắc */}
+      <Modal
+        visible={showColorLegend}
+        transparent={true}
+        statusBarTranslucent={true}
+        animationType="fade"
+        onRequestClose={() => setShowColorLegend(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Chú thích màu sắc</Text>
+              <TouchableOpacity
+                onPress={() => setShowColorLegend(false)}
+                style={styles.closeButton}
+              >
+                <MaterialIcons name="close" size={24} color="#959698" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.colorLegendContainer}>
+              <View style={styles.legendItem}>
+                <View style={[styles.colorBox, { backgroundColor: "#29375C" }]} />
+                <Text style={styles.legendText}>Tiết học bình thường</Text>
+              </View>
+            
+              
+              <View style={styles.legendItem}>
+                <View style={[styles.colorBox, { backgroundColor: "#F04438" }]} />
+                <Text style={styles.legendText}>Tiết học vắng mặt</Text>
+              </View>
+              
+              <View style={styles.legendItem}>
+                <View style={[styles.colorBox, { backgroundColor: "#059669" }]} />
+                <Text style={styles.legendText}>Tiết học đã hoàn thành</Text>
+              </View>
+              
+              <View style={styles.legendItem}>
+                <View style={[styles.colorBox, { backgroundColor: "#5F99AE" }]} />
+                <Text style={styles.legendText}>Hoạt động cá nhân</Text>
+              </View>
+              
+              <View style={styles.legendItem}>
+                <View style={[styles.colorBox, { backgroundColor: "#E9762B" }]} />
+                <Text style={styles.legendText}>Xung đột lịch học</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -119,6 +178,59 @@ const styles = StyleSheet.create({
   },
   pickerArrow: {
     color: "#fff",
+  },
+  infoButton: {
+    position: "absolute",
+    right: -50,
+    top: 0,
+    padding: 5,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 20,
+    width: "80%",
+    alignItems: "center",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 15,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontFamily: fonts.bold,
+    color: "#29375C",
+  },
+  closeButton: {
+    padding: 5,
+  },
+  colorLegendContainer: {
+    width: "100%",
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  colorBox: {
+    width: 20,
+    height: 20,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  legendText: {
+    fontSize: 14,
+    fontFamily: fonts.medium,
+    color: "#29375C",
   },
 });
 

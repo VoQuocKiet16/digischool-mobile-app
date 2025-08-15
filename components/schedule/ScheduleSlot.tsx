@@ -30,6 +30,7 @@ interface ScheduleSlotProps {
   type?: string;
   slotData?: any;
   isSwapLesson?: boolean;
+  userType?: "student" | "teacher"; // Thêm prop để phân biệt user type
 }
 
 const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
@@ -48,6 +49,7 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
   type,
   slotData,
   isSwapLesson = false,
+  userType,
 }) => {
   const router = useRouter();
   const [showConflictModal, setShowConflictModal] = useState(false);
@@ -96,11 +98,19 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
   const handleViewLesson = () => {
     setShowConflictModal(false);
     if (slotData?.lessonId) {
-      // Chuyển đến chi tiết môn học
-      router.push({
-        pathname: "/students/lesson_information/lesson_detail",
-        params: { lessonId: slotData.lessonId },
-      });
+      // Chuyển đến chi tiết môn học dựa trên userType
+      if (userType === "teacher") {
+        router.push({
+          pathname: "/teachers/lesson_information/lesson_detail",
+          params: { lessonId: slotData.lessonId },
+        });
+      } else {
+        // Mặc định là student
+        router.push({
+          pathname: "/students/lesson_information/lesson_detail",
+          params: { lessonId: slotData.lessonId },
+        });
+      }
     }
   };
 
@@ -128,38 +138,50 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
   let textStyle = styles.filledSlotText;
   let showNotification = hasNotification;
 
-  // Slot có xung đột
-  if (type === "conflict") {
+  // Xử lý status của lesson - ưu tiên cao nhất
+  if (slotData?.status === "absent" || slotData?.leaveRequestStatus === "approved") {
+    slotStyle = styles.absentSlot;
+    textStyle = styles.absentSlotText;
+    showNotification = true; // Hiển thị notification cho absent hoặc leave request approved
+  } else if (slotData?.status === "completed") {
+    slotStyle = styles.completedSlot;
+    textStyle = styles.completedSlotText;
+  }
+  // Slot có xung đột - chỉ khi không có status đặc biệt
+  else if (type === "conflict") {
     slotStyle = styles.conflictSlot;
     textStyle = styles.conflictSlotText;
     showNotification = true; // Luôn hiển thị notification cho slot xung đột
   }
-  // Slot hoạt động cá nhân
+  // Slot hoạt động cá nhân - chỉ khi không có status đặc biệt
   else if (type === "user-activity") {
     slotStyle = styles.userActivitySlot;
     textStyle = styles.userActivitySlotText;
   }
 
-  if (isEmpty) {
-    slotStyle = styles.emptySlot as any;
-    textStyle = styles.emptySlotText;
-  } else if (isSelected) {
-    slotStyle = styles.selectedSlot;
-    slotText = "Đã chọn";
-    textStyle = styles.selectedSlotText;
-  } else if (cellStatus === "current") {
-    slotStyle = styles.currentSlot;
-    textStyle = styles.currentSlotText;
-  } else if (cellStatus === "exchangeable") {
-    if (isSwapLesson) {
-      slotStyle = styles.filledSlot;
-      textStyle = styles.filledSlotText;
-    } else {
-      slotStyle = styles.exchangeableSlot;
-      textStyle = styles.exchangeableSlotText;
+  // Các logic khác chỉ áp dụng khi không có status đặc biệt
+  if (slotData?.status !== "absent" && slotData?.leaveRequestStatus !== "approved" && slotData?.status !== "completed") {
+    if (isEmpty) {
+      slotStyle = styles.emptySlot as any;
+      textStyle = styles.emptySlotText;
+    } else if (isSelected) {
+      slotStyle = styles.selectedSlot;
+      slotText = "Đã chọn";
+      textStyle = styles.selectedSlotText;
+    } else if (cellStatus === "current") {
+      slotStyle = styles.currentSlot;
+      textStyle = styles.currentSlotText;
+    } else if (cellStatus === "exchangeable") {
+      if (isSwapLesson) {
+        slotStyle = styles.filledSlot;
+        textStyle = styles.filledSlotText;
+      } else {
+        slotStyle = styles.exchangeableSlot;
+        textStyle = styles.exchangeableSlotText;
+      }
+    } else if (isUserAdded) {
+      slotStyle = styles.userAddedSlot;
     }
-  } else if (isUserAdded) {
-    slotStyle = styles.userAddedSlot;
   }
 
   return (
@@ -388,10 +410,10 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semiBold,
   },
   userActivitySlot: {
-    backgroundColor: "#229A89",
+    backgroundColor: "#5F99AE",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#229A89",
+    borderColor: "#5F99AE",
     paddingVertical: 12,
     paddingHorizontal: 10,
     width: "90%",
@@ -414,7 +436,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semiBold,
   },
   conflictSlot: {
-    backgroundColor: "#F04438", // Màu đỏ cho xung đột
+    backgroundColor: "#E9762B", 
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 10,
@@ -430,6 +452,54 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   conflictSlotText: {
+    color: "#fff",
+    fontSize: 9,
+    textAlign: "center",
+    includeFontPadding: false,
+    textAlignVertical: "center",
+    fontFamily: fonts.semiBold,
+  },
+  absentSlot: {
+    backgroundColor: "#F04438", // Màu đỏ cho vắng
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    width: "90%",
+    height: 77,
+    minHeight: 77,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+    elevation: 3,
+  },
+  absentSlotText: {
+    color: "#fff",
+    fontSize: 9,
+    textAlign: "center",
+    includeFontPadding: false,
+    textAlignVertical: "center",
+    fontFamily: fonts.semiBold,
+  },
+  completedSlot: {
+    backgroundColor: "#059669", // Màu xanh lá đậm khác với userActivitySlot
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    width: "90%",
+    height: 77,
+    minHeight: 77,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+    elevation: 3,
+  },
+  completedSlotText: {
     color: "#fff",
     fontSize: 9,
     textAlign: "center",
