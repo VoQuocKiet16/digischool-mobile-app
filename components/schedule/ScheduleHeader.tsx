@@ -77,6 +77,7 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
       <Modal
         visible={showColorLegend}
         transparent={true}
+        statusBarTranslucent={true}
         animationType="fade"
         onRequestClose={() => setShowColorLegend(false)}
       >

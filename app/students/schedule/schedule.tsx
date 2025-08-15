@@ -92,6 +92,7 @@ function mapApiToScheduleData(apiData: any): {
         isMakeupLesson: lesson.isMakeupLesson || false, // Thêm flag để nhận diện tiết dạy bù
         status: lesson.status || "scheduled", // Thêm status từ API
         hasNotification: hasNotification, // Thêm hasNotification dựa trên các trường boolean
+        leaveRequestStatus: lesson.leaveRequestStatus, // Thêm leaveRequestStatus từ API
       };
       if (lesson._id) {
         lessonIds[periodIndex][dayIndex] = lesson._id;
@@ -125,6 +126,8 @@ function mapApiToScheduleData(apiData: any): {
           teacher: existingSlot.teacher,
           isMakeupLesson: existingSlot.isMakeupLesson,
           hasNotification: existingSlot.hasNotification, // Giữ nguyên hasNotification từ lesson
+          status: existingSlot.status, // Giữ nguyên status từ lesson
+          leaveRequestStatus: existingSlot.leaveRequestStatus, // Giữ nguyên leaveRequestStatus từ lesson
           activityData: {
             content: activity.content,
             time: activity.time,

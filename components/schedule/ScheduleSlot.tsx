@@ -139,10 +139,10 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
   let showNotification = hasNotification;
 
   // Xử lý status của lesson - ưu tiên cao nhất
-  if (slotData?.status === "absent") {
+  if (slotData?.status === "absent" || slotData?.leaveRequestStatus === "approved") {
     slotStyle = styles.absentSlot;
     textStyle = styles.absentSlotText;
-    showNotification = true; // Hiển thị notification cho absent
+    showNotification = true; // Hiển thị notification cho absent hoặc leave request approved
   } else if (slotData?.status === "completed") {
     slotStyle = styles.completedSlot;
     textStyle = styles.completedSlotText;
@@ -160,7 +160,7 @@ const ScheduleSlot: React.FC<ScheduleSlotProps> = ({
   }
 
   // Các logic khác chỉ áp dụng khi không có status đặc biệt
-  if (slotData?.status !== "absent" && slotData?.status !== "completed") {
+  if (slotData?.status !== "absent" && slotData?.leaveRequestStatus !== "approved" && slotData?.status !== "completed") {
     if (isEmpty) {
       slotStyle = styles.emptySlot as any;
       textStyle = styles.emptySlotText;
