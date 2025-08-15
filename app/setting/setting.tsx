@@ -2,9 +2,8 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React from "react";
-import { Image, Linking, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Linking, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
-import ConfirmLogoutModal from "../../components/notifications_modal/ConfirmLogoutModal";
 import RefreshableScrollView from "../../components/RefreshableScrollView";
 import { useNotificationContext } from "../../contexts/NotificationContext";
 import { useUserData } from "../../hooks/useUserData";
@@ -13,12 +12,36 @@ import { fonts } from "../../utils/responsive";
 
 const Setting: React.FC = () => {
   const router = useRouter();
-  const { userData, refreshUserData } = useUserData();
+  const { userData, loading, refreshUserData } = useUserData();
   const { reconnectSocket } = useNotificationContext();
-  const [showLogoutModal, setShowLogoutModal] = React.useState(false);
+
+  // Hiển thị loading screen khi đang tải dữ liệu
+  if (loading) {
+    return (
+      <HeaderLayout title="Cài đặt" onBack={() => router.back()}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#29375C" />
+          <Text style={styles.loadingText}>Đang tải thông tin...</Text>
+        </View>
+      </HeaderLayout>
+    );
+  }
+
+  // Hiển thị error state nếu không có dữ liệu usera
+  if (!userData) {
+    return (
+      <HeaderLayout title="Cài đặt" onBack={() => router.back()}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Không thể tải thông tin người dùng</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={refreshUserData}>
+            <Text style={styles.retryText}>Thử lại</Text>
+          </TouchableOpacity>
+        </View>
+      </HeaderLayout>
+    );
+  }
 
   const handleLogout = async () => {
-    setShowLogoutModal(false);
     try {
       // Logout function đã handle việc clear session data
       await logout();
@@ -50,6 +73,24 @@ const Setting: React.FC = () => {
       
       router.replace("/auth/login");
     }
+  };
+
+  const showLogoutAlert = () => {
+    Alert.alert(
+      "Xác nhận đăng xuất",
+      "Bạn có chắc chắn muốn đăng xuất?",
+      [
+        {
+          text: "Hủy",
+          style: "cancel"
+        },
+        {
+          text: "Đăng xuất",
+          style: "destructive",
+          onPress: handleLogout
+        }
+      ]
+    );
   };
 
   const getRoleDisplay = (roles: string[]) => {
@@ -132,7 +173,7 @@ const Setting: React.FC = () => {
         </View>
         <TouchableOpacity
           style={styles.logoutBtn}
-          onPress={() => setShowLogoutModal(true)}
+          onPress={showLogoutAlert}
         >
           <Text style={styles.logoutText}>Đăng xuất</Text>
         </TouchableOpacity>
@@ -207,11 +248,6 @@ const Setting: React.FC = () => {
           </TouchableOpacity>
         </View>
       </RefreshableScrollView>
-      <ConfirmLogoutModal
-        visible={showLogoutModal}
-        onCancel={() => setShowLogoutModal(false)}
-        onConfirm={handleLogout}
-      />
     </HeaderLayout>
   );
 };
@@ -297,6 +333,45 @@ const styles = StyleSheet.create({
   },
   menuArrow: {
     marginLeft: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f7f7f7",
+    paddingVertical: 50,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 18,
+    color: "#29375C",
+    fontFamily: fonts.medium,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f7f7f7",
+    paddingVertical: 50,
+  },
+  errorText: {
+    fontSize: 18,
+    color: "#B71C1C",
+    textAlign: "center",
+    marginBottom: 20,
+    fontFamily: fonts.medium,
+  },
+  retryButton: {
+    backgroundColor: "#29375C",
+    borderRadius: 25,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  retryText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    fontSize: 18,
+    fontFamily: fonts.bold,
   },
 });
 

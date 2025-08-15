@@ -90,6 +90,9 @@ function mapApiToTeacherScheduleData(apiData: any): {
           type: "default",
           status: lesson.status || "scheduled", // Thêm status từ API
           hasNotification: hasNotification, // Thêm hasNotification dựa trên các trường boolean
+          lessonId: lesson._id, // Thêm lessonId để xử lý conflict
+          subject: lesson.subject, // Thêm subject để xử lý conflict
+          teacher: lesson.teacher, // Thêm teacher để xử lý conflict
         };
         if (lesson._id) {
           lessonIds[periodIndex][dayIndex] = lesson._id;
@@ -98,28 +101,60 @@ function mapApiToTeacherScheduleData(apiData: any): {
     }
   });
 
-  // Map các hoạt động cá nhân của giáo viên vào slot
+  // Map các hoạt động cá nhân của giáo viên vào slot SAU KHI môn học đã được đặt
   const activities = apiData?.data?.teacherPersonalActivities || [];
+  
   const startDate = apiData?.data?.startDate
     ? new Date(apiData.data.startDate)
     : null;
   activities.forEach((activity: any) => {
-    if (!startDate) return;
+    if (!startDate) {
+      return;
+    }
     const date = new Date(activity.date);
     const dayIndex = Math.floor(
       (date.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)
     );
     const periodIndex = (activity.period || 1) - 1;
+    
     if (periodIndex >= 0 && periodIndex < 10 && dayIndex >= 0 && dayIndex < 7) {
-      schedule[periodIndex][dayIndex] = {
-        text: activity.title,
-        type: "user-activity",
-        content: activity.content,
-        time: activity.time,
-        remindAt: activity.remindAt,
-        date: activity.date,
-        id: activity._id,
-      };
+      const existingSlot = schedule[periodIndex][dayIndex];
+      
+      // Kiểm tra xung đột: nếu slot đã có môn học
+      if (existingSlot && existingSlot.type === "default" && existingSlot.text) {
+        // Tạo slot xung đột với thông tin cả môn học và hoạt động
+        schedule[periodIndex][dayIndex] = {
+          text: `${existingSlot.text} + ${activity.title}`,
+          type: "conflict",
+          lessonText: existingSlot.text,
+          activityText: activity.title,
+          lessonId: existingSlot.lessonId,
+          subject: existingSlot.subject,
+          teacher: existingSlot.teacher,
+          isMakeupLesson: existingSlot.isMakeupLesson,
+          hasNotification: existingSlot.hasNotification,
+          activityData: {
+            content: activity.content,
+            time: activity.remindMinutes || activity.time,
+            remindAt: activity.remindAt,
+            date: activity.date,
+            id: activity._id,
+          },
+          hasConflict: true,
+        };
+      } else if (!existingSlot || !existingSlot.text || existingSlot.type === "user-added") {
+        // Chỉ thêm hoạt động vào slot trống hoặc slot user-added
+        schedule[periodIndex][dayIndex] = {
+          text: activity.title,
+          type: "user-activity",
+          content: activity.content,
+          time: activity.remindMinutes || activity.time,
+          remindAt: activity.remindAt,
+          date: activity.date,
+          id: activity._id,
+        };
+      }
+      // Nếu slot đã có hoạt động khác hoặc môn học, không ghi đè
     }
   });
 
@@ -223,7 +258,6 @@ export default function ScheduleTeachersScreen() {
   };
 
   const fetchSchedule = useCallback(async (forceRefresh = false) => {
-    console.log('🔄 Fetching teacher schedule from API - Year:', yearRef.current, 'Week:', weekNumberRef.current);
     setLoading(true);
     setError("");
     try {
@@ -243,6 +277,7 @@ export default function ScheduleTeachersScreen() {
         weekNumber: responseWeek,
       } = mapApiToTeacherScheduleData(data);
 
+      // Bỏ logic merge hoạt động cá nhân từ AsyncStorage - chỉ lấy từ API
       setScheduleData(schedule);
       setLessonIds(newLessonIds);
 
@@ -308,7 +343,6 @@ export default function ScheduleTeachersScreen() {
   // Tự động refresh khi màn hình được focus (sau khi thêm hoạt động)
   useFocusEffect(
     React.useCallback(() => {
-      console.log('🔄 Teacher Schedule: Screen focused, refreshing schedule...');
       
       const refreshSchedule = async () => {
         try {
@@ -317,7 +351,6 @@ export default function ScheduleTeachersScreen() {
           
           // Xóa notification đã xử lý nếu có
           await AsyncStorage.removeItem('scheduleNeedsRefresh');
-          console.log('🔄 Teacher schedule refreshed from API');
         } catch (error) {
           console.error('🔄 Teacher Schedule: Error refreshing:', error);
         }
@@ -471,6 +504,7 @@ export default function ScheduleTeachersScreen() {
               }
               dateRange={dateRange}
               showUtilityButton={true}
+              userType="teacher"
             />
           </View>
         </RefreshableScrollView>

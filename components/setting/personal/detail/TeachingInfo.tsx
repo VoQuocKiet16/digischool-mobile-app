@@ -20,7 +20,7 @@ const TeachingInfo: React.FC<TeachingInfoProps> = ({ userData }) => {
 
   const getHomeroomClass = () => {
     if (!userData?.roleInfo?.homeroomClass || !userData.roleInfo.homeroomClass.className) {
-      return "Đang tải...";
+      return "Không";
     }
     return userData.roleInfo.homeroomClass.className;
   };

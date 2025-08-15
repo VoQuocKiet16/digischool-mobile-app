@@ -1,6 +1,3 @@
-import ConfirmDeleteModal from "@/components/notifications_modal/ConfirmDeleteModal";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
 import {
   cancelStudentLeaveRequest,
   deleteTeacherLeaveRequest,
@@ -11,17 +8,13 @@ import {
   cancelSwapRequest,
 } from "@/services/lesson_request.service";
 import { LessonData, StudentLeaveRequest, TeacherLeaveRequest } from "@/types/lesson.types";
-import { fonts } from "@/utils/responsive";
 import { MaterialIcons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import React, { useRef, useState } from "react";
-import {
-  Alert,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
+import { Alert, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { fonts } from "../../utils/responsive";
+import { ThemedText } from "../ThemedText";
+import { ThemedView } from "../ThemedView";
 
 interface Slot_InformationProps {
   onEvaluatePress?: () => void;
@@ -61,6 +54,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
   onRefresh,
   refreshKey,
 }) => {
+  const router = useRouter();
   const [isEditingDesc, setIsEditingDesc] = useState(false);
   const [descValue, setDescValue] = useState(lessonData?.description || "");
   const [showDescriptionCard, setShowDescriptionCard] = useState(
@@ -68,11 +62,8 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
   );
   const [isAddingDescription, setIsAddingDescription] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const textInputRef = useRef<TextInput>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const textInputRef = React.useRef<TextInput>(null);
   const [deleting, setDeleting] = useState(false);
-  const [showLeaveRequestDeleteModal, setShowLeaveRequestDeleteModal] = useState(false);
-  const [deletingLeaveRequest, setDeletingLeaveRequest] = useState(false);
 
   // Cập nhật showDescriptionCard và descValue khi lessonData thay đổi
   React.useEffect(() => {
@@ -296,7 +287,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
   };
 
   const handleDeleteLeaveRequest = async () => {
-    setDeletingLeaveRequest(true);
+    setDeleting(true);
     try {
       if (role === "student") {
         const requestId = lessonData?.studentLeaveRequests?.find((r: StudentLeaveRequest) => r.status === "pending")?._id;
@@ -309,13 +300,82 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
           await deleteTeacherLeaveRequest(requestId);
         }
       }
-      setShowLeaveRequestDeleteModal(false);
+      // setShowLeaveRequestDeleteModal(false); // This state variable was removed
       if (onRefresh) onRefresh();
     } catch (error: any) {
       Alert.alert("Lỗi", error.message || "Không thể xóa yêu cầu nghỉ phép");
     } finally {
-      setDeletingLeaveRequest(false);
+      setDeleting(false);
     }
+  };
+
+  const handleCancelRequest = () => {
+    Alert.alert(
+      "Huỷ yêu cầu",
+      "Bạn có chắc chắn muốn huỷ yêu cầu này?",
+      [
+        {
+          text: "Hủy",
+          style: "cancel",
+        },
+        {
+          text: "Huỷ yêu cầu",
+          style: "destructive",
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              if (pendingRequest?.type === "substitute") {
+                const id = lessonData?.substituteRequests?.[0]?._id;
+                if (!id) return;
+                await cancelSubstituteRequest(id);
+              } else if (pendingRequest?.type === "swap") {
+                const id = lessonData?.swapRequests?.[0]?._id;
+                if (!id) return;
+                await cancelSwapRequest(id);
+              } else if (pendingRequest?.type === "makeup") {
+                const id = lessonData?.makeupRequests?.[0]?._id;
+                if (!id) return;
+                await cancelMakeupRequest(id);
+              }
+              if (onRefresh) onRefresh();
+            } catch (e) {
+              // handle error nếu cần
+            } finally {
+              setDeleting(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleCancelLeaveRequest = () => {
+    Alert.alert(
+      "Huỷ yêu cầu nghỉ phép",
+      "Bạn có chắc chắn muốn huỷ yêu cầu này?",
+      [
+        {
+          text: "Hủy",
+          style: "cancel",
+        },
+        {
+          text: "Huỷ yêu cầu",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              if (lessonData?.studentLeaveRequests?.[0]?._id) {
+                await cancelStudentLeaveRequest(lessonData.studentLeaveRequests[0]._id);
+              } else if (lessonData?.teacherLeaveRequests?.[0]?._id) {
+                await deleteTeacherLeaveRequest(lessonData.teacherLeaveRequests[0]._id);
+              }
+              if (onRefresh) onRefresh();
+            } catch (e) {
+              // handle error nếu cần
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -659,7 +719,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
             </ThemedText>
             <TouchableOpacity
               style={[styles.closeBtn, { marginLeft: "auto", marginRight: 0 }]}
-              onPress={() => setShowDeleteModal(true)}
+              onPress={handleCancelRequest}
             >
               <View style={styles.closeCircle}>
                 <MaterialIcons name="close" size={22} color="#fff" />
@@ -680,36 +740,6 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
               </ThemedText>
             </View>
           </View>
-          <ConfirmDeleteModal
-            visible={showDeleteModal}
-            onCancel={() => setShowDeleteModal(false)}
-            onConfirm={async () => {
-              setDeleting(true);
-              try {
-                if (pendingRequest.type === "substitute") {
-                  const id = lessonData?.substituteRequests?.[0]?._id;
-                  if (!id) return;
-                  await cancelSubstituteRequest(id);
-                } else if (pendingRequest.type === "swap") {
-                  const id = lessonData?.swapRequests?.[0]?._id;
-                  if (!id) return;
-                  await cancelSwapRequest(id);
-                } else if (pendingRequest.type === "makeup") {
-                  const id = lessonData?.makeupRequests?.[0]?._id;
-                  if (!id) return;
-                  await cancelMakeupRequest(id);
-                }
-                setShowDeleteModal(false);
-                if (onRefresh) onRefresh();
-              } catch (e) {
-                // handle error nếu cần
-              } finally {
-                setDeleting(false);
-              }
-            }}
-            title="Huỷ yêu cầu?"
-            message={`Bạn có chắc chắn muốn huỷ yêu cầu này?`}
-          />
         </ThemedView>
       )}
 
@@ -724,7 +754,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
             {canCancelLeaveRequest() && (
               <TouchableOpacity
                 style={[styles.closeBtn, { marginLeft: "auto", marginRight: 0 }]}
-                onPress={() => setShowLeaveRequestDeleteModal(true)}
+                onPress={handleCancelLeaveRequest}
               >
                 <View style={styles.closeCircle}>
                   <MaterialIcons name="close" size={22} color="#fff" />
@@ -758,15 +788,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
               </ThemedText>
             </View>
           </View>
-          {canCancelLeaveRequest() && (
-            <ConfirmDeleteModal
-              visible={showLeaveRequestDeleteModal}
-              onCancel={() => setShowLeaveRequestDeleteModal(false)}
-              onConfirm={handleDeleteLeaveRequest}
-              title="Huỷ yêu cầu nghỉ phép?"
-              message={`Bạn có chắc chắn muốn huỷ yêu cầu nghỉ phép này?`}
-            />
-          )}
+          {/* This modal state variable was removed */}
         </ThemedView>
       )}
     </View>

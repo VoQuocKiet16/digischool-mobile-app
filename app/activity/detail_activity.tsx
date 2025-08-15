@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -11,12 +12,12 @@ import {
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  View
+  View,
 } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import LoadingModal from "../../components/LoadingModal";
-import ConfirmDeleteModal from "../../components/notifications_modal/ConfirmDeleteModal";
 import RemindPicker from "../../components/RemindPicker";
+import ToastNotification from "../../components/ToastNotification";
 import { deleteActivity, updateActivity } from "../../services/activity.service";
 import { fonts } from "../../utils/responsive";
 
@@ -111,7 +112,6 @@ const DetailActivityScreen = () => {
   const [loadingSuccess, setLoadingSuccess] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [error, setError] = useState("");
   const [titleError, setTitleError] = useState("");
   const [detailError, setDetailError] = useState("");
@@ -162,6 +162,36 @@ const DetailActivityScreen = () => {
   // Function để thông báo TKB cần refresh
   const notifyScheduleRefresh = async (type: 'update' | 'delete', activityData?: any) => {
     try {
+      // Cập nhật AsyncStorage personalActivities
+      const existingActivitiesStr = await AsyncStorage.getItem('personalActivities');
+      let existingActivities = [];
+      
+      if (existingActivitiesStr) {
+        try {
+          existingActivities = JSON.parse(existingActivitiesStr);
+        } catch (parseError) {
+          console.error('Error parsing existing activities:', parseError);
+        }
+      }
+      
+      let updatedActivities = [...existingActivities];
+      
+      if (type === 'delete') {
+        // Xóa hoạt động khỏi danh sách
+        updatedActivities = existingActivities.filter((activity: any) => 
+          activity._id !== activityData._id
+        );
+      } else if (type === 'update') {
+        // Cập nhật hoạt động trong danh sách
+        updatedActivities = existingActivities.map((activity: any) => 
+          activity._id === activityData._id ? { ...activity, ...activityData } : activity
+        );
+      }
+      
+      // Lưu danh sách đã cập nhật
+      await AsyncStorage.setItem('personalActivities', JSON.stringify(updatedActivities));
+      
+      // Lưu thông báo TKB cần refresh
       const scheduleUpdate = {
         type: type === 'update' ? 'updated_activity' : 'deleted_activity',
         data: activityData || { _id: id, date: dateParam, period: periodParam },
@@ -170,9 +200,9 @@ const DetailActivityScreen = () => {
       };
       
       await AsyncStorage.setItem('scheduleNeedsRefresh', JSON.stringify(scheduleUpdate));
-      console.log('📝 Schedule refresh notification saved:', scheduleUpdate);
+      console.log('📝 Personal activities updated and schedule refresh notification saved:', scheduleUpdate);
     } catch (error) {
-      console.error('Error saving schedule refresh notification:', error);
+      console.error('Error updating personal activities or schedule refresh notification:', error);
     }
   };
 
@@ -234,40 +264,50 @@ const DetailActivityScreen = () => {
   };
 
   const handleDelete = () => {
-    setShowDeleteModal(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!id) {
-      setError("Không tìm thấy id hoạt động!");
-      return;
-    }
-    setIsDeleting(true);
-    setShowLoading(true);
-    setError("");
-    try {
-      const res = await deleteActivity(id);
-      setShowDeleteModal(false);
-      setShowLoading(false);
-      setIsDeleting(false);
-      if (res.success) {
-        // Thông báo TKB cần refresh
-        await notifyScheduleRefresh('delete', {
-          _id: id,
-          date: dateParam,
-          period: periodParam
-        });
-        
-        router.back();
-      } else {
-        setError(res.message || "Xoá hoạt động thất bại!");
-      }
-    } catch (e) {
-      setShowDeleteModal(false);
-      setShowLoading(false);
-      setIsDeleting(false);
-      setError("Xoá hoạt động thất bại!");
-    }
+    Alert.alert(
+      "Xác nhận xóa",
+      "Bạn có chắc chắn muốn xóa hoạt động này?",
+      [
+        {
+          text: "Hủy",
+          style: "cancel",
+        },
+        {
+          text: "Xóa",
+          style: "destructive",
+          onPress: async () => {
+            if (!id) {
+              setError("Không tìm thấy id hoạt động!");
+              return;
+            }
+            setIsDeleting(true);
+            setShowLoading(true);
+            setError("");
+            try {
+              const res = await deleteActivity(id);
+              setShowLoading(false);
+              setIsDeleting(false);
+              if (res.success) {
+                // Thông báo TKB cần refresh
+                await notifyScheduleRefresh('delete', {
+                  _id: id,
+                  date: dateParam,
+                  period: periodParam
+                });
+                
+                router.back();
+              } else {
+                setError(res.message || "Xoá hoạt động thất bại!");
+              }
+            } catch (e) {
+              setShowLoading(false);
+              setIsDeleting(false);
+              setError("Xoá hoạt động thất bại!");
+            }
+          },
+        },
+      ],
+    );
   };
 
   const subtitle = getActivitySubtitle({ date: dateParam, period });
@@ -401,12 +441,11 @@ const DetailActivityScreen = () => {
                 }
                 success={loadingSuccess}
               />
-              <ConfirmDeleteModal
-                visible={showDeleteModal}
-                onCancel={() => setShowDeleteModal(false)}
-                onConfirm={confirmDelete}
-                title="Xác nhận xóa?"
-                message={`Xóa bỏ sẽ không thể hoàn lại được!\nBạn chắc chắn muốn xóa bỏ?`}
+              <ToastNotification
+                visible={!!error}
+                title="Lỗi"
+                message={error}
+                onClose={() => setError("")}
               />
             </View>
           </ScrollView>

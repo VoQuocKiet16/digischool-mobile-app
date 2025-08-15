@@ -132,18 +132,44 @@ const AddActivityScreen = () => {
   // Function để thông báo TKB cần refresh
   const notifyScheduleRefresh = async (activityData: any) => {
     try {
-      // Lưu thông tin hoạt động mới để TKB có thể detect
+      // Lưu hoạt động mới vào AsyncStorage
+      const existingActivitiesStr = await AsyncStorage.getItem('personalActivities');
+      let existingActivities = [];
+      
+      if (existingActivitiesStr) {
+        try {
+          existingActivities = JSON.parse(existingActivitiesStr);
+        } catch (parseError) {
+          console.error('Error parsing existing activities:', parseError);
+        }
+      }
+      
+      // Thêm hoạt động mới vào danh sách với format đúng
+      const newActivity = {
+        title: activityData.title,
+        content: activityData.content,
+        period: activityData.period,
+        date: activityData.date,
+        remindMinutes: activityData.remindMinutes,
+        _id: activityData._id || `local_${Date.now()}`,
+        createdAt: new Date().toISOString()
+      };
+      
+      const updatedActivities = [...existingActivities, newActivity];
+      await AsyncStorage.setItem('personalActivities', JSON.stringify(updatedActivities));
+      
+      // Lưu thông báo TKB cần refresh
       const scheduleUpdate = {
         type: 'new_activity',
-        data: activityData,
+        data: newActivity,
         timestamp: Date.now(),
         needsRefresh: true
       };
       
       await AsyncStorage.setItem('scheduleNeedsRefresh', JSON.stringify(scheduleUpdate));
-      console.log('📝 Schedule refresh notification saved:', scheduleUpdate);
+      console.log('📝 Activity saved to AsyncStorage and schedule refresh notification sent:', newActivity);
     } catch (error) {
-      console.error('Error saving schedule refresh notification:', error);
+      console.error('Error saving activity to AsyncStorage:', error);
     }
   };
 

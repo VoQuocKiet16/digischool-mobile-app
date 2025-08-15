@@ -380,8 +380,9 @@ export default function TeacherLeaveRequestScreen() {
                 )}
                 onSelectSlot={handleSelectSlot}
                 onSlotPress={handleSelectSlot}
-                hideNullSlot={false}
+                hideNullSlot={true}
                 showUtilityButton={false}
+                hidePastSlots={true}
               />
             </ScrollView>
           )}
