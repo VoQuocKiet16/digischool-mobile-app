@@ -42,7 +42,33 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
         const storedConversations = await AsyncStorage.getItem(`conversations_${currentUserId}`);
         if (storedConversations) {
           console.log('🚀 Loaded conversations from storage, displaying immediately');
-          setChatData(JSON.parse(storedConversations));
+          // Merge với data hiện tại nếu có để không ghi đè unreadCount
+          setChatData(prevData => {
+            const storedData = JSON.parse(storedConversations);
+            if (prevData.length === 0) {
+              return storedData;
+            }
+            
+            // Merge stored data với current data
+            return storedData.map((storedConv: any) => {
+              const existing = prevData.find(
+                (existing: any) => 
+                  existing.userId === storedConv.userId || 
+                  existing.id === storedConv.id ||
+                  existing.userId === storedConv.id ||
+                  existing.id === storedConv.userId
+              );
+              
+              if (existing && existing.unreadCount > 0) {
+                return {
+                  ...storedConv,
+                  unreadCount: existing.unreadCount
+                };
+              }
+              
+              return storedConv;
+            });
+          });
           setLoading(false);
           setIsInitialLoad(false);
         } else {
@@ -59,7 +85,33 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
             const storedConversations = await AsyncStorage.getItem(`conversations_${uid}`);
             if (storedConversations) {
               console.log('🚀 Loaded conversations from storage, displaying immediately');
-              setChatData(JSON.parse(storedConversations));
+              // Merge với data hiện tại nếu có để không ghi đè unreadCount
+              setChatData(prevData => {
+                const storedData = JSON.parse(storedConversations);
+                if (prevData.length === 0) {
+                  return storedData;
+                }
+                
+                // Merge stored data với current data
+                return storedData.map((storedConv: any) => {
+                  const existing = prevData.find(
+                    (existing: any) => 
+                      existing.userId === storedConv.userId || 
+                      existing.id === storedConv.id ||
+                      existing.userId === storedConv.id ||
+                      existing.id === storedConv.userId
+                  );
+                  
+                  if (existing && existing.unreadCount > 0) {
+                    return {
+                      ...storedConv,
+                      unreadCount: existing.unreadCount
+                    };
+                  }
+                  
+                  return storedConv;
+                });
+              });
               setLoading(false);
               setIsInitialLoad(false);
             } else {
@@ -113,7 +165,36 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
       const res = await chatService.getConversations(actualToken);
       if (res.success) {
         console.log('🔄 Fetched fresh conversations from API');
-        setChatData(res.data);
+        // Merge với data hiện tại để giữ lại unreadCount local
+        setChatData(prevData => {
+          const newData = res.data.map((newConversation: any) => {
+            // Tìm conversation tương ứng trong data hiện tại
+            const existingConversation = prevData.find(
+              (existing: any) => 
+                existing.userId === newConversation.userId || 
+                existing.id === newConversation.id ||
+                existing.userId === newConversation.id ||
+                existing.id === newConversation.userId
+            );
+            
+            // Nếu có conversation hiện tại, so sánh và chọn unreadCount phù hợp
+            if (existingConversation) {
+              const existingUnreadCount = existingConversation.unreadCount || 0;
+              const serverUnreadCount = newConversation.unreadCount || 0;
+              
+              return {
+                ...newConversation,
+                // Chỉ cập nhật unreadCount từ server nếu nó lớn hơn local hoặc local = 0
+                unreadCount: existingUnreadCount > 0 ? existingUnreadCount : serverUnreadCount
+              };
+            }
+            
+            // Nếu là conversation mới, dùng unreadCount từ server
+            return newConversation;
+          });
+          
+          return newData;
+        });
         if (myId) {
           await AsyncStorage.setItem(`conversations_${myId}`, JSON.stringify(res.data));
         }
@@ -188,7 +269,12 @@ export default function MessageListScreen({ token = "demo-token" }: Props) {
     
     const handleMessageRead = (data: any) => {
       // Sử dụng hook để mark conversation as read
-      // Không có useChatState nên không có markConversationAsRead
+      // Chỉ xử lý khi chính user này mark as read (không phải người khác)
+      
+      // Kiểm tra xem event này có phải từ user hiện tại không
+      if (data.userId && data.userId !== myId) {
+        return; // Bỏ qua nếu không phải user hiện tại
+      }
       
       // Khi có tin nhắn được mark as read, reset unreadCount cho conversation đó
       setChatData((prevData) => {
