@@ -2,8 +2,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { Alert } from "react-native";
 
-// export const baseURL = "http://192.168.2.226:8080";
-export const baseURL = "https://0d02bbdd263b.ngrok-free.app"; 
+export const baseURL = "http://192.168.3.213:8080";
+// export const baseURL = "https://0d02bbdd263b.ngrok-free.app"; 
 // export const baseURL = "https://digischool-app-374067302360.asia-southeast1.run.app";
 
 const api = axios.create({

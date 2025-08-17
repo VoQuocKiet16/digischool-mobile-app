@@ -2,14 +2,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import LoadingModal from "../../components/LoadingModal";
@@ -19,7 +20,7 @@ import { updatePersonalInfo } from "../../services/auth.service";
 import { fonts } from "../../utils/responsive";
 
 export default function UpdatePersonal() {
-  const { userData } = useUserData();
+  const { userData, loading, error, refreshUserData } = useUserData();
   const [avatar] = useState(require("../../assets/images/avt_default.png"));
   const [role, setRole] = useState("Người dùng");
 
@@ -46,7 +47,33 @@ export default function UpdatePersonal() {
   // Loading state
   const [showLoading, setShowLoading] = useState(false);
   const [loadingSuccess, setLoadingSuccess] = useState(false);
-  const [error, setError] = useState("");
+  const [updateError, setUpdateError] = useState("");
+
+  // Hiển thị loading screen khi đang tải dữ liệu
+  if (loading) {
+    return (
+      <HeaderLayout title="Thông tin cá nhân" onBack={() => router.back()}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#29375C" />
+          <Text style={styles.loadingText}>Đang tải thông tin...</Text>
+        </View>
+      </HeaderLayout>
+    );
+  }
+
+  // Hiển thị error state nếu không có dữ liệu user
+  if (!userData) {
+    return (
+      <HeaderLayout title="Thông tin cá nhân" onBack={() => router.back()}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Không thể tải thông tin người dùng</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={refreshUserData}>
+            <Text style={styles.retryText}>Thử lại</Text>
+          </TouchableOpacity>
+        </View>
+      </HeaderLayout>
+    );
+  }
 
   const handleChangeAvatar = () => {
     // TODO: Implement avatar change functionality
@@ -56,7 +83,7 @@ export default function UpdatePersonal() {
   const handleSave = async () => {
     setShowLoading(true);
     setLoadingSuccess(false);
-    setError("");
+    setUpdateError("");
 
     try {
       // Prepare data for API
@@ -75,11 +102,11 @@ export default function UpdatePersonal() {
           router.back();
         }, 1000);
       } else {
-        setError(response.message || "Cập nhật thông tin thất bại!");
+        setUpdateError(response.message || "Cập nhật thông tin thất bại!");
         setShowLoading(false);
       }
     } catch (error: any) {
-      setError(error.message || "Cập nhật thông tin thất bại!");
+      setUpdateError(error.message || "Cập nhật thông tin thất bại!");
       setShowLoading(false);
     }
   };
@@ -184,5 +211,44 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f7f7f7",
+    paddingVertical: 50,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 18,
+    color: "#29375C",
+    fontFamily: fonts.medium,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f7f7f7",
+    paddingVertical: 50,
+  },
+  errorText: {
+    fontSize: 18,
+    color: "#B71C1C",
+    textAlign: "center",
+    marginBottom: 20,
+    fontFamily: fonts.medium,
+  },
+  retryButton: {
+    backgroundColor: "#29375C",
+    borderRadius: 25,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  retryText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    fontSize: 18,
+    fontFamily: fonts.bold,
   },
 });
