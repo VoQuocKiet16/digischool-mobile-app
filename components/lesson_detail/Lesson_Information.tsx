@@ -525,8 +525,21 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
             Tình trạng tiết học
           </ThemedText>
         </View>
+        
+        {/* Status row cho tiết học được nghỉ */}
+        {lessonData?.status === "absent" && (
+          <View style={styles.statusRowAbsent}>
+            <View style={styles.statusIconWrapAbsent}>
+              <MaterialIcons name="event-busy" size={20} color="#fff" />
+            </View>
+            <ThemedText style={styles.statusTextWhite}>
+              Giáo viên vắng mặt
+            </ThemedText>
+          </View>
+        )}
+        
         {/* Nếu chưa hoàn thành tiết học */}
-        {!isCompleted &&
+        {!isCompleted && lessonData?.status !== "absent" &&
           (role === "teacher" ? (
             <TouchableOpacity
               style={[
@@ -1008,6 +1021,31 @@ const styles = StyleSheet.create({
     height: 24,
     alignItems: "center",
     justifyContent: "center",
+  },
+  statusRowAbsent: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F04438",
+    borderRadius: 24,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    marginBottom: 10,
+    marginLeft: 8,
+    marginRight: 8,
+    marginTop: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  statusIconWrapAbsent: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
   },
 });
 
