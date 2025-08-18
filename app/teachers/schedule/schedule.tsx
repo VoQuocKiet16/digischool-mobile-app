@@ -469,6 +469,7 @@ export default function ScheduleTeachersScreen() {
         onPressTitle={handleSessionToggle}
         onChangeYear={handleChangeYear}
         onChangeDateRange={handleChangeWeek}
+        showInfoButton={true}
       />
       {loading ? (
         <ActivityIndicator

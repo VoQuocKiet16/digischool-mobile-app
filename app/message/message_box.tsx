@@ -8,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as MediaLibrary from "expo-media-library";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
+import * as WebBrowser from "expo-web-browser";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -17,6 +18,7 @@ import {
   Image,
   Keyboard,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   StyleSheet,
   Text,
@@ -70,6 +72,8 @@ export default function MessageBoxScreen() {
   const [imageLoading, setImageLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<any>(null);
   const [fileLoading, setFileLoading] = useState(false);
+  const [openingFile, setOpeningFile] = useState(false);
+  const [sharingFile, setSharingFile] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<any>(null);
   const [showImageViewer, setShowImageViewer] = useState(false);
@@ -108,39 +112,13 @@ export default function MessageBoxScreen() {
     });
   }, []);
 
-  // Bước 1: Load messages từ persistent storage trước (hiển thị ngay)
+  // Load messages từ API
   useEffect(() => {
     if (!isReady) return; // Chờ lấy xong token/myId
 
-    const loadInitialMessages = async () => {
-      // Đọc từ persistent storage trước để hiển thị ngay
-      const storedMessages = await AsyncStorage.getItem(`messages_${userId}`);
-      if (storedMessages) {
-        const parsedMessages = JSON.parse(storedMessages);
-        const sorted = parsedMessages.sort((a: any, b: any) => {
-          const timeA = new Date(a.createdAt || a.time || 0).getTime();
-          const timeB = new Date(b.createdAt || b.time || 0).getTime();
-          return timeA - timeB;
-        });
-        setMessages(sorted);
-        setLoading(false);
-        return;
-      }
-
-      // Nếu không có storage, kiểm tra RAM cache
-      // const cached = getMessages(userId as string); // This line is removed
-      // if (cached?.items && cached.items.length > 0) { // This line is removed
-      //   setMessages(cached.items); // This line is removed
-      //   setLoading(false); // This line is removed
-      //   return; // This line is removed
-      // } // This line is removed
-
-      // Nếu không có cache, gọi API
-      fetchMessagesFromAPI();
-    };
-
-    loadInitialMessages();
-  }, [isReady, userId]); // Removed getMessages and loadMessagesFromStorage
+    // Gọi API ngay lập tức
+    fetchMessagesFromAPI();
+  }, [isReady, userId]);
 
   // Tách fetch messages ra ngoài để có thể gọi lại
   const fetchMessagesFromAPI = async () => {
@@ -157,9 +135,6 @@ export default function MessageBoxScreen() {
           return timeA - timeB;
         });
         setMessages(sorted);
-        // setMessagesCache(userId as string, sorted); // This line is removed
-        // Lưu vào persistent storage
-        AsyncStorage.setItem(`messages_${userId}`, JSON.stringify(sorted));
       } else {
         setError(res.message || "Lỗi không xác định");
         if (!messages.length) setMessages([]);
@@ -172,20 +147,7 @@ export default function MessageBoxScreen() {
     }
   };
 
-  // Bước 2: Sync với API (background, không block UI)
-  useEffect(() => {
-    if (!isReady) return;
 
-    const syncWithAPI = async () => {
-      // Sync ngầm, không hiển thị loading
-      fetchMessagesFromAPI();
-    };
-
-    // Chỉ sync sau khi đã load initial data
-    if (messages.length > 0) {
-      syncWithAPI();
-    }
-  }, [isReady, userId, token, myId]);
 
   // Lắng nghe tin nhắn mới
   useEffect(() => {
@@ -209,13 +171,6 @@ export default function MessageBoxScreen() {
             (!m.mediaUrl || m.mediaUrl === msg.mediaUrl)
         );
         const next = idx !== -1 ? (() => { const arr = [...prev]; arr[idx] = { ...msg }; return arr; })() : [...prev, msg];
-        // setMessagesCache(userId as string, next); // This line is removed
-        
-        // Lưu vào persistent storage
-        AsyncStorage.setItem(`messages_${userId}`, JSON.stringify(next));
-        
-        // Invalidate cache để đảm bảo data luôn fresh
-        // invalidateMessages(userId as string); // This line is removed
         return next;
       });
       flatListRef.current?.scrollToEnd({ animated: true });
@@ -224,7 +179,7 @@ export default function MessageBoxScreen() {
     return () => {
       // ChatContext quản lý lifecycle socket
     };
-  }, [isReady, userId, token, myId]); // Removed setMessagesCache, saveMessagesToStorage, invalidateMessages
+  }, [isReady, userId, token, myId]);
 
   useEffect(() => {
     if (error) {
@@ -372,21 +327,171 @@ export default function MessageBoxScreen() {
     });
   };
 
-  // Hàm xử lý bấm vào file để mở
+  // Hàm xử lý bấm vào file để mở trực tiếp
   const handlePressFile = async (file: any) => {
+    if (openingFile) return; // Prevent multiple opens
+    
     try {
-      const isAvailable = await Sharing.isAvailableAsync();
-      if (!isAvailable) {
-        Alert.alert('Lỗi', 'Chia sẻ không khả dụng trên thiết bị này');
+      setOpeningFile(true);
+      
+      const fileExtension = file.mediaUrl.split('.').pop()?.toLowerCase() || '';
+      
+      // Các loại file có thể xem trực tiếp trong browser
+      const viewableInBrowser = ['pdf', 'txt', 'html', 'htm', 'csv', 'xml', 'json'];
+      
+      // Các loại file Office documents có thể xem qua Google Docs Viewer
+      const officeTypes = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+      
+      // Các loại file ảnh (đã có xử lý riêng)
+      const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
+      
+      if (imageTypes.includes(fileExtension)) {
+        // Đối với ảnh, sử dụng image viewer có sẵn
+        handlePressImage(file);
         return;
       }
-
-      await Sharing.shareAsync(file.mediaUrl);
+      
+      // Mở file trực tiếp từ cloud storage
+      await handleOpenFromCloud(file, fileExtension);
     } catch (error) {
-      console.error('❌ Lỗi khi mở file:', error);
-      Alert.alert('Lỗi', 'Không thể mở file');
+      console.error('❌ Lỗi khi xử lý file:', error);
+      Alert.alert('Lỗi', 'Không thể xử lý file');
+    } finally {
+      setOpeningFile(false);
     }
   };
+
+  // Hàm mở file trực tiếp từ cloud storage
+  const handleOpenFromCloud = async (file: any, fileExtension: string) => {
+    try {
+      const fileUrl = file.mediaUrl;
+      
+      // Các loại file Office documents sử dụng Google Docs Viewer
+      const officeTypes = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+      
+      let urlToOpen = fileUrl;
+      
+      if (officeTypes.includes(fileExtension)) {
+        // Mở file Office qua Google Docs Viewer
+        urlToOpen = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+      }
+      
+      // Mở tất cả file trong in-app browser (không hiển thị menu)
+      await WebBrowser.openBrowserAsync(urlToOpen, {
+        presentationStyle: WebBrowser.WebBrowserPresentationStyle.FORM_SHEET,
+        controlsColor: '#29375C',
+        showTitle: true,
+        enableBarCollapsing: true,
+        showInRecents: false,
+      });
+    } catch (error) {
+      console.error('❌ Lỗi khi mở file từ cloud:', error);
+      Alert.alert('Lỗi', 'Không thể mở file từ cloud storage. Vui lòng kiểm tra kết nối internet.');
+    }
+  };
+
+  // Hàm helper để tải file về và mở (fallback)
+  const handleDownloadAndOpen = async (file: any, fileExtension: string) => {
+    try {
+      // Tạo tên file unique để tránh conflict
+      const fileName = file.content || 'file';
+      const localFileName = `${fileName.replace(/[^a-zA-Z0-9._-]/g, '_')}_${Date.now()}.${fileExtension}`;
+      const localFileUri = FileSystem.documentDirectory + localFileName;
+
+      // Tải file về local trước
+      const downloadResult = await FileSystem.downloadAsync(file.mediaUrl, localFileUri);
+      
+      if (downloadResult && downloadResult.uri) {
+        // Thử mở file bằng Linking trước (cả iOS và Android)
+        let openSuccess = false;
+        
+        try {
+          // Thử Linking.openURL cho cả iOS và Android
+          if (Platform.OS === 'ios') {
+            // iOS: thử mở bằng file:// URL
+            await Linking.openURL(downloadResult.uri);
+            openSuccess = true;
+          } else {
+            // Android: thử mở bằng file:// URL với path đầy đủ
+            const filePath = downloadResult.uri.startsWith('file://') 
+              ? downloadResult.uri 
+              : `file://${downloadResult.uri}`;
+            await Linking.openURL(filePath);
+            openSuccess = true;
+          }
+        } catch (linkingError) {
+          console.log('❌ Linking failed, trying Sharing...', linkingError);
+          openSuccess = false;
+        }
+
+        // Nếu Linking không thành công, dùng Sharing
+        if (!openSuccess) {
+          try {
+            await Sharing.shareAsync(downloadResult.uri, {
+              mimeType: getMimeType(fileExtension),
+              UTI: getUTIForFile(fileExtension),
+            });
+          } catch (sharingError) {
+            console.error('❌ Sharing also failed:', sharingError);
+            Alert.alert('Lỗi', 'Không thể mở file. Vui lòng kiểm tra xem bạn có app phù hợp để mở loại file này không.');
+          }
+        }
+      } else {
+        Alert.alert('Lỗi', 'Không thể tải file');
+      }
+    } catch (error) {
+      console.error('❌ Lỗi khi tải và mở file:', error);
+      Alert.alert('Lỗi', 'Không thể tải và mở file');
+    }
+  };
+
+  // Helper function để xác định UTI cho iOS
+  const getUTIForFile = (extension: string): string => {
+    const ext = extension.toLowerCase();
+    switch (ext) {
+      case 'pdf': return 'com.adobe.pdf';
+      case 'doc': 
+      case 'docx': return 'com.microsoft.word.doc';
+      case 'xls':
+      case 'xlsx': return 'com.microsoft.excel.sheet';
+      case 'ppt':
+      case 'pptx': return 'com.microsoft.powerpoint.presentation';
+      case 'txt': return 'public.plain-text';
+      case 'jpg':
+      case 'jpeg': return 'public.jpeg';
+      case 'png': return 'public.png';
+      case 'mp4': return 'public.mpeg-4';
+      case 'mp3': return 'public.mp3';
+      default: return 'public.data';
+    }
+  };
+
+  // Helper function để xác định MIME type
+  const getMimeType = (extension: string): string => {
+    const ext = extension.toLowerCase();
+    switch (ext) {
+      case 'pdf': return 'application/pdf';
+      case 'doc': return 'application/msword';
+      case 'docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      case 'xls': return 'application/vnd.ms-excel';
+      case 'xlsx': return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      case 'ppt': return 'application/vnd.ms-powerpoint';
+      case 'pptx': return 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+      case 'txt': return 'text/plain';
+      case 'jpg':
+      case 'jpeg': return 'image/jpeg';
+      case 'png': return 'image/png';
+      case 'gif': return 'image/gif';
+      case 'mp4': return 'video/mp4';
+      case 'mp3': return 'audio/mpeg';
+      case 'csv': return 'text/csv';
+      case 'xml': return 'text/xml';
+      case 'json': return 'application/json';
+      default: return 'application/octet-stream';
+    }
+  };
+
+
 
   // Hàm tải file về máy
   const handleDownloadFile = async () => {
@@ -471,9 +576,10 @@ export default function MessageBoxScreen() {
 
   // Hàm chia sẻ media
   const handleShareMedia = async () => {
-    if (!selectedMedia) return;
+    if (!selectedMedia || sharingFile) return;
     
     try {
+      setSharingFile(true);
       setShowMenu(false);
       
       const isAvailable = await Sharing.isAvailableAsync();
@@ -482,11 +588,33 @@ export default function MessageBoxScreen() {
         return;
       }
 
-      await Sharing.shareAsync(selectedMedia.mediaUrl);
+      // Kiểm tra xem có phải URL cloud không
+      if (selectedMedia.mediaUrl.startsWith('http://') || selectedMedia.mediaUrl.startsWith('https://')) {
+        // Nếu là URL cloud, tải file về trước rồi mới share
+        const fileName = selectedMedia.content || 'file';
+        const fileExtension = selectedMedia.mediaUrl.split('.').pop() || '';
+        const localFileName = `${fileName.replace(/[^a-zA-Z0-9._-]/g, '_')}_${Date.now()}.${fileExtension}`;
+        const localFileUri = FileSystem.documentDirectory + localFileName;
+
+        // Tải file về local
+        const downloadResult = await FileSystem.downloadAsync(selectedMedia.mediaUrl, localFileUri);
+        
+        if (downloadResult && downloadResult.uri) {
+          // Share file local
+          await Sharing.shareAsync(downloadResult.uri);
+        } else {
+          Alert.alert('Lỗi', 'Không thể tải file để chia sẻ');
+        }
+      } else {
+        // Nếu đã là file local, share trực tiếp
+        await Sharing.shareAsync(selectedMedia.mediaUrl);
+      }
       
     } catch (error) {
       console.error('❌ Lỗi khi chia sẻ:', error);
-      Alert.alert('Lỗi', 'Không thể chia sẻ media');
+      Alert.alert('Lỗi', 'Không thể chia sẻ file');
+    } finally {
+      setSharingFile(false);
     }
   };
 
@@ -535,8 +663,7 @@ export default function MessageBoxScreen() {
             avatar: null,
           };
           setMessages((prev) => { const next = [...prev, tempMsg]; return next; });
-          // Invalidate cache để đảm bảo data luôn fresh
-          // invalidateMessages(userId as string); // This line is removed
+
           await chatService.sendMessageAPI(
             {
               receiver: userId,
@@ -555,8 +682,7 @@ export default function MessageBoxScreen() {
             type: "image",
           });
           setSelectedImage(null);
-          // Invalidate conversation cache để cập nhật conversation list
-          // invalidateConversations(); // This line is removed
+
           // Scroll xuống tin nhắn cuối cùng sau khi gửi
           setTimeout(() => {
             flatListRef.current?.scrollToEnd({ animated: true });
@@ -602,8 +728,7 @@ export default function MessageBoxScreen() {
             avatar: null,
           };
           setMessages((prev) => { const next = [...prev, tempMsg]; return next; });
-          // Invalidate cache để đảm bảo data luôn fresh
-          // invalidateMessages(userId as string); // This line is removed
+
           await chatService.sendMessageAPI(
             {
               receiver: userId,
@@ -623,8 +748,7 @@ export default function MessageBoxScreen() {
           });
           setSelectedFile(null);
           setFileLoading(false);
-          // Invalidate conversation cache để cập nhật conversation list
-          // invalidateConversations(); // This line is removed
+
           // Scroll xuống tin nhắn cuối cùng sau khi gửi
           setTimeout(() => {
             flatListRef.current?.scrollToEnd({ animated: true });
@@ -750,13 +874,21 @@ export default function MessageBoxScreen() {
                       onPress={() => handlePressFile(item)}
                       onLongPress={() => handleLongPressMedia(item)}
                       activeOpacity={0.8}
+                      disabled={openingFile}
+                      style={openingFile ? { opacity: 0.6 } : {}}
                     >
                       <View style={styles.fileMessageContainer}>
-                        <Ionicons name="document" size={32} color="#fff" />
+                        {openingFile ? (
+                          <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                          <Ionicons name="document" size={32} color="#fff" />
+                        )}
                         <Text style={[styles.messageText, { color: '#fff', marginLeft: 8 }]} numberOfLines={1}>
-                          {(item.content || "File").length > 20 
-                            ? (item.content || "File").substring(0, 20) + "..." 
-                            : (item.content || "File")}
+                          {openingFile ? 'Đang mở file...' : (
+                            (item.content || "File").length > 20 
+                              ? (item.content || "File").substring(0, 20) + "..." 
+                              : (item.content || "File")
+                          )}
                         </Text>
                       </View>
                     </TouchableOpacity>
@@ -820,13 +952,21 @@ export default function MessageBoxScreen() {
                       onPress={() => handlePressFile(item)}
                       onLongPress={() => handleLongPressMedia(item)}
                       activeOpacity={0.8}
+                      disabled={openingFile}
+                      style={openingFile ? { opacity: 0.6 } : {}}
                     >
                       <View style={styles.fileMessageContainer}>
-                        <Ionicons name="document" size={32} color="#fff" />
+                        {openingFile ? (
+                          <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                          <Ionicons name="document" size={32} color="#fff" />
+                        )}
                         <Text style={[styles.messageText, styles.textOther, { marginLeft: 8 }]} numberOfLines={1}>
-                          {(item.content || "File").length > 20 
-                            ? (item.content || "File").substring(0, 20) + "..." 
-                            : (item.content || "File")}
+                          {openingFile ? 'Đang mở file...' : (
+                            (item.content || "File").length > 20 
+                              ? (item.content || "File").substring(0, 20) + "..." 
+                              : (item.content || "File")
+                          )}
                         </Text>
                       </View>
                     </TouchableOpacity>
@@ -862,13 +1002,13 @@ export default function MessageBoxScreen() {
     }
   }, [hasUserInteracted, userId]); // Thêm userId vào dependency để đảm bảo chỉ mark as read cho conversation hiện tại
 
-  // Mark as read khi màn hình box focus trở lại
+  // Mark as read khi màn hình box focus trở lại (chỉ khi user đã tương tác)
   useFocusEffect(
     React.useCallback(() => {
-      if (myId && userId) {
+      if (myId && userId && hasUserInteracted) {
         chatService.markAsRead(myId as string, myId as string, userId as string);
       }
-    }, [myId, userId])
+    }, [myId, userId, hasUserInteracted])
   );
 
   return (
@@ -1106,11 +1246,18 @@ export default function MessageBoxScreen() {
                 <Text style={styles.menuItemText}>Tải về máy</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.menuItem}
+                style={[styles.menuItem, sharingFile && { opacity: 0.6 }]}
                 onPress={handleShareMedia}
+                disabled={sharingFile}
               >
-                <Ionicons name="share-outline" size={24} color="#29375C" />
-                <Text style={styles.menuItemText}>Chia sẻ</Text>
+                {sharingFile ? (
+                  <ActivityIndicator size="small" color="#29375C" />
+                ) : (
+                  <Ionicons name="share-outline" size={24} color="#29375C" />
+                )}
+                <Text style={styles.menuItemText}>
+                  {sharingFile ? 'Đang chia sẻ...' : 'Chia sẻ'}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.menuItem}

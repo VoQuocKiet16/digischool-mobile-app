@@ -10,6 +10,7 @@ interface ScheduleHeaderProps {
   onPressTitle?: () => void;
   onChangeYear?: () => void;
   onChangeDateRange?: () => void;
+  showInfoButton?: boolean;
 }
 
 const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
@@ -19,6 +20,7 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
   onPressTitle,
   onChangeYear,
   onChangeDateRange,
+  showInfoButton = false,
 }) => {
   const [showColorLegend, setShowColorLegend] = useState(false);
 
@@ -65,12 +67,14 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
           <Text style={styles.pickerText}>{year}</Text>
           <MaterialIcons name="arrow-drop-down" size={24} color="#FFFFFF" />
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.infoButton}
-          onPress={() => setShowColorLegend(true)}
-        >
-          <MaterialIcons name="info" size={20} color="#29375C" />
-        </TouchableOpacity>
+        {showInfoButton && (
+          <TouchableOpacity
+            style={styles.infoButton}
+            onPress={() => setShowColorLegend(true)}
+          >
+            <MaterialIcons name="info" size={20} color="#29375C" />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Modal chú thích màu sắc */}
@@ -81,8 +85,16 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
         animationType="fade"
         onRequestClose={() => setShowColorLegend(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowColorLegend(false)}
+        >
+          <TouchableOpacity 
+            style={styles.modalContent}
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+          >
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Chú thích màu sắc</Text>
               <TouchableOpacity
@@ -120,8 +132,8 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
                 <Text style={styles.legendText}>Xung đột lịch học</Text>
               </View>
             </View>
-          </View>
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
     </View>
   );

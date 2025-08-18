@@ -1,14 +1,11 @@
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import {
-  Alert,
-  Modal,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  useWindowDimensions,
-  View,
+    Alert,
+    StyleSheet,
+    Text,
+    useWindowDimensions,
+    View
 } from "react-native";
 import { useUserData } from "../../hooks/useUserData";
 import { PDFService } from "../../services/pdfService";
@@ -97,16 +94,14 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
   userType,
   hidePastSlots,
 }) => {
-  const [currentDay, setCurrentDay] = useState(getTodayIndex());
   const currentDayIndex =
-    propCurrentDayIndex !== undefined ? propCurrentDayIndex : currentDay;
+    propCurrentDayIndex !== undefined ? propCurrentDayIndex : getTodayIndex();
   const { width } = useWindowDimensions();
   const numCols = days.length + 1;
   const colWidth = width / numCols;
   const { userData } = useUserData();
   const router = useRouter();
-  const [dateInfoModalVisible, setDateInfoModalVisible] = useState(false);
-  const [selectedDateInfo, setSelectedDateInfo] = useState("");
+
 
   const handleLeaveRequest = () => {
     const role = userData?.roleInfo?.type;
@@ -208,23 +203,13 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
         {/* Dải phân cách */}
         <View style={{ width: 0.1, height: 22, backgroundColor: "#f7f7f7" }} />
         {days.map((day, idx) => (
-          <TouchableOpacity
+          <View
             key={`day-header-${idx}`}
             style={[
               styles.dayHeaderCell,
               { width: colWidth },
               currentDayIndex === idx && styles.selectedDayButton,
             ]}
-            onPress={() => {
-              setCurrentDay(idx);
-              if (dateRange) {
-                const specificDate = getSpecificDate(dateRange, idx);
-                const formattedDate = formatVietnameseDate(specificDate);
-                setSelectedDateInfo(`${formattedDate}`);
-                setDateInfoModalVisible(true);
-              }
-            }}
-            activeOpacity={0.7}
           >
             <Text
               style={[
@@ -237,29 +222,11 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
             >
               {day}
             </Text>
-          </TouchableOpacity>
+          </View>
         ))}
       </View>
 
-      {/* Modal thông tin ngày */}
-      <Modal
-        visible={dateInfoModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setDateInfoModalVisible(false)}
-        statusBarTranslucent={true}
-      >
-        <TouchableWithoutFeedback
-          onPress={() => setDateInfoModalVisible(false)}
-        >
-          <View style={styles.dateInfoModalOverlay}>
-            <View style={styles.dateInfoModalContent}>
-              <Text style={styles.dateInfoTitle}>Thông tin ngày</Text>
-              <Text style={styles.dateInfoText}>{selectedDateInfo}</Text>
-            </View>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
+
 
       {/* Các hàng tiết */}
       {periods.map((period, periodIndex) => (
@@ -437,29 +404,6 @@ const styles = StyleSheet.create({
   },
   currentDaySlot: {
     backgroundColor: "#BACDDD",
-  },
-  dateInfoModalOverlay: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  dateInfoModalContent: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 20,
-    alignItems: "center",
-  },
-  dateInfoTitle: {
-    color: "#29375C",
-    fontSize: 20,
-    fontFamily: fonts.bold,
-    marginBottom: 10,
-  },
-  dateInfoText: {
-    fontSize: 18,
-    fontFamily: fonts.medium,
-    color: "#29375C",
   },
 });
 
