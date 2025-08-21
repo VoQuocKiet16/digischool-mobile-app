@@ -101,6 +101,7 @@ export default function MessageBoxScreen() {
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
 
   // Lấy token và myId từ AsyncStorage nếu chưa có
   useEffect(() => {
@@ -250,10 +251,7 @@ export default function MessageBoxScreen() {
       (e) => {
         setKeyboardVisible(true);
         setKeyboardHeight(e.endCoordinates.height);
-        // Scroll xuống tin nhắn cuối cùng khi bàn phím xuất hiện
-        setTimeout(() => {
-          flatListRef.current?.scrollToEnd({ animated: true });
-        }, 100);
+        // KHÔNG scroll tự động khi keyboard xuất hiện
       }
     );
     const keyboardDidHideListener = Keyboard.addListener(
@@ -1282,10 +1280,7 @@ export default function MessageBoxScreen() {
             editable={!sending}
             multiline={true}
             onFocus={() => {
-              // Scroll xuống tin nhắn cuối cùng khi focus vào input
-              setTimeout(() => {
-                flatListRef.current?.scrollToEnd({ animated: true });
-              }, 100);
+              // KHÔNG scroll khi focus vào input để giữ nguyên vị trí
             }}
           />
           <TouchableOpacity
@@ -1426,22 +1421,31 @@ export default function MessageBoxScreen() {
                 ]}
                 showsVerticalScrollIndicator={false}
                 onContentSizeChange={() => {
-                  // Chỉ scroll tự động khi không phải user đang scroll
-                  if (!keyboardVisible) {
+                  // Chỉ scroll tự động khi có tin nhắn mới và user chưa tương tác và không đang scroll
+                  if (!hasUserInteracted && !isUserScrolling && messages.length > 0) {
                     flatListRef.current?.scrollToEnd({ animated: true });
                   }
                 }}
                 onLayout={() => {
-                  // Scroll xuống cuối khi layout thay đổi
-                  setTimeout(() => {
-                    flatListRef.current?.scrollToEnd({ animated: false });
-                  }, 100);
+                  // Chỉ scroll xuống cuối khi lần đầu load và user không đang scroll
+                  if (messages.length > 0 && !hasUserInteracted && !isUserScrolling) {
+                    setTimeout(() => {
+                      flatListRef.current?.scrollToEnd({ animated: false });
+                    }, 100);
+                  }
                 }}
                 keyboardShouldPersistTaps="handled"
                 maintainVisibleContentPosition={{
                   minIndexForVisible: 0,
                   autoscrollToTopThreshold: 10,
                 }}
+                removeClippedSubviews={false}
+                maxToRenderPerBatch={10}
+                windowSize={10}
+                onScrollBeginDrag={() => setIsUserScrolling(true)}
+                onScrollEndDrag={() => setIsUserScrolling(false)}
+                onMomentumScrollBegin={() => setIsUserScrolling(true)}
+                onMomentumScrollEnd={() => setIsUserScrolling(false)}
               />
             )}
           </View>
