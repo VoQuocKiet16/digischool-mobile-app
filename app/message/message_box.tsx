@@ -1160,6 +1160,150 @@ export default function MessageBoxScreen() {
     }, [myId, userId, hasUserInteracted])
   );
 
+  // Component render input content để tránh duplicate code
+  const renderInputContent = () => (
+    <TouchableWithoutFeedback
+      onPress={Keyboard.dismiss}
+      accessible={false}
+    >
+      <View style={styles.inputContainer}>
+        {selectedImage && (
+          <View style={styles.imagePreviewContainer}>
+            {imageLoading ? (
+              <View
+                style={{
+                  width: 100,
+                  height: 100,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <ActivityIndicator size="large" color="#29375C" />
+                {/* Render ảnh ẩn để ép sự kiện load */}
+                <Image
+                  source={{ uri: selectedImage.uri }}
+                  style={{
+                    width: 1,
+                    height: 1,
+                    position: "absolute",
+                    opacity: 0,
+                  }}
+                  onLoad={() => setImageLoading(false)}
+                  onLoadEnd={() => setImageLoading(false)}
+                />
+              </View>
+            ) : (
+              <Image
+                source={{ uri: selectedImage.uri }}
+                style={{ width: 100, height: 100, borderRadius: 8 }}
+                onLoad={() => setImageLoading(false)}
+                onLoadEnd={() => setImageLoading(false)}
+              />
+            )}
+            <TouchableOpacity
+              onPress={() => {
+                setSelectedImage(null);
+                setImageLoading(false);
+              }}
+              style={{ marginLeft: -16, marginBottom: 100 }}
+            >
+              <Ionicons name="close-circle" size={28} color="red" />
+            </TouchableOpacity>
+          </View>
+        )}
+        {selectedFile && (
+          <View style={styles.filePreviewContainer}>
+            {fileLoading ? (
+              <View
+                style={{
+                  padding: 20,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <ActivityIndicator size="large" color="#29375C" />
+              </View>
+            ) : (
+              <View style={styles.fileInfo}>
+                <Ionicons name="document" size={40} color="#29375C" />
+                <View style={styles.fileDetails}>
+                  <Text style={styles.fileName} numberOfLines={1}>
+                    {(selectedFile.name || "File").length > 20
+                      ? (selectedFile.name || "File").substring(0, 20) +
+                        "..."
+                      : selectedFile.name || "File"}
+                  </Text>
+                  <Text style={styles.fileSize}>
+                    {selectedFile.size
+                      ? `${(selectedFile.size / 1024).toFixed(1)} KB`
+                      : "Unknown size"}
+                  </Text>
+                </View>
+              </View>
+            )}
+            <TouchableOpacity
+              onPress={() => {
+                setSelectedFile(null);
+                setFileLoading(false);
+              }}
+              style={{ marginLeft: 16 }}
+            >
+              <Ionicons name="close-circle" size={28} color="red" />
+            </TouchableOpacity>
+          </View>
+        )}
+        <View style={styles.inputRow}>
+          <TouchableOpacity
+            onPress={handlePickFile}
+            disabled={sending}
+            style={{ marginHorizontal: 8 }}
+          >
+            <Ionicons
+              name="document-outline"
+              size={24}
+              color="#29375C"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handlePickImage}
+            disabled={sending}
+          >
+            <Ionicons name="image" size={24} color="#29375C" />
+          </TouchableOpacity>
+          <TextInput
+            style={[
+              styles.input,
+              { maxHeight: 100, textAlignVertical: "top" },
+            ]}
+            placeholder="Nhập tin nhắn tại đây..."
+            placeholderTextColor="#A0A0A0"
+            value={input}
+            onChangeText={setInput}
+            editable={!sending}
+            multiline={true}
+            onFocus={() => {
+              // Scroll xuống tin nhắn cuối cùng khi focus vào input
+              setTimeout(() => {
+                flatListRef.current?.scrollToEnd({ animated: true });
+              }, 100);
+            }}
+          />
+          <TouchableOpacity
+            style={styles.sendBtn}
+            onPress={handleSend}
+            disabled={sending}
+          >
+            <Ionicons
+              name="send"
+              size={24}
+              color={sending ? "#A0A0A0" : "#29375C"}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </TouchableWithoutFeedback>
+  );
+
   return (
     <SafeScreen>
       <View style={{ flex: 1, backgroundColor: "#fff" }}>
@@ -1311,148 +1455,7 @@ export default function MessageBoxScreen() {
             keyboardVerticalOffset={0}
             style={{ backgroundColor: "#fff" }}
           >
-            {/* Preview ảnh và file đã chọn (nếu có) và input gửi tin nhắn */}
-            <TouchableWithoutFeedback
-              onPress={Keyboard.dismiss}
-              accessible={false}
-            >
-              <View style={styles.inputContainer}>
-                {selectedImage && (
-                  <View style={styles.imagePreviewContainer}>
-                    {imageLoading ? (
-                      <View
-                        style={{
-                          width: 100,
-                          height: 100,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <ActivityIndicator size="large" color="#29375C" />
-                        {/* Render ảnh ẩn để ép sự kiện load */}
-                        <Image
-                          source={{ uri: selectedImage.uri }}
-                          style={{
-                            width: 1,
-                            height: 1,
-                            position: "absolute",
-                            opacity: 0,
-                          }}
-                          onLoad={() => setImageLoading(false)}
-                          onLoadEnd={() => setImageLoading(false)}
-                        />
-                      </View>
-                    ) : (
-                      <Image
-                        source={{ uri: selectedImage.uri }}
-                        style={{ width: 100, height: 100, borderRadius: 8 }}
-                        onLoad={() => setImageLoading(false)}
-                        onLoadEnd={() => setImageLoading(false)}
-                      />
-                    )}
-                    <TouchableOpacity
-                      onPress={() => {
-                        setSelectedImage(null);
-                        setImageLoading(false);
-                      }}
-                      style={{ marginLeft: -16, marginBottom: 100 }}
-                    >
-                      <Ionicons name="close-circle" size={28} color="red" />
-                    </TouchableOpacity>
-                  </View>
-                )}
-                {selectedFile && (
-                  <View style={styles.filePreviewContainer}>
-                    {fileLoading ? (
-                      <View
-                        style={{
-                          padding: 20,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <ActivityIndicator size="large" color="#29375C" />
-                      </View>
-                    ) : (
-                      <View style={styles.fileInfo}>
-                        <Ionicons name="document" size={40} color="#29375C" />
-                        <View style={styles.fileDetails}>
-                          <Text style={styles.fileName} numberOfLines={1}>
-                            {(selectedFile.name || "File").length > 20
-                              ? (selectedFile.name || "File").substring(0, 20) +
-                                "..."
-                              : selectedFile.name || "File"}
-                          </Text>
-                          <Text style={styles.fileSize}>
-                            {selectedFile.size
-                              ? `${(selectedFile.size / 1024).toFixed(1)} KB`
-                              : "Unknown size"}
-                          </Text>
-                        </View>
-                      </View>
-                    )}
-                    <TouchableOpacity
-                      onPress={() => {
-                        setSelectedFile(null);
-                        setFileLoading(false);
-                      }}
-                      style={{ marginLeft: 16 }}
-                    >
-                      <Ionicons name="close-circle" size={28} color="red" />
-                    </TouchableOpacity>
-                  </View>
-                )}
-                <View style={styles.inputRow}>
-                  <TouchableOpacity
-                    onPress={handlePickFile}
-                    disabled={sending}
-                    style={{ marginHorizontal: 8 }}
-                  >
-                    <Ionicons
-                      name="document-outline"
-                      size={24}
-                      color="#29375C"
-                    />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={handlePickImage}
-                    disabled={sending}
-                  >
-                    <Ionicons name="image" size={24} color="#29375C" />
-                  </TouchableOpacity>
-                  <TextInput
-                    style={[
-                      styles.input,
-                      { maxHeight: 100, textAlignVertical: "top" },
-                    ]}
-                    placeholder="Nhập tin nhắn tại đây..."
-                    placeholderTextColor="#A0A0A0"
-                    value={input}
-                    onChangeText={setInput}
-                    editable={!sending}
-                    multiline={true}
-                    // blurOnSubmit={false}
-                    onFocus={() => {
-                      // Scroll xuống tin nhắn cuối cùng khi focus vào input
-                      setTimeout(() => {
-                        flatListRef.current?.scrollToEnd({ animated: true });
-                      }, 100);
-                    }}
-                  />
-                  <TouchableOpacity
-                    style={styles.sendBtn}
-                    onPress={handleSend}
-                    disabled={sending}
-                  >
-                    <Ionicons
-                      name="send"
-                      size={24}
-                      color={sending ? "#A0A0A0" : "#29375C"}
-                    />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </TouchableWithoutFeedback>
+            {renderInputContent()}
           </KeyboardAvoidingView>
         ) : (
           // Android: Sử dụng approach tự động điều chỉnh layout
@@ -1464,148 +1467,7 @@ export default function MessageBoxScreen() {
               }
             ]}
           >
-            {/* Preview ảnh và file đã chọn (nếu có) và input gửi tin nhắn */}
-            <TouchableWithoutFeedback
-              onPress={Keyboard.dismiss}
-              accessible={false}
-            >
-              <View style={styles.inputContainer}>
-                {selectedImage && (
-                  <View style={styles.imagePreviewContainer}>
-                    {imageLoading ? (
-                      <View
-                        style={{
-                          width: 100,
-                          height: 100,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <ActivityIndicator size="large" color="#29375C" />
-                        {/* Render ảnh ẩn để ép sự kiện load */}
-                        <Image
-                          source={{ uri: selectedImage.uri }}
-                          style={{
-                            width: 1,
-                            height: 1,
-                            position: "absolute",
-                            opacity: 0,
-                          }}
-                          onLoad={() => setImageLoading(false)}
-                          onLoadEnd={() => setImageLoading(false)}
-                        />
-                      </View>
-                    ) : (
-                      <Image
-                        source={{ uri: selectedImage.uri }}
-                        style={{ width: 100, height: 100, borderRadius: 8 }}
-                        onLoad={() => setImageLoading(false)}
-                        onLoadEnd={() => setImageLoading(false)}
-                      />
-                    )}
-                    <TouchableOpacity
-                      onPress={() => {
-                        setSelectedImage(null);
-                        setImageLoading(false);
-                      }}
-                      style={{ marginLeft: -16, marginBottom: 100 }}
-                    >
-                      <Ionicons name="close-circle" size={28} color="red" />
-                    </TouchableOpacity>
-                  </View>
-                )}
-                {selectedFile && (
-                  <View style={styles.filePreviewContainer}>
-                    {fileLoading ? (
-                      <View
-                        style={{
-                          padding: 20,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <ActivityIndicator size="large" color="#29375C" />
-                      </View>
-                    ) : (
-                      <View style={styles.fileInfo}>
-                        <Ionicons name="document" size={40} color="#29375C" />
-                        <View style={styles.fileDetails}>
-                          <Text style={styles.fileName} numberOfLines={1}>
-                            {(selectedFile.name || "File").length > 20
-                              ? (selectedFile.name || "File").substring(0, 20) +
-                                "..."
-                              : selectedFile.name || "File"}
-                          </Text>
-                          <Text style={styles.fileSize}>
-                            {selectedFile.size
-                              ? `${(selectedFile.size / 1024).toFixed(1)} KB`
-                              : "Unknown size"}
-                          </Text>
-                        </View>
-                      </View>
-                    )}
-                    <TouchableOpacity
-                      onPress={() => {
-                        setSelectedFile(null);
-                        setFileLoading(false);
-                      }}
-                      style={{ marginLeft: 16 }}
-                    >
-                      <Ionicons name="close-circle" size={28} color="red" />
-                    </TouchableOpacity>
-                  </View>
-                )}
-                <View style={styles.inputRow}>
-                  <TouchableOpacity
-                    onPress={handlePickFile}
-                    disabled={sending}
-                    style={{ marginHorizontal: 8 }}
-                  >
-                    <Ionicons
-                      name="document-outline"
-                      size={24}
-                      color="#29375C"
-                    />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={handlePickImage}
-                    disabled={sending}
-                  >
-                    <Ionicons name="image" size={24} color="#29375C" />
-                  </TouchableOpacity>
-                  <TextInput
-                    style={[
-                      styles.input,
-                      { maxHeight: 100, textAlignVertical: "top" },
-                    ]}
-                    placeholder="Nhập tin nhắn tại đây..."
-                    placeholderTextColor="#A0A0A0"
-                    value={input}
-                    onChangeText={setInput}
-                    editable={!sending}
-                    multiline={true}
-                    // blurOnSubmit={false}
-                    onFocus={() => {
-                      // Scroll xuống tin nhắn cuối cùng khi focus vào input
-                      setTimeout(() => {
-                        flatListRef.current?.scrollToEnd({ animated: true });
-                      }, 100);
-                    }}
-                  />
-                  <TouchableOpacity
-                    style={styles.sendBtn}
-                    onPress={handleSend}
-                    disabled={sending}
-                  >
-                    <Ionicons
-                      name="send"
-                      size={24}
-                      color={sending ? "#A0A0A0" : "#29375C"}
-                    />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </TouchableWithoutFeedback>
+            {renderInputContent()}
           </View>
         )}
       </View>
