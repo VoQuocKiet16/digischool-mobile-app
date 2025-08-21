@@ -1699,8 +1699,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#fff",
     padding: 20,
-    elevation: 2,
     alignSelf: "stretch",
+    borderTopWidth: 1,
+    borderTopColor: "#E5E5E5",
   },
   filePreviewContainer: {
     width: "100%",
@@ -1708,8 +1709,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#fff",
     padding: 20,
-    elevation: 2,
     alignSelf: "stretch",
+    borderTopWidth: 1,
+    borderTopColor: "#E5E5E5",
   },
   fileInfo: {
     flexDirection: "row",
@@ -1773,8 +1775,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 16,
     paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
   },
   menuItemText: {
     fontSize: responsiveValues.fontSize.md,
