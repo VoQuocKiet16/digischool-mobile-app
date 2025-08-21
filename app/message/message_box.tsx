@@ -138,6 +138,16 @@ export default function MessageBoxScreen() {
     fetchMessagesFromAPI();
   }, [isReady, userId]);
 
+  // Tự động scroll xuống tin nhắn mới nhất khi mở box chat
+  useEffect(() => {
+    if (messages.length > 0 && !hasUserInteracted) {
+      // Delay một chút để đảm bảo FlatList đã render xong
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: false });
+      }, 200);
+    }
+  }, [messages, hasUserInteracted]);
+
   // Tách fetch messages ra ngoài để có thể gọi lại
   const fetchMessagesFromAPI = async () => {
     setLoading(true);
@@ -200,7 +210,10 @@ export default function MessageBoxScreen() {
             : [...prev, msg];
         return next;
       });
-      flatListRef.current?.scrollToEnd({ animated: true });
+      // Chỉ scroll khi có tin nhắn mới và user chưa tương tác
+      if (!hasUserInteracted) {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }
     });
 
     return () => {
@@ -1155,7 +1168,14 @@ export default function MessageBoxScreen() {
           userId as string
         );
       }
-    }, [myId, userId, hasUserInteracted])
+      
+      // Tự động scroll xuống cuối khi focus vào màn hình chat (nếu chưa tương tác)
+      if (messages.length > 0 && !hasUserInteracted) {
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: false });
+        }, 300);
+      }
+    }, [myId, userId, hasUserInteracted, messages.length])
   );
 
   // Component render input content để tránh duplicate code
@@ -1421,28 +1441,23 @@ export default function MessageBoxScreen() {
                 ]}
                 showsVerticalScrollIndicator={false}
                 onContentSizeChange={() => {
-                  // Chỉ scroll tự động khi có tin nhắn mới và user chưa tương tác và không đang scroll
-                  if (!hasUserInteracted && !isUserScrolling && messages.length > 0) {
-                    flatListRef.current?.scrollToEnd({ animated: true });
-                  }
+                  // KHÔNG scroll tự động - để giữ nguyên vị trí khi keyboard xuất hiện
                 }}
                 onLayout={() => {
-                  // Chỉ scroll xuống cuối khi lần đầu load và user không đang scroll
-                  if (messages.length > 0 && !hasUserInteracted && !isUserScrolling) {
-                    setTimeout(() => {
-                      flatListRef.current?.scrollToEnd({ animated: false });
-                    }, 100);
-                  }
+                  // Không scroll tự động trong onLayout - để tránh conflict với useEffect mới
                 }}
                 keyboardShouldPersistTaps="handled"
                 maintainVisibleContentPosition={{
                   minIndexForVisible: 0,
-                  autoscrollToTopThreshold: 10,
+                  autoscrollToTopThreshold: 1,
                 }}
                 removeClippedSubviews={false}
                 maxToRenderPerBatch={10}
                 windowSize={10}
-                onScrollBeginDrag={() => setIsUserScrolling(true)}
+                onScrollBeginDrag={() => {
+                  setIsUserScrolling(true);
+                  setHasUserInteracted(true);
+                }}
                 onScrollEndDrag={() => setIsUserScrolling(false)}
                 onMomentumScrollBegin={() => setIsUserScrolling(true)}
                 onMomentumScrollEnd={() => setIsUserScrolling(false)}
@@ -1462,7 +1477,7 @@ export default function MessageBoxScreen() {
             {renderInputContent()}
           </KeyboardAvoidingView>
         ) : (
-          // Android: Sử dụng approach tự động điều chỉnh layout
+          // Android: Sử dụng manual margin adjustment
           <View 
             style={[
               { backgroundColor: "#fff" },
