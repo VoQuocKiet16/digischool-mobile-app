@@ -1,11 +1,13 @@
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
-    Alert,
-    StyleSheet,
-    Text,
-    useWindowDimensions,
-    View
+  Alert,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View
 } from "react-native";
 import { useUserData } from "../../hooks/useUserData";
 import { PDFService } from "../../services/pdfService";
@@ -101,6 +103,12 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
   const colWidth = width / numCols;
   const { userData } = useUserData();
   const router = useRouter();
+  const [showDateModal, setShowDateModal] = useState(false);
+  const [selectedDateInfo, setSelectedDateInfo] = useState<{
+    dayIndex: number;
+    date: Date;
+    formattedDate: string;
+  } | null>(null);
 
 
   const handleLeaveRequest = () => {
@@ -167,6 +175,20 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
     }
   };
 
+  const handleDayHeaderPress = (dayIndex: number) => {
+    if (dateRange) {
+      const specificDate = getSpecificDate(dateRange, dayIndex);
+      const formattedDate = formatVietnameseDate(specificDate);
+      
+      setSelectedDateInfo({
+        dayIndex,
+        date: specificDate,
+        formattedDate,
+      });
+      setShowDateModal(true);
+    }
+  };
+
   const menuItems = [
     {
       id: "export",
@@ -203,13 +225,15 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
         {/* Dải phân cách */}
         <View style={{ width: 0.1, height: 22, backgroundColor: "#f7f7f7" }} />
         {days.map((day, idx) => (
-          <View
+          <TouchableOpacity
             key={`day-header-${idx}`}
             style={[
               styles.dayHeaderCell,
               { width: colWidth },
               currentDayIndex === idx && styles.selectedDayButton,
             ]}
+            onPress={() => handleDayHeaderPress(idx)}
+            activeOpacity={0.7}
           >
             <Text
               style={[
@@ -222,7 +246,7 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
             >
               {day}
             </Text>
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
 
@@ -331,6 +355,45 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
           })}
         </View>
       ))}
+
+      {/* Modal thông tin ngày */}
+      <Modal
+        visible={showDateModal}
+        transparent={true}
+        statusBarTranslucent={true}
+        animationType="fade"
+        onRequestClose={() => setShowDateModal(false)}
+      >
+        <TouchableOpacity 
+          style={styles.dateModalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowDateModal(false)}
+        >
+          <TouchableOpacity 
+            style={styles.dateModalContent}
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.dateModalHeader}>
+              <Text style={styles.dateModalTitle}>Thông tin ngày</Text>
+              <TouchableOpacity
+                onPress={() => setShowDateModal(false)}
+                style={styles.closeButton}
+              >
+                <Text style={styles.closeButtonText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            
+            {selectedDateInfo && (
+              <View style={styles.dateInfoContainer}>
+                <Text style={styles.dateInfoText}>
+                  {selectedDateInfo.formattedDate}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
@@ -404,6 +467,55 @@ const styles = StyleSheet.create({
   },
   currentDaySlot: {
     backgroundColor: "#BACDDD",
+  },
+  dateModalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  dateModalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    width: "70%",
+    maxWidth: 280,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  dateModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 12,
+  },
+  dateModalTitle: {
+    fontSize: 16,
+    fontFamily: fonts.bold,
+    color: "#29375C",
+  },
+  closeButton: {
+    padding: 2,
+  },
+  closeButtonText: {
+    fontSize: 16,
+    color: "#959698",
+    fontWeight: "bold",
+  },
+  dateInfoContainer: {
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  dateInfoText: {
+    fontSize: 14,
+    fontFamily: fonts.semiBold,
+    color: "#29375C",
+    textAlign: "center",
   },
 });
 

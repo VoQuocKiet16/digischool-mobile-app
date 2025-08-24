@@ -2,6 +2,7 @@ import HeaderLayout from "@/components/layout/HeaderLayout";
 import Lesson_Information from "@/components/lesson_detail/Lesson_Information";
 import MenuDropdown from "@/components/MenuDropdown";
 import RefreshableScrollView from "@/components/RefreshableScrollView";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -24,8 +25,15 @@ const LessonDetailScreen = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
   const pollingRef = useRef<NodeJS.Timeout | number | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
+    const getCurrentUserId = async () => {
+      const userId = await AsyncStorage.getItem("userId");
+      setCurrentUserId(userId);
+    };
+    getCurrentUserId();
+
     if (lessonId) {
       fetchLessonDetail();
       // Setup polling mỗi 5s
@@ -162,6 +170,7 @@ const LessonDetailScreen = () => {
           lessonData={lessonData}
           onRefresh={handleRefresh}
           refreshKey={refreshKey}
+          currentUserId={currentUserId || undefined}
         />
       </RefreshableScrollView>
     </HeaderLayout>

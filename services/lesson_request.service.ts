@@ -64,6 +64,38 @@ export const createMakeupLessonRequest = async ({
   return res.data;
 };
 
+// Teacher approve substitute request
+export const approveSubstituteRequest = async (requestId: string) => {
+  const res = await api.post(
+    `/api/schedules/lesson-request/substitute/${requestId}/approve`
+  );
+  return res.data;
+};
+
+// Manager approve substitute request
+export const approveSubstituteRequestManager = async (requestId: string) => {
+  const res = await api.post(
+    `/api/schedules/lesson-request/substitute/${requestId}/approve-manager`
+  );
+  return res.data;
+};
+
+// Teacher approve swap request
+export const approveSwapRequest = async (requestId: string) => {
+  const res = await api.post(
+    `/api/schedules/lesson-request/swap/${requestId}/approve`
+  );
+  return res.data;
+};
+
+// Manager approve swap request
+export const approveSwapRequestManager = async (requestId: string) => {
+  const res = await api.post(
+    `/api/schedules/lesson-request/swap/${requestId}/approve-manager`
+  );
+  return res.data;
+};
+
 // Cancel substitute request
 export const cancelSubstituteRequest = async (requestId: string) => {
   const res = await api.post(

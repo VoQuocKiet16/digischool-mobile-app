@@ -13,6 +13,7 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Alert, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import { fonts } from "../../utils/responsive";
+import ProgressBar from "../ProgressBar";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
 
@@ -35,6 +36,7 @@ interface Slot_InformationProps {
   } | null;
   onRefresh?: () => void;
   refreshKey?: number;
+  currentUserId?: string;
 }
 
 const Slot_Information: React.FC<Slot_InformationProps> = ({
@@ -53,6 +55,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
   pendingRequest,
   onRefresh,
   refreshKey,
+  currentUserId,
 }) => {
   const router = useRouter();
   const [isEditingDesc, setIsEditingDesc] = useState(false);
@@ -65,6 +68,13 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
   const textInputRef = React.useRef<TextInput>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Xác định xem user hiện tại có phải giáo viên chính (bị hạn chế quyền) không
+  // Theo logic: substituteTeacher = giáo viên chính ban đầu (chỉ xem), teacher = giáo viên dạy thay hiện tại (đầy đủ quyền)
+  const isOriginalTeacher = () => {
+    if (!lessonData?.substituteTeacher || !currentUserId) return false;
+    return lessonData.substituteTeacher._id === currentUserId;
+  };
+
   // Cập nhật showDescriptionCard và descValue khi lessonData thay đổi
   React.useEffect(() => {
     setShowDescriptionCard(!!lessonData?.description);
@@ -73,7 +83,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
 
   // Xử lý trigger thêm mô tả từ parent
   React.useEffect(() => {
-    if (shouldAddDescription && role === "teacher") {
+    if (shouldAddDescription && role === "teacher" && !isOriginalTeacher()) {
       setIsAddingDescription(true);
       setShowDescriptionCard(true);
       setDescValue("");
@@ -131,7 +141,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
   };
 
   const handleEditDescription = () => {
-    if (role !== "teacher") return;
+    if (role !== "teacher" || isOriginalTeacher()) return;
 
     setIsEditingDesc(true);
     // Focus vào text input sau khi render
@@ -141,7 +151,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
   };
 
   const handleSaveDescription = async () => {
-    if (role !== "teacher") return;
+    if (role !== "teacher" || isOriginalTeacher()) return;
 
     setIsSaving(true);
     try {
@@ -199,6 +209,123 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
     }
   };
 
+  // Helper functions cho substitute/swap requests với logic 2 giai đoạn
+  const getSubstituteRequestStatus = () => {
+    const request = lessonData?.substituteRequests?.[0];
+    if (!request) return null;
+    
+    if (request.status === "rejected") {
+      return {
+        currentStep: 0,
+        statusText: request.teacherApproved ? "Bị từ chối bởi quản lý" : "Bị từ chối bởi giáo viên",
+        isRejected: true
+      };
+    }
+    
+    if (request.status === "approved") {
+      return {
+        currentStep: 3,
+        statusText: "Đã được phê duyệt hoàn toàn",
+        isCompleted: true
+      };
+    }
+    
+    if (!request.teacherApproved) {
+      return {
+        currentStep: 1,
+        statusText: "Đang chờ giáo viên phê duyệt",
+        isWaitingTeacher: true
+      };
+    }
+    
+    if (!request.managerApproved) {
+      return {
+        currentStep: 2,
+        statusText: "Đang chờ quản lý phê duyệt",
+        isWaitingManager: true
+      };
+    }
+    
+    return null;
+  };
+
+  const getSwapRequestStatus = () => {
+    const request = lessonData?.swapRequests?.[0];
+    if (!request) return null;
+    
+    if (request.status === "rejected") {
+      return {
+        currentStep: 0,
+        statusText: request.teacherApproved ? "Bị từ chối bởi quản lý" : "Bị từ chối bởi giáo viên",
+        isRejected: true
+      };
+    }
+    
+    if (request.status === "approved") {
+      return {
+        currentStep: 3,
+        statusText: "Đã được phê duyệt hoàn toàn",
+        isCompleted: true
+      };
+    }
+    
+    if (!request.teacherApproved) {
+      return {
+        currentStep: 1,
+        statusText: "Đang chờ giáo viên phê duyệt",
+        isWaitingTeacher: true
+      };
+    }
+    
+    if (!request.managerApproved) {
+      return {
+        currentStep: 2,
+        statusText: "Giáo viên đã phê duyệt, đang chờ quản lý",
+        isWaitingManager: true
+      };
+    }
+    
+    return null;
+  };
+
+  const getMakeupRequestStatus = () => {
+    const request = lessonData?.makeupRequests?.[0];
+    if (!request) return null;
+    
+    if (request.status === "rejected") {
+      return {
+        currentStep: 0,
+        statusText: "Bị từ chối",
+        isRejected: true
+      };
+    }
+    
+    if (request.status === "approved") {
+      return {
+        currentStep: 3,
+        statusText: "Đã được phê duyệt",
+        isCompleted: true
+      };
+    }
+    
+    return {
+      currentStep: 1,
+      statusText: "Đang chờ quản lý phê duyệt",
+      isWaitingManager: true
+    };
+  };
+
+  // Kiểm tra cả giáo viên và học sinh có yêu cầu nghỉ phép không
+  const hasBothLeaveRequests = () => {
+    const hasStudentRequest = lessonData?.studentLeaveRequests?.some((request: StudentLeaveRequest) => 
+      ["pending", "approved"].includes(request.status)
+    );
+    const hasTeacherRequest = lessonData?.teacherLeaveRequests?.some((request: TeacherLeaveRequest) => 
+      ["pending", "approved"].includes(request.status)
+    );
+    return hasStudentRequest && hasTeacherRequest;
+  };
+
   const getLeaveRequestStatus = () => {
     if (role === "student") {
       const request = lessonData?.studentLeaveRequests?.find((r: StudentLeaveRequest) => 
@@ -210,14 +337,6 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
         ["pending", "approved"].includes(r.status)
       );
       return request?.status || null;
-    }
-  };
-
-  const getLeaveRequestType = () => {
-    if (role === "student") {
-      return "nghỉ phép";
-    } else {
-      return "nghỉ phép";
     }
   };
 
@@ -241,6 +360,52 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
         default:
           return "Đang chờ quản lý phê duyệt";
       }
+    }
+  };
+
+  // Lấy trạng thái yêu cầu nghỉ phép của giáo viên
+  const getTeacherLeaveRequestStatus = () => {
+    const request = lessonData?.teacherLeaveRequests?.find((r: TeacherLeaveRequest) => 
+      ["pending", "approved"].includes(r.status)
+    );
+    return request?.status || null;
+  };
+
+  // Lấy text trạng thái yêu cầu nghỉ phép của giáo viên
+  const getTeacherLeaveRequestStatusText = () => {
+    const status = getTeacherLeaveRequestStatus();
+    switch (status) {
+      case "pending":
+        return "Đang chờ quản lý phê duyệt";
+      case "approved":
+        return "Đã được phê duyệt";
+      default:
+        return "Đang chờ quản lý phê duyệt";
+    }
+  };
+
+  // Lấy style cho yêu cầu nghỉ phép của giáo viên
+  const getTeacherLeaveRequestStyle = () => {
+    const status = getTeacherLeaveRequestStatus();
+    switch (status) {
+      case "pending":
+        return {
+          backgroundColor: "#F9B233",
+          textColor: "#fff",
+          iconColor: "#fff"
+        };
+      case "approved":
+        return {
+          backgroundColor: "#5FC16E",
+          textColor: "#fff",
+          iconColor: "#fff"
+        };
+      default:
+        return {
+          backgroundColor: "#F9B233",
+          textColor: "#fff",
+          iconColor: "#fff"
+        };
     }
   };
 
@@ -290,24 +455,32 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
     setDeleting(true);
     try {
       if (role === "student") {
-        const requestId = lessonData?.studentLeaveRequests?.find((r: StudentLeaveRequest) => r.status === "pending")?._id;
-        if (requestId) {
-          await cancelStudentLeaveRequest(requestId);
+        // Xử lý xóa yêu cầu nghỉ phép của học sinh
+        const request = lessonData?.studentLeaveRequests?.find((r: StudentLeaveRequest) => 
+          ["pending", "approved"].includes(r.status)
+        );
+        if (request) {
+          await cancelStudentLeaveRequest(request._id);
+          if (onRefresh) onRefresh();
         }
       } else {
-        const requestId = lessonData?.teacherLeaveRequests?.find((r: TeacherLeaveRequest) => r.status === "pending")?._id;
-        if (requestId) {
-          await deleteTeacherLeaveRequest(requestId);
+        // Xử lý xóa yêu cầu nghỉ phép của giáo viên
+        const request = lessonData?.teacherLeaveRequests?.find((r: TeacherLeaveRequest) => 
+          ["pending", "approved"].includes(r.status)
+        );
+        if (request) {
+          await deleteTeacherLeaveRequest(request._id);
+          if (onRefresh) onRefresh();
         }
       }
-      // setShowLeaveRequestDeleteModal(false); // This state variable was removed
-      if (onRefresh) onRefresh();
-    } catch (error: any) {
-      Alert.alert("Lỗi", error.message || "Không thể xóa yêu cầu nghỉ phép");
+    } catch (error) {
+      Alert.alert("Lỗi", "Không thể xóa yêu cầu nghỉ phép");
     } finally {
       setDeleting(false);
     }
   };
+
+
 
   const handleCancelRequest = () => {
     Alert.alert(
@@ -396,12 +569,24 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
           <MaterialIcons name="access-time" size={18} color="#25345C" />
           <ThemedText style={styles.infoText}>{getTimeRange()}</ThemedText>
         </View>
+        {/* Hiển thị giáo viên chính */}
         <View style={styles.infoRow}>
           <MaterialIcons name="person" size={18} color="#25345C" />
           <ThemedText style={styles.infoText}>
-            {getGenderTeacher()} {getTeacherName()}
+            {lessonData?.substituteTeacher ? "Giáo viên chính: " : `${getGenderTeacher()} `}
+            {lessonData?.substituteTeacher ? lessonData.substituteTeacher.name : getTeacherName()}
           </ThemedText>
         </View>
+        
+        {/* Hiển thị giáo viên dạy thay nếu có */}
+        {lessonData?.substituteTeacher && (
+          <View style={styles.infoRow}>
+            <MaterialIcons name="swap-horiz" size={18} color="#25345C" />
+            <ThemedText style={styles.infoText}>
+              Giáo viên dạy thay: {getTeacherName()}
+            </ThemedText>
+          </View>
+        )}
       </ThemedView>
 
       {/* Card 2: Mô tả thêm */}
@@ -412,7 +597,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
             <ThemedText type="subtitle" style={styles.headerText}>
               Mô tả thêm
             </ThemedText>
-            {role === "teacher" && (
+            {role === "teacher" && !isOriginalTeacher() && (
               <>
                 <View style={{ flex: 1 }} />
                 {isEditingDesc ? (
@@ -466,7 +651,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
             <ThemedText type="subtitle" style={styles.headerText}>
               Thông tin kiểm tra
             </ThemedText>
-            {role === "teacher" && !isCompleted && (
+            {role === "teacher" && !isCompleted && !isOriginalTeacher() && (
               <>
                 <View style={{ flex: 1 }} />
                 <TouchableOpacity
@@ -540,7 +725,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
         
         {/* Nếu chưa hoàn thành tiết học */}
         {!isCompleted && lessonData?.status !== "absent" &&
-          (role === "teacher" ? (
+          (role === "teacher" && !isOriginalTeacher() ? (
             <TouchableOpacity
               style={[
                 hasApprovedLeaveRequest() ? styles.statusRowGreen : styles.statusRowOrangeWrap,
@@ -620,7 +805,7 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
                   Đánh giá: {lessonData.teacherEvaluation.rating}
                 </ThemedText>
               </View>
-            ) : role === "teacher" ? (
+            ) : role === "teacher" && !isOriginalTeacher() ? (
               <TouchableOpacity
                 style={styles.statusRowBlueWrap}
                 onPress={handleEvaluate}
@@ -718,51 +903,98 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
       </ThemedView>
 
       {/* Card 5: Trạng thái yêu cầu tiết học nếu có */}
-      {pendingRequest && (
+      {(pendingRequest || 
+        lessonData?.substituteRequests?.some((r: any) => r.status === "pending") ||
+        lessonData?.swapRequests?.some((r: any) => r.status === "pending") ||
+        lessonData?.makeupRequests?.some((r: any) => r.status === "pending")
+      ) && (
         <ThemedView style={styles.card}>
           <View style={styles.headerRow}>
             <View style={styles.headerBar} />
             <ThemedText type="subtitle" style={styles.headerText}>
               Yêu cầu{" "}
-              {pendingRequest.type === "substitute"
+              {pendingRequest?.type === "substitute" || lessonData?.substituteRequests?.some((r: any) => r.status === "pending")
                 ? "dạy thay"
-                : pendingRequest.type === "swap"
+                : pendingRequest?.type === "swap" || lessonData?.swapRequests?.some((r: any) => r.status === "pending")
                 ? "đổi tiết"
                 : "dạy bù"}
             </ThemedText>
-            <TouchableOpacity
-              style={[styles.closeBtn, { marginLeft: "auto", marginRight: 0 }]}
-              onPress={handleCancelRequest}
-            >
-              <View style={styles.closeCircle}>
-                <MaterialIcons name="close" size={22} color="#fff" />
-              </View>
-            </TouchableOpacity>
+            {role === "teacher" && (
+              <TouchableOpacity
+                style={[styles.closeBtn, { marginLeft: "auto", marginRight: 0 }]}
+                onPress={handleCancelRequest}
+              >
+                <View style={styles.closeCircle}>
+                  <MaterialIcons name="close" size={22} color="#fff" />
+                </View>
+              </TouchableOpacity>
+            )}
           </View>
-          <View style={styles.statusRowOrangeWrap}>
-            <View style={styles.statusRowOrangeLeft}>
-              <View style={[styles.statusIconWrapOrange, { marginRight: 5 }]}>
-                <MaterialIcons
-                  name="assignment-turned-in"
-                  size={20}
-                  color="#fff"
-                />
+
+          {/* Progress Bar cho Substitute/Swap requests */}
+          {(pendingRequest?.type === "substitute" || lessonData?.substituteRequests?.some((r: any) => r.status === "pending") ||
+            pendingRequest?.type === "swap" || lessonData?.swapRequests?.some((r: any) => r.status === "pending")) && (
+            <>
+              <ProgressBar
+                currentStep={
+                  pendingRequest?.type === "substitute" || lessonData?.substituteRequests?.some((r: any) => r.status === "pending")
+                    ? getSubstituteRequestStatus()?.currentStep || 0
+                    : getSwapRequestStatus()?.currentStep || 0
+                }
+                labels={['Tạo yêu cầu', 'GV phê duyệt', 'QL phê duyệt']}
+                totalSteps={3}
+                size="medium"
+              />
+              <View style={styles.statusRowOrangeWrap}>
+                <View style={styles.statusRowOrangeLeft}>
+                  <View style={[styles.statusIconWrapOrange, { marginRight: 5 }]}>
+                    <MaterialIcons
+                      name={
+                        pendingRequest?.type === "swap" || lessonData?.swapRequests?.some((r: any) => r.status === "pending")
+                          ? "swap-horiz"
+                          : "assignment-turned-in"
+                      }
+                      size={20}
+                      color="#fff"
+                    />
+                  </View>
+                  <ThemedText style={styles.statusTextOrange}>
+                    {(pendingRequest?.type === "substitute" || lessonData?.substituteRequests?.some((r: any) => r.status === "pending")
+                      ? getSubstituteRequestStatus()?.statusText
+                      : getSwapRequestStatus()?.statusText) || "Đang xử lý"}
+                  </ThemedText>
+                </View>
               </View>
-              <ThemedText style={styles.statusTextOrange}>
-                {pendingRequest.statusText}
-              </ThemedText>
+            </>
+          )}
+
+          {/* Status cho Makeup requests (không đổi) */}
+          {(pendingRequest?.type === "makeup" || lessonData?.makeupRequests?.some((r: any) => r.status === "pending")) && (
+            <View style={styles.statusRowOrangeWrap}>
+              <View style={styles.statusRowOrangeLeft}>
+                <View style={[styles.statusIconWrapOrange, { marginRight: 5 }]}>
+                  <MaterialIcons
+                    name="assignment-turned-in"
+                    size={20}
+                    color="#fff"
+                  />
+                </View>
+                <ThemedText style={styles.statusTextOrange}>
+                  {getMakeupRequestStatus()?.statusText || "Đang chờ quản lý phê duyệt"}
+                </ThemedText>
+              </View>
             </View>
-          </View>
+          )}
         </ThemedView>
       )}
 
-      {/* Card 6: Yêu cầu nghỉ phép nếu có */}
-      {hasLeaveRequest() && (
+      {/* Card 6: Yêu cầu nghỉ phép của học sinh nếu có */}
+      {hasLeaveRequest() && role === "student" && (
         <ThemedView style={styles.card}>
           <View style={styles.headerRow}>
             <View style={styles.headerBar} />
             <ThemedText type="subtitle" style={styles.headerText}>
-              Yêu cầu {getLeaveRequestType()}
+              {hasBothLeaveRequests() ? "Yêu cầu nghỉ phép [HS]" : "Yêu cầu nghỉ phép"}
             </ThemedText>
             {canCancelLeaveRequest() && (
               <TouchableOpacity
@@ -801,7 +1033,56 @@ const Slot_Information: React.FC<Slot_InformationProps> = ({
               </ThemedText>
             </View>
           </View>
-          {/* This modal state variable was removed */}
+        </ThemedView>
+      )}
+
+      {/* Card 7: Yêu cầu nghỉ phép của giáo viên nếu có */}
+      {lessonData?.teacherLeaveRequests?.some((request: TeacherLeaveRequest) => 
+        request.status === "pending" || (request.status === "approved" && role === "teacher")
+      ) && (
+        <ThemedView style={styles.card}>
+          <View style={styles.headerRow}>
+            <View style={styles.headerBar} />
+            <ThemedText type="subtitle" style={styles.headerText}>
+              Yêu cầu nghỉ phép [GV]
+            </ThemedText>
+            {role === "teacher" && canCancelLeaveRequest() && (
+              <TouchableOpacity
+                style={[styles.closeBtn, { marginLeft: "auto", marginRight: 0 }]}
+                onPress={handleCancelLeaveRequest}
+              >
+                <View style={styles.closeCircle}>
+                  <MaterialIcons name="close" size={22} color="#fff" />
+                </View>
+              </TouchableOpacity>
+            )}
+          </View>
+          <View style={[
+            styles.statusRowOrangeWrap,
+            { backgroundColor: getTeacherLeaveRequestStyle().backgroundColor }
+          ]}>
+            <View style={styles.statusRowOrangeLeft}>
+              <View style={[
+                styles.statusIconWrapOrange, 
+                { 
+                  marginRight: 5,
+                  backgroundColor: getTeacherLeaveRequestStyle().backgroundColor 
+                }
+              ]}>
+                <MaterialIcons
+                  name="event-busy"
+                  size={20}
+                  color={getTeacherLeaveRequestStyle().iconColor}
+                />
+              </View>
+              <ThemedText style={[
+                styles.statusTextOrange,
+                { color: getTeacherLeaveRequestStyle().textColor }
+              ]}>
+                {getTeacherLeaveRequestStatusText()}
+              </ThemedText>
+            </View>
+          </View>
         </ThemedView>
       )}
     </View>
@@ -1047,6 +1328,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 10,
   },
+
 });
 
 export default Slot_Information;
