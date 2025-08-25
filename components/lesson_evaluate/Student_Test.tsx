@@ -2,6 +2,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
+  ScrollView,
   StyleSheet,
   TextInput,
   TouchableOpacity,
@@ -245,25 +246,27 @@ const Student_Test: React.FC<Student_TestProps> = ({
                 {dropdownIndex === index && (
                   <View style={styles.dropdown}>
                     {getAvailableStudents().length > 0 ? (
-                      getAvailableStudents().map((student) => (
-                        <TouchableOpacity
-                          key={student.id}
-                          style={styles.dropdownItem}
-                          onPress={() =>
-                            handleSelectStudent(student.id, student.name, index)
-                          }
-                        >
-                          <MaterialIcons
-                            name="person"
-                            size={16}
-                            color="#9E9E9E"
-                            style={{ marginRight: 8 }}
-                          />
-                          <ThemedText style={styles.dropdownItemText}>
-                            {student.name}
-                          </ThemedText>
-                        </TouchableOpacity>
-                      ))
+                      <ScrollView>
+                        {getAvailableStudents().map((student) => (
+                          <TouchableOpacity
+                            key={student.id}
+                            style={styles.dropdownItem}
+                            onPress={() =>
+                              handleSelectStudent(student.id, student.name, index)
+                            }
+                          >
+                              <MaterialIcons
+                                name="person"
+                                size={16}
+                                color="#9E9E9E"
+                                style={{ marginRight: 8 }}
+                              />
+                            <ThemedText style={styles.dropdownItemText} numberOfLines={2}>
+                              {student.name}
+                            </ThemedText>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
                     ) : (
                       <View style={styles.emptyDropdown}>
                         <ThemedText style={styles.emptyDropdownText}>
@@ -415,8 +418,8 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
     paddingVertical: 2,
-    maxHeight: 180,
-    width: "70%",
+    maxHeight: 200,
+    width: "85%",
     marginLeft: 10,
   },
   dropdownItem: {
@@ -424,11 +427,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 10,
     paddingHorizontal: 16,
+    minHeight: 44,
   },
   dropdownItemText: {
     fontSize: 16,
     color: "#fff",
     fontFamily: fonts.regular,
+    flex: 1,
+    flexWrap: "wrap",
+    lineHeight: 20,
   },
   addButton: {
     flexDirection: "row",

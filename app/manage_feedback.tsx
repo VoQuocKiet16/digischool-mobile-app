@@ -36,6 +36,17 @@ const RATING_OPTIONS = [
   { value: 5, label: "5 sao" },
 ];
 
+// Feedback type options
+const TYPE_OPTIONS = [
+  { value: "all", label: "Tất cả loại", color: "#29375C" },
+  { value: "ban_giam_hieu", label: "Ban giám hiệu", color: "#1976D2" },
+  { value: "tai_chinh", label: "Tài chính", color: "#388E3C" },
+  { value: "giao_vien", label: "Giáo viên", color: "#F57C00" },
+  { value: "nhan_vien", label: "Nhân viên", color: "#7B1FA2" },
+  { value: "canh_quan_ve_sinh", label: "Cảnh quan vệ sinh", color: "#795548" },
+  { value: "hoc_sinh", label: "Học sinh", color: "#E91E63" },
+];
+
 export default function ManageFeedback() {
   const { hasUnreadNotification, isLoading: notificationLoading } = useNotificationContext();
   const [userName, setUserName] = useState("");
@@ -50,6 +61,7 @@ export default function ManageFeedback() {
   // Filter states
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedRating, setSelectedRating] = useState(0);
+  const [selectedType, setSelectedType] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   
@@ -68,7 +80,7 @@ export default function ManageFeedback() {
 
   useEffect(() => {
     loadData();
-  }, [selectedStatus, selectedRating, currentPage]);
+  }, [selectedStatus, selectedRating, selectedType, currentPage]);
 
   const loadData = async () => {
     setLoading(true);
@@ -77,6 +89,7 @@ export default function ManageFeedback() {
       const feedbacksResponse = await manageService.getParentFeedbacks({
         status: selectedStatus === "all" ? undefined : selectedStatus,
         rating: selectedRating === 0 ? undefined : selectedRating,
+        type: selectedType === "all" ? undefined : selectedType,
         page: currentPage,
         limit: 10,
       });
@@ -156,38 +169,63 @@ export default function ManageFeedback() {
     );
   };
 
+  const renderTypeBadge = (type: string) => {
+    const typeOption = TYPE_OPTIONS.find(option => option.value === type);
+    return (
+      <View style={[styles.typeBadge, { backgroundColor: typeOption?.color || "#29375C" }]}>
+        <Text style={styles.typeBadgeText}>{typeOption?.label || type}</Text>
+      </View>
+    );
+  };
+
   const renderFeedbackItem = ({ item }: { item: FeedbackData }) => (
     <TouchableOpacity
       style={styles.feedbackCard}
       onPress={() => handleFeedbackPress(item)}
-      activeOpacity={0.8}
+      activeOpacity={0.85}
     >
-      <View style={styles.feedbackHeader}>
-        <View style={styles.userInfo}>
-          <MaterialIcons name="person" size={20} color="#29375C" />
-          <Text style={styles.userName}>{item.user.name}</Text>
+      {/* Header: User + Date + Status */}
+      <View style={[styles.feedbackHeader, { marginBottom: 4 }]}>
+        <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+          <MaterialIcons name="person" size={20} color="#29375C" style={{ marginRight: 6 }} />
+          <Text style={styles.userName} numberOfLines={1} ellipsizeMode="tail">
+            {item.user.name}
+          </Text>
         </View>
-        <View style={styles.feedbackMeta}>
-          {renderStars(item.rating)}
-          {renderStatusBadge(item.status)}
+        <View style={{ alignItems: "flex-end" }}>
+          <Text style={[styles.feedbackDate, { fontSize: 12, color: "#A0A4B8" }]}>
+            {new Date(item.createdAt).toLocaleDateString('vi-VN')}
+          </Text>
+          {item.adminResponse && (
+            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
+              <MaterialIcons name="reply" size={14} color="#34C759" />
+              <Text style={[styles.responseText, { fontSize: 11, marginLeft: 2 }]}>Đã phản hồi</Text>
+            </View>
+          )}
         </View>
       </View>
-      
+
+      {/* Meta: Stars + Type + Status */}
+      <View style={[styles.feedbackMeta, { marginBottom: 6 }]}>
+        {renderStars(item.rating)}
+        {renderTypeBadge(item.type)}
+        {renderStatusBadge(item.status)}
+      </View>
+
+      {/* Teacher info if applicable */}
+      {item.type === 'giao_vien' && item.targetTeacher && (
+        <View style={styles.teacherInfo}>
+          <MaterialIcons name="school" size={16} color="#F57C00" />
+          <Text style={styles.teacherText} numberOfLines={1} ellipsizeMode="tail">
+            Giáo viên: {item.targetTeacher.name} ({item.targetTeacher.teacherId})
+          </Text>
+        </View>
+      )}
+
+      {/* Description */}
       <Text style={styles.feedbackDescription} numberOfLines={2}>
         {item.description}
       </Text>
-      
-      <View style={styles.feedbackFooter}>
-        <Text style={styles.feedbackDate}>
-          {new Date(item.createdAt).toLocaleDateString('vi-VN')}
-        </Text>
-        {item.adminResponse && (
-          <View style={styles.responseIndicator}>
-            <MaterialIcons name="reply" size={16} color="#34C759" />
-            <Text style={styles.responseText}>Đã phản hồi</Text>
-          </View>
-        )}
-      </View>
     </TouchableOpacity>
   );
 
@@ -252,6 +290,30 @@ export default function ManageFeedback() {
                   <Text style={[
                     styles.filterOptionText,
                     selectedStatus === option.value && styles.filterOptionTextActive
+                  ]}>
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Type Filter */}
+          <View style={styles.filterGroup}>
+            <Text style={styles.filterLabel}>Loại góp ý:</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterOptions}>
+              {TYPE_OPTIONS.map((option) => (
+                <TouchableOpacity
+                  key={option.value}
+                  style={[
+                    styles.filterOption,
+                    selectedType === option.value && styles.filterOptionActive
+                  ]}
+                  onPress={() => setSelectedType(option.value)}
+                >
+                  <Text style={[
+                    styles.filterOptionText,
+                    selectedType === option.value && styles.filterOptionTextActive
                   ]}>
                     {option.label}
                   </Text>
@@ -362,6 +424,28 @@ export default function ManageFeedback() {
                   <Text style={styles.detailValue}>{selectedFeedback.user.name}</Text>
                   <Text style={styles.detailSubValue}>{selectedFeedback.user.email}</Text>
                 </View>
+
+                <View style={styles.detailSection}>
+                  <Text style={styles.detailLabel}>Loại góp ý:</Text>
+                  {renderTypeBadge(selectedFeedback.type)}
+                </View>
+
+                {/* Show target teacher if feedback is about a teacher */}
+                {selectedFeedback.type === 'giao_vien' && selectedFeedback.targetTeacher && (
+                  <View style={styles.detailSection}>
+                    <Text style={styles.detailLabel}>Giáo viên được góp ý:</Text>
+                    <View style={styles.teacherDetail}>
+                      <MaterialIcons name="school" size={20} color="#F57C00" />
+                      <View style={styles.teacherInfoDetail}>
+                        <Text style={styles.teacherName}>{selectedFeedback.targetTeacher.name}</Text>
+                        <Text style={styles.teacherId}>Mã GV: {selectedFeedback.targetTeacher.teacherId}</Text>
+                        {selectedFeedback.targetTeacher.subject && (
+                          <Text style={styles.teacherSubject}>Môn: {selectedFeedback.targetTeacher.subject}</Text>
+                        )}
+                      </View>
+                    </View>
+                  </View>
+                )}
 
                 <View style={styles.detailSection}>
                   <Text style={styles.detailLabel}>Đánh giá:</Text>
@@ -547,6 +631,7 @@ const styles = StyleSheet.create({
     fontFamily: "Baloo2-Medium",
     color: "#7B859C",
     marginTop: 4,
+    paddingRight: 10,
     textAlign: "center",
   },
   averageRating: {
@@ -680,6 +765,31 @@ const styles = StyleSheet.create({
     fontFamily: "Baloo2-SemiBold",
     color: "#fff",
   },
+  typeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  typeBadgeText: {
+    fontSize: 10,
+    fontFamily: "Baloo2-SemiBold",
+    color: "#fff",
+  },
+  teacherInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: "#FFF3E0",
+    borderRadius: 8,
+  },
+  teacherText: {
+    fontSize: 12,
+    fontFamily: "Baloo2-Medium",
+    color: "#F57C00",
+  },
   feedbackDescription: {
     fontSize: 14,
     fontFamily: "Baloo2-Medium",
@@ -795,6 +905,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Baloo2-Medium",
     color: "#29375C",
+  },
+  teacherDetail: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+    padding: 12,
+    backgroundColor: "#FFF3E0",
+    borderRadius: 8,
+  },
+  teacherInfoDetail: {
+    flex: 1,
+  },
+  teacherName: {
+    fontSize: 16,
+    fontFamily: "Baloo2-SemiBold",
+    color: "#F57C00",
+    marginBottom: 4,
+  },
+  teacherId: {
+    fontSize: 14,
+    fontFamily: "Baloo2-Medium",
+    color: "#F57C00",
+    marginBottom: 2,
+  },
+  teacherSubject: {
+    fontSize: 14,
+    fontFamily: "Baloo2-Medium",
+    color: "#F57C00",
   },
   modalFooter: {
     flexDirection: "row",

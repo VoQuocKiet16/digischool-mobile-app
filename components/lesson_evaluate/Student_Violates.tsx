@@ -1,16 +1,17 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
-  Alert,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import {
-  lessonEvaluateService,
-  Student,
+    lessonEvaluateService,
+    Student,
 } from "../../services/lesson_evaluate.service";
 import { fonts } from "../../utils/responsive";
 import PlusIcon from "../PlusIcon";
@@ -223,27 +224,29 @@ const Student_Violates: React.FC<Student_ViolatesProps> = ({
                 {dropdownIndex === index && (
                   <View style={styles.dropdown}>
                     {getAvailableStudents().length > 0 ? (
-                      getAvailableStudents().map((student) => (
-                        <TouchableOpacity
-                          key={student.id}
-                          style={styles.dropdownItem}
-                          onPress={() =>
-                            handleSelectStudent(student.id, student.name, index)
-                          }
-                        >
-                          <View style={styles.dropdownAvatar}>
-                            <MaterialIcons
-                              name="person"
-                              size={16}
-                              color="#9E9E9E"
-                              style={{ marginRight: 8 }}
-                            />
-                          </View>
-                          <Text style={styles.dropdownItemText}>
-                            {student.name}
-                          </Text>
-                        </TouchableOpacity>
-                      ))
+                      <ScrollView>
+                        {getAvailableStudents().map((student) => (
+                          <TouchableOpacity
+                            key={student.id}
+                            style={styles.dropdownItem}
+                            onPress={() =>
+                              handleSelectStudent(student.id, student.name, index)
+                            }
+                          >
+                            <View style={styles.dropdownAvatar}>
+                              <MaterialIcons
+                                name="person"
+                                size={16}
+                                color="#9E9E9E"
+                                style={{ marginRight: 8 }}
+                              />
+                            </View>
+                            <Text style={styles.dropdownItemText} numberOfLines={2}>
+                              {student.name}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
                     ) : (
                       <View style={styles.emptyDropdown}>
                         <ThemedText style={styles.emptyDropdownText}>
@@ -419,13 +422,14 @@ const styles = StyleSheet.create({
     elevation: 4,
     paddingVertical: 2,
     maxHeight: 200,
-    width: "70%",
+    width: "85%",
   },
   dropdownItem: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 10,
     paddingHorizontal: 16,
+    minHeight: 44,
   },
   dropdownAvatar: {
     alignItems: "center",
@@ -436,6 +440,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: fonts.regular,
     color: "#fff",
+    flex: 1,
+    flexWrap: "wrap",
+    lineHeight: 20,
   },
   addButton: {
     flexDirection: "row",

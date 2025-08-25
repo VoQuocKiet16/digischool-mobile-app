@@ -5,15 +5,16 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { useEffect, useState } from "react";
 import {
-  Alert,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Alert,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
+import * as XLSX from 'xlsx';
 import Header from "../components/Header";
 import LoadingModal from "../components/LoadingModal";
 import { useNotificationContext } from "../contexts/NotificationContext";
@@ -213,43 +214,56 @@ export default function ManageSchedule() {
 
   const exportExcel = async () => {
     try {
-      // Tạo CSV content với encoding UTF-8 BOM để tránh lỗi mã hóa
-      const headers = Object.keys(SAMPLE_EXCEL_DATA[0]) as (keyof SampleDataRow)[];
-      const csvContent = [
-        '\ufeff' + headers.join(','), // UTF-8 BOM để Excel hiểu đúng encoding
-        ...SAMPLE_EXCEL_DATA.map(row => 
-          headers.map(header => {
-            const value = row[header];
-            // Escape giá trị nếu có dấu phẩy hoặc xuống dòng
-            if (typeof value === 'string' && (value.includes(',') || value.includes('\n') || value.includes('"'))) {
-              return `"${value.replace(/"/g, '""')}"`;
-            }
-            return value;
-          }).join(',')
-        )
-      ].join('\n');
-
-      // Tạo file CSV trong cache directory
-      const fileName = 'mau_thoi_khoa_bieu.csv';
+      // Tạo workbook Excel
+      const workbook = XLSX.utils.book_new();
+      
+      // Tạo worksheet từ data
+      const worksheet = XLSX.utils.json_to_sheet(SAMPLE_EXCEL_DATA);
+      
+      // Thiết lập độ rộng cột
+      const columnWidths = [
+        { wch: 8 },  // Lớp
+        { wch: 15 }, // Môn học
+        { wch: 20 }, // Giáo viên
+        { wch: 10 }, // Ngày
+        { wch: 6 },  // Tiết
+        { wch: 6 },  // Tuần
+        { wch: 10 }, // Buổi
+        { wch: 25 }, // Email giáo viên
+        { wch: 30 }, // Bài học
+      ];
+      worksheet['!cols'] = columnWidths;
+      
+      // Thêm worksheet vào workbook
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Thời khóa biểu');
+      
+      // Tạo file Excel
+      const excelBuffer = XLSX.write(workbook, { 
+        type: 'base64', 
+        bookType: 'xlsx' 
+      });
+      
+      // Tạo file Excel trong documents directory
+      const fileName = 'mau_thoi_khoa_bieu.xlsx';
       const fileUri = FileSystem.documentDirectory + fileName;
       
-      await FileSystem.writeAsStringAsync(fileUri, csvContent, {
-        encoding: FileSystem.EncodingType.UTF8
+      await FileSystem.writeAsStringAsync(fileUri, excelBuffer, {
+        encoding: FileSystem.EncodingType.Base64
       });
 
-      // Chia sẻ file
+      // Chia sẻ file Excel
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(fileUri, {
-          mimeType: 'text/csv',
-          dialogTitle: 'Tải mẫu thời khóa biểu',
-          UTI: 'public.comma-separated-values-text'
+          mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          dialogTitle: 'Tải mẫu thời khóa biểu Excel',
+          UTI: 'org.openxmlformats.spreadsheetml.sheet'
         });
       } else {
-        Alert.alert("Thành công", `File đã được tạo: ${fileName}`);
+        Alert.alert("Thành công", `File Excel đã được tạo: ${fileName}`);
       }
     } catch (error) {
       console.error('Export error:', error);
-      Alert.alert("Lỗi", "Không thể tạo file mẫu. Vui lòng thử lại.");
+      Alert.alert("Lỗi", "Không thể tạo file Excel mẫu. Vui lòng thử lại.");
     }
   };
 
