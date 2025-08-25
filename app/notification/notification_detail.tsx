@@ -12,6 +12,12 @@ import {
 import { WebView } from "react-native-webview";
 import HeaderLayout from "../../components/layout/HeaderLayout";
 import { approveOrRejectRequest } from "../../services/approve_reject.service";
+import {
+  approveSubstituteRequest,
+  approveSubstituteRequestManager,
+  approveSwapRequest,
+  approveSwapRequestManager
+} from "../../services/lesson_request.service";
 import { fonts } from "../../utils/responsive";
 
 function timeAgo(dateString: string): string {
@@ -71,12 +77,6 @@ export default function NotificationDetailScreen() {
 
   // Kiểm tra xem có phải role quản lý không
   const isManager = currentUserRole.includes("manager") || currentUserRole.includes("admin");
-  
-  // Kiểm tra xem có phải request type cần ẩn modal không
-  const shouldHideForManager = isManager && (
-    relatedObjectRequestType === "substitute_request" || 
-    relatedObjectRequestType === "swap_request"
-  );
 
   const showActionBar = [
     "substitute_request",
@@ -87,8 +87,7 @@ export default function NotificationDetailScreen() {
   ].includes(relatedObjectRequestType as string)
     && relatedObjectStatus !== "approved"
     && relatedObjectStatus !== "rejected"
-    && relatedObjectStatus !== "cancelled"
-    && !shouldHideForManager;
+    && relatedObjectStatus !== "cancelled"; 
 
   React.useEffect(() => {
     if (showActionBar) {
@@ -107,14 +106,40 @@ export default function NotificationDetailScreen() {
     }
     setLoading(true);
     try {
-      const token = await AsyncStorage.getItem("token");
-      if (!token) throw new Error("Không tìm thấy token");
-      const res = await approveOrRejectRequest(
-        relatedObjectRequestType as string,
-        relatedObjectId as string,
-        "approve",
-        token
-      );
+      console.log("relatedObject", relatedObject);
+      console.log("relatedObjectRequestType", relatedObjectRequestType);
+      console.log("relatedObjectId", relatedObjectId);
+      console.log("isManager", isManager);
+      console.log("relatedObject?.teacherApproved", relatedObject?.teacherApproved);
+
+              // Sử dụng logic 2 giai đoạn cho substitute và swap requests
+        if (relatedObjectRequestType === "substitute_request") {
+          if (isManager) {
+            // Manager approve (giai đoạn 2) - vì nếu manager nhận thông báo thì đã đến giai đoạn 2
+            await approveSubstituteRequestManager(relatedObjectId as string);
+          } else {
+            // Teacher approve (giai đoạn 1)
+            await approveSubstituteRequest(relatedObjectId as string);
+          }
+        } else if (relatedObjectRequestType === "swap_request") {
+          if (isManager) {
+            // Manager approve (giai đoạn 2) - vì nếu manager nhận thông báo thì đã đến giai đoạn 2
+            await approveSwapRequestManager(relatedObjectId as string);
+          } else {
+            // Teacher approve (giai đoạn 1)
+            await approveSwapRequest(relatedObjectId as string);
+          }
+        } else {
+        // Sử dụng service cũ cho các request khác (makeup, leave requests)
+        const token = await AsyncStorage.getItem("token");
+        if (!token) throw new Error("Không tìm thấy token");
+        await approveOrRejectRequest(
+          relatedObjectRequestType as string,
+          relatedObjectId as string,
+          "approve",
+          token
+        );
+      }
       router.back();
     } catch (err: any) {
       alert("Có lỗi xảy ra khi chấp nhận: " + (err?.message || err));

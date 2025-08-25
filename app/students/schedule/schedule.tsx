@@ -80,8 +80,8 @@ function mapApiToScheduleData(apiData: any): {
       let text = "";
       text = lesson.subject?.subjectName || "";
       
-      // Kiểm tra các trường boolean để thêm hasNotification
-      const hasNotification = lesson.hasTestInfo || lesson.hasStudentLeaveRequest;
+      // Sử dụng hasNotification từ backend thay vì tính toán thủ công
+      const hasNotification = lesson.hasStudentLeaveRequest || lesson.hasNotification || false;
       
       schedule[periodIndex][dayIndex] = {
         text,
@@ -91,7 +91,7 @@ function mapApiToScheduleData(apiData: any): {
         teacher: lesson.teacher,
         isMakeupLesson: lesson.isMakeupLesson || false, // Thêm flag để nhận diện tiết dạy bù
         status: lesson.status || "scheduled", // Thêm status từ API
-        hasNotification: hasNotification, // Thêm hasNotification dựa trên các trường boolean
+        hasNotification: hasNotification, // Sử dụng hasNotification từ backend
         leaveRequestStatus: lesson.leaveRequestStatus, // Thêm leaveRequestStatus từ API
       };
       if (lesson._id) {

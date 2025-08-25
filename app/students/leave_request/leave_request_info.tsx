@@ -12,23 +12,27 @@ import {
 } from "react-native";
 import HeaderLayout from "../../../components/layout/HeaderLayout";
 import LoadingModal from "../../../components/LoadingModal";
-import { createLeaveRequest } from "../../../services/leave_request.service";
+import { createDayLeaveRequest, createLeaveRequest } from "../../../services/leave_request.service";
 import { fonts } from "../../../utils/responsive";
+
+interface RequestItem {
+  type: "lesson" | "day";
+  dayIndex: number;
+  slots: any[];
+  lessonIds: string[];
+  subjects: string[];
+}
 
 export default function LeaveRequestInfoScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
-  const selectedSlots = params.selectedSlots
-    ? JSON.parse(params.selectedSlots as string)
+  const requests: RequestItem[] = params.requests
+    ? JSON.parse(params.requests as string)
     : [];
   const days = params.days
     ? JSON.parse(params.days as string)
     : ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
-  const subjects = params.subjects ? JSON.parse(params.subjects as string) : [];
-  const lessonIds = params.lessonIds
-    ? JSON.parse(params.lessonIds as string)
-    : [];
 
   const [phone, setPhone] = useState(params.phone ? String(params.phone) : "");
   const [reason, setReason] = useState(
@@ -62,17 +66,32 @@ export default function LeaveRequestInfoScreen() {
     return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
   }
 
-  const lessonsByDay: Record<string, { date: string; lessons: string[] }> = {};
+  // Xử lý dữ liệu theo danh sách requests
+  const lessonsByDay: Record<string, { date: string; lessons: string[]; type: "lesson" | "day" }> = {};
   
-  selectedSlots.forEach((slot: any, idx: number) => {
-    const day = days[slot.col];
-    const date = slot.date || slot.scheduledDate || "";
-    const key = date ? `${day} | ${formatDate(date)}` : day;
-    if (!lessonsByDay[key]) lessonsByDay[key] = { date, lessons: [] };
-    // Sử dụng subjects array đã được truyền từ trang trước
-    const subjectName = subjects[idx] || "";
-    lessonsByDay[key].lessons.push(subjectName);
+  requests.forEach((request) => {
+    const dayName = days[request.dayIndex];
+    const key = `${dayName}`;
+    
+    if (!lessonsByDay[key]) {
+      lessonsByDay[key] = { 
+        date: "", 
+        lessons: [],
+        type: request.type
+      };
+    }
+    
+    if (request.type === "day") {
+      lessonsByDay[key].lessons.push("Tất cả các tiết học");
+    } else {
+      request.subjects.forEach(subject => {
+        if (subject && !lessonsByDay[key].lessons.includes(subject)) {
+          lessonsByDay[key].lessons.push(subject);
+        }
+      });
+    }
   });
+  
   const lessonsByDayArr = Object.entries(lessonsByDay);
 
   const handleNext = () => {
@@ -85,13 +104,49 @@ export default function LeaveRequestInfoScreen() {
     setShowLoading(true);
     setLoadingSuccess(false);
     setError("");
+    
     try {
-      const res = await createLeaveRequest({
-        lessonIds,
-        phoneNumber: phone,
-        reason,
-      });
-      if (res && res.success) {
+      let allSuccess = true;
+      let errorMessage = "";
+
+      // Xử lý từng request
+      for (const request of requests) {
+        let res;
+        
+        if (request.type === "lesson") {
+          res = await createLeaveRequest({
+            lessonIds: request.lessonIds,
+            phoneNumber: phone,
+            reason,
+          });
+        } else {
+          // Tạo date từ dayIndex (giả sử tuần hiện tại)
+          const today = new Date();
+          const currentDay = today.getDay(); // 0 = Chủ nhật, 1 = Thứ 2, ...
+          const targetDay = request.dayIndex === 6 ? 0 : request.dayIndex + 1; // Chuyển đổi index
+          
+          // Tính ngày của tuần hiện tại
+          const daysDiff = targetDay - currentDay;
+          const targetDate = new Date(today);
+          targetDate.setDate(today.getDate() + daysDiff);
+          
+          const dateString = targetDate.toISOString().split('T')[0];
+          
+          res = await createDayLeaveRequest({
+            date: dateString,
+            phoneNumber: phone,
+            reason,
+          });
+        }
+        
+        if (!res || !res.success) {
+          allSuccess = false;
+          errorMessage = res?.message || "Gửi yêu cầu thất bại!";
+          break;
+        }
+      }
+      
+      if (allSuccess) {
         setLoadingSuccess(true);
         setTimeout(() => {
           setShowLoading(false);
@@ -99,7 +154,7 @@ export default function LeaveRequestInfoScreen() {
           router.push("/");
         }, 1200);
       } else {
-        setError("Gửi yêu cầu thất bại!");
+        setError(errorMessage);
         setShowLoading(false);
       }
     } catch (e: any) {
@@ -107,7 +162,7 @@ export default function LeaveRequestInfoScreen() {
         setError(e.response.data.message);
       } else {
         setError(
-          "Tiết học này đã được xin nghỉ hoặc có lỗi xảy ra. Vui lòng thử lại!"
+          "Có lỗi xảy ra khi gửi yêu cầu. Vui lòng thử lại!"
         );
       }
       setShowLoading(false);
@@ -214,7 +269,7 @@ export default function LeaveRequestInfoScreen() {
               <View style={[styles.card]}>
                 <View style={styles.cardHeaderRow}>
                   <View style={styles.cardHeaderBar} />
-                  <Text style={styles.cardTitle}>Tiết học xin nghỉ</Text>
+                  <Text style={styles.cardTitle}>Thông tin xin nghỉ</Text>
                   <View style={{ flex: 1 }} />
                   <MaterialIcons
                     name="edit"
@@ -225,8 +280,8 @@ export default function LeaveRequestInfoScreen() {
                       router.push({
                         pathname: "/students/leave_request/leave_request",
                         params: {
-                          selectedSlots: JSON.stringify(selectedSlots),
-                          lessonIds: JSON.stringify(lessonIds),
+                          requests: JSON.stringify(requests),
+                          days: JSON.stringify(days),
                           phone,
                           reason,
                         },
@@ -244,6 +299,14 @@ export default function LeaveRequestInfoScreen() {
                         style={{ marginRight: 8 }}
                       />
                       <Text style={styles.dayText}>{key}</Text>
+                      <View style={[
+                        styles.typeBadge,
+                        value.type === "day" ? styles.typeBadgeDay : styles.typeBadgeLesson
+                      ]}>
+                        <Text style={styles.typeBadgeText}>
+                          {value.type === "day" ? "Cả ngày" : "Từng tiết"}
+                        </Text>
+                      </View>
                     </View>
                     {value.lessons.map((lesson: any, i: number) => (
                           <View key={`lesson-${idx}-${i}`} style={styles.lessonTagCard}>
@@ -366,10 +429,28 @@ const styles = StyleSheet.create({
     color: "#29375C",
     fontFamily: fonts.semiBold,
     fontSize: 16,
+    flex: 1,
+  },
+  typeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 15,
+    marginLeft: 8,
+  },
+  typeBadgeDay: {
+    backgroundColor: "#3B82F6",
+  },
+  typeBadgeLesson: {
+    backgroundColor: "#FFA726",
+  },
+  typeBadgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontFamily: fonts.medium,
   },
   lessonTagCard: {
     backgroundColor: "#FFD6B0",
-    borderRadius: 10,
+    borderRadius: 25,
     paddingVertical: 8,
     marginBottom: 10,
     alignItems: "center",

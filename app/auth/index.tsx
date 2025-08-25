@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   indicatorContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginBottom: 58,
+    marginBottom: 10,
     marginTop: 8,
   },
   dot: {

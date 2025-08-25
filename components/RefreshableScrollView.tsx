@@ -18,9 +18,11 @@ const RefreshableScrollView: React.FC<RefreshableScrollViewProps> = ({
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
+    
     try {
       await onRefresh();
     } catch (error) {
+      console.error('Refresh error:', error);
     } finally {
       setRefreshing(false);
     }
@@ -35,6 +37,7 @@ const RefreshableScrollView: React.FC<RefreshableScrollViewProps> = ({
           onRefresh={handleRefresh}
           colors={colors}
           tintColor={tintColor}
+          progressViewOffset={0}
         />
       }
     >

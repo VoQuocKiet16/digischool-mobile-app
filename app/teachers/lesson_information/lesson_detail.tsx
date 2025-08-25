@@ -5,22 +5,23 @@ import ConfirmTeachedModal from "@/components/notifications_modal/ConfirmTeached
 import PlusIcon from "@/components/PlusIcon";
 import RefreshableScrollView from "@/components/RefreshableScrollView";
 import { fonts, responsive, responsiveValues } from "@/utils/responsive";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from "react-native";
 import {
-  completeLesson,
-  deleteLessonDescription,
-  getLessonDetail,
-  updateLessonDescription,
+    completeLesson,
+    deleteLessonDescription,
+    getLessonDetail,
+    updateLessonDescription,
 } from "../../../services/schedule.service";
 import { LessonData, TeacherLeaveRequest } from "../../../types/lesson.types";
 import { getLessonSubtitle } from "../../../utils/lessonSubtitle";
@@ -39,6 +40,8 @@ const LessonDetailScreen = () => {
     statusText: string;
   } | null>(null);
   const isFocused = useIsFocused();
+  const pollingRef = useRef<NodeJS.Timeout | number | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Kiểm tra có được approved nghỉ phép không
   const hasApprovedLeaveRequest = () => {
@@ -53,55 +56,65 @@ const LessonDetailScreen = () => {
     );
   };
 
+  // Xác định xem user hiện tại có phải giáo viên chính (bị hạn chế quyền) không
+  // Theo logic: substituteTeacher = giáo viên chính ban đầu (chỉ xem), teacher = giáo viên dạy thay hiện tại (đầy đủ quyền)
+  const isOriginalTeacher = () => {
+    if (!lessonData?.substituteTeacher || !currentUserId) return false;
+    return lessonData.substituteTeacher._id === currentUserId;
+  };
+
   // Menu items cho lesson detail
   const lessonMenuItems = [
-    {
-      id: 'substitute',
-      title: 'Dạy thay',
-      onPress: () => {
-        if (pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()) return;
-        router.push({
-          pathname: "/teachers/lesson_request/substitute_request",
-          params: { lessonId: lessonId },
-        });
+    // Ẩn dạy thay, đổi tiết, dạy bù cho giáo viên chính (bị hạn chế quyền)
+    ...(!isOriginalTeacher() ? [
+      {
+        id: 'substitute',
+        title: 'Dạy thay',
+        onPress: () => {
+          if (pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()) return;
+          router.push({
+            pathname: "/teachers/lesson_request/substitute_request",
+            params: { lessonId: lessonId },
+          });
+        },
+        disabled: !!pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest(),
       },
-      disabled: !!pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest(),
-    },
-    {
-      id: 'swap',
-      title: 'Đổi tiết',
-      onPress: () => {
-        if (pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()) return;
-        router.push({
-          pathname: "/teachers/lesson_request/swap_schedule",
-          params: {
-            lessonId: lessonId,
-            className: lessonData?.class?.className,
-            lessonFrom: JSON.stringify(lessonData),
-            lessonDate: lessonData?.scheduledDate,
-            lessonYear: lessonData?.academicYear?.name || "2025-2026",
-          },
-        });
+      {
+        id: 'swap',
+        title: 'Đổi tiết',
+        onPress: () => {
+          if (pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()) return;
+          router.push({
+            pathname: "/teachers/lesson_request/swap_schedule",
+            params: {
+              lessonId: lessonId,
+              className: lessonData?.class?.className,
+              lessonFrom: JSON.stringify(lessonData),
+              lessonDate: lessonData?.scheduledDate,
+              lessonYear: lessonData?.academicYear?.name || "2025-2026",
+            },
+          });
+        },
+        disabled: !!pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest(),
       },
-      disabled: !!pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest(),
-    },
-    {
-      id: 'makeup',
-      title: 'Dạy bù',
-      onPress: () => {
-        if (pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()) return;
-        router.push({
-          pathname: "/teachers/lesson_request/makeup_schedule",
-          params: {
-            lessonId: lessonId,
-            className: lessonData?.class?.className,
-            lessonDate: lessonData?.scheduledDate,
-            lessonYear: lessonData?.academicYear?.name || "2025-2026",
-          },
-        });
+      {
+        id: 'makeup',
+        title: 'Dạy bù',
+        onPress: () => {
+          if (pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest()) return;
+          router.push({
+            pathname: "/teachers/lesson_request/makeup_schedule",
+            params: {
+              lessonId: lessonId,
+              className: lessonData?.class?.className,
+              lessonDate: lessonData?.scheduledDate,
+              lessonYear: lessonData?.academicYear?.name || "2025-2026",
+            },
+          });
+        },
+        disabled: !!pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest(),
       },
-      disabled: !!pendingRequest || lessonData?.status === "completed" || hasApprovedLeaveRequest() || hasPendingLeaveRequest(),
-    },
+    ] : []),
     {
       id: 'note',
       title: 'Ghi chú',
@@ -118,9 +131,22 @@ const LessonDetailScreen = () => {
   ];
 
   useEffect(() => {
+    const getCurrentUserId = async () => {
+      const userId = await AsyncStorage.getItem("userId");
+      setCurrentUserId(userId);
+    };
+    getCurrentUserId();
+
     if (lessonId) {
       fetchLessonDetail();
+      // Setup polling mỗi 5s
+      pollingRef.current = setInterval(() => {
+        pollLessonDetail();
+      }, 5000);
     }
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
   }, [lessonId, refreshKey]);
 
   // Refresh lesson data khi quay về từ trang khác
@@ -141,30 +167,44 @@ const LessonDetailScreen = () => {
 
   useEffect(() => {
     if (lessonData) {
-      if (
-        lessonData.substituteRequests?.some((r: any) => r.status === "pending")
-      ) {
+      // Kiểm tra substitute requests với logic 2 giai đoạn
+      const substituteRequest = lessonData.substituteRequests?.find((r: any) => r.status === "pending");
+      if (substituteRequest) {
+        let statusText = "Đang chờ giáo viên phê duyệt";
+        if (substituteRequest.teacherApproved && !substituteRequest.managerApproved) {
+          statusText = "Giáo viên đã phê duyệt, đang chờ quản lý";
+        }
         setPendingRequest({
           type: "substitute",
-          statusText: "Đang chờ giáo viên phê duyệt",
+          statusText,
         });
-      } else if (
-        lessonData.swapRequests?.some((r: any) => r.status === "pending")
-      ) {
+        return;
+      }
+
+      // Kiểm tra swap requests với logic 2 giai đoạn  
+      const swapRequest = lessonData.swapRequests?.find((r: any) => r.status === "pending");
+      if (swapRequest) {
+        let statusText = "Đang chờ giáo viên phê duyệt";
+        if (swapRequest.teacherApproved && !swapRequest.managerApproved) {
+          statusText = "Giáo viên đã phê duyệt, đang chờ quản lý";
+        }
         setPendingRequest({
           type: "swap",
-          statusText: "Đang chờ giáo viên phê duyệt",
+          statusText,
         });
-      } else if (
-        lessonData.makeupRequests?.some((r: any) => r.status === "pending")
-      ) {
+        return;
+      }
+
+      // Kiểm tra makeup requests (không đổi)
+      if (lessonData.makeupRequests?.some((r: any) => r.status === "pending")) {
         setPendingRequest({
           type: "makeup",
           statusText: "Đang chờ quản lý phê duyệt",
         });
-      } else {
-        setPendingRequest(null);
+        return;
       }
+
+      setPendingRequest(null);
     }
   }, [lessonData]);
 
@@ -255,6 +295,20 @@ const LessonDetailScreen = () => {
     });
   };
 
+  const pollLessonDetail = async () => {
+    try {
+      const data = await getLessonDetail(lessonId);
+      setLessonData(data);
+      if (data?.status === "completed") {
+        setIsCompleted(true);
+      } else {
+        setIsCompleted(false);
+      }
+    } catch (err) {
+      // Không show error khi polling ngầm
+    }
+  };
+
   if (loading) {
     return (
       <HeaderLayout
@@ -324,9 +378,10 @@ const LessonDetailScreen = () => {
           pendingRequest={pendingRequest}
           onRefresh={handleRefresh}
           refreshKey={refreshKey}
+          currentUserId={currentUserId || undefined}
         />
         <View style={{ marginHorizontal: 30, marginTop: 0, marginBottom: 12 }}>
-          {!lessonData?.description && lessonData?.status !== "completed" && !hasApprovedLeaveRequest() && (
+          {!lessonData?.description && lessonData?.status !== "completed" && !hasApprovedLeaveRequest() && !isOriginalTeacher() && (
             <View style={{ marginBottom: 12 }}>
               <PlusIcon
                 text="Thêm mô tả"
@@ -336,7 +391,7 @@ const LessonDetailScreen = () => {
               />
             </View>
           )}
-          {!lessonData?.testInfo && lessonData?.status !== "completed" && !hasApprovedLeaveRequest() && (
+          {!lessonData?.testInfo && lessonData?.status !== "completed" && !hasApprovedLeaveRequest() && !isOriginalTeacher() && (
             <PlusIcon
               text="Dặn dò kiểm tra"
               onPress={() =>

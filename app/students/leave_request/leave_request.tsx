@@ -8,7 +8,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import HeaderLayout from "../../../components/layout/HeaderLayout";
 import ScheduleDay from "../../../components/schedule/ScheduleDay";
@@ -66,9 +66,7 @@ function mapApiToScheduleData(apiData: any): {
 
 export default function LeaveRequestScreen() {
   const router = useRouter();
-  const [session, setSession] = useState<"Buổi sáng" | "Buổi chiều">(
-    "Buổi sáng"
-  );
+  const [session, setSession] = useState<"Buổi sáng" | "Buổi chiều">("Buổi sáng");
   const [selected, setSelected] = useState<
     {
       row: number;
@@ -91,17 +89,15 @@ export default function LeaveRequestScreen() {
   const [weekNumber, setWeekNumber] = useState(1);
   const [availableYears, setAvailableYears] = useState<string[]>([]);
   const [availableWeeks, setAvailableWeeks] = useState<number[]>([]);
-  const [loading, setLoading] = useState(true); // Bắt đầu với loading = true
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showYearModal, setShowYearModal] = useState(false);
   const [showWeekModal, setShowWeekModal] = useState(false);
-  
-  // Flag để tránh gọi API trùng lặp
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Function để lấy danh sách năm học và tuần có sẵn, đồng thời xác định tuần hiện tại
   const fetchAvailableData = async () => {
-    setLoading(true); // Bắt đầu loading
+    setLoading(true);
     try {
       // Gọi 2 API song song để tối ưu thời gian
       const [currentWeekResponse, availableWeeksResponse] = await Promise.all([
@@ -217,18 +213,15 @@ export default function LeaveRequestScreen() {
 
   useEffect(() => {
     const initializeSchedule = async () => {
-      if (isInitialized) return; // Tránh gọi lại nếu đã khởi tạo
+      if (isInitialized) return;
       
-      // 1. Đầu tiên lấy thông tin năm học và tuần hiện tại
       await fetchAvailableData();
-      
       setIsInitialized(true);
     };
     
     initializeSchedule();
-  }, [isInitialized]); // Chỉ chạy khi isInitialized thay đổi
+  }, [isInitialized]);
 
-  // Tự động fetch schedule khi year hoặc weekNumber thay đổi
   useEffect(() => {
     if (isInitialized && year && weekNumber) {
       fetchSchedule();
@@ -239,7 +232,7 @@ export default function LeaveRequestScreen() {
   const handleChangeYear = () => setShowYearModal(true);
   const handleSelectYear = (selected: string) => {
     setYear(selected);
-    setWeekNumber(1); // Reset về tuần 1 khi đổi năm
+    setWeekNumber(1);
     setShowYearModal(false);
   };
   const handleChangeWeek = () => setShowWeekModal(true);
@@ -251,7 +244,7 @@ export default function LeaveRequestScreen() {
     setShowWeekModal(false);
   };
 
-  // Logic chọn slot xin nghỉ giữ nguyên
+  // Logic chọn slot xin nghỉ
   const handleSelectSlot = (dayIndex: number, periodIndex: number) => {
     const isExist = selected.some(
       (cell) =>
@@ -274,7 +267,6 @@ export default function LeaveRequestScreen() {
         )
       );
     } else {
-      // Tính toán đúng index trong toàn bộ schedule
       const actualPeriodIndex = session === "Buổi sáng" ? periodIndex : periodIndex + 5;
       const lessonId = lessonIds[actualPeriodIndex][dayIndex] || "";
       
@@ -289,6 +281,101 @@ export default function LeaveRequestScreen() {
         },
       ]);
     }
+  };
+
+  // Logic chọn cả ngày - được gọi từ ScheduleDay component
+  const handleSelectDay = (dayIndex: number) => {
+    const daySlots = [];
+    
+    // Kiểm tra xem ngày này có đủ tất cả tiết học không
+    for (let periodIndex = 0; periodIndex < 10; periodIndex++) {
+      const actualPeriodIndex = periodIndex;
+      const lessonId = lessonIds[actualPeriodIndex]?.[dayIndex];
+      
+      // Chỉ thêm slot nếu có lessonId hợp lệ
+      if (lessonId && typeof lessonId === 'string' && lessonId.trim() !== "") {
+        daySlots.push({
+          row: periodIndex,
+          col: dayIndex,
+          lessonId,
+          session: (periodIndex < 5 ? "Buổi sáng" : "Buổi chiều") as "Buổi sáng" | "Buổi chiều",
+          week: weekNumber,
+        });
+      }
+    }
+
+    if (daySlots.length === 0) {
+      console.warn(`Ngày ${dayIndex} không có tiết học nào`);
+      return;
+    }
+
+    // Kiểm tra xem ngày này có slot nào có thể chọn không (không bị ẩn do leave request)
+    const availableSlotsInDay = daySlots.filter(slot => {
+      const actualPeriodIndex = slot.row;
+      const slotData = scheduleData[actualPeriodIndex]?.[dayIndex];
+      // Chỉ cho phép chọn nếu slot không bị ẩn (có text và không phải empty)
+      return slotData && slotData.text && slotData.text.trim() !== "";
+    });
+
+    if (availableSlotsInDay.length === 0) {
+      console.warn(`Ngày ${dayIndex} đã nghỉ hết tất cả tiết học (tất cả lesson đã bị ẩn)`);
+      return;
+    }
+
+    console.log(`Chọn cả ngày ${dayIndex}:`, availableSlotsInDay);
+
+    // Kiểm tra xem đã chọn hết chưa
+    const alreadySelectedAll = availableSlotsInDay.every(slot => 
+      selected.some(selectedSlot => 
+        selectedSlot.row === slot.row && 
+        selectedSlot.col === slot.col && 
+        selectedSlot.week === slot.week
+      )
+    );
+
+    if (alreadySelectedAll) {
+      setSelected(selected.filter(slot => 
+        !(slot.col === dayIndex && slot.week === weekNumber)
+      ));
+    } else {
+      const newSelected = selected.filter(slot => 
+        !(slot.col === dayIndex && slot.week === weekNumber)
+      );
+      setSelected([...newSelected, ...availableSlotsInDay]);
+    }
+  };
+
+  // Kiểm tra xem một ngày có được chọn toàn bộ không
+  const isDayFullySelected = (dayIndex: number) => {
+    // Lấy tất cả slot có lessonId hợp lệ trong ngày này
+    const validDaySlots = Array.from({ length: 10 }, (_, periodIndex) => {
+      const actualPeriodIndex = periodIndex;
+      const lessonId = lessonIds[actualPeriodIndex]?.[dayIndex];
+      return lessonId && typeof lessonId === 'string' && lessonId.trim() !== "";
+    }).filter(Boolean);
+
+    if (validDaySlots.length === 0) return false;
+
+    // Lọc ra các slot có thể chọn (không bị ẩn do leave request)
+    const availableSlotsInDay = validDaySlots.filter((_, periodIndex) => {
+      const actualPeriodIndex = periodIndex;
+      const slotData = scheduleData[actualPeriodIndex]?.[dayIndex];
+      // Chỉ cho phép chọn nếu slot không bị ẩn (có text và không phải empty)
+      return slotData && slotData.text && slotData.text.trim() !== "";
+    });
+
+    if (availableSlotsInDay.length === 0) return false;
+
+    // Đếm số slot đã được chọn trong ngày này
+    const selectedDaySlots = selected.filter(slot => 
+      slot.col === dayIndex && 
+      slot.week === weekNumber &&
+      slot.lessonId && 
+      typeof slot.lessonId === 'string' && 
+      slot.lessonId.trim() !== ""
+    );
+
+    return selectedDaySlots.length === availableSlotsInDay.length;
   };
 
   // Hiển thị dữ liệu theo session và lọc bỏ tiết completed
@@ -310,10 +397,113 @@ export default function LeaveRequestScreen() {
         );
   const periods = session === "Buổi sáng" ? morningPeriods : afternoonPeriods;
 
+  // Validation cho form
+  const canProceed = () => selected.length > 0;
+
+  // Xử lý tiếp tục
+  const handleContinue = () => {
+    if (selected.length > 0) {
+      try {
+        // Phân loại các slot theo ngày
+        const slotsByDay: Record<number, any[]> = {};
+        selected.forEach(slot => {
+          if (!slotsByDay[slot.col]) slotsByDay[slot.col] = [];
+          slotsByDay[slot.col].push(slot);
+        });
+
+        // Tạo danh sách các yêu cầu
+        const requests: Array<{
+          type: "lesson" | "day";
+          dayIndex: number;
+          slots: any[];
+          lessonIds: string[];
+          subjects: string[];
+        }> = [];
+
+        Object.entries(slotsByDay).forEach(([dayIndexStr, daySlots]) => {
+          const dayIndex = parseInt(dayIndexStr);
+          
+          // Lọc ra các slot có lessonId hợp lệ
+          const validDaySlots = daySlots.filter(slot => 
+            slot.lessonId && 
+            typeof slot.lessonId === 'string' && 
+            slot.lessonId.trim() !== ""
+          );
+
+          if (validDaySlots.length === 0) {
+            console.warn(`Không có lessonId hợp lệ cho ngày ${dayIndex}`);
+            return;
+          }
+
+          // Đếm tổng số slot có lessonId hợp lệ trong ngày này
+          const totalValidSlotsInDay = Array.from({ length: 10 }, (_, periodIndex) => {
+            const actualPeriodIndex = periodIndex;
+            const lessonId = lessonIds[actualPeriodIndex]?.[dayIndex];
+            return lessonId && typeof lessonId === 'string' && lessonId.trim() !== "";
+          }).filter(Boolean).length;
+
+          // Đếm tổng số slot có thể chọn (không bị ẩn do leave request) trong ngày này
+          const totalAvailableSlotsInDay = Array.from({ length: 10 }, (_, periodIndex) => {
+            const actualPeriodIndex = periodIndex;
+            const lessonId = lessonIds[actualPeriodIndex]?.[dayIndex];
+            if (!lessonId || typeof lessonId !== 'string' || lessonId.trim() === "") return false;
+            
+            const slotData = scheduleData[actualPeriodIndex]?.[dayIndex];
+            // Chỉ cho phép chọn nếu slot không bị ẩn (có text và không phải empty)
+            return slotData && slotData.text && slotData.text.trim() !== "";
+          }).filter(Boolean).length;
+
+          if (validDaySlots.length === totalAvailableSlotsInDay && totalAvailableSlotsInDay > 0) {
+            // Nghỉ cả ngày - chỉ khi chọn đủ tất cả slot có thể chọn
+            requests.push({
+              type: "day",
+              dayIndex,
+              slots: validDaySlots,
+              lessonIds: validDaySlots.map(slot => slot.lessonId).filter(Boolean),
+              subjects: validDaySlots.map(slot => {
+                const actualPeriodIndex = slot.row + (slot.session === "Buổi chiều" ? 5 : 0);
+                return scheduleData[actualPeriodIndex]?.[slot.col]?.text || "";
+              }).filter(Boolean)
+            });
+          } else {
+            // Nghỉ từng tiết
+            requests.push({
+              type: "lesson",
+              dayIndex,
+              slots: validDaySlots,
+              lessonIds: validDaySlots.map(slot => slot.lessonId).filter(Boolean),
+              subjects: validDaySlots.map(slot => {
+                const actualPeriodIndex = slot.row + (slot.session === "Buổi chiều" ? 5 : 0);
+                return scheduleData[actualPeriodIndex]?.[slot.col]?.text || "";
+              }).filter(Boolean)
+            });
+          }
+        });
+
+        if (requests.length === 0) {
+          console.error("Không có request hợp lệ nào được tạo");
+          return;
+        }
+
+        // Chuyển sang trang info với thông tin đã phân loại
+        router.push({
+          pathname: "/students/leave_request/leave_request_info",
+          params: {
+            requests: JSON.stringify(requests),
+            days: JSON.stringify(days),
+          },
+        });
+      } catch (error) {
+        console.error("Lỗi khi xử lý dữ liệu:", error);
+        // Có thể hiển thị thông báo lỗi cho user
+      }
+    }
+  };
+
   return (
     <HeaderLayout
-      title="Tiết học xin nghỉ"
-      subtitle="Chọn các tiết học bạn muốn xin phép nghỉ"
+      title="Xin nghỉ phép"
+      subtitle="Chọn tiết hoặc ngày để nghỉ"
       onBack={() => router.back()}
     >
       <SafeAreaView style={{ flex: 1 }}>
@@ -325,10 +515,10 @@ export default function LeaveRequestScreen() {
             onPressTitle={() =>
               setSession(session === "Buổi sáng" ? "Buổi chiều" : "Buổi sáng")
             }
-            // Không cho phép thay đổi năm học và tuần
             onChangeYear={undefined}
             onChangeDateRange={undefined}
           />
+          
           {loading ? (
             <ActivityIndicator
               size="large"
@@ -336,14 +526,8 @@ export default function LeaveRequestScreen() {
               style={{ marginTop: 30 }}
             />
           ) : error ? (
-            <View
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Text style={{ color: "red" }}>{error}</Text>
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{error}</Text>
             </View>
           ) : (
             <ScrollView
@@ -356,16 +540,24 @@ export default function LeaveRequestScreen() {
                 onAddActivity={handleSelectSlot}
                 scheduleData={displayedData}
                 selectedSlots={selected.filter(
-                  (cell) => cell.session === session && cell.week === weekNumber
+                  (cell) => {
+                    // Hiển thị tất cả slot đã chọn trong tuần hiện tại
+                    // Không phân biệt session để user thấy được tất cả slot đã chọn
+                    return cell.week === weekNumber;
+                  }
                 )}
                 onSelectSlot={handleSelectSlot}
                 onSlotPress={handleSelectSlot}
                 hideNullSlot={true}
                 hidePastSlots={true}
+                lessonIds={lessonIds}
+                fullScheduleData={scheduleData}
+                onDayHeaderPress={handleSelectDay}
+                isDayFullySelected={isDayFullySelected}
               />
             </ScrollView>
           )}
-          {/* Không hiển thị modal chọn năm học và tuần */}
+          
           <View style={styles.legendRow}>
             <View style={styles.legendItem}>
               <View style={styles.legendBox} />
@@ -375,47 +567,26 @@ export default function LeaveRequestScreen() {
               <View style={[styles.legendBox, styles.legendBoxSelected]} />
               <Text style={styles.legendText}>Tiết học xin nghỉ</Text>
             </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendBox, styles.legendBoxDay]} />
+              <Text style={styles.legendText}>Nghỉ cả ngày</Text>
+            </View>
           </View>
         </View>
+        
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={[
               styles.button,
-              selected.length === 0 && styles.buttonDisabled,
+              !canProceed() && styles.buttonDisabled,
             ]}
-            disabled={selected.length === 0}
-            onPress={() => {
-              if (selected.length > 0) {
-                
-                const subjects = selected.map(
-                  ({ row, col, session: slotSession }) => {
-                    // Tính toán đúng index trong toàn bộ schedule
-                    const actualPeriodIndex = slotSession === "Buổi sáng" ? row : row + 5;
-                    const subjectName = scheduleData[actualPeriodIndex][col]?.text || "";
-                    return subjectName;
-                  }
-                );
-                
-                const lessonIdsSelected = selected.map(
-                  ({ lessonId }) => lessonId
-                );
-                
-                router.push({
-                  pathname: "/students/leave_request/leave_request_info",
-                  params: {
-                    selectedSlots: JSON.stringify(selected),
-                    subjects: JSON.stringify(subjects),
-                    days: JSON.stringify(days),
-                    lessonIds: JSON.stringify(lessonIdsSelected),
-                  },
-                });
-              }
-            }}
+            disabled={!canProceed()}
+            onPress={handleContinue}
           >
             <Text
               style={[
                 styles.buttonText,
-                selected.length === 0 && styles.buttonTextDisabled,
+                !canProceed() && styles.buttonTextDisabled,
               ]}
             >
               Tiếp tục
@@ -428,6 +599,14 @@ export default function LeaveRequestScreen() {
 }
 
 const styles = StyleSheet.create({
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  errorText: {
+    color: "red",
+  },
   slot: {
     width: 54,
     height: 48,
@@ -447,6 +626,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginVertical: 12,
+    flexWrap: 'wrap',
+    gap: 16,
   },
   legendItem: {
     flexDirection: "row",
@@ -461,6 +642,7 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   legendBoxSelected: { backgroundColor: "#FFA726" },
+  legendBoxDay: { backgroundColor: "#3B82F6" },
   legendText: { color: "#29375C", fontSize: 13 },
   button: {
     backgroundColor: "#29375C",
@@ -476,7 +658,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontFamily: fonts.semiBold,
     fontSize: 18,
-  },
+    },
   buttonTextDisabled: {
     color: "#9CA3AF",
     fontFamily: fonts.semiBold,
