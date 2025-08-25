@@ -86,7 +86,7 @@ const LessonDetailScreen = () => {
   };
 
   const handleRefresh = async () => {
-    await fetchLessonDetail();
+    // Chỉ cần setRefreshKey để trigger useEffect, không cần gọi fetchLessonDetail trực tiếp
     setRefreshKey((k) => k + 1);
   };
 

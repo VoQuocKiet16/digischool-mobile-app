@@ -26,3 +26,28 @@ export interface UserData {
   subject: Subject | null;
   roleInfo: RoleInfo | null;
 }
+
+export interface LeaveRequest {
+  _id: string;
+  requestType: "lesson" | "day";
+  lessonIds?: string[];
+  date?: string;
+  phoneNumber: string;
+  reason: string;
+  status: "pending" | "approved" | "rejected";
+  studentId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateLessonLeaveRequest {
+  lessonIds: string[];
+  phoneNumber: string;
+  reason: string;
+}
+
+export interface CreateDayLeaveRequest {
+  date: string;
+  phoneNumber: string;
+  reason: string;
+}

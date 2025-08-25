@@ -44,6 +44,9 @@ interface ScheduleDayProps {
   showUtilityButton?: boolean;
   userType?: "student" | "teacher"; // Thêm prop để phân biệt user type
   hidePastSlots?: boolean; // Thêm prop để ẩn slot ở quá khứ (chỉ dùng trong leave request)
+  // Props mới cho leave request
+  onDayHeaderPress?: (dayIndex: number) => void;
+  isDayFullySelected?: (dayIndex: number) => boolean;
 }
 
 const DAY_COL_WIDTH = 90;
@@ -95,6 +98,8 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
   showUtilityButton = false,
   userType,
   hidePastSlots,
+  onDayHeaderPress,
+  isDayFullySelected,
 }) => {
   const currentDayIndex =
     propCurrentDayIndex !== undefined ? propCurrentDayIndex : getTodayIndex();
@@ -176,6 +181,13 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
   };
 
   const handleDayHeaderPress = (dayIndex: number) => {
+    // Nếu có onDayHeaderPress từ leave request, sử dụng nó
+    if (onDayHeaderPress) {
+      onDayHeaderPress(dayIndex);
+      return;
+    }
+    
+    // Logic cũ cho date range
     if (dateRange) {
       const specificDate = getSpecificDate(dateRange, dayIndex);
       const formattedDate = formatVietnameseDate(specificDate);
@@ -231,6 +243,8 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
               styles.dayHeaderCell,
               { width: colWidth },
               currentDayIndex === idx && styles.selectedDayButton,
+              // Thêm style cho ngày được chọn toàn bộ
+              isDayFullySelected && isDayFullySelected(idx) && styles.fullySelectedDayButton,
             ]}
             onPress={() => handleDayHeaderPress(idx)}
             activeOpacity={0.7}
@@ -240,6 +254,8 @@ const ScheduleDay: React.FC<ScheduleDayProps> = ({
                 styles.dayHeaderText,
                 currentDayIndex === idx && styles.selectedDayText,
                 day === "CN" && !(currentDayIndex === idx) && styles.sundayText,
+                // Thêm style cho text của ngày được chọn toàn bộ
+                isDayFullySelected && isDayFullySelected(idx) && styles.fullySelectedDayText,
               ]}
               numberOfLines={1}
               ellipsizeMode="tail"
@@ -413,16 +429,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#e0e0e0",
   },
-    utilityButton: {
-      backgroundColor: "#29375C",
-      paddingVertical: responsive.isIPad() ? 4 : 4,
-      paddingHorizontal: responsive.isIPad() ? 4 : 6,
-      borderRadius: responsive.isIPad() ? 8 : 8,
-      alignItems: "center",
-      justifyContent: "center",
-      height: responsive.isIPad() ? 25 : 20,
-      width: responsive.isIPad() ? 25 : 20,
-    },
+  utilityButton: {
+    backgroundColor: "#29375C",
+    paddingVertical: responsive.isIPad() ? 4 : 4,
+    paddingHorizontal: responsive.isIPad() ? 4 : 6,
+    borderRadius: responsive.isIPad() ? 5 : 5,
+    alignItems: "center",
+    justifyContent: "center",
+    height: responsive.isIPad() ? 25 : 20,
+    width: responsive.isIPad() ? 25 : 20,
+  },
   dayHeaderCell: {
     height: responsive.isIPad() ? 70 : 40,
     justifyContent: "center",
@@ -441,7 +457,7 @@ const styles = StyleSheet.create({
   },
   selectedDayButton: {
     backgroundColor: "#29375C",
-    borderRadius: 10,
+    borderRadius: 3,
   },
   selectedDayText: {
     color: "#fff",
@@ -516,6 +532,12 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semiBold,
     color: "#29375C",
     textAlign: "center",
+  },
+  fullySelectedDayButton: {
+    backgroundColor: "#3B82F6",
+  },
+  fullySelectedDayText: {
+    color: "#fff",
   },
 });
 

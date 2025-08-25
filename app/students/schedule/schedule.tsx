@@ -81,7 +81,7 @@ function mapApiToScheduleData(apiData: any): {
       text = lesson.subject?.subjectName || "";
       
       // Sử dụng hasNotification từ backend thay vì tính toán thủ công
-      const hasNotification = lesson.hasNotification || false;
+      const hasNotification = lesson.hasStudentLeaveRequest || lesson.hasNotification || false;
       
       schedule[periodIndex][dayIndex] = {
         text,
