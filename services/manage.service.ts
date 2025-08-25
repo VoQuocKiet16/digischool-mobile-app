@@ -889,6 +889,49 @@ class ManageService {
     const days = Math.floor((now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
     return Math.ceil(days / 7);
   }
+
+  // ===== API THỐNG KÊ ĐÁNH GIÁ TIẾT HỌC THEO TUẦN =====
+
+  /**
+   * Lấy danh sách năm học
+   */
+  async getAcademicYears(): Promise<{ _id: string; name: string; startDate: string; endDate: string; isActive: boolean }[]> {
+    try {
+      const response = await api.get('/api/statistics/academic-years');
+      return response.data.data;
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách năm học:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy danh sách tuần theo năm học
+   */
+  async getAvailableWeeks(academicYearId: string): Promise<{ weekNumber: number; startDate: string; endDate: string; semester: string; hasData: boolean }[]> {
+    try {
+      const response = await api.get(`/api/statistics/available-weeks?academicYearId=${academicYearId}`);
+      return response.data.data;
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách tuần:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Xuất thống kê Excel
+   */
+  async exportWeeklyEvaluation(academicYearId: string, weekNumber: number): Promise<Blob> {
+    try {
+      const response = await api.get(`/api/statistics/export-weekly-evaluation?academicYearId=${academicYearId}&weekNumber=${weekNumber}`, {
+        responseType: 'blob'
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Lỗi khi xuất thống kê:', error);
+      throw error;
+    }
+  }
 }
 
 export default new ManageService(); 

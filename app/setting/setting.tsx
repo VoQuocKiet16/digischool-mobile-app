@@ -246,6 +246,27 @@ const Setting: React.FC = () => {
               style={styles.menuArrow}
             />
           </TouchableOpacity>
+          {userData?.roleInfo?.role?.includes("manager") && (
+            <TouchableOpacity 
+              style={styles.menuItem}
+              onPress={() => router.push("/setting/statistics")}
+            >
+              <View style={styles.menuIcon}>
+                <MaterialCommunityIcons
+                  name="chart-line"
+                  size={28}
+                  color="#FFFFFF"
+                />
+              </View>
+              <Text style={styles.menuText}>Thống kê</Text>
+              <Ionicons
+                name="chevron-forward"
+                size={22}
+                color="#29375C"
+                style={styles.menuArrow}
+              />
+            </TouchableOpacity>
+          )}
         </View>
       </RefreshableScrollView>
     </HeaderLayout>
