@@ -96,6 +96,8 @@ export interface SubstituteRequest {
   }>;
   reason: string;
   status: string;
+  teacherApproved?: boolean;
+  managerApproved?: boolean;
   createdBy: string;
   createdAt: string;
   updatedAt: string;
@@ -133,6 +135,8 @@ export interface SwapRequest {
     type: string;
   };
   status: string;
+  teacherApproved?: boolean;
+  managerApproved?: boolean;
   createdBy: string;
   createdAt: string;
   updatedAt: string;

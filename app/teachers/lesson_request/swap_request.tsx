@@ -23,6 +23,7 @@ export default function SwapRequest() {
   const [reason, setReason] = useState("");
   const [showLoading, setShowLoading] = useState(false);
   const [loadingSuccess, setLoadingSuccess] = useState(false);
+  const [error, setError] = useState("");
   const isValid = reason.trim().length > 0;
 
   // Hàm format thông tin lesson
@@ -44,6 +45,7 @@ export default function SwapRequest() {
     if (!isValid) return;
     setShowLoading(true);
     setLoadingSuccess(false);
+    setError("");
     try {
       await createSwapLessonRequest({
         originalLessonId: lessonFrom?._id,
@@ -59,9 +61,7 @@ export default function SwapRequest() {
     } catch (e: any) {
       setShowLoading(false);
       setLoadingSuccess(false);
-      alert(
-        e?.response?.data?.message || "Đã có lỗi xảy ra, vui lòng thử lại!"
-      );
+      setError(e?.response?.data?.errors[0]?.msg || "Đã có lỗi xảy ra, vui lòng thử lại!");
     }
   };
 
@@ -100,6 +100,11 @@ export default function SwapRequest() {
             placeholderTextColor="#9CA3AF"
           />
         </View>
+        {error ? (
+          <Text style={styles.errorText}>
+            {error}
+          </Text>
+        ) : null}
         <TouchableOpacity
           style={[styles.sendBtn, !isValid && styles.sendBtnDisabled]}
           disabled={!isValid}
@@ -176,5 +181,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginLeft: 2,
     marginTop: -2,
+  },
+  errorText: {
+    textAlign: "center",
+    color: "#E53935",
+    fontFamily: fonts.medium,
+    fontSize: 14,
+    marginTop: -10,
+    marginBottom: 10,
+    marginLeft: 15,
+    marginRight: 15,
   },
 });

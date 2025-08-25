@@ -1,16 +1,26 @@
 import api from "./api.config";
+import { CreateLessonLeaveRequest, CreateDayLeaveRequest } from "../types/user.types";
 
 export const createLeaveRequest = async ({
   lessonIds,
   phoneNumber,
   reason,
-}: {
-  lessonIds: string[];
-  phoneNumber: string;
-  reason: string;
-}) => {
-  const res = await api.post("/api/student-leave-requests/create", {
+}: CreateLessonLeaveRequest) => {
+  const res = await api.post("/api/student-leave-requests/create-lesson", {
     lessonIds,
+    phoneNumber,
+    reason,
+  });
+  return res.data;
+};
+
+export const createDayLeaveRequest = async ({
+  date,
+  phoneNumber,
+  reason,
+}: CreateDayLeaveRequest) => {
+  const res = await api.post("/api/student-leave-requests/create-day", {
+    date,
     phoneNumber,
     reason,
   });

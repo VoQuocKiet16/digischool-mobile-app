@@ -1,16 +1,18 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import { useEffect, useState } from "react";
 import {
-    Alert,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
 import Header from "../components/Header";
 import LoadingModal from "../components/LoadingModal";
@@ -22,37 +24,75 @@ const ACADEMIC_YEARS = ["2025-2026", "2024-2025"];
 const GRADE_LEVELS = ["10", "11", "12"];
 const SEMESTERS = ["1", "2"];
 
-// Data mẫu cho Excel preview
-const SAMPLE_EXCEL_DATA = [
+// Type definition for sample data
+type SampleDataRow = {
+  "Lớp": string;
+  "Môn học": string;
+  "Giáo viên": string;
+  "Ngày": string;
+  "Tiết": number;
+  "Tuần": number;
+  "Buổi": string;
+  "Email giáo viên": string;
+  "Bài học": string;
+};
+
+// Data mẫu cho Excel preview - cập nhật theo format backend
+const SAMPLE_EXCEL_DATA: SampleDataRow[] = [
   {
-    Lớp: "10A1",
+    "Lớp": "10A1",
     "Môn học": "Toán",
     "Giáo viên": "Nguyễn Văn A",
-    Ngày: "Thứ 2",
-    Tiết: 1,
-    Tuần: 1,
-    Buổi: "Sáng",
+    "Ngày": "Thứ 2",
+    "Tiết": 1,
+    "Tuần": 1,
+    "Buổi": "morning",
+    "Email giáo viên": "nguyenvana@email.com",
     "Bài học": "Chương 1: Hàm số"
   },
   {
-    Lớp: "10A1",
+    "Lớp": "10A1",
     "Môn học": "Vật lý",
     "Giáo viên": "Trần Thị B",
-    Ngày: "Thứ 2",
-    Tiết: 2,
-    Tuần: 1,
-    Buổi: "Sáng",
+    "Ngày": "Thứ 2",
+    "Tiết": 2,
+    "Tuần": 1,
+    "Buổi": "morning",
+    "Email giáo viên": "tranthib@email.com",
     "Bài học": "Chương 1: Cơ học"
   },
   {
-    Lớp: "10A1",
+    "Lớp": "10A1",
     "Môn học": "Chào cờ",
     "Giáo viên": "Lê Văn C",
-    Ngày: "Thứ 2",
-    Tiết: 3,
-    Tuần: 1,
-    Buổi: "Sáng",
-    "Bài học": "Chào cờ"
+    "Ngày": "Thứ 2",
+    "Tiết": 3,
+    "Tuần": 1,
+    "Buổi": "morning",
+    "Email giáo viên": "levanc@email.com",
+    "Bài học": ""
+  },
+  {
+    "Lớp": "10A1",
+    "Môn học": "Văn",
+    "Giáo viên": "Phạm Thị D",
+    "Ngày": "Thứ 2",
+    "Tiết": 4,
+    "Tuần": 1,
+    "Buổi": "morning",
+    "Email giáo viên": "phamthid@email.com",
+    "Bài học": "Bài 2: Tác phẩm văn học"
+  },
+  {
+    "Lớp": "10A1",
+    "Môn học": "Sinh hoạt lớp",
+    "Giáo viên": "Lê Văn C",
+    "Ngày": "Thứ 2",
+    "Tiết": 5,
+    "Tuần": 1,
+    "Buổi": "morning",
+    "Email giáo viên": "levanc@email.com",
+    "Bài học": ""
   }
 ];
 
@@ -171,6 +211,48 @@ export default function ManageSchedule() {
     }
   };
 
+  const exportExcel = async () => {
+    try {
+      // Tạo CSV content với encoding UTF-8 BOM để tránh lỗi mã hóa
+      const headers = Object.keys(SAMPLE_EXCEL_DATA[0]) as (keyof SampleDataRow)[];
+      const csvContent = [
+        '\ufeff' + headers.join(','), // UTF-8 BOM để Excel hiểu đúng encoding
+        ...SAMPLE_EXCEL_DATA.map(row => 
+          headers.map(header => {
+            const value = row[header];
+            // Escape giá trị nếu có dấu phẩy hoặc xuống dòng
+            if (typeof value === 'string' && (value.includes(',') || value.includes('\n') || value.includes('"'))) {
+              return `"${value.replace(/"/g, '""')}"`;
+            }
+            return value;
+          }).join(',')
+        )
+      ].join('\n');
+
+      // Tạo file CSV trong cache directory
+      const fileName = 'mau_thoi_khoa_bieu.csv';
+      const fileUri = FileSystem.documentDirectory + fileName;
+      
+      await FileSystem.writeAsStringAsync(fileUri, csvContent, {
+        encoding: FileSystem.EncodingType.UTF8
+      });
+
+      // Chia sẻ file
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(fileUri, {
+          mimeType: 'text/csv',
+          dialogTitle: 'Tải mẫu thời khóa biểu',
+          UTI: 'public.comma-separated-values-text'
+        });
+      } else {
+        Alert.alert("Thành công", `File đã được tạo: ${fileName}`);
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      Alert.alert("Lỗi", "Không thể tạo file mẫu. Vui lòng thử lại.");
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Header title="Thời khoá biểu" name={userName ? `QL ${userName}` : "QL Nguyễn Văn A"} hasUnreadNotification={!notificationLoading && hasUnreadNotification} />
@@ -221,7 +303,7 @@ export default function ManageSchedule() {
               <View style={styles.stepContent}>
                 <Text style={styles.stepTitle}>Chuẩn bị file Excel</Text>
                 <Text style={styles.stepDescription}>
-                  File Excel phải có các cột: Lớp, Môn học, Giáo viên, Ngày, Tiết, Tuần, Buổi, Bài học
+                  File Excel phải có các cột: Lớp, Môn học, Giáo viên, Ngày, Tiết, Tuần, Buổi, Email giáo viên, Bài học
                 </Text>
               </View>
             </View>
@@ -467,6 +549,9 @@ export default function ManageSchedule() {
                     ✓ File đã chọn: {selectedFile.name}
                   </Text>
                 )}
+                <Text style={styles.fileFormatNote}>
+                  File phải có các cột: Lớp, Môn học, Giáo viên, Ngày, Tiết, Tuần, Buổi, Email giáo viên, Bài học
+                </Text>
               </View>
             </ScrollView>
 
@@ -524,18 +609,20 @@ export default function ManageSchedule() {
                   <Text style={styles.tableHeaderText}>Tiết</Text>
                   <Text style={styles.tableHeaderText}>Tuần</Text>
                   <Text style={styles.tableHeaderText}>Buổi</Text>
+                  <Text style={styles.tableHeaderText}>Email GV</Text>
                   <Text style={styles.tableHeaderText}>Bài học</Text>
                 </View>
                 
                 {SAMPLE_EXCEL_DATA.map((row, index) => (
                   <View key={index} style={styles.tableRow}>
-                    <Text style={styles.tableCell}>{row.Lớp}</Text>
+                    <Text style={styles.tableCell}>{row["Lớp"]}</Text>
                     <Text style={styles.tableCell}>{row["Môn học"]}</Text>
                     <Text style={styles.tableCell}>{row["Giáo viên"]}</Text>
-                    <Text style={styles.tableCell}>{row.Ngày}</Text>
-                    <Text style={styles.tableCell}>{row.Tiết}</Text>
-                    <Text style={styles.tableCell}>{row.Tuần}</Text>
-                    <Text style={styles.tableCell}>{row.Buổi}</Text>
+                    <Text style={styles.tableCell}>{row["Ngày"]}</Text>
+                    <Text style={styles.tableCell}>{row["Tiết"]}</Text>
+                    <Text style={styles.tableCell}>{row["Tuần"]}</Text>
+                    <Text style={styles.tableCell}>{row["Buổi"]}</Text>
+                    <Text style={styles.tableCell}>{row["Email giáo viên"]}</Text>
                     <Text style={styles.tableCell}>{row["Bài học"]}</Text>
                   </View>
                 ))}
@@ -545,17 +632,19 @@ export default function ManageSchedule() {
                 <Text style={styles.noteTitle}>Lưu ý:</Text>
                 <Text style={styles.noteText}>• Ngày: Thứ 2, Thứ 3, Thứ 4, Thứ 5, Thứ 6, Thứ 7</Text>
                 <Text style={styles.noteText}>• Tiết: Số từ 1-10</Text>
-                <Text style={styles.noteText}>• Buổi: Sáng, Chiều</Text>
+                <Text style={styles.noteText}>• Buổi: morning (sáng), afternoon (chiều)</Text>
                 <Text style={styles.noteText}>• Môn học đặc biệt: "Chào cờ", "Sinh hoạt lớp"</Text>
+                <Text style={styles.noteText}>• Email giáo viên: Nếu để trống, hệ thống tự tạo</Text>
+                <Text style={styles.noteText}>• Bài học: Nếu để trống, hệ thống dùng tên môn học</Text>
               </View>
             </ScrollView>
 
             <View style={styles.modalFooter}>
               <TouchableOpacity 
                 style={styles.confirmButton}
-                onPress={() => setShowPreviewModal(false)}
+                onPress={exportExcel}
               >
-                <Text style={styles.confirmButtonText}>Đã hiểu</Text>
+                <Text style={styles.confirmButtonText}>Tải mẫu</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -825,6 +914,14 @@ const styles = StyleSheet.create({
     color: "#7ED957",
     marginTop: 8,
     textAlign: "center",
+  },
+  fileFormatNote: {
+    fontSize: 12,
+    fontFamily: "Baloo2-Medium",
+    color: "#7B859C",
+    marginTop: 8,
+    textAlign: "center",
+    fontStyle: "italic",
   },
   modalFooter: {
     flexDirection: "row",
