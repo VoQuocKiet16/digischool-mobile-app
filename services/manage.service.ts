@@ -260,6 +260,13 @@ export interface FeedbackData {
     email: string;
   };
   rating: number;
+  type: 'ban_giam_hieu' | 'tai_chinh' | 'giao_vien' | 'nhan_vien' | 'canh_quan_ve_sinh' | 'hoc_sinh';
+  targetTeacher?: {
+    _id: string;
+    name: string;
+    teacherId: string;
+    subject?: string;
+  };
   description: string;
   status: 'pending' | 'reviewed' | 'resolved';
   adminResponse?: string;
@@ -627,6 +634,7 @@ class ManageService {
   async getParentFeedbacks(filters?: {
     status?: string;
     rating?: number;
+    type?: string;
     page?: number;
     limit?: number;
   }): Promise<FeedbacksResponse> {
@@ -635,6 +643,7 @@ class ManageService {
       
       if (filters?.status) params.append('status', filters.status);
       if (filters?.rating) params.append('rating', filters.rating.toString());
+      if (filters?.type) params.append('type', filters.type);
       if (filters?.page) params.append('page', filters.page.toString());
       if (filters?.limit) params.append('limit', filters.limit.toString());
 
@@ -780,7 +789,7 @@ class ManageService {
       const response = await api.get(url);
       console.log('✅ Daily stats response:', response.data);
       return response.data.data; // Truy cập data bên trong
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Lỗi khi lấy thống kê sĩ số toàn trường:', error);
       console.error('❌ Error details:', error.response?.data || error.message);
       throw error;
@@ -799,7 +808,7 @@ class ManageService {
       const response = await api.get(url);
       console.log('✅ Teacher attendance response:', response.data);
       return response.data.data; // Truy cập data bên trong
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Lỗi khi lấy thống kê điểm danh giáo viên:', error);
       console.error('❌ Error details:', error.response?.data || error.message);
       throw error;
@@ -818,7 +827,7 @@ class ManageService {
       const response = await api.get(url);
       console.log('✅ Student chart response:', response.data);
       return response.data.data; // Truy cập data bên trong
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Lỗi khi lấy dữ liệu biểu đồ học sinh:', error);
       console.error('❌ Error details:', error.response?.data || error.message);
       throw error;
@@ -834,7 +843,7 @@ class ManageService {
       const response = await api.get(`/api/statistics/weekly?weekNumber=${weekNumber}&academicYear=${academicYearName}`);
       console.log('✅ Weekly stats response:', response.data);
       return response.data.data; // Truy cập data bên trong
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Lỗi khi lấy thống kê tuần:', error);
       console.error('❌ Error details:', error.response?.data || error.message);
       throw error;
@@ -850,7 +859,7 @@ class ManageService {
       const response = await api.get(`/api/statistics/completion-rates?weekNumber=${weekNumber}&academicYear=${academicYearName}`);
       console.log('✅ Completion rates response:', response.data);
       return response.data.data; // Truy cập data bên trong
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Lỗi khi lấy tỷ lệ hoàn thành:', error);
       console.error('❌ Error details:', error.response?.data || error.message);
       throw error;
