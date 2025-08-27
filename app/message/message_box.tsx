@@ -26,7 +26,7 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
-  useWindowDimensions
+  useWindowDimensions,
 } from "react-native";
 import SafeScreen from "../../components/SafeScreen";
 import { useChatContext } from "../../contexts/ChatContext";
@@ -98,7 +98,7 @@ export default function MessageBoxScreen() {
   );
   const [isReady, setIsReady] = useState(false);
   const [myName, setMyName] = useState<string>("bạn");
-  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const [isUserCurrentlyViewing, setIsUserCurrentlyViewing] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isUserScrolling, setIsUserScrolling] = useState(false);
@@ -140,13 +140,13 @@ export default function MessageBoxScreen() {
 
   // Tự động scroll xuống tin nhắn mới nhất khi mở box chat
   useEffect(() => {
-    if (messages.length > 0 && !hasUserInteracted) {
+    if (messages.length > 0 && isUserCurrentlyViewing) {
       // Delay một chút để đảm bảo FlatList đã render xong
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: false });
       }, 200);
     }
-  }, [messages, hasUserInteracted]);
+  }, [messages, isUserCurrentlyViewing]);
 
   // Tách fetch messages ra ngoài để có thể gọi lại
   const fetchMessagesFromAPI = async () => {
@@ -186,34 +186,60 @@ export default function MessageBoxScreen() {
 
     const actualUserId = myId as string;
     chatService.onNewMessage(actualUserId, (msg) => {
+             console.log("📱 New message received:", {
+         msg,
+         myId: actualUserId,
+         userId,
+         isUserCurrentlyViewing,
+         isReceiver: actualUserId !== userId,
+         explanation: "Server sometimes returns 'read', sometimes 'sent' - we always override to 'sent'"
+       });
+      
       const isRelevantMessage =
         (msg.sender === actualUserId && msg.receiver === userId) ||
         (msg.sender === userId && msg.receiver === actualUserId);
       if (!isRelevantMessage) return;
 
-      setMessages((prev) => {
-        const idx = prev.findIndex(
-          (m) =>
-            !m._id &&
-            m.content === msg.content &&
-            m.sender === msg.sender &&
-            m.receiver === msg.receiver &&
-            (!m.mediaUrl || m.mediaUrl === msg.mediaUrl)
-        );
-        const next =
-          idx !== -1
-            ? (() => {
-                const arr = [...prev];
-                arr[idx] = { ...msg };
-                return arr;
-              })()
-            : [...prev, msg];
-        return next;
-      });
-      // Chỉ scroll khi có tin nhắn mới và user chưa tương tác
-      if (!hasUserInteracted) {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }
+             setMessages((prev) => {
+         const idx = prev.findIndex(
+           (m) =>
+             !m._id &&
+             m.content === msg.content &&
+             m.sender === msg.sender &&
+             m.receiver === msg.receiver &&
+             (!m.mediaUrl || m.mediaUrl === msg.mediaUrl)
+         );
+         
+                   // Override status từ server: luôn set thành "sent" cho tin nhắn mới
+          const messageWithCorrectStatus = {
+            ...msg,
+            status: "sent" // Luôn là "sent" cho tin nhắn mới, bất kể server trả về gì
+          };
+          
+          console.log("📱 Overriding message status:", {
+            originalStatus: msg.status,
+            newStatus: "sent",
+            explanation: "Always override to 'sent' regardless of server response"
+          });
+         
+         const next =
+           idx !== -1
+             ? (() => {
+                 const arr = [...prev];
+                 arr[idx] = messageWithCorrectStatus;
+                 return arr;
+               })()
+             : [...prev, messageWithCorrectStatus];
+         return next;
+       });
+       
+       // Scroll khi có tin nhắn mới và user đang xem tin nhắn
+       if (isUserCurrentlyViewing) {
+         flatListRef.current?.scrollToEnd({ animated: true });
+       }
+       
+       // KHÔNG mark as read khi nhận tin nhắn mới từ server
+       // Chỉ mark as read khi user thực sự đang xem conversation (đã có logic riêng)
     });
 
     return () => {
@@ -229,6 +255,13 @@ export default function MessageBoxScreen() {
 
   useEffect(() => {
     const handleRead = (data: any) => {
+      console.log("📱 Message read event received:", {
+        data,
+        myId,
+        userId,
+        isUserCurrentlyViewing
+      });
+      
       setMessages((prev) => {
         let updated = prev.map((msg) =>
           data.messageId && msg._id === data.messageId
@@ -713,9 +746,6 @@ export default function MessageBoxScreen() {
   const handleSend = async () => {
     if (sending) return;
 
-    // Set user has interacted when they send a message
-    setHasUserInteracted(true);
-
     setSending(true);
     // Nếu có ảnh, upload trước
     if (selectedImage) {
@@ -1142,48 +1172,102 @@ export default function MessageBoxScreen() {
     );
   };
 
-  // Hàm mark as read khi user thực sự tương tác
-  const markAsReadWhenInteracting = () => {
-    if (hasUserInteracted && myId && userId) {
-      const actualUserId = myId as string;
-      // Chỉ mark as read cho conversation hiện tại
-      chatService.markAsRead(actualUserId, actualUserId, userId as string);
-    }
-  };
+                                               // Hàm mark as read khi user đang xem tin nhắn và conversation có đủ 2 người
+         const markAsReadWhenViewing = () => {
+           // Chỉ mark as read nếu user đang xem tin nhắn và conversation có đủ 2 người
+           // VÀ chỉ khi user hiện tại là người nhận (không phải người gửi)
+           // myId !== userId nghĩa là người đang xem (myId) là người nhận, userId là người gửi
+                       if (myId && userId && isConversationActive()) {
+              console.log(
+                "📱 Marking as read - receiver is viewing conversation"
+              );
+              const actualUserId = myId as string;
+              // Mark as read cho conversation hiện tại khi receiver đang xem
+              console.log("📱 Calling chatService.markAsRead with:", {
+                actualUserId,
+                userId,
+                isUserCurrentlyViewing
+              });
+              chatService.markAsRead(actualUserId, actualUserId, userId as string);
+           } else {
+             console.log("📱 NOT marking as read - conditions not met:", {
+               isUserCurrentlyViewing,
+               myId,
+               userId,
+               isReceiver: myId !== userId,
+               isConversationActive: isConversationActive(),
+               explanation: "Only mark as read when current user (myId) is the receiver (userId is sender)"
+             });
+           }
+         };
 
-  // Mark as read khi user gửi tin nhắn
+        // Hàm kiểm tra xem conversation có đủ 2 người không
+    const isConversationActive = () => {
+      // Nếu có userId thì conversation có 2 người
+      // Chỉ mark as read khi user hiện tại đang xem VÀ user hiện tại là người nhận
+      // (myId !== userId nghĩa là user hiện tại là người nhận, userId là người gửi)
+      const isActive = !!userId && isUserCurrentlyViewing && myId !== userId;
+      console.log("📱 isConversationActive check:", {
+        userId,
+        myId,
+        isUserCurrentlyViewing,
+        isReceiver: myId !== userId,
+        isActive,
+        explanation: "myId !== userId means current user is the receiver (userId is sender)"
+      });
+      return isActive;
+    };
+
+  // Mark as read khi user đang xem tin nhắn và conversation có đủ 2 người
   useEffect(() => {
-    if (hasUserInteracted) {
-      markAsReadWhenInteracting();
+    console.log("📱 useEffect triggered for mark as read:", {
+      isUserCurrentlyViewing,
+      userId,
+      isConversationActive: isConversationActive(),
+      explanation: "This effect only runs when user enters/leaves conversation"
+    });
+    
+    // Chỉ mark as read nếu conversation có đủ 2 người và user đang xem
+    if (isConversationActive()) {
+      console.log("📱 User is actively viewing conversation - marking as read");
+      markAsReadWhenViewing();
+    } else {
+      console.log("📱 User is NOT actively viewing conversation - NOT marking as read");
     }
-  }, [hasUserInteracted, userId]); // Thêm userId vào dependency để đảm bảo chỉ mark as read cho conversation hiện tại
+  }, [isUserCurrentlyViewing, userId]); // Thêm isUserCurrentlyViewing vào dependency
 
-  // Mark as read khi màn hình box focus trở lại (chỉ khi user đã tương tác)
+  // Mark as read khi màn hình box focus trở lại
   useFocusEffect(
     React.useCallback(() => {
-      if (myId && userId && hasUserInteracted) {
-        chatService.markAsRead(
-          myId as string,
-          myId as string,
-          userId as string
-        );
-      }
-      
-      // Tự động scroll xuống cuối khi focus vào màn hình chat (nếu chưa tương tác)
-      if (messages.length > 0 && !hasUserInteracted) {
+      console.log("📱 Focus effect - entering conversation");
+      // Set user đang xem khi focus vào màn hình
+      setIsUserCurrentlyViewing(true);
+
+      // Tự động scroll xuống cuối khi focus vào màn hình chat
+      if (messages.length > 0) {
         setTimeout(() => {
           flatListRef.current?.scrollToEnd({ animated: false });
         }, 300);
       }
-    }, [myId, userId, hasUserInteracted, messages.length])
+
+      // Cleanup function để set user không xem khi blur
+      return () => {
+        console.log("📱 Focus effect - leaving conversation");
+        setIsUserCurrentlyViewing(false);
+      };
+    }, [myId, userId]) // Bỏ messages.length khỏi dependency
   );
+
+  // Reset trạng thái xem khi component unmount
+  useEffect(() => {
+    return () => {
+      setIsUserCurrentlyViewing(false);
+    };
+  }, []);
 
   // Component render input content để tránh duplicate code
   const renderInputContent = () => (
-    <TouchableWithoutFeedback
-      onPress={Keyboard.dismiss}
-      accessible={false}
-    >
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.inputContainer}>
         {selectedImage && (
           <View style={styles.imagePreviewContainer}>
@@ -1247,8 +1331,7 @@ export default function MessageBoxScreen() {
                 <View style={styles.fileDetails}>
                   <Text style={styles.fileName} numberOfLines={1}>
                     {(selectedFile.name || "File").length > 20
-                      ? (selectedFile.name || "File").substring(0, 20) +
-                        "..."
+                      ? (selectedFile.name || "File").substring(0, 20) + "..."
                       : selectedFile.name || "File"}
                   </Text>
                   <Text style={styles.fileSize}>
@@ -1276,32 +1359,21 @@ export default function MessageBoxScreen() {
             disabled={sending}
             style={{ marginHorizontal: 8 }}
           >
-            <Ionicons
-              name="document-outline"
-              size={24}
-              color="#29375C"
-            />
+            <Ionicons name="document-outline" size={24} color="#29375C" />
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handlePickImage}
-            disabled={sending}
-          >
+          <TouchableOpacity onPress={handlePickImage} disabled={sending}>
             <Ionicons name="image" size={24} color="#29375C" />
           </TouchableOpacity>
           <TextInput
-            style={[
-              styles.input,
-              { maxHeight: 100, textAlignVertical: "top" },
-            ]}
+            style={[styles.input, { maxHeight: 100, textAlignVertical: "top" }]}
             placeholder="Nhập tin nhắn tại đây..."
             placeholderTextColor="#A0A0A0"
             value={input}
-            onChangeText={setInput}
+            onChangeText={(text) => {
+              setInput(text);
+            }}
             editable={!sending}
             multiline={true}
-            onFocus={() => {
-              // KHÔNG scroll khi focus vào input để giữ nguyên vị trí
-            }}
           />
           <TouchableOpacity
             style={styles.sendBtn}
@@ -1336,136 +1408,141 @@ export default function MessageBoxScreen() {
         </View>
         <View style={{ flex: 1, backgroundColor: "#29375C" }}>
           {/* Danh sách tin nhắn */}
-          <View style={[styles.listWrapper, { flex: 1 }]}>
-            {loading ? (
-              <ActivityIndicator style={{ marginTop: 40 }} />
-            ) : error ? (
-              <Text
-                style={{ color: "red", textAlign: "center", marginTop: 40 }}
-              >
-                {error}
-              </Text>
-            ) : messages.length === 0 ? (
-              <View
-                style={{
-                  alignItems: "center",
-                  marginTop: 60,
-                  paddingHorizontal: 24,
-                }}
-              >
+          <TouchableWithoutFeedback
+            onPress={() => {
+              // Không cần làm gì khi nhấn vào chat container
+            }}
+          >
+            <View style={[styles.listWrapper, { flex: 1 }]}>
+              {loading ? (
+                <ActivityIndicator style={{ marginTop: 40 }} />
+              ) : error ? (
+                <Text
+                  style={{ color: "red", textAlign: "center", marginTop: 40 }}
+                >
+                  {error}
+                </Text>
+              ) : messages.length === 0 ? (
                 <View
                   style={{
                     alignItems: "center",
-                    width: 320,
-                    maxWidth: "100%",
+                    marginTop: 60,
+                    paddingHorizontal: 24,
                   }}
                 >
-                  <Text
+                  <View
                     style={{
-                      color: "#29375C",
-                      fontSize: 18,
-                      fontWeight: "bold",
-                      marginBottom: 10,
-                      textAlign: "center",
-                      fontFamily: fonts.bold,
+                      alignItems: "center",
+                      width: 320,
+                      maxWidth: "100%",
                     }}
                   >
-                    Xin chào bạn !
-                  </Text>
-                  <Text
-                    style={{
-                      color: "#29375C",
-                      fontSize: 15,
-                      marginBottom: 18,
-                      textAlign: "center",
-                      lineHeight: 22,
-                      fontFamily: fonts.regular,
-                    }}
-                  >
-                    Hãy gửi tin nhắn để bắt đầu cuộc trò chuyện với{" "}
-                    {name || "người nhận"} nhé.
-                  </Text>
+                    <Text
+                      style={{
+                        color: "#29375C",
+                        fontSize: 18,
+                        fontWeight: "bold",
+                        marginBottom: 10,
+                        textAlign: "center",
+                        fontFamily: fonts.bold,
+                      }}
+                    >
+                      Xin chào bạn !
+                    </Text>
+                    <Text
+                      style={{
+                        color: "#29375C",
+                        fontSize: 15,
+                        marginBottom: 18,
+                        textAlign: "center",
+                        lineHeight: 22,
+                        fontFamily: fonts.regular,
+                      }}
+                    >
+                      Hãy gửi tin nhắn để bắt đầu cuộc trò chuyện với{" "}
+                      {name || "người nhận"} nhé.
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            ) : (
-              <FlatList
-                ref={flatListRef}
-                data={messages}
-                keyExtractor={(item) =>
-                  item._id?.toString() ||
-                  item.id?.toString() ||
-                  Math.random().toString()
-                }
-                renderItem={({ item, index }) => {
-                  // Xác định có cần chèn label ngày không
-                  const prevMsg = index > 0 ? messages[index - 1] : null;
-                  const currDate = item.createdAt
-                    ? new Date(item.createdAt).toDateString()
-                    : "";
-                  const prevDate =
-                    prevMsg && prevMsg.createdAt
-                      ? new Date(prevMsg.createdAt).toDateString()
+              ) : (
+                <FlatList
+                  ref={flatListRef}
+                  data={messages}
+                  keyExtractor={(item) =>
+                    item._id?.toString() ||
+                    item.id?.toString() ||
+                    Math.random().toString()
+                  }
+                  renderItem={({ item, index }) => {
+                    // Xác định có cần chèn label ngày không
+                    const prevMsg = index > 0 ? messages[index - 1] : null;
+                    const currDate = item.createdAt
+                      ? new Date(item.createdAt).toDateString()
                       : "";
-                  const showDateLabel = !prevMsg || currDate !== prevDate;
-                  return (
-                    <>
-                      {showDateLabel && formatDateLabel(item.createdAt) && (
-                        <View
-                          style={{ alignItems: "center", marginVertical: 8 }}
-                        >
-                          <Text
-                            style={{
-                              backgroundColor: "#BFC6D1",
-                              color: "#fff",
-                              borderRadius: 12,
-                              paddingHorizontal: 12,
-                              paddingVertical: 4,
-                              fontSize: 14,
-                            }}
+                    const prevDate =
+                      prevMsg && prevMsg.createdAt
+                        ? new Date(prevMsg.createdAt).toDateString()
+                        : "";
+                    const showDateLabel = !prevMsg || currDate !== prevDate;
+                    return (
+                      <>
+                        {showDateLabel && formatDateLabel(item.createdAt) && (
+                          <View
+                            style={{ alignItems: "center", marginVertical: 8 }}
                           >
-                            {formatDateLabel(item.createdAt)}
-                          </Text>
-                        </View>
-                      )}
-                      {renderMessage({ item, index })}
-                    </>
-                  );
-                }}
-                contentContainerStyle={[
-                  styles.listContent,
-                  {
-                    paddingBottom: keyboardVisible
-                      ? responsiveValues.padding.xl
-                      : responsiveValues.padding.sm,
-                  },
-                ]}
-                showsVerticalScrollIndicator={false}
-                onContentSizeChange={() => {
-                  // KHÔNG scroll tự động - để giữ nguyên vị trí khi keyboard xuất hiện
-                }}
-                onLayout={() => {
-                  // Không scroll tự động trong onLayout - để tránh conflict với useEffect mới
-                }}
-                keyboardShouldPersistTaps="handled"
-                maintainVisibleContentPosition={{
-                  minIndexForVisible: 0,
-                  autoscrollToTopThreshold: 1,
-                }}
-                removeClippedSubviews={false}
-                maxToRenderPerBatch={10}
-                windowSize={10}
-                onScrollBeginDrag={() => {
-                  setIsUserScrolling(true);
-                  setHasUserInteracted(true);
-                }}
-                onScrollEndDrag={() => setIsUserScrolling(false)}
-                onMomentumScrollBegin={() => setIsUserScrolling(true)}
-                onMomentumScrollEnd={() => setIsUserScrolling(false)}
-              />
-            )}
-          </View>
+                            <Text
+                              style={{
+                                backgroundColor: "#BFC6D1",
+                                color: "#fff",
+                                borderRadius: 12,
+                                paddingHorizontal: 12,
+                                paddingVertical: 4,
+                                fontSize: 14,
+                              }}
+                            >
+                              {formatDateLabel(item.createdAt)}
+                            </Text>
+                          </View>
+                        )}
+                        {renderMessage({ item, index })}
+                      </>
+                    );
+                  }}
+                  contentContainerStyle={[
+                    styles.listContent,
+                    {
+                      paddingBottom: keyboardVisible
+                        ? responsiveValues.padding.xl
+                        : responsiveValues.padding.sm,
+                    },
+                  ]}
+                  showsVerticalScrollIndicator={false}
+                  onContentSizeChange={() => {
+                    // KHÔNG scroll tự động - để giữ nguyên vị trí khi keyboard xuất hiện
+                  }}
+                  onLayout={() => {
+                    // Không scroll tự động trong onLayout - để tránh conflict với useEffect mới
+                  }}
+                  keyboardShouldPersistTaps="handled"
+                  maintainVisibleContentPosition={{
+                    minIndexForVisible: 0,
+                    autoscrollToTopThreshold: 1,
+                  }}
+                  removeClippedSubviews={false}
+                  maxToRenderPerBatch={10}
+                  windowSize={10}
+                  onScrollBeginDrag={() => {
+                    setIsUserScrolling(true);
+                  }}
+                  onScrollEndDrag={() => setIsUserScrolling(false)}
+                  onMomentumScrollBegin={() => setIsUserScrolling(true)}
+                  onMomentumScrollEnd={() => setIsUserScrolling(false)}
+                />
+              )}
+            </View>
+          </TouchableWithoutFeedback>
         </View>
-        
+
         {/* Input container với platform-specific behavior */}
         {Platform.OS === "ios" ? (
           // iOS: Sử dụng KeyboardAvoidingView
@@ -1478,12 +1555,12 @@ export default function MessageBoxScreen() {
           </KeyboardAvoidingView>
         ) : (
           // Android: Sử dụng manual margin adjustment
-          <View 
+          <View
             style={[
               { backgroundColor: "#fff" },
               keyboardVisible && {
-                marginBottom: keyboardHeight
-              }
+                marginBottom: keyboardHeight,
+              },
             ]}
           >
             {renderInputContent()}
