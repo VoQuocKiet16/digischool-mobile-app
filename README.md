@@ -368,8 +368,8 @@ This project is private property. Distribution or use without permission is proh
 ## 📞 Contact
 
 - **Developer**: GDevX Team
-- **Email**: contact@gdevx.com
-- **Website**: https://gdevx.com
+- **Email**: vok89265@gmail.com
+- **Website**: https://www.digischool.site
 
 ## 🙏 Acknowledgments
 
