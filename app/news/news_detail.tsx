@@ -63,11 +63,14 @@ export default function NewsDetailScreen() {
             const storedNews = await AsyncStorage.getItem(`${tab}-${subject}`);
             if (storedNews) {
               const parsedNews = JSON.parse(storedNews);
-              const found = parsedNews.find((item: any) => item._id === id || item.id === id);
-              if (found) {
-                foundNews = found;
-                console.log('🚀 Found news in storage, displaying immediately');
-                break;
+              // Kiểm tra nếu parsedNews là array trước khi gọi find
+              if (Array.isArray(parsedNews)) {
+                const found = parsedNews.find((item: any) => item._id === id || item.id === id);
+                if (found) {
+                  foundNews = found;
+                  console.log('🚀 Found news in storage, displaying immediately');
+                  break;
+                }
               }
             }
           }

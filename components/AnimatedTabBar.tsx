@@ -1,8 +1,12 @@
 import { useTheme } from '@react-navigation/native';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
-import * as Animatable from 'react-native-animatable';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming
+} from 'react-native-reanimated';
 import Colors from '../constants/Colors';
 import { responsive } from '../utils/responsive';
 import Icon from './Icons';
@@ -23,62 +27,88 @@ interface AnimatedTabBarProps {
   visible: boolean;
 }
 
-const animate1: any = { 0: { scale: .5, translateY: 7 }, .92: { translateY: -34 }, 1: { scale: 1.2, translateY: -24 } };
-const animate2: any = { 0: { scale: 1.2, translateY: -24 }, 1: { scale: 1, translateY: 7 } };
-const circle1: any = { 0: { scale: 0 }, 0.3: { scale: .9 }, 0.5: { scale: .2 }, 0.8: { scale: .7 }, 1: { scale: 1 } };
-const circle2: any = { 0: { scale: 1 }, 1: { scale: 0 } };
+// Animation configurations for reanimated
+const ANIMATION_DURATION = 200;
 
 const TabButton: React.FC<{
   item: TabItem;
   onPress: () => void;
   focused: boolean;
 }> = ({ item, onPress, focused }) => {
-  const viewRef = useRef<Animatable.View>(null);
-  const circleRef = useRef<Animatable.View>(null);
-  const textRef = useRef<Animatable.Text>(null);
   const { colors } = useTheme();
+  
+  // Shared values for animations
+  const scale = useSharedValue(focused ? 1.2 : 1);
+  const translateY = useSharedValue(focused ? -24 : 7);
+  const circleScale = useSharedValue(focused ? 1 : 0);
+  const textScale = useSharedValue(focused ? 1 : 0);
   
   const color = Colors.black; // Luôn sử dụng màu đen cho text
   const bgColor = Colors.white; // Luôn sử dụng màu trắng cho background
 
   useEffect(() => {
     if (focused) {
-      viewRef.current?.animate(animate1);
-      circleRef.current?.animate(circle1);
-      textRef.current?.transitionTo({ scale: 1 } as any);
+      scale.value = withSpring(1.2, { damping: 15, stiffness: 150 });
+      translateY.value = withTiming(-24, { duration: ANIMATION_DURATION });
+      circleScale.value = withSpring(1, { damping: 15, stiffness: 150 });
+      textScale.value = withTiming(1, { duration: ANIMATION_DURATION });
     } else {
-      viewRef.current?.animate(animate2);
-      circleRef.current?.animate(circle2);
-      textRef.current?.transitionTo({ scale: 0 } as any);
+      scale.value = withSpring(1, { damping: 15, stiffness: 150 });
+      translateY.value = withTiming(7, { duration: ANIMATION_DURATION });
+      circleScale.value = withSpring(0, { damping: 15, stiffness: 150 });
+      textScale.value = withTiming(0, { duration: ANIMATION_DURATION });
     }
   }, [focused]);
+
+  // Animated styles
+  const animatedButtonStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { scale: scale.value },
+        { translateY: translateY.value }
+      ]
+    };
+  });
+
+  const animatedCircleStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: circleScale.value }]
+    };
+  });
+
+  const animatedTextStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: textScale.value }],
+      opacity: textScale.value
+    };
+  });
+
+  const iconSize = focused 
+    ? (responsive.isIPad() ? responsive.iconSize(22) : responsive.iconSize(18))
+    : (responsive.isIPad() ? responsive.iconSize(42) : responsive.iconSize(24));
 
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={1}
       style={styles.container}>
-      <Animatable.View
-        ref={viewRef}
-        duration={200}
-        style={styles.container}>
+      <Animated.View
+        style={[styles.container, animatedButtonStyle]}>
         <View style={[styles.btn, { borderColor: bgColor, backgroundColor: bgColor }]}>
-          <Animatable.View
-            ref={circleRef}
-            style={styles.circle} />
+          <Animated.View
+            style={[styles.circle, animatedCircleStyle]} />
           <Icon 
             type={item.type} 
             name={item.icon} 
             color={focused ? Colors.white : Colors.primary} 
-            size={focused ? (responsive.isIPad() ? responsive.iconSize(22) : responsive.iconSize(18)) : (responsive.isIPad() ? responsive.iconSize(42) : responsive.iconSize(24))}
+            size={iconSize}
           />
         </View>
-        <Animatable.Text
-          ref={textRef}
-          style={[styles.text, { color }]}>
+        <Animated.Text
+          style={[styles.text, { color }, animatedTextStyle]}>
           {item.label}
-        </Animatable.Text>
-      </Animatable.View>
+        </Animated.Text>
+      </Animated.View>
     </TouchableOpacity>
   );
 };
@@ -89,12 +119,10 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
   onTabPress, 
   visible 
 }) => {
-  const insets = useSafeAreaInsets();
-  
   if (!visible) return null;
 
   return (
-    <View style={[styles.tabBar, { paddingBottom: insets.bottom }]}>
+    <View style={styles.tabBar}>
       {tabs.map((tab) => (
         <TabButton
           key={tab.route}
